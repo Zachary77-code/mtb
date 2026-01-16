@@ -1,0 +1,430 @@
+"""
+HTML 报告生成器
+"""
+import os
+import re
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, Any, List
+
+from jinja2 import Environment, FileSystemLoader
+import markdown
+
+from config.settings import REPORTS_DIR
+
+
+class HtmlReportGenerator:
+    """
+    HTML 报告生成器
+
+    将 Markdown 格式的 MTB 报告渲染为带交互式引用的 HTML 文件。
+    使用蓝白配色的简洁医疗风格。
+    """
+
+    def __init__(self):
+        # 模板目录
+        self.template_dir = Path(__file__).parent / "templates"
+        self.template_dir.mkdir(exist_ok=True)
+
+        # 确保模板存在
+        self._ensure_templates()
+
+        # Jinja2 环境
+        self.env = Environment(
+            loader=FileSystemLoader(str(self.template_dir)),
+            autoescape=True
+        )
+
+    def _ensure_templates(self):
+        """确保模板文件存在"""
+        report_template = self.template_dir / "report.html"
+
+        if not report_template.exists():
+            self._create_default_template()
+
+    def _create_default_template(self):
+        """创建默认模板"""
+        template_content = '''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTB 报告 - {{ patient_id }}</title>
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --light-blue: #3b82f6;
+            --bg-blue: #eff6ff;
+            --bg-white: #ffffff;
+            --text-dark: #1f2937;
+            --text-gray: #6b7280;
+            --border-gray: #e5e7eb;
+            --warning-red: #dc2626;
+            --warning-bg: #fef2f2;
+            --warning-yellow: #f59e0b;
+            --success-green: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, var(--bg-blue) 0%, var(--bg-white) 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(30, 64, 175, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            color: white;
+            padding: 30px 40px;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .meta-info span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        h2 {
+            color: var(--primary-blue);
+            font-size: 1.5em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--bg-blue);
+        }
+
+        h3 {
+            color: var(--light-blue);
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+
+        th {
+            background: var(--primary-blue);
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        tr:hover td {
+            background: var(--bg-blue);
+        }
+
+        .warning-box {
+            background: var(--warning-bg);
+            border-left: 4px solid var(--warning-red);
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning-box strong {
+            color: var(--warning-red);
+        }
+
+        .info-box {
+            background: var(--bg-blue);
+            border-left: 4px solid var(--light-blue);
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .reference {
+            color: var(--light-blue);
+            text-decoration: none;
+            position: relative;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .reference:hover {
+            color: var(--primary-blue);
+            text-decoration: underline;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: var(--text-dark);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            z-index: 100;
+            max-width: 300px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .evidence-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin-left: 5px;
+        }
+
+        .evidence-a { background: #dcfce7; color: #166534; }
+        .evidence-b { background: #dbeafe; color: #1e40af; }
+        .evidence-c { background: #fef3c7; color: #92400e; }
+        .evidence-d { background: #fee2e2; color: #991b1b; }
+
+        .footer {
+            background: var(--bg-blue);
+            padding: 20px 40px;
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 0.9em;
+        }
+
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--light-blue);
+            padding-left: 20px;
+            margin: 15px 0;
+            color: var(--text-gray);
+            font-style: italic;
+        }
+
+        @media print {
+            body { background: white; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>分子肿瘤委员会（MTB）报告</h1>
+            <div class="meta-info">
+                <span><strong>患者编号:</strong> {{ patient_id }}</span>
+                <span><strong>肿瘤类型:</strong> {{ cancer_type }}</span>
+                <span><strong>生成日期:</strong> {{ generation_date }}</span>
+            </div>
+        </div>
+
+        <div class="content">
+            {{ report_content | safe }}
+
+            {% if warnings %}
+            <div class="warning-box">
+                <strong>⚠️ 安全警告</strong>
+                <ul>
+                {% for warning in warnings %}
+                    <li>{{ warning }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if references %}
+            <h2>参考文献</h2>
+            <ol>
+            {% for ref in references %}
+                <li>
+                    <a href="{{ ref.url }}" class="reference" target="_blank">
+                        [{{ ref.type }}: {{ ref.id }}]
+                    </a>
+                </li>
+            {% endfor %}
+            </ol>
+            {% endif %}
+        </div>
+
+        <div class="footer">
+            <p>本报告由 MTB 多智能体系统自动生成 | {{ generation_date }}</p>
+            <p>⚠️ 本报告仅供参考，所有临床决策应由具有资质的医疗专业人员做出</p>
+        </div>
+    </div>
+</body>
+</html>'''
+
+        template_path = self.template_dir / "report.html"
+        with open(template_path, "w", encoding="utf-8") as f:
+            f.write(template_content)
+
+    def generate(
+        self,
+        structured_case: Dict[str, Any],
+        chair_synthesis: str,
+        references: List[Dict[str, str]]
+    ) -> str:
+        """
+        生成 HTML 报告
+
+        Args:
+            structured_case: 结构化病例数据
+            chair_synthesis: Chair 综合报告（Markdown）
+            references: 引用列表
+
+        Returns:
+            生成的 HTML 文件路径
+        """
+        # 获取模板
+        template = self.env.get_template("report.html")
+
+        # 处理报告内容
+        html_content = self._markdown_to_html(chair_synthesis)
+        html_content = self._add_reference_links(html_content)
+        html_content = self._add_evidence_tags(html_content)
+
+        # 提取警告
+        warnings = self._extract_warnings(chair_synthesis)
+
+        # 准备上下文
+        context = {
+            "patient_id": structured_case.get("patient_id", "Unknown"),
+            "cancer_type": structured_case.get("primary_cancer", "未知"),
+            "generation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "report_content": html_content,
+            "references": references,
+            "warnings": warnings
+        }
+
+        # 渲染模板
+        final_html = template.render(context)
+
+        # 保存文件
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        patient_id = context["patient_id"].replace("/", "_").replace("\\", "_")
+        filename = f"MTB_Report_{patient_id}_{timestamp}.html"
+        filepath = REPORTS_DIR / filename
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(final_html)
+
+        return str(filepath)
+
+    def _markdown_to_html(self, md_text: str) -> str:
+        """Markdown 转 HTML"""
+        return markdown.markdown(
+            md_text,
+            extensions=[
+                'tables',
+                'fenced_code',
+                'nl2br',
+                'sane_lists'
+            ]
+        )
+
+    def _add_reference_links(self, html: str) -> str:
+        """添加引用链接"""
+        # 转换 [PMID: xxx] 为链接
+        html = re.sub(
+            r'\[PMID:\s*(\d+)\]',
+            r'<a href="https://pubmed.ncbi.nlm.nih.gov/\1/" class="reference" target="_blank">[PMID: \1]</a>',
+            html
+        )
+
+        # 转换 [NCTxxx] 为链接
+        html = re.sub(
+            r'\[(NCT\d+)\]',
+            r'<a href="https://clinicaltrials.gov/study/\1" class="reference" target="_blank">[\1]</a>',
+            html
+        )
+
+        return html
+
+    def _add_evidence_tags(self, html: str) -> str:
+        """添加证据等级标签"""
+        evidence_map = {
+            r'\[Evidence A\]': '<span class="evidence-tag evidence-a">Evidence A</span>',
+            r'\[Evidence B\]': '<span class="evidence-tag evidence-b">Evidence B</span>',
+            r'\[Evidence C\]': '<span class="evidence-tag evidence-c">Evidence C</span>',
+            r'\[Evidence D\]': '<span class="evidence-tag evidence-d">Evidence D</span>',
+        }
+
+        for pattern, replacement in evidence_map.items():
+            html = re.sub(pattern, replacement, html, flags=re.IGNORECASE)
+
+        return html
+
+    def _extract_warnings(self, text: str) -> List[str]:
+        """提取安全警告"""
+        warnings = []
+        lines = text.split('\n')
+
+        for line in lines:
+            if '⚠️' in line or '❌' in line:
+                clean = line.strip().lstrip('#').strip()
+                if clean and clean not in warnings:
+                    warnings.append(clean)
+
+        return warnings[:5]  # 限制数量
+
+
+if __name__ == "__main__":
+    print("HTML 报告生成器模块加载成功")
+    print(f"报告目录: {REPORTS_DIR}")
+
+    # 创建生成器实例（确保模板存在）
+    generator = HtmlReportGenerator()
+    print(f"模板目录: {generator.template_dir}")

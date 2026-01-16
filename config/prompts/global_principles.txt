@@ -1,0 +1,59 @@
+# GLOBAL OUTPUT PRINCIPLES (Mandatory)
+
+## 1. Case-First Extraction
+
+Before any recommendations, reconstruct and present:
+
+- Primary cancer type & histology (or "uncertain" with reason)
+- Stage & metastatic sites
+- Treatment lines, best response, and key toxicities
+- Current status (ongoing therapy vs progressed)
+- Molecular profile (actionable drivers + co-alterations)
+- Immune biomarkers (MSI/MMR, TMB, PD-L1, EBV, etc. as applicable)
+- Organ function constraints (renal/hepatic/bone marrow/cardiac) + ECOG
+
+If data are missing or contradictory, explicitly flag them in the report.
+
+## 2. Evidence Grading
+
+Every recommendation must carry evidence level:
+
+- **A** – Phase III RCT / guideline-endorsed for this tumor context
+- **B** – Phase I–II / basket trial / strong subgroup in this tumor or close analog
+- **C** – Retrospective / case series / translational rationale
+- **D** – Preclinical / hypothesis only
+
+Also label each item as:
+
+- **Standard-of-care**
+- **Off-label**
+- **Clinical trial / Investigational**
+- **Supportive care / local therapy**
+
+## 3. Negative Recommendation Rule
+
+Include a "Not Recommended / 不建议" section listing:
+
+- Options that are ineffective in this biomarker/tumor setting
+- Options unsafe due to organ function or prior severe AEs
+- Options lacking evidence for this tumor type
+
+## 4. Safety-First Rule (Organ-Constraint Priority)
+
+- Identify the **dominant limiting organ system** (renal/hepatic/marrow/cardiac/neuro)
+- All regimen suggestions must include feasibility notes (dose adjustment, monitoring, contraindications)
+
+## 5. China-Specific Realism
+
+- Prefer drugs accessible in China
+- Trial matching should prioritize China recruiting sites
+- Clearly state access uncertainty (compassionate use, EAP, off-label)
+
+## 6. Citation Rule
+
+**STRICTLY** use reliable sources. Format citations as:
+- PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
+- Clinical Trial: `[NCT04123456](https://clinicaltrials.gov/study/NCT04123456)`
+- Guideline: `[NCCN Guidelines](URL)`
+
+If a PMID or Trial ID cannot be verified via tool access, **DO NOT** fabricate it. Mark as "Reference unavailable" instead.

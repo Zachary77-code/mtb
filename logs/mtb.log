@@ -1,0 +1,311 @@
+2026-01-16 11:18:27 | INFO     | __main__:main:35 | ============================================================
+2026-01-16 11:18:27 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-16 11:18:27 | INFO     | __main__:main:37 | ============================================================
+2026-01-16 11:18:27 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-16 11:18:27 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/sample_case.txt
+2026-01-16 11:18:27 | INFO     | __main__:main:52 | 病例文本长度: 1200 字符
+2026-01-16 11:18:27 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-16 11:18:27 | ERROR    | __main__:main:111 | 工作流执行失败: Client.__init__() got an unexpected keyword argument 'proxies'
+Traceback (most recent call last):
+
+  File "D:\MTB\main.py", line 150, in <module>
+    main(case_path)
+
+> File "D:\MTB\main.py", line 74, in main
+    final_state = run_mtb_workflow(input_text)
+
+  File "D:\MTB\src\graph\state_graph.py", line 110, in run_mtb_workflow
+    final_state = workflow.invoke(initial_state)
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 3071, in invoke
+    for chunk in self.stream(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 2646, in stream
+    for _ in runner.tick(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_runner.py", line 167, in tick
+    run_with_retry(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_retry.py", line 42, in run_with_retry
+    return task.proc.invoke(task.input, config)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\_internal\_runnable.py", line 656, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\_internal\_runnable.py", line 400, in invoke
+    ret = self.func(*args, **kwargs)
+
+  File "D:\MTB\src\graph\nodes.py", line 24, in case_parsing_node
+    agent = PathologistAgent()
+
+  File "D:\MTB\src\agents\pathologist.py", line 21, in __init__
+    super().__init__(
+
+  File "D:\MTB\src\agents\base_agent.py", line 47, in __init__
+    self.client = OpenAI(api_key=OPENAI_API_KEY)
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_client.py", line 123, in __init__
+    super().__init__(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 856, in __init__
+    self._client = http_client or SyncHttpxClientWrapper(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 754, in __init__
+    super().__init__(**kwargs)
+
+TypeError: Client.__init__() got an unexpected keyword argument 'proxies'
+During task with name 'parse_case' and id '86e83327-d980-5c03-9f38-8c0dfd16a2a2'
+2026-01-16 11:18:54 | INFO     | __main__:main:35 | ============================================================
+2026-01-16 11:18:54 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-16 11:18:54 | INFO     | __main__:main:37 | ============================================================
+2026-01-16 11:18:54 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-16 11:18:54 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/sample_case.txt
+2026-01-16 11:18:54 | INFO     | __main__:main:52 | 病例文本长度: 1200 字符
+2026-01-16 11:18:54 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-16 11:18:54 | ERROR    | __main__:main:111 | 工作流执行失败: Client.__init__() got an unexpected keyword argument 'proxies'
+Traceback (most recent call last):
+
+  File "D:\MTB\main.py", line 150, in <module>
+    main(case_path)
+
+> File "D:\MTB\main.py", line 74, in main
+    final_state = run_mtb_workflow(input_text)
+
+  File "D:\MTB\src\graph\state_graph.py", line 110, in run_mtb_workflow
+    final_state = workflow.invoke(initial_state)
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 3071, in invoke
+    for chunk in self.stream(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 2646, in stream
+    for _ in runner.tick(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_runner.py", line 167, in tick
+    run_with_retry(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_retry.py", line 42, in run_with_retry
+    return task.proc.invoke(task.input, config)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\_internal\_runnable.py", line 656, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\_internal\_runnable.py", line 400, in invoke
+    ret = self.func(*args, **kwargs)
+
+  File "D:\MTB\src\graph\nodes.py", line 24, in case_parsing_node
+    agent = PathologistAgent()
+
+  File "D:\MTB\src\agents\pathologist.py", line 21, in __init__
+    super().__init__(
+
+  File "D:\MTB\src\agents\base_agent.py", line 47, in __init__
+    self.client = OpenAI(api_key=OPENAI_API_KEY)
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_client.py", line 123, in __init__
+    super().__init__(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 856, in __init__
+    self._client = http_client or SyncHttpxClientWrapper(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 754, in __init__
+    super().__init__(**kwargs)
+
+TypeError: Client.__init__() got an unexpected keyword argument 'proxies'
+During task with name 'parse_case' and id '0e18424a-f84e-3268-1361-5ec79e7327c2'
+2026-01-16 11:18:56 | INFO     | __main__:main:35 | ============================================================
+2026-01-16 11:18:56 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-16 11:18:56 | INFO     | __main__:main:37 | ============================================================
+2026-01-16 11:18:56 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-16 11:18:56 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/sample_case.txt
+2026-01-16 11:18:56 | INFO     | __main__:main:52 | 病例文本长度: 1200 字符
+2026-01-16 11:18:56 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-16 11:18:56 | ERROR    | __main__:main:111 | 工作流执行失败: Client.__init__() got an unexpected keyword argument 'proxies'
+Traceback (most recent call last):
+
+  File "D:\MTB\main.py", line 150, in <module>
+    main(case_path)
+
+> File "D:\MTB\main.py", line 74, in main
+    final_state = run_mtb_workflow(input_text)
+
+  File "D:\MTB\src\graph\state_graph.py", line 110, in run_mtb_workflow
+    final_state = workflow.invoke(initial_state)
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 3071, in invoke
+    for chunk in self.stream(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 2646, in stream
+    for _ in runner.tick(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_runner.py", line 167, in tick
+    run_with_retry(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_retry.py", line 42, in run_with_retry
+    return task.proc.invoke(task.input, config)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\_internal\_runnable.py", line 656, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\_internal\_runnable.py", line 400, in invoke
+    ret = self.func(*args, **kwargs)
+
+  File "D:\MTB\src\graph\nodes.py", line 24, in case_parsing_node
+    agent = PathologistAgent()
+
+  File "D:\MTB\src\agents\pathologist.py", line 21, in __init__
+    super().__init__(
+
+  File "D:\MTB\src\agents\base_agent.py", line 47, in __init__
+    self.client = OpenAI(api_key=OPENAI_API_KEY)
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_client.py", line 123, in __init__
+    super().__init__(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 856, in __init__
+    self._client = http_client or SyncHttpxClientWrapper(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 754, in __init__
+    super().__init__(**kwargs)
+
+TypeError: Client.__init__() got an unexpected keyword argument 'proxies'
+During task with name 'parse_case' and id 'e71fcf16-fdb5-9c8b-ee6e-95de2ed93f65'
+2026-01-16 11:21:27 | INFO     | __main__:main:35 | ============================================================
+2026-01-16 11:21:27 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-16 11:21:27 | INFO     | __main__:main:37 | ============================================================
+2026-01-16 11:21:27 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-16 11:21:27 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/sample_case.txt
+2026-01-16 11:21:27 | INFO     | __main__:main:52 | 病例文本长度: 1200 字符
+2026-01-16 11:21:27 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-16 11:21:32 | ERROR    | __main__:main:111 | 工作流执行失败: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+Traceback (most recent call last):
+
+  File "D:\MTB\main.py", line 150, in <module>
+    main(case_path)
+
+> File "D:\MTB\main.py", line 74, in main
+    final_state = run_mtb_workflow(input_text)
+
+  File "D:\MTB\src\graph\state_graph.py", line 110, in run_mtb_workflow
+    final_state = workflow.invoke(initial_state)
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 3071, in invoke
+    for chunk in self.stream(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 2646, in stream
+    for _ in runner.tick(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_runner.py", line 167, in tick
+    run_with_retry(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_retry.py", line 42, in run_with_retry
+    return task.proc.invoke(task.input, config)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\_internal\_runnable.py", line 656, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\_internal\_runnable.py", line 400, in invoke
+    ret = self.func(*args, **kwargs)
+
+  File "D:\MTB\src\graph\nodes.py", line 25, in case_parsing_node
+    result = agent.parse_case(state["input_text"])
+
+  File "D:\MTB\src\agents\pathologist.py", line 51, in parse_case
+    result = self.invoke(task_prompt)
+
+  File "D:\MTB\src\agents\base_agent.py", line 99, in invoke
+    response = self.client.chat.completions.create(**api_params)
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_utils\_utils.py", line 286, in wrapper
+    return func(*args, **kwargs)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\resources\chat\completions\completions.py", line 1192, in create
+    return self._post(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 1259, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 1047, in request
+    raise self._make_status_error_from_response(err.response) from None
+
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}
+During task with name 'parse_case' and id 'edc98750-6b6a-9ec9-c914-b64fcf25e057'
+2026-01-16 12:01:27 | INFO     | __main__:main:35 | ============================================================
+2026-01-16 12:01:27 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-16 12:01:27 | INFO     | __main__:main:37 | ============================================================
+2026-01-16 12:01:27 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-16 12:01:27 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/sample_case.txt
+2026-01-16 12:01:27 | INFO     | __main__:main:52 | 病例文本长度: 1200 字符
+2026-01-16 12:01:27 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-16 12:02:48 | INFO     | __main__:main:81 | 报告生成成功: D:\MTB\reports\MTB_Report_P2024-001_20260116_120248.html
+2026-01-16 12:02:48 | INFO     | __main__:main:82 | 执行时间: 81.00秒
+2026-01-16 12:02:48 | ERROR    | __main__:main:111 | 工作流执行失败: 'gbk' codec can't encode character '\u2705' in position 0: illegal multibyte sequence
+Traceback (most recent call last):
+
+  File "d:\MTB\main.py", line 150, in <module>
+    main(case_path)
+
+> File "d:\MTB\main.py", line 85, in main
+    print("✅ MTB 报告生成成功!")
+
+UnicodeEncodeError: 'gbk' codec can't encode character '\u2705' in position 0: illegal multibyte sequence
+2026-01-16 12:08:47 | INFO     | __main__:main:35 | ============================================================
+2026-01-16 12:08:47 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-16 12:08:47 | INFO     | __main__:main:37 | ============================================================
+2026-01-16 12:08:47 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-16 12:08:47 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/sample_case.txt
+2026-01-16 12:08:47 | INFO     | __main__:main:52 | 病例文本长度: 1200 字符
+2026-01-16 12:08:47 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-16 12:10:47 | INFO     | __main__:main:81 | 报告生成成功: D:\MTB\reports\MTB_Report_P2024-001_20260116_121047.html
+2026-01-16 12:10:47 | INFO     | __main__:main:82 | 执行时间: 120.10秒
+2026-01-16 12:21:11 | INFO     | __main__:main:35 | ============================================================
+2026-01-16 12:21:11 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-16 12:21:11 | INFO     | __main__:main:37 | ============================================================
+2026-01-16 12:21:11 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-16 12:21:11 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/sample_case.txt
+2026-01-16 12:21:11 | INFO     | __main__:main:52 | 病例文本长度: 1200 字符
+2026-01-16 12:21:11 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-16 12:21:11 | INFO     | src.graph.nodes:case_parsing_node:25 | [PARSE] 开始解析病例文本...
+2026-01-16 12:21:11 | INFO     | src.agents.base_agent:invoke:127 | [Pathologist] 开始处理...
+2026-01-16 12:21:23 | INFO     | src.agents.base_agent:invoke:161 | [Pathologist] 完成，输出长度: 2676 字符
+2026-01-16 12:21:23 | INFO     | src.graph.nodes:case_parsing_node:32 | [PARSE] 完成，解析字段: ['patient_id', 'age', 'sex', 'primary_cancer', 'histology', 'stage', 'metastatic_sites', 'molecular_profile', 'msi_status', 'tmb_score', 'pd_l1_tps', 'treatment_lines', 'current_status', 'organ_function', 'raw_text']
+2026-01-16 12:21:23 | INFO     | src.graph.nodes:geneticist_node:53 | [GENETICIST] 开始分子分析...
+2026-01-16 12:21:23 | INFO     | src.agents.base_agent:invoke:127 | [Geneticist] 开始处理...
+2026-01-16 12:21:27 | INFO     | src.agents.base_agent:invoke:156 | [Geneticist] 检测到工具调用: 1 个
+2026-01-16 12:21:29 | INFO     | src.graph.nodes:geneticist_node:60 | [GENETICIST] 完成，报告长度: 173 字符，引用数: 0
+2026-01-16 12:21:29 | INFO     | src.graph.nodes:recruiter_node:78 | [RECRUITER] 开始搜索临床试验...
+2026-01-16 12:21:29 | INFO     | src.agents.base_agent:invoke:127 | [Recruiter] 开始处理...
+2026-01-16 12:21:35 | INFO     | src.agents.base_agent:invoke:156 | [Recruiter] 检测到工具调用: 1 个
+2026-01-16 12:21:39 | INFO     | src.graph.nodes:recruiter_node:88 | [RECRUITER] 完成，报告长度: 291 字符，试验数: 0
+2026-01-16 12:21:39 | INFO     | src.graph.nodes:oncologist_node:106 | [ONCOLOGIST] 开始制定治疗方案...
+2026-01-16 12:21:39 | INFO     | src.agents.base_agent:invoke:127 | [Oncologist] 开始处理...
+2026-01-16 12:21:50 | INFO     | src.agents.base_agent:invoke:156 | [Oncologist] 检测到工具调用: 1 个
+2026-01-16 12:21:54 | INFO     | src.graph.nodes:oncologist_node:117 | [ONCOLOGIST] 完成，方案长度: 131 字符，安全警告: 0
+2026-01-16 12:21:54 | INFO     | src.graph.nodes:chair_node:144 | [CHAIR] 开始综合所有报告...
+2026-01-16 12:21:54 | INFO     | src.agents.base_agent:invoke:127 | [Chair] 开始处理...
+2026-01-16 12:22:31 | INFO     | src.agents.base_agent:invoke:161 | [Chair] 完成，输出长度: 7749 字符
+2026-01-16 12:22:31 | INFO     | src.graph.nodes:chair_node:157 | [CHAIR] 完成，综合报告长度: 7749 字符，引用数: 2
+2026-01-16 12:22:31 | INFO     | src.graph.nodes:format_verification_node:175 | [VERIFY] 开始格式验证...
+2026-01-16 12:22:31 | INFO     | src.validators.format_checker:validate:67 | [FORMAT] 全部 12 个模块验证通过
+2026-01-16 12:22:31 | INFO     | src.graph.nodes:format_verification_node:186 | [VERIFY] 格式验证通过，包含全部 12 个必选模块
+2026-01-16 12:22:31 | INFO     | src.graph.edges:should_retry_chair:26 | [EDGE] 条件判断: compliant=True, iteration=1/2
+2026-01-16 12:22:31 | INFO     | src.graph.edges:should_retry_chair:30 | [EDGE] 决策: proceed (验证通过)
+2026-01-16 12:22:31 | INFO     | src.graph.nodes:webpage_generator_node:207 | [HTML] 开始生成 HTML 报告...
+2026-01-16 12:22:31 | INFO     | src.graph.nodes:webpage_generator_node:218 | [HTML] 报告已保存: D:\MTB\reports\MTB_Report_P2024-001_20260116_122231.html
+2026-01-16 12:22:31 | INFO     | __main__:main:81 | 报告生成成功: D:\MTB\reports\MTB_Report_P2024-001_20260116_122231.html
+2026-01-16 12:22:31 | INFO     | __main__:main:82 | 执行时间: 79.92秒
+2026-01-16 12:23:19 | INFO     | __main__:main:35 | ============================================================
+2026-01-16 12:23:19 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-16 12:23:19 | INFO     | __main__:main:37 | ============================================================
+2026-01-16 12:23:19 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-16 12:23:19 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/sample_case.txt
+2026-01-16 12:23:19 | INFO     | __main__:main:52 | 病例文本长度: 1200 字符
+2026-01-16 12:23:19 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-16 12:23:19 | INFO     | src.graph.nodes:case_parsing_node:25 | [PARSE] 开始解析病例文本...
+2026-01-16 12:23:19 | INFO     | src.agents.base_agent:invoke:127 | [Pathologist] 开始处理...
+2026-01-16 12:23:32 | INFO     | src.agents.base_agent:invoke:161 | [Pathologist] 完成，输出长度: 2676 字符
+2026-01-16 12:23:32 | INFO     | src.graph.nodes:case_parsing_node:32 | [PARSE] 完成，解析字段: ['patient_id', 'age', 'sex', 'primary_cancer', 'histology', 'stage', 'metastatic_sites', 'molecular_profile', 'msi_status', 'tmb_score', 'pd_l1_tps', 'treatment_lines', 'current_status', 'organ_function', 'raw_text']
+2026-01-16 12:23:32 | INFO     | src.graph.nodes:geneticist_node:53 | [GENETICIST] 开始分子分析...
+2026-01-16 12:23:32 | INFO     | src.agents.base_agent:invoke:127 | [Geneticist] 开始处理...
+2026-01-16 12:23:48 | INFO     | src.agents.base_agent:invoke:156 | [Geneticist] 检测到工具调用: 1 个
+2026-01-16 12:23:50 | INFO     | src.graph.nodes:geneticist_node:60 | [GENETICIST] 完成，报告长度: 172 字符，引用数: 0
+2026-01-16 12:23:50 | INFO     | src.graph.nodes:recruiter_node:78 | [RECRUITER] 开始搜索临床试验...
+2026-01-16 12:23:50 | INFO     | src.agents.base_agent:invoke:127 | [Recruiter] 开始处理...
+2026-01-16 12:23:53 | INFO     | src.agents.base_agent:invoke:156 | [Recruiter] 检测到工具调用: 1 个
+2026-01-16 12:23:57 | INFO     | src.graph.nodes:recruiter_node:88 | [RECRUITER] 完成，报告长度: 145 字符，试验数: 0
+2026-01-16 12:23:57 | INFO     | src.graph.nodes:oncologist_node:106 | [ONCOLOGIST] 开始制定治疗方案...
+2026-01-16 12:23:57 | INFO     | src.agents.base_agent:invoke:127 | [Oncologist] 开始处理...
+2026-01-16 12:24:01 | INFO     | src.agents.base_agent:invoke:161 | [Oncologist] 完成，输出长度: 363 字符
+2026-01-16 12:24:01 | INFO     | src.graph.nodes:oncologist_node:117 | [ONCOLOGIST] 完成，方案长度: 363 字符，安全警告: 0
+2026-01-16 12:24:01 | INFO     | src.graph.nodes:chair_node:144 | [CHAIR] 开始综合所有报告...
+2026-01-16 12:24:01 | INFO     | src.agents.base_agent:invoke:127 | [Chair] 开始处理...
+2026-01-16 12:24:05 | INFO     | src.agents.base_agent:invoke:156 | [Chair] 检测到工具调用: 1 个
+2026-01-16 12:24:08 | INFO     | src.graph.nodes:chair_node:157 | [CHAIR] 完成，综合报告长度: 196 字符，引用数: 0
+2026-01-16 12:24:08 | INFO     | src.graph.nodes:format_verification_node:175 | [VERIFY] 开始格式验证...
+2026-01-16 12:24:08 | WARNING  | src.validators.format_checker:validate:65 | [FORMAT] 缺失模块 (12/12): ['执行摘要', '患者概况', '分子特征', '治疗史回顾', '药物/方案对比', '器官功能与剂量', '治疗路线图', '分子复查建议', '临床试验推荐', '局部治疗建议', '核心建议汇总', '参考文献']
+2026-01-16 12:24:08 | WARNING  | src.graph.nodes:format_verification_node:188 | [VERIFY] 格式验证失败，缺失模块: ['执行摘要', '患者概况', '分子特征', '治疗史回顾', '药物/方案对比', '器官功能与剂量', '治疗路线图', '分子复查建议', '临床试验推荐', '局部治疗建议', '核心建议汇总', '参考文献']
+2026-01-16 12:24:08 | INFO     | src.graph.edges:should_retry_chair:26 | [EDGE] 条件判断: compliant=False, iteration=1/2
+2026-01-16 12:24:08 | INFO     | src.graph.edges:should_retry_chair:45 | [EDGE] 决策: regenerate (缺失模块: ['执行摘要', '患者概况', '分子特征', '治疗史回顾', '药物/方案对比', '器官功能与剂量', '治疗路线图', '分子复查建议', '临床试验推荐', '局部治疗建议', '核心建议汇总', '参考文献'])
+2026-01-16 12:24:08 | INFO     | src.graph.nodes:chair_node:142 | [CHAIR] 重新生成报告 (第 2 次)，需补充模块: ['执行摘要', '患者概况', '分子特征', '治疗史回顾', '药物/方案对比', '器官功能与剂量', '治疗路线图', '分子复查建议', '临床试验推荐', '局部治疗建议', '核心建议汇总', '参考文献']
+2026-01-16 12:24:08 | INFO     | src.agents.base_agent:invoke:127 | [Chair] 开始处理...
+2026-01-16 12:24:12 | INFO     | src.agents.base_agent:invoke:156 | [Chair] 检测到工具调用: 1 个
+2026-01-16 12:24:18 | INFO     | src.graph.nodes:chair_node:157 | [CHAIR] 完成，综合报告长度: 169 字符，引用数: 0
+2026-01-16 12:24:18 | INFO     | src.graph.nodes:format_verification_node:175 | [VERIFY] 开始格式验证...
+2026-01-16 12:24:18 | WARNING  | src.validators.format_checker:validate:65 | [FORMAT] 缺失模块 (12/12): ['执行摘要', '患者概况', '分子特征', '治疗史回顾', '药物/方案对比', '器官功能与剂量', '治疗路线图', '分子复查建议', '临床试验推荐', '局部治疗建议', '核心建议汇总', '参考文献']
+2026-01-16 12:24:18 | WARNING  | src.graph.nodes:format_verification_node:188 | [VERIFY] 格式验证失败，缺失模块: ['执行摘要', '患者概况', '分子特征', '治疗史回顾', '药物/方案对比', '器官功能与剂量', '治疗路线图', '分子复查建议', '临床试验推荐', '局部治疗建议', '核心建议汇总', '参考文献']
+2026-01-16 12:24:18 | INFO     | src.graph.edges:should_retry_chair:26 | [EDGE] 条件判断: compliant=False, iteration=2/2
+2026-01-16 12:24:18 | WARNING  | src.graph.edges:should_retry_chair:36 | [EDGE] 决策: proceed (已达最大重试次数 2，缺失: ['执行摘要', '患者概况', '分子特征', '治疗史回顾', '药物/方案对比', '器官功能与剂量', '治疗路线图', '分子复查建议', '临床试验推荐', '局部治疗建议', '核心建议汇总', '参考文献'])
+2026-01-16 12:24:18 | INFO     | src.graph.nodes:webpage_generator_node:207 | [HTML] 开始生成 HTML 报告...
+2026-01-16 12:24:18 | INFO     | src.graph.nodes:webpage_generator_node:218 | [HTML] 报告已保存: D:\MTB\reports\MTB_Report_P2024-001_20260116_122418.html
+2026-01-16 12:24:18 | INFO     | __main__:main:81 | 报告生成成功: D:\MTB\reports\MTB_Report_P2024-001_20260116_122418.html
+2026-01-16 12:24:18 | INFO     | __main__:main:82 | 执行时间: 58.46秒
