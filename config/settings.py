@@ -5,8 +5,8 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# 加载环境变量
-load_dotenv()
+# 加载环境变量 (override=True 确保.env文件覆盖系统环境变量)
+load_dotenv(override=True)
 
 # 项目根目录
 BASE_DIR = Path(__file__).parent.parent.resolve()
@@ -40,7 +40,12 @@ ONCOKB_API_TOKEN = os.getenv("ONCOKB_API_TOKEN", "")
 # ==================== RAG 配置 ====================
 NCCN_PDF_DIR = BASE_DIR / os.getenv("NCCN_PDF_DIR", "NCCN_English")
 NCCN_VECTOR_DIR = DATA_DIR / "nccn_vectors"
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+
+# ==================== DashScope Embedding 配置 ====================
+DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY", "")
+DASHSCOPE_BASE_URL = os.getenv("DASHSCOPE_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-v4")
+EMBEDDING_DIMENSIONS = int(os.getenv("EMBEDDING_DIMENSIONS", "256"))
 
 # ==================== Agent 配置 ====================
 AGENT_TEMPERATURE = float(os.getenv("AGENT_TEMPERATURE", "0.2"))

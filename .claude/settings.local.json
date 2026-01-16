@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(__NEW_LINE__ curl -s \"https://www.cbioportal.org/api/studies?pageSize=3000\")",
+      "Bash(paste:*)"
     ]
   }
 }

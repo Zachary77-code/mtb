@@ -2,6 +2,7 @@
 NCCN 向量存储
 
 使用 ChromaDB 存储和检索文档向量
+使用阿里云 DashScope API 生成文本嵌入
 """
 import os
 from pathlib import Path
@@ -18,11 +19,11 @@ except ImportError:
     logger.warning("[VectorStore] ChromaDB 未安装，请运行: pip install chromadb")
 
 try:
-    from sentence_transformers import SentenceTransformer
-    HAS_SENTENCE_TRANSFORMERS = True
+    from openai import OpenAI
+    HAS_OPENAI = True
 except ImportError:
-    HAS_SENTENCE_TRANSFORMERS = False
-    logger.warning("[VectorStore] sentence-transformers 未安装，请运行: pip install sentence-transformers")
+    HAS_OPENAI = False
+    logger.warning("[VectorStore] openai 未安装，请运行: pip install openai")
 
 
 class NCCNVectorStore:
@@ -45,7 +46,7 @@ class NCCNVectorStore:
 
         self.client = None
         self.collection = None
-        self.embedding_model = None
+        self.embedding_client = None  # OpenAI客户端用于调用DashScope API
 
         self._initialized = False
 
@@ -57,8 +58,11 @@ class NCCNVectorStore:
         if not HAS_CHROMADB:
             raise ImportError("ChromaDB 未安装")
 
-        if not HAS_SENTENCE_TRANSFORMERS:
-            raise ImportError("sentence-transformers 未安装")
+        if not HAS_OPENAI:
+            raise ImportError("openai 未安装")
+
+        from config.settings import DASHSCOPE_API_KEY, DASHSCOPE_BASE_URL, EMBEDDING_DIMENSIONS
+        self.embedding_dimensions = EMBEDDING_DIMENSIONS
 
         # 确保目录存在
         self.persist_dir.mkdir(parents=True, exist_ok=True)
@@ -79,20 +83,42 @@ class NCCNVectorStore:
             }
         )
 
-        # 加载嵌入模型 (强制 CPU 模式，RTX 50 系列暂不支持)
-        logger.info(f"[VectorStore] 加载嵌入模型: {self.embedding_model_name} (CPU 模式)")
-        self.embedding_model = SentenceTransformer(self.embedding_model_name, device='cpu')
+        # 初始化 DashScope Embedding 客户端 (OpenAI 兼容模式)
+        logger.info(f"[VectorStore] 初始化 DashScope Embedding: {self.embedding_model_name}")
+        self.embedding_client = OpenAI(
+            api_key=DASHSCOPE_API_KEY,
+            base_url=DASHSCOPE_BASE_URL
+        )
 
         self._initialized = True
         logger.info(f"[VectorStore] 初始化完成，现有文档数: {self.collection.count()}")
 
     def _get_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """生成文本嵌入"""
+        """
+        生成文本嵌入 (使用 DashScope API)
+
+        DashScope text-embedding-v4 每次最多处理10条文本
+        """
         if not self._initialized:
             self.initialize()
 
-        embeddings = self.embedding_model.encode(texts, show_progress_bar=False)
-        return embeddings.tolist()
+        all_embeddings = []
+        batch_size = 10  # DashScope API 限制
+
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+
+            response = self.embedding_client.embeddings.create(
+                model=self.embedding_model_name,
+                input=batch,
+                dimensions=self.embedding_dimensions
+            )
+
+            # 按index排序确保顺序正确
+            batch_embeddings = sorted(response.data, key=lambda x: x.index)
+            all_embeddings.extend([item.embedding for item in batch_embeddings])
+
+        return all_embeddings
 
     def build_index(self, documents: List[Dict[str, Any]], batch_size: int = 100):
         """

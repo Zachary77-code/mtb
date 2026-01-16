@@ -1535,3 +1535,849 @@ UnicodeEncodeError: 'gbk' codec can't encode character '\u2705' in position 0: i
 2026-01-16 18:19:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf
 2026-01-16 18:19:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf: 1390 个文档块
 2026-01-16 18:19:12 | INFO     | src.tools.rag.pdf_processor:process_all_pdfs:274 | [PDF] 总计处理 59 个 PDF，生成 32622 个文档块
+2026-01-16 18:22:06 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 18:22:06 | INFO     | src.tools.rag.vector_store:initialize:83 | [VectorStore] 加载嵌入模型: BAAI/bge-m3 (CPU 模式)
+2026-01-16 18:22:28 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化完成，现有文档数: 14700
+2026-01-16 18:22:28 | INFO     | __main__:build_index:64 | [NCCN-RAG] 开始处理 PDF 并构建索引...
+2026-01-16 18:22:28 | INFO     | src.tools.rag.pdf_processor:list_pdfs:43 | [PDF] 找到 59 个 PDF 文件
+2026-01-16 18:22:28 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf
+2026-01-16 18:22:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf: 1463 个文档块
+2026-01-16 18:22:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：Castleman病.pdf
+2026-01-16 18:22:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：Castleman病.pdf: 113 个文档块
+2026-01-16 18:22:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf
+2026-01-16 18:22:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf: 314 个文档块
+2026-01-16 18:22:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf
+2026-01-16 18:22:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf: 805 个文档块
+2026-01-16 18:22:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：乳腺癌.pdf
+2026-01-16 18:22:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：乳腺癌.pdf: 1202 个文档块
+2026-01-16 18:22:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf
+2026-01-16 18:22:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf: 300 个文档块
+2026-01-16 18:22:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf
+2026-01-16 18:22:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf: 739 个文档块
+2026-01-16 18:22:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：前列腺癌.pdf
+2026-01-16 18:22:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：前列腺癌.pdf: 1045 个文档块
+2026-01-16 18:22:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf
+2026-01-16 18:22:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf: 204 个文档块
+2026-01-16 18:22:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf
+2026-01-16 18:22:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf: 556 个文档块
+2026-01-16 18:22:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf
+2026-01-16 18:22:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf: 312 个文档块
+2026-01-16 18:22:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf
+2026-01-16 18:22:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf: 555 个文档块
+2026-01-16 18:22:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf: 1124 个文档块
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf: 211 个文档块
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：姑息治疗.pdf
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：姑息治疗.pdf: 456 个文档块
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf: 597 个文档块
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：宫颈癌.pdf: 582 个文档块
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：小肠腺癌.pdf
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：小肠腺癌.pdf: 269 个文档块
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf: 336 个文档块
+2026-01-16 18:22:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf
+2026-01-16 18:22:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf: 870 个文档块
+2026-01-16 18:22:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 18:22:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf: 427 个文档块
+2026-01-16 18:22:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf
+2026-01-16 18:22:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf: 128 个文档块
+2026-01-16 18:22:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf
+2026-01-16 18:22:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf: 322 个文档块
+2026-01-16 18:22:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：直肠癌.pdf
+2026-01-16 18:22:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：直肠癌.pdf: 860 个文档块
+2026-01-16 18:22:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf
+2026-01-16 18:22:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf: 153 个文档块
+2026-01-16 18:22:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：结肠癌.pdf
+2026-01-16 18:22:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：结肠癌.pdf: 1162 个文档块
+2026-01-16 18:22:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：老年肿瘤.pdf
+2026-01-16 18:22:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：老年肿瘤.pdf: 460 个文档块
+2026-01-16 18:22:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肛门癌.pdf
+2026-01-16 18:22:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肛门癌.pdf: 290 个文档块
+2026-01-16 18:22:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肺癌筛查.pdf
+2026-01-16 18:22:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肺癌筛查.pdf: 410 个文档块
+2026-01-16 18:22:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 18:22:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胰腺癌.pdf: 717 个文档块
+2026-01-16 18:22:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf
+2026-01-16 18:22:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf: 178 个文档块
+2026-01-16 18:22:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：造血生长因子.pdf
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：造血生长因子.pdf: 445 个文档块
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf: 268 个文档块
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：阴茎癌.pdf
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：阴茎癌.pdf: 234 个文档块
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf: 286 个文档块
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf: 76 个文档块
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf: 1392 个文档块
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌 (2).pdf
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌 (2).pdf: 453 个文档块
+2026-01-16 18:22:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌.pdf
+2026-01-16 18:22:36 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌.pdf: 453 个文档块
+2026-01-16 18:22:36 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf
+2026-01-16 18:22:36 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf: 593 个文档块
+2026-01-16 18:22:36 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf
+2026-01-16 18:22:36 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf: 319 个文档块
+2026-01-16 18:22:36 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf
+2026-01-16 18:22:36 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf: 753 个文档块
+2026-01-16 18:22:36 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 18:22:36 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf: 594 个文档块
+2026-01-16 18:22:36 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 18:22:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：宫颈癌.pdf: 583 个文档块
+2026-01-16 18:22:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 18:22:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf: 396 个文档块
+2026-01-16 18:22:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf
+2026-01-16 18:22:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf: 160 个文档块
+2026-01-16 18:22:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf
+2026-01-16 18:22:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf: 461 个文档块
+2026-01-16 18:22:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf
+2026-01-16 18:22:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf: 410 个文档块
+2026-01-16 18:22:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf
+2026-01-16 18:22:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf: 1110 个文档块
+2026-01-16 18:22:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：肾癌.pdf
+2026-01-16 18:22:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：肾癌.pdf: 391 个文档块
+2026-01-16 18:22:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 18:22:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：胰腺癌.pdf: 713 个文档块
+2026-01-16 18:22:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf
+2026-01-16 18:22:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf: 489 个文档块
+2026-01-16 18:22:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 18:22:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf: 1388 个文档块
+2026-01-16 18:22:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 18:22:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：宫颈癌.pdf: 585 个文档块
+2026-01-16 18:22:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 18:22:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf: 393 个文档块
+2026-01-16 18:22:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 18:22:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf: 461 个文档块
+2026-01-16 18:22:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：肾癌.pdf
+2026-01-16 18:22:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：肾癌.pdf: 386 个文档块
+2026-01-16 18:22:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：阴道癌.pdf
+2026-01-16 18:22:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：阴道癌.pdf: 280 个文档块
+2026-01-16 18:22:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 18:22:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf: 1390 个文档块
+2026-01-16 18:22:40 | INFO     | src.tools.rag.pdf_processor:process_all_pdfs:274 | [PDF] 总计处理 59 个 PDF，生成 32622 个文档块
+2026-01-16 18:22:40 | INFO     | src.tools.rag.vector_store:build_index:112 | [VectorStore] 开始构建索引: 32622 个文档
+2026-01-16 18:22:40 | INFO     | src.tools.rag.vector_store:build_index:117 | [VectorStore] 清空现有 14700 个文档
+2026-01-16 18:23:10 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 100/32622 (0.3%)
+2026-01-16 18:23:43 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 200/32622 (0.6%)
+2026-01-16 18:24:16 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 300/32622 (0.9%)
+2026-01-16 18:24:45 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 400/32622 (1.2%)
+2026-01-16 18:25:14 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 500/32622 (1.5%)
+2026-01-16 18:25:36 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 600/32622 (1.8%)
+2026-01-16 18:25:56 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 700/32622 (2.1%)
+2026-01-16 18:26:19 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 800/32622 (2.5%)
+2026-01-16 18:26:45 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 900/32622 (2.8%)
+2026-01-16 18:27:08 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 1000/32622 (3.1%)
+2026-01-16 18:27:27 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 1100/32622 (3.4%)
+2026-01-16 18:27:49 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 1200/32622 (3.7%)
+2026-01-16 18:28:12 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 1300/32622 (4.0%)
+2026-01-16 18:28:40 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 1400/32622 (4.3%)
+2026-01-16 18:29:01 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 1500/32622 (4.6%)
+2026-01-16 18:29:28 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 1600/32622 (4.9%)
+2026-01-16 18:29:49 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 1700/32622 (5.2%)
+2026-01-16 18:30:08 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 1800/32622 (5.5%)
+2026-01-16 18:30:29 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 1900/32622 (5.8%)
+2026-01-16 18:30:59 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 2000/32622 (6.1%)
+2026-01-16 18:31:28 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 2100/32622 (6.4%)
+2026-01-16 18:31:56 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 2200/32622 (6.7%)
+2026-01-16 18:32:28 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 2300/32622 (7.1%)
+2026-01-16 18:32:49 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 2400/32622 (7.4%)
+2026-01-16 18:33:17 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 2500/32622 (7.7%)
+2026-01-16 18:33:48 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 2600/32622 (8.0%)
+2026-01-16 18:34:10 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 2700/32622 (8.3%)
+2026-01-16 18:34:45 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 2800/32622 (8.6%)
+2026-01-16 18:35:07 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 2900/32622 (8.9%)
+2026-01-16 18:35:33 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 3000/32622 (9.2%)
+2026-01-16 18:36:14 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 3100/32622 (9.5%)
+2026-01-16 18:36:48 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 3200/32622 (9.8%)
+2026-01-16 18:37:07 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 3300/32622 (10.1%)
+2026-01-16 18:37:25 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 3400/32622 (10.4%)
+2026-01-16 18:37:42 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 3500/32622 (10.7%)
+2026-01-16 18:38:01 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 3600/32622 (11.0%)
+2026-01-16 18:38:22 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 3700/32622 (11.3%)
+2026-01-16 18:38:44 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 3800/32622 (11.6%)
+2026-01-16 18:39:06 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 3900/32622 (12.0%)
+2026-01-16 18:39:30 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 4000/32622 (12.3%)
+2026-01-16 18:40:01 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 4100/32622 (12.6%)
+2026-01-16 18:40:21 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 4200/32622 (12.9%)
+2026-01-16 18:40:53 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 4300/32622 (13.2%)
+2026-01-16 18:41:18 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 4400/32622 (13.5%)
+2026-01-16 18:41:45 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 4500/32622 (13.8%)
+2026-01-16 18:42:08 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 4600/32622 (14.1%)
+2026-01-16 18:42:30 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 4700/32622 (14.4%)
+2026-01-16 18:42:54 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 4800/32622 (14.7%)
+2026-01-16 18:43:19 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 4900/32622 (15.0%)
+2026-01-16 18:43:49 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 5000/32622 (15.3%)
+2026-01-16 18:44:25 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 5100/32622 (15.6%)
+2026-01-16 18:44:47 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 5200/32622 (15.9%)
+2026-01-16 18:45:14 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 5300/32622 (16.2%)
+2026-01-16 18:45:33 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 5400/32622 (16.6%)
+2026-01-16 18:45:51 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 5500/32622 (16.9%)
+2026-01-16 18:46:09 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 5600/32622 (17.2%)
+2026-01-16 18:46:29 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 5700/32622 (17.5%)
+2026-01-16 18:46:52 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 5800/32622 (17.8%)
+2026-01-16 18:47:13 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 5900/32622 (18.1%)
+2026-01-16 18:47:36 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 6000/32622 (18.4%)
+2026-01-16 18:48:06 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 6100/32622 (18.7%)
+2026-01-16 18:48:40 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 6200/32622 (19.0%)
+2026-01-16 18:49:10 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 6300/32622 (19.3%)
+2026-01-16 18:49:39 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 6400/32622 (19.6%)
+2026-01-16 18:50:11 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 6500/32622 (19.9%)
+2026-01-16 18:50:30 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 6600/32622 (20.2%)
+2026-01-16 18:50:53 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 6700/32622 (20.5%)
+2026-01-16 18:51:16 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 6800/32622 (20.8%)
+2026-01-16 18:51:48 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 6900/32622 (21.2%)
+2026-01-16 18:52:10 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 7000/32622 (21.5%)
+2026-01-16 18:52:41 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 7100/32622 (21.8%)
+2026-01-16 18:53:14 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 7200/32622 (22.1%)
+2026-01-16 18:53:42 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 7300/32622 (22.4%)
+2026-01-16 18:54:01 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 7400/32622 (22.7%)
+2026-01-16 18:54:20 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 7500/32622 (23.0%)
+2026-01-16 18:54:43 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 7600/32622 (23.3%)
+2026-01-16 18:55:05 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 7700/32622 (23.6%)
+2026-01-16 18:55:39 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 7800/32622 (23.9%)
+2026-01-16 18:56:05 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 7900/32622 (24.2%)
+2026-01-16 18:56:30 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 8000/32622 (24.5%)
+2026-01-16 18:57:04 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 8100/32622 (24.8%)
+2026-01-16 18:57:32 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 8200/32622 (25.1%)
+2026-01-16 18:57:52 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 8300/32622 (25.4%)
+2026-01-16 18:58:12 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 8400/32622 (25.7%)
+2026-01-16 18:58:34 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 8500/32622 (26.1%)
+2026-01-16 18:58:57 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 8600/32622 (26.4%)
+2026-01-16 18:59:20 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 8700/32622 (26.7%)
+2026-01-16 18:59:42 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 8800/32622 (27.0%)
+2026-01-16 19:00:06 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 8900/32622 (27.3%)
+2026-01-16 19:00:36 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 9000/32622 (27.6%)
+2026-01-16 19:01:11 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 9100/32622 (27.9%)
+2026-01-16 19:01:32 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 9200/32622 (28.2%)
+2026-01-16 19:01:57 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 9300/32622 (28.5%)
+2026-01-16 19:02:19 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 9400/32622 (28.8%)
+2026-01-16 19:02:45 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 9500/32622 (29.1%)
+2026-01-16 19:03:18 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 9600/32622 (29.4%)
+2026-01-16 19:03:43 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 9700/32622 (29.7%)
+2026-01-16 19:04:04 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 9800/32622 (30.0%)
+2026-01-16 19:04:26 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 9900/32622 (30.3%)
+2026-01-16 19:04:48 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 10000/32622 (30.7%)
+2026-01-16 19:05:17 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 10100/32622 (31.0%)
+2026-01-16 19:05:47 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 10200/32622 (31.3%)
+2026-01-16 19:06:14 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 10300/32622 (31.6%)
+2026-01-16 19:06:31 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 10400/32622 (31.9%)
+2026-01-16 19:06:53 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 10500/32622 (32.2%)
+2026-01-16 19:07:17 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 10600/32622 (32.5%)
+2026-01-16 19:07:48 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 10700/32622 (32.8%)
+2026-01-16 19:08:09 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 10800/32622 (33.1%)
+2026-01-16 19:08:35 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 10900/32622 (33.4%)
+2026-01-16 19:08:53 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 11000/32622 (33.7%)
+2026-01-16 19:09:21 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 11100/32622 (34.0%)
+2026-01-16 19:09:51 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 11200/32622 (34.3%)
+2026-01-16 19:10:25 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 11300/32622 (34.6%)
+2026-01-16 19:11:01 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 11400/32622 (34.9%)
+2026-01-16 19:11:29 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 11500/32622 (35.3%)
+2026-01-16 19:11:49 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 11600/32622 (35.6%)
+2026-01-16 19:12:07 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 11700/32622 (35.9%)
+2026-01-16 19:12:27 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 11800/32622 (36.2%)
+2026-01-16 19:12:53 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 11900/32622 (36.5%)
+2026-01-16 19:13:16 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 12000/32622 (36.8%)
+2026-01-16 19:13:42 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 12100/32622 (37.1%)
+2026-01-16 19:14:09 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 12200/32622 (37.4%)
+2026-01-16 19:14:30 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 12300/32622 (37.7%)
+2026-01-16 19:14:56 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 12400/32622 (38.0%)
+2026-01-16 19:15:24 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 12500/32622 (38.3%)
+2026-01-16 19:15:45 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 12600/32622 (38.6%)
+2026-01-16 19:16:13 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 12700/32622 (38.9%)
+2026-01-16 19:16:34 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 12800/32622 (39.2%)
+2026-01-16 19:16:56 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 12900/32622 (39.5%)
+2026-01-16 19:17:24 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 13000/32622 (39.9%)
+2026-01-16 19:17:49 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 13100/32622 (40.2%)
+2026-01-16 19:18:29 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 13200/32622 (40.5%)
+2026-01-16 19:18:52 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 13300/32622 (40.8%)
+2026-01-16 19:19:16 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 13400/32622 (41.1%)
+2026-01-16 19:19:35 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 13500/32622 (41.4%)
+2026-01-16 19:20:03 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 13600/32622 (41.7%)
+2026-01-16 19:20:25 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 13700/32622 (42.0%)
+2026-01-16 19:20:48 | INFO     | src.tools.rag.vector_store:build_index:145 | [VectorStore] 进度: 13800/32622 (42.3%)
+2026-01-16 19:57:57 | INFO     | __main__:initialize:71 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 19:57:57 | INFO     | __main__:initialize:87 | [VectorStore] 初始化 DashScope Embedding: BAAI/bge-m3
+2026-01-16 19:57:57 | INFO     | __main__:initialize:94 | [VectorStore] 初始化完成，现有文档数: 0
+2026-01-16 19:57:57 | INFO     | src.tools.rag.pdf_processor:list_pdfs:43 | [PDF] 找到 59 个 PDF 文件
+2026-01-16 19:57:57 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf
+2026-01-16 19:57:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf: 1463 个文档块
+2026-01-16 19:57:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：Castleman病.pdf
+2026-01-16 19:57:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：Castleman病.pdf: 113 个文档块
+2026-01-16 19:57:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf
+2026-01-16 19:57:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf: 314 个文档块
+2026-01-16 19:57:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf
+2026-01-16 19:57:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf: 805 个文档块
+2026-01-16 19:57:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：乳腺癌.pdf
+2026-01-16 19:57:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：乳腺癌.pdf: 1202 个文档块
+2026-01-16 19:57:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf
+2026-01-16 19:57:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf: 300 个文档块
+2026-01-16 19:57:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf
+2026-01-16 19:57:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf: 739 个文档块
+2026-01-16 19:57:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：前列腺癌.pdf
+2026-01-16 19:57:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：前列腺癌.pdf: 1045 个文档块
+2026-01-16 19:57:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf
+2026-01-16 19:57:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf: 204 个文档块
+2026-01-16 19:57:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf
+2026-01-16 19:58:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf: 556 个文档块
+2026-01-16 19:58:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf
+2026-01-16 19:58:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf: 312 个文档块
+2026-01-16 19:58:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf
+2026-01-16 19:58:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf: 555 个文档块
+2026-01-16 19:58:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf
+2026-01-16 19:58:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf: 1124 个文档块
+2026-01-16 19:58:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf
+2026-01-16 19:58:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf: 211 个文档块
+2026-01-16 19:58:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：姑息治疗.pdf
+2026-01-16 19:58:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：姑息治疗.pdf: 456 个文档块
+2026-01-16 19:58:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 19:58:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf: 597 个文档块
+2026-01-16 19:58:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 19:58:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：宫颈癌.pdf: 582 个文档块
+2026-01-16 19:58:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：小肠腺癌.pdf
+2026-01-16 19:58:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：小肠腺癌.pdf: 269 个文档块
+2026-01-16 19:58:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf
+2026-01-16 19:58:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf: 336 个文档块
+2026-01-16 19:58:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf
+2026-01-16 19:58:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf: 870 个文档块
+2026-01-16 19:58:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 19:58:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf: 427 个文档块
+2026-01-16 19:58:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf
+2026-01-16 19:58:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf: 128 个文档块
+2026-01-16 19:58:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf
+2026-01-16 19:58:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf: 322 个文档块
+2026-01-16 19:58:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：直肠癌.pdf
+2026-01-16 19:58:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：直肠癌.pdf: 860 个文档块
+2026-01-16 19:58:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf
+2026-01-16 19:58:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf: 153 个文档块
+2026-01-16 19:58:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：结肠癌.pdf
+2026-01-16 19:58:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：结肠癌.pdf: 1162 个文档块
+2026-01-16 19:58:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：老年肿瘤.pdf
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：老年肿瘤.pdf: 460 个文档块
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肛门癌.pdf
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肛门癌.pdf: 290 个文档块
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肺癌筛查.pdf
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肺癌筛查.pdf: 410 个文档块
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胰腺癌.pdf: 717 个文档块
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf: 178 个文档块
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：造血生长因子.pdf
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：造血生长因子.pdf: 445 个文档块
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf: 268 个文档块
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：阴茎癌.pdf
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：阴茎癌.pdf: 234 个文档块
+2026-01-16 19:58:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf
+2026-01-16 19:58:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf: 286 个文档块
+2026-01-16 19:58:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf
+2026-01-16 19:58:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf: 76 个文档块
+2026-01-16 19:58:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 19:58:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf: 1392 个文档块
+2026-01-16 19:58:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌 (2).pdf
+2026-01-16 19:58:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌 (2).pdf: 453 个文档块
+2026-01-16 19:58:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌.pdf
+2026-01-16 19:58:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌.pdf: 453 个文档块
+2026-01-16 19:58:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf
+2026-01-16 19:58:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf: 593 个文档块
+2026-01-16 19:58:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf
+2026-01-16 19:58:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf: 319 个文档块
+2026-01-16 19:58:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf
+2026-01-16 19:58:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf: 753 个文档块
+2026-01-16 19:58:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 19:58:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf: 594 个文档块
+2026-01-16 19:58:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 19:58:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：宫颈癌.pdf: 583 个文档块
+2026-01-16 19:58:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 19:58:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf: 396 个文档块
+2026-01-16 19:58:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf
+2026-01-16 19:58:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf: 160 个文档块
+2026-01-16 19:58:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf
+2026-01-16 19:58:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf: 461 个文档块
+2026-01-16 19:58:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf
+2026-01-16 19:58:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf: 410 个文档块
+2026-01-16 19:58:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf
+2026-01-16 19:58:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf: 1110 个文档块
+2026-01-16 19:58:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：肾癌.pdf
+2026-01-16 19:58:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：肾癌.pdf: 391 个文档块
+2026-01-16 19:58:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 19:58:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：胰腺癌.pdf: 713 个文档块
+2026-01-16 19:58:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf
+2026-01-16 19:58:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf: 489 个文档块
+2026-01-16 19:58:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 19:58:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf: 1388 个文档块
+2026-01-16 19:58:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 19:58:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：宫颈癌.pdf: 585 个文档块
+2026-01-16 19:58:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 19:58:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf: 393 个文档块
+2026-01-16 19:58:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 19:58:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf: 461 个文档块
+2026-01-16 19:58:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：肾癌.pdf
+2026-01-16 19:58:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：肾癌.pdf: 386 个文档块
+2026-01-16 19:58:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：阴道癌.pdf
+2026-01-16 19:58:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：阴道癌.pdf: 280 个文档块
+2026-01-16 19:58:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 19:58:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf: 1390 个文档块
+2026-01-16 19:58:08 | INFO     | src.tools.rag.pdf_processor:process_all_pdfs:274 | [PDF] 总计处理 59 个 PDF，生成 32622 个文档块
+2026-01-16 19:58:08 | INFO     | __main__:build_index:138 | [VectorStore] 开始构建索引: 32622 个文档
+2026-01-16 19:58:37 | INFO     | __main__:initialize:71 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 19:58:37 | INFO     | __main__:initialize:87 | [VectorStore] 初始化 DashScope Embedding: text-embedding-v4
+2026-01-16 19:58:37 | INFO     | __main__:initialize:94 | [VectorStore] 初始化完成，现有文档数: 0
+2026-01-16 19:58:37 | INFO     | src.tools.rag.pdf_processor:list_pdfs:43 | [PDF] 找到 59 个 PDF 文件
+2026-01-16 19:58:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf
+2026-01-16 19:58:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf: 1463 个文档块
+2026-01-16 19:58:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：Castleman病.pdf
+2026-01-16 19:58:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：Castleman病.pdf: 113 个文档块
+2026-01-16 19:58:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf
+2026-01-16 19:58:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf: 314 个文档块
+2026-01-16 19:58:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf
+2026-01-16 19:58:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf: 805 个文档块
+2026-01-16 19:58:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：乳腺癌.pdf
+2026-01-16 19:58:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：乳腺癌.pdf: 1202 个文档块
+2026-01-16 19:58:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf
+2026-01-16 19:58:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf: 300 个文档块
+2026-01-16 19:58:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf
+2026-01-16 19:58:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf: 739 个文档块
+2026-01-16 19:58:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：前列腺癌.pdf
+2026-01-16 19:58:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：前列腺癌.pdf: 1045 个文档块
+2026-01-16 19:58:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf
+2026-01-16 19:58:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf: 204 个文档块
+2026-01-16 19:58:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf
+2026-01-16 19:58:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf: 556 个文档块
+2026-01-16 19:58:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf
+2026-01-16 19:58:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf: 312 个文档块
+2026-01-16 19:58:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf
+2026-01-16 19:58:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf: 555 个文档块
+2026-01-16 19:58:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf
+2026-01-16 19:58:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf: 1124 个文档块
+2026-01-16 19:58:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf
+2026-01-16 19:58:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf: 211 个文档块
+2026-01-16 19:58:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：姑息治疗.pdf
+2026-01-16 19:58:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：姑息治疗.pdf: 456 个文档块
+2026-01-16 19:58:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 19:58:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf: 597 个文档块
+2026-01-16 19:58:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 19:58:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：宫颈癌.pdf: 582 个文档块
+2026-01-16 19:58:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：小肠腺癌.pdf
+2026-01-16 19:58:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：小肠腺癌.pdf: 269 个文档块
+2026-01-16 19:58:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf
+2026-01-16 19:58:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf: 336 个文档块
+2026-01-16 19:58:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf
+2026-01-16 19:58:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf: 870 个文档块
+2026-01-16 19:58:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf: 427 个文档块
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf: 128 个文档块
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf: 322 个文档块
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：直肠癌.pdf
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：直肠癌.pdf: 860 个文档块
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf: 153 个文档块
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：结肠癌.pdf
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：结肠癌.pdf: 1162 个文档块
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：老年肿瘤.pdf
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：老年肿瘤.pdf: 460 个文档块
+2026-01-16 19:58:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肛门癌.pdf
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肛门癌.pdf: 290 个文档块
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肺癌筛查.pdf
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肺癌筛查.pdf: 410 个文档块
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胰腺癌.pdf: 717 个文档块
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf: 178 个文档块
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：造血生长因子.pdf
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：造血生长因子.pdf: 445 个文档块
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf: 268 个文档块
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：阴茎癌.pdf
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：阴茎癌.pdf: 234 个文档块
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf: 286 个文档块
+2026-01-16 19:58:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf
+2026-01-16 19:58:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf: 76 个文档块
+2026-01-16 19:58:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 19:58:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf: 1392 个文档块
+2026-01-16 19:58:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌 (2).pdf
+2026-01-16 19:58:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌 (2).pdf: 453 个文档块
+2026-01-16 19:58:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌.pdf
+2026-01-16 19:58:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌.pdf: 453 个文档块
+2026-01-16 19:58:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf
+2026-01-16 19:58:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf: 593 个文档块
+2026-01-16 19:58:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf
+2026-01-16 19:58:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf: 319 个文档块
+2026-01-16 19:58:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf
+2026-01-16 19:58:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf: 753 个文档块
+2026-01-16 19:58:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 19:58:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf: 594 个文档块
+2026-01-16 19:58:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 19:58:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：宫颈癌.pdf: 583 个文档块
+2026-01-16 19:58:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 19:58:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf: 396 个文档块
+2026-01-16 19:58:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf
+2026-01-16 19:58:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf: 160 个文档块
+2026-01-16 19:58:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf
+2026-01-16 19:58:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf: 461 个文档块
+2026-01-16 19:58:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf
+2026-01-16 19:58:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf: 410 个文档块
+2026-01-16 19:58:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf
+2026-01-16 19:58:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf: 1110 个文档块
+2026-01-16 19:58:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：肾癌.pdf
+2026-01-16 19:58:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：肾癌.pdf: 391 个文档块
+2026-01-16 19:58:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 19:58:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：胰腺癌.pdf: 713 个文档块
+2026-01-16 19:58:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf
+2026-01-16 19:58:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf: 489 个文档块
+2026-01-16 19:58:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 19:58:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf: 1388 个文档块
+2026-01-16 19:58:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 19:58:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：宫颈癌.pdf: 585 个文档块
+2026-01-16 19:58:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 19:58:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf: 393 个文档块
+2026-01-16 19:58:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 19:58:48 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf: 461 个文档块
+2026-01-16 19:58:48 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：肾癌.pdf
+2026-01-16 19:58:48 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：肾癌.pdf: 386 个文档块
+2026-01-16 19:58:48 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：阴道癌.pdf
+2026-01-16 19:58:48 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：阴道癌.pdf: 280 个文档块
+2026-01-16 19:58:48 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 19:58:48 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf: 1390 个文档块
+2026-01-16 19:58:48 | INFO     | src.tools.rag.pdf_processor:process_all_pdfs:274 | [PDF] 总计处理 59 个 PDF，生成 32622 个文档块
+2026-01-16 19:58:48 | INFO     | __main__:build_index:138 | [VectorStore] 开始构建索引: 32622 个文档
+2026-01-16 19:58:58 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 100/32622 (0.3%)
+2026-01-16 19:59:07 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 200/32622 (0.6%)
+2026-01-16 19:59:16 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 300/32622 (0.9%)
+2026-01-16 19:59:24 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 400/32622 (1.2%)
+2026-01-16 19:59:33 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 500/32622 (1.5%)
+2026-01-16 19:59:41 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 600/32622 (1.8%)
+2026-01-16 19:59:50 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 700/32622 (2.1%)
+2026-01-16 19:59:58 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 800/32622 (2.5%)
+2026-01-16 20:00:07 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 900/32622 (2.8%)
+2026-01-16 20:00:15 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 1000/32622 (3.1%)
+2026-01-16 20:00:24 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 1100/32622 (3.4%)
+2026-01-16 20:00:32 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 1200/32622 (3.7%)
+2026-01-16 20:00:41 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 1300/32622 (4.0%)
+2026-01-16 20:00:50 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 1400/32622 (4.3%)
+2026-01-16 20:00:59 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 1500/32622 (4.6%)
+2026-01-16 20:01:07 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 1600/32622 (4.9%)
+2026-01-16 20:01:16 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 1700/32622 (5.2%)
+2026-01-16 20:01:24 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 1800/32622 (5.5%)
+2026-01-16 20:01:33 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 1900/32622 (5.8%)
+2026-01-16 20:01:41 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 2000/32622 (6.1%)
+2026-01-16 20:01:50 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 2100/32622 (6.4%)
+2026-01-16 20:01:58 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 2200/32622 (6.7%)
+2026-01-16 20:02:07 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 2300/32622 (7.1%)
+2026-01-16 20:02:17 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 2400/32622 (7.4%)
+2026-01-16 20:02:25 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 2500/32622 (7.7%)
+2026-01-16 20:02:34 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 2600/32622 (8.0%)
+2026-01-16 20:02:43 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 2700/32622 (8.3%)
+2026-01-16 20:02:51 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 2800/32622 (8.6%)
+2026-01-16 20:03:00 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 2900/32622 (8.9%)
+2026-01-16 20:03:08 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 3000/32622 (9.2%)
+2026-01-16 20:03:17 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 3100/32622 (9.5%)
+2026-01-16 20:03:26 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 3200/32622 (9.8%)
+2026-01-16 20:03:34 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 3300/32622 (10.1%)
+2026-01-16 20:03:42 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 3400/32622 (10.4%)
+2026-01-16 20:03:51 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 3500/32622 (10.7%)
+2026-01-16 20:03:59 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 3600/32622 (11.0%)
+2026-01-16 20:04:08 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 3700/32622 (11.3%)
+2026-01-16 20:04:16 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 3800/32622 (11.6%)
+2026-01-16 20:04:26 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 3900/32622 (12.0%)
+2026-01-16 20:04:34 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 4000/32622 (12.3%)
+2026-01-16 20:04:43 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 4100/32622 (12.6%)
+2026-01-16 20:04:51 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 4200/32622 (12.9%)
+2026-01-16 20:04:59 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 4300/32622 (13.2%)
+2026-01-16 20:05:08 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 4400/32622 (13.5%)
+2026-01-16 20:05:16 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 4500/32622 (13.8%)
+2026-01-16 20:05:24 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 4600/32622 (14.1%)
+2026-01-16 20:05:33 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 4700/32622 (14.4%)
+2026-01-16 20:05:41 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 4800/32622 (14.7%)
+2026-01-16 20:05:50 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 4900/32622 (15.0%)
+2026-01-16 20:05:59 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 5000/32622 (15.3%)
+2026-01-16 20:06:08 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 5100/32622 (15.6%)
+2026-01-16 20:06:16 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 5200/32622 (15.9%)
+2026-01-16 20:06:24 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 5300/32622 (16.2%)
+2026-01-16 20:06:32 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 5400/32622 (16.6%)
+2026-01-16 20:06:40 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 5500/32622 (16.9%)
+2026-01-16 20:06:49 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 5600/32622 (17.2%)
+2026-01-16 20:06:57 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 5700/32622 (17.5%)
+2026-01-16 20:07:06 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 5800/32622 (17.8%)
+2026-01-16 20:07:15 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 5900/32622 (18.1%)
+2026-01-16 20:07:24 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 6000/32622 (18.4%)
+2026-01-16 20:07:32 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 6100/32622 (18.7%)
+2026-01-16 20:07:41 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 6200/32622 (19.0%)
+2026-01-16 20:07:50 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 6300/32622 (19.3%)
+2026-01-16 20:07:58 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 6400/32622 (19.6%)
+2026-01-16 20:08:07 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 6500/32622 (19.9%)
+2026-01-16 20:08:16 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 6600/32622 (20.2%)
+2026-01-16 20:08:25 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 6700/32622 (20.5%)
+2026-01-16 20:08:33 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 6800/32622 (20.8%)
+2026-01-16 20:08:42 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 6900/32622 (21.2%)
+2026-01-16 20:08:50 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 7000/32622 (21.5%)
+2026-01-16 20:08:59 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 7100/32622 (21.8%)
+2026-01-16 20:09:08 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 7200/32622 (22.1%)
+2026-01-16 20:09:17 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 7300/32622 (22.4%)
+2026-01-16 20:09:25 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 7400/32622 (22.7%)
+2026-01-16 20:09:33 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 7500/32622 (23.0%)
+2026-01-16 20:09:43 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 7600/32622 (23.3%)
+2026-01-16 20:09:51 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 7700/32622 (23.6%)
+2026-01-16 20:10:00 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 7800/32622 (23.9%)
+2026-01-16 20:10:09 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 7900/32622 (24.2%)
+2026-01-16 20:10:17 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 8000/32622 (24.5%)
+2026-01-16 20:10:26 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 8100/32622 (24.8%)
+2026-01-16 20:10:34 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 8200/32622 (25.1%)
+2026-01-16 20:10:42 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 8300/32622 (25.4%)
+2026-01-16 20:10:51 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 8400/32622 (25.7%)
+2026-01-16 20:10:59 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 8500/32622 (26.1%)
+2026-01-16 20:11:08 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 8600/32622 (26.4%)
+2026-01-16 20:11:17 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 8700/32622 (26.7%)
+2026-01-16 20:11:26 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 8800/32622 (27.0%)
+2026-01-16 20:11:34 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 8900/32622 (27.3%)
+2026-01-16 20:11:43 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 9000/32622 (27.6%)
+2026-01-16 20:11:52 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 9100/32622 (27.9%)
+2026-01-16 20:12:00 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 9200/32622 (28.2%)
+2026-01-16 20:12:09 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 9300/32622 (28.5%)
+2026-01-16 20:12:18 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 9400/32622 (28.8%)
+2026-01-16 20:12:26 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 9500/32622 (29.1%)
+2026-01-16 20:12:35 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 9600/32622 (29.4%)
+2026-01-16 20:12:43 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 9700/32622 (29.7%)
+2026-01-16 20:12:52 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 9800/32622 (30.0%)
+2026-01-16 20:13:01 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 9900/32622 (30.3%)
+2026-01-16 20:13:11 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 10000/32622 (30.7%)
+2026-01-16 20:13:19 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 10100/32622 (31.0%)
+2026-01-16 20:13:28 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 10200/32622 (31.3%)
+2026-01-16 20:13:37 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 10300/32622 (31.6%)
+2026-01-16 20:13:45 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 10400/32622 (31.9%)
+2026-01-16 20:13:54 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 10500/32622 (32.2%)
+2026-01-16 20:14:03 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 10600/32622 (32.5%)
+2026-01-16 20:14:11 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 10700/32622 (32.8%)
+2026-01-16 20:14:20 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 10800/32622 (33.1%)
+2026-01-16 20:14:29 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 10900/32622 (33.4%)
+2026-01-16 20:14:37 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 11000/32622 (33.7%)
+2026-01-16 20:14:46 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 11100/32622 (34.0%)
+2026-01-16 20:14:55 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 11200/32622 (34.3%)
+2026-01-16 20:15:04 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 11300/32622 (34.6%)
+2026-01-16 20:15:13 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 11400/32622 (34.9%)
+2026-01-16 20:15:22 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 11500/32622 (35.3%)
+2026-01-16 20:15:31 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 11600/32622 (35.6%)
+2026-01-16 20:15:39 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 11700/32622 (35.9%)
+2026-01-16 20:15:48 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 11800/32622 (36.2%)
+2026-01-16 20:15:57 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 11900/32622 (36.5%)
+2026-01-16 20:16:06 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 12000/32622 (36.8%)
+2026-01-16 20:16:15 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 12100/32622 (37.1%)
+2026-01-16 20:16:24 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 12200/32622 (37.4%)
+2026-01-16 20:16:32 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 12300/32622 (37.7%)
+2026-01-16 20:16:42 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 12400/32622 (38.0%)
+2026-01-16 20:16:51 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 12500/32622 (38.3%)
+2026-01-16 20:17:00 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 12600/32622 (38.6%)
+2026-01-16 20:17:09 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 12700/32622 (38.9%)
+2026-01-16 20:17:17 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 12800/32622 (39.2%)
+2026-01-16 20:17:26 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 12900/32622 (39.5%)
+2026-01-16 20:17:36 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 13000/32622 (39.9%)
+2026-01-16 20:17:45 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 13100/32622 (40.2%)
+2026-01-16 20:17:54 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 13200/32622 (40.5%)
+2026-01-16 20:18:03 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 13300/32622 (40.8%)
+2026-01-16 20:18:11 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 13400/32622 (41.1%)
+2026-01-16 20:18:20 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 13500/32622 (41.4%)
+2026-01-16 20:18:29 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 13600/32622 (41.7%)
+2026-01-16 20:18:38 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 13700/32622 (42.0%)
+2026-01-16 20:18:48 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 13800/32622 (42.3%)
+2026-01-16 20:18:57 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 13900/32622 (42.6%)
+2026-01-16 20:19:06 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 14000/32622 (42.9%)
+2026-01-16 20:19:15 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 14100/32622 (43.2%)
+2026-01-16 20:19:24 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 14200/32622 (43.5%)
+2026-01-16 20:19:32 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 14300/32622 (43.8%)
+2026-01-16 20:19:41 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 14400/32622 (44.1%)
+2026-01-16 20:19:49 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 14500/32622 (44.4%)
+2026-01-16 20:19:58 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 14600/32622 (44.8%)
+2026-01-16 20:20:06 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 14700/32622 (45.1%)
+2026-01-16 20:20:16 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 14800/32622 (45.4%)
+2026-01-16 20:20:26 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 14900/32622 (45.7%)
+2026-01-16 20:20:35 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 15000/32622 (46.0%)
+2026-01-16 20:20:44 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 15100/32622 (46.3%)
+2026-01-16 20:20:53 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 15200/32622 (46.6%)
+2026-01-16 20:21:01 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 15300/32622 (46.9%)
+2026-01-16 20:21:09 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 15400/32622 (47.2%)
+2026-01-16 20:21:18 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 15500/32622 (47.5%)
+2026-01-16 20:21:27 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 15600/32622 (47.8%)
+2026-01-16 20:21:36 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 15700/32622 (48.1%)
+2026-01-16 20:21:45 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 15800/32622 (48.4%)
+2026-01-16 20:21:53 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 15900/32622 (48.7%)
+2026-01-16 20:22:02 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 16000/32622 (49.0%)
+2026-01-16 20:22:10 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 16100/32622 (49.4%)
+2026-01-16 20:22:20 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 16200/32622 (49.7%)
+2026-01-16 20:22:29 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 16300/32622 (50.0%)
+2026-01-16 20:22:37 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 16400/32622 (50.3%)
+2026-01-16 20:22:46 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 16500/32622 (50.6%)
+2026-01-16 20:22:55 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 16600/32622 (50.9%)
+2026-01-16 20:23:03 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 16700/32622 (51.2%)
+2026-01-16 20:23:11 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 16800/32622 (51.5%)
+2026-01-16 20:23:21 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 16900/32622 (51.8%)
+2026-01-16 20:23:30 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 17000/32622 (52.1%)
+2026-01-16 20:23:39 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 17100/32622 (52.4%)
+2026-01-16 20:23:48 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 17200/32622 (52.7%)
+2026-01-16 20:23:57 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 17300/32622 (53.0%)
+2026-01-16 20:24:05 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 17400/32622 (53.3%)
+2026-01-16 20:24:14 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 17500/32622 (53.6%)
+2026-01-16 20:24:23 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 17600/32622 (54.0%)
+2026-01-16 20:24:32 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 17700/32622 (54.3%)
+2026-01-16 20:24:41 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 17800/32622 (54.6%)
+2026-01-16 20:24:50 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 17900/32622 (54.9%)
+2026-01-16 20:24:59 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 18000/32622 (55.2%)
+2026-01-16 20:25:08 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 18100/32622 (55.5%)
+2026-01-16 20:25:17 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 18200/32622 (55.8%)
+2026-01-16 20:25:25 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 18300/32622 (56.1%)
+2026-01-16 20:25:35 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 18400/32622 (56.4%)
+2026-01-16 20:25:43 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 18500/32622 (56.7%)
+2026-01-16 20:25:52 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 18600/32622 (57.0%)
+2026-01-16 20:26:02 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 18700/32622 (57.3%)
+2026-01-16 20:26:11 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 18800/32622 (57.6%)
+2026-01-16 20:26:20 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 18900/32622 (57.9%)
+2026-01-16 20:26:29 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 19000/32622 (58.2%)
+2026-01-16 20:26:38 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 19100/32622 (58.5%)
+2026-01-16 20:26:48 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 19200/32622 (58.9%)
+2026-01-16 20:26:57 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 19300/32622 (59.2%)
+2026-01-16 20:27:06 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 19400/32622 (59.5%)
+2026-01-16 20:27:15 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 19500/32622 (59.8%)
+2026-01-16 20:27:25 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 19600/32622 (60.1%)
+2026-01-16 20:27:36 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 19700/32622 (60.4%)
+2026-01-16 20:27:45 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 19800/32622 (60.7%)
+2026-01-16 20:27:55 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 19900/32622 (61.0%)
+2026-01-16 20:28:05 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 20000/32622 (61.3%)
+2026-01-16 20:28:14 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 20100/32622 (61.6%)
+2026-01-16 20:28:23 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 20200/32622 (61.9%)
+2026-01-16 20:28:34 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 20300/32622 (62.2%)
+2026-01-16 20:28:43 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 20400/32622 (62.5%)
+2026-01-16 20:28:55 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 20500/32622 (62.8%)
+2026-01-16 20:29:05 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 20600/32622 (63.1%)
+2026-01-16 20:29:16 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 20700/32622 (63.5%)
+2026-01-16 20:29:30 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 20800/32622 (63.8%)
+2026-01-16 20:29:39 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 20900/32622 (64.1%)
+2026-01-16 20:29:49 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 21000/32622 (64.4%)
+2026-01-16 20:29:58 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 21100/32622 (64.7%)
+2026-01-16 20:30:10 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 21200/32622 (65.0%)
+2026-01-16 20:30:23 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 21300/32622 (65.3%)
+2026-01-16 20:30:40 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 21400/32622 (65.6%)
+2026-01-16 20:30:57 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 21500/32622 (65.9%)
+2026-01-16 20:31:16 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 21600/32622 (66.2%)
+2026-01-16 20:31:32 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 21700/32622 (66.5%)
+2026-01-16 20:31:48 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 21800/32622 (66.8%)
+2026-01-16 20:32:04 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 21900/32622 (67.1%)
+2026-01-16 20:32:23 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 22000/32622 (67.4%)
+2026-01-16 20:32:40 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 22100/32622 (67.7%)
+2026-01-16 20:32:58 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 22200/32622 (68.1%)
+2026-01-16 20:33:13 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 22300/32622 (68.4%)
+2026-01-16 20:33:28 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 22400/32622 (68.7%)
+2026-01-16 20:33:44 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 22500/32622 (69.0%)
+2026-01-16 20:33:58 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 22600/32622 (69.3%)
+2026-01-16 20:34:09 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 22700/32622 (69.6%)
+2026-01-16 20:34:21 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 22800/32622 (69.9%)
+2026-01-16 20:34:34 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 22900/32622 (70.2%)
+2026-01-16 20:34:45 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 23000/32622 (70.5%)
+2026-01-16 20:34:55 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 23100/32622 (70.8%)
+2026-01-16 20:35:09 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 23200/32622 (71.1%)
+2026-01-16 20:35:20 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 23300/32622 (71.4%)
+2026-01-16 20:35:31 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 23400/32622 (71.7%)
+2026-01-16 20:35:44 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 23500/32622 (72.0%)
+2026-01-16 20:35:58 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 23600/32622 (72.3%)
+2026-01-16 20:36:13 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 23700/32622 (72.7%)
+2026-01-16 20:36:27 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 23800/32622 (73.0%)
+2026-01-16 20:36:43 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 23900/32622 (73.3%)
+2026-01-16 20:36:58 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 24000/32622 (73.6%)
+2026-01-16 20:37:13 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 24100/32622 (73.9%)
+2026-01-16 20:37:28 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 24200/32622 (74.2%)
+2026-01-16 20:37:41 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 24300/32622 (74.5%)
+2026-01-16 20:37:54 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 24400/32622 (74.8%)
+2026-01-16 20:38:10 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 24500/32622 (75.1%)
+2026-01-16 20:38:23 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 24600/32622 (75.4%)
+2026-01-16 20:38:34 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 24700/32622 (75.7%)
+2026-01-16 20:38:47 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 24800/32622 (76.0%)
+2026-01-16 20:39:03 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 24900/32622 (76.3%)
+2026-01-16 20:39:18 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 25000/32622 (76.6%)
+2026-01-16 20:39:34 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 25100/32622 (76.9%)
+2026-01-16 20:39:48 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 25200/32622 (77.2%)
+2026-01-16 20:40:02 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 25300/32622 (77.6%)
+2026-01-16 20:40:17 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 25400/32622 (77.9%)
+2026-01-16 20:40:29 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 25500/32622 (78.2%)
+2026-01-16 20:40:41 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 25600/32622 (78.5%)
+2026-01-16 20:40:54 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 25700/32622 (78.8%)
+2026-01-16 20:41:08 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 25800/32622 (79.1%)
+2026-01-16 20:41:22 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 25900/32622 (79.4%)
+2026-01-16 20:41:36 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 26000/32622 (79.7%)
+2026-01-16 20:41:50 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 26100/32622 (80.0%)
+2026-01-16 20:42:01 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 26200/32622 (80.3%)
+2026-01-16 20:42:16 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 26300/32622 (80.6%)
+2026-01-16 20:42:33 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 26400/32622 (80.9%)
+2026-01-16 20:42:49 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 26500/32622 (81.2%)
+2026-01-16 20:43:03 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 26600/32622 (81.5%)
+2026-01-16 20:43:18 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 26700/32622 (81.8%)
+2026-01-16 20:43:32 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 26800/32622 (82.2%)
+2026-01-16 20:43:53 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 26900/32622 (82.5%)
+2026-01-16 20:44:13 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 27000/32622 (82.8%)
+2026-01-16 20:44:29 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 27100/32622 (83.1%)
+2026-01-16 20:44:40 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 27200/32622 (83.4%)
+2026-01-16 20:44:56 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 27300/32622 (83.7%)
+2026-01-16 20:45:12 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 27400/32622 (84.0%)
+2026-01-16 20:45:26 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 27500/32622 (84.3%)
+2026-01-16 20:45:40 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 27600/32622 (84.6%)
+2026-01-16 20:45:57 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 27700/32622 (84.9%)
+2026-01-16 20:46:11 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 27800/32622 (85.2%)
+2026-01-16 20:46:27 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 27900/32622 (85.5%)
+2026-01-16 20:46:45 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 28000/32622 (85.8%)
+2026-01-16 20:47:03 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 28100/32622 (86.1%)
+2026-01-16 20:47:17 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 28200/32622 (86.4%)
+2026-01-16 20:47:34 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 28300/32622 (86.8%)
+2026-01-16 20:47:46 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 28400/32622 (87.1%)
+2026-01-16 20:47:57 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 28500/32622 (87.4%)
+2026-01-16 20:48:12 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 28600/32622 (87.7%)
+2026-01-16 20:48:25 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 28700/32622 (88.0%)
+2026-01-16 20:48:40 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 28800/32622 (88.3%)
+2026-01-16 20:48:55 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 28900/32622 (88.6%)
+2026-01-16 20:49:19 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 29000/32622 (88.9%)
+2026-01-16 20:49:38 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 29100/32622 (89.2%)
+2026-01-16 20:49:57 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 29200/32622 (89.5%)
+2026-01-16 20:50:15 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 29300/32622 (89.8%)
+2026-01-16 20:50:32 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 29400/32622 (90.1%)
+2026-01-16 20:50:48 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 29500/32622 (90.4%)
+2026-01-16 20:51:05 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 29600/32622 (90.7%)
+2026-01-16 20:51:23 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 29700/32622 (91.0%)
+2026-01-16 20:51:38 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 29800/32622 (91.3%)
+2026-01-16 20:51:52 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 29900/32622 (91.7%)
+2026-01-16 20:52:05 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 30000/32622 (92.0%)
+2026-01-16 20:52:19 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 30100/32622 (92.3%)
+2026-01-16 20:52:31 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 30200/32622 (92.6%)
+2026-01-16 20:52:43 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 30300/32622 (92.9%)
+2026-01-16 20:52:57 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 30400/32622 (93.2%)
+2026-01-16 20:53:12 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 30500/32622 (93.5%)
+2026-01-16 20:53:29 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 30600/32622 (93.8%)
+2026-01-16 20:53:46 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 30700/32622 (94.1%)
+2026-01-16 20:54:04 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 30800/32622 (94.4%)
+2026-01-16 20:54:21 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 30900/32622 (94.7%)
+2026-01-16 20:54:35 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 31000/32622 (95.0%)
+2026-01-16 20:54:50 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 31100/32622 (95.3%)
+2026-01-16 20:55:06 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 31200/32622 (95.6%)
+2026-01-16 20:55:26 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 31300/32622 (95.9%)
+2026-01-16 20:55:45 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 31400/32622 (96.3%)
+2026-01-16 20:56:03 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 31500/32622 (96.6%)
+2026-01-16 20:56:18 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 31600/32622 (96.9%)
+2026-01-16 20:56:38 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 31700/32622 (97.2%)
+2026-01-16 20:56:57 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 31800/32622 (97.5%)
+2026-01-16 20:57:17 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 31900/32622 (97.8%)
+2026-01-16 20:57:36 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 32000/32622 (98.1%)
+2026-01-16 20:57:53 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 32100/32622 (98.4%)
+2026-01-16 20:58:12 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 32200/32622 (98.7%)
+2026-01-16 20:58:26 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 32300/32622 (99.0%)
+2026-01-16 20:58:43 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 32400/32622 (99.3%)
+2026-01-16 20:59:02 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 32500/32622 (99.6%)
+2026-01-16 20:59:23 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 32600/32622 (99.9%)
+2026-01-16 20:59:27 | INFO     | __main__:build_index:171 | [VectorStore] 进度: 32622/32622 (100.0%)
+2026-01-16 20:59:27 | INFO     | __main__:build_index:173 | [VectorStore] 索引构建完成，总计 32622 个文档
+2026-01-16 21:24:12 | INFO     | src.tools.rag.vector_store:initialize:71 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 21:24:12 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化 DashScope Embedding: text-embedding-v4
+2026-01-16 21:24:12 | INFO     | src.tools.rag.vector_store:initialize:94 | [VectorStore] 初始化完成，现有文档数: 32622
+2026-01-16 21:26:19 | INFO     | src.tools.rag.vector_store:initialize:71 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 21:26:19 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化 DashScope Embedding: text-embedding-v4
+2026-01-16 21:26:19 | INFO     | src.tools.rag.vector_store:initialize:94 | [VectorStore] 初始化完成，现有文档数: 32622

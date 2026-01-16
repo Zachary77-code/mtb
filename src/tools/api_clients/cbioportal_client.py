@@ -92,11 +92,12 @@ class cBioPortalClient:
             "top_mutations": []
         }
 
-        # 使用 MSK-IMPACT 等大型研究直接获取突变
+        # 使用大型研究直接获取突变
         major_study_ids = [
-            "msk_impact_2017",      # MSK-IMPACT Clinical Sequencing
-            "tcga_pan_can_atlas_2018",  # TCGA Pan-Cancer Atlas
-            "genie_public"          # AACR GENIE
+            "msk_impact_2017",           # MSK-IMPACT Clinical Sequencing (10,945 样本)
+            "pancan_mimsi_msk_2024",     # MSK Mixed Tumors MiMSI (5,033 样本)
+            "brca_metabric",             # METABRIC Breast Cancer (2,433 样本)
+            "mds_iwg_2022",              # MDS International Working Group (3,323 样本)
         ]
 
         all_mutations = []
@@ -271,7 +272,7 @@ class cBioPortalClient:
             "studies_analyzed": mutation_data.get("studies_analyzed", 0),
             "top_mutations": mutation_data.get("top_mutations", []),
             "by_cancer_type": mutation_data.get("by_cancer_type", {}),
-            "cbioportal_url": f"https://www.cbioportal.org/results/mutations?gene_list={gene}"
+            "cbioportal_url": f"https://www.cbioportal.org/results?cancer_study_list=msk_impact_2017&gene_list={gene}&tab=summary"
         }
 
 
