@@ -354,7 +354,8 @@ class HtmlReportGenerator:
 
         # 保存文件
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        patient_id = context["patient_id"].replace("/", "_").replace("\\", "_")
+        patient_id = context.get("patient_id") or "Unknown"
+        patient_id = patient_id.replace("/", "_").replace("\\", "_")
         filename = f"MTB_Report_{patient_id}_{timestamp}.html"
         filepath = REPORTS_DIR / filename
 

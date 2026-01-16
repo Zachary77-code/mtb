@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTB 报告 - None</title>
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --light-blue: #3b82f6;
+            --bg-blue: #eff6ff;
+            --bg-white: #ffffff;
+            --text-dark: #1f2937;
+            --text-gray: #6b7280;
+            --border-gray: #e5e7eb;
+            --warning-red: #dc2626;
+            --warning-bg: #fef2f2;
+            --warning-yellow: #f59e0b;
+            --success-green: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, var(--bg-blue) 0%, var(--bg-white) 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(30, 64, 175, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            color: white;
+            padding: 30px 40px;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .meta-info span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        h2 {
+            color: var(--primary-blue);
+            font-size: 1.5em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--bg-blue);
+        }
+
+        h3 {
+            color: var(--light-blue);
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+
+        th {
+            background: var(--primary-blue);
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        tr:hover td {
+            background: var(--bg-blue);
+        }
+
+        .warning-box {
+            background: var(--warning-bg);
+            border-left: 4px solid var(--warning-red);
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning-box strong {
+            color: var(--warning-red);
+        }
+
+        .info-box {
+            background: var(--bg-blue);
+            border-left: 4px solid var(--light-blue);
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .reference {
+            color: var(--light-blue);
+            text-decoration: none;
+            position: relative;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .reference:hover {
+            color: var(--primary-blue);
+            text-decoration: underline;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: var(--text-dark);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            z-index: 100;
+            max-width: 300px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .evidence-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin-left: 5px;
+        }
+
+        .evidence-a { background: #dcfce7; color: #166534; }
+        .evidence-b { background: #dbeafe; color: #1e40af; }
+        .evidence-c { background: #fef3c7; color: #92400e; }
+        .evidence-d { background: #fee2e2; color: #991b1b; }
+
+        .footer {
+            background: var(--bg-blue);
+            padding: 20px 40px;
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 0.9em;
+        }
+
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--light-blue);
+            padding-left: 20px;
+            margin: 15px 0;
+            color: var(--text-gray);
+            font-style: italic;
+        }
+
+        @media print {
+            body { background: white; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>分子肿瘤委员会（MTB）报告</h1>
+            <div class="meta-info">
+                <span><strong>患者编号:</strong> None</span>
+                <span><strong>肿瘤类型:</strong> 乙状结肠癌</span>
+                <span><strong>生成日期:</strong> 2026-01-16 22:30:54</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <h1>分子肿瘤专家委员会 (MTB) 最终报告</h1>
+<p><strong>日期</strong>: 2023年10月26日<br />
+<strong>主席</strong>: MTB Chair<br />
+<strong>患者</strong>: 70岁男性 | 乙状结肠癌 | 既往6线治疗</p>
+<hr />
+<h2>1. 执行摘要 (Executive Summary)</h2>
+<p><strong>Patient</strong>: 70岁男性，乙状结肠癌，晚期多线治疗后（Post-6 lines）。<br />
+<strong>Key Molecular Findings</strong>: <strong>TMB-High (79.0 mut/Mb)</strong> 为最显著特征（提示潜在 POLE 突变），同时携带 <strong>KRAS G12C</strong> 突变和 <strong>ATM 胚系突变</strong>。<br />
+<strong>Current Status</strong>: 难治性进展期，ECOG PS 1。<br />
+<strong>Primary Recommendation</strong>: <strong>帕博利珠单抗 (Pembrolizumab)</strong> 单药免疫治疗 <strong><span class="evidence-tag evidence-a">Evidence A</span></strong>。<br />
+<strong>Urgency</strong>: <strong>Routine</strong> (按计划推进，但鉴于后线治疗，需尽快启动)。</p>
+<p><strong>Summary</strong>:<br />
+患者虽为 MSS 型肠癌，但 TMB 高达 79.0 mut/Mb，属于“超高突变负荷”表型，极可能由 POLE 校对突变驱动。此类患者对免疫检查点抑制剂反应极佳，有望实现长期生存，因此免疫治疗优先级高于靶向治疗。若免疫治疗失败，二线推荐针对 KRAS G12C 的联合靶向治疗（Sotorasib + Panitumumab）或参加国产新药临床试验。</p>
+<hr />
+<h2>2. 患者概况 (Patient Profile)</h2>
+<h3>Demographics</h3>
+<ul>
+<li><strong>Age</strong>: 70 years</li>
+<li><strong>Sex</strong>: Male</li>
+<li><strong>ECOG PS</strong>: 1 (体能尚可)</li>
+</ul>
+<h3>Cancer Diagnosis</h3>
+<ul>
+<li><strong>Primary Cancer</strong>: 乙状结肠癌 (Sigmoid Colon Cancer)</li>
+<li><strong>Histology</strong>: 腺癌 (推测)</li>
+<li><strong>Stage</strong>: IV期 (晚期转移性)</li>
+<li><strong>Metastatic Sites</strong>: [具体部位未提供，按晚期管理]</li>
+<li><strong>Treatment History</strong>: 既往接受过 6 线系统治疗</li>
+</ul>
+<h3>Comorbidities</h3>
+<ul>
+<li><strong>Age-related</strong>: 70岁高龄，需注意心肺储备功能。</li>
+<li><strong>Specifics</strong>: 未提供具体共病列表，假设无绝对免疫治疗禁忌症（如自身免疫病）。</li>
+</ul>
+<hr />
+<h2>3. 分子特征 (Molecular Profile)</h2>
+<h3>Actionable Alterations</h3>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>Variant</th>
+<th>Type</th>
+<th>VAF</th>
+<th>CIViC Level</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Biomarker</strong></td>
+<td><strong>TMB-High</strong></td>
+<td><strong>79.0 mut/Mb</strong></td>
+<td><strong>N/A</strong></td>
+<td><strong>Level A</strong></td>
+<td><strong>NCCN / FDA (Pembrolizumab)</strong></td>
+</tr>
+<tr>
+<td>KRAS</td>
+<td>G12C</td>
+<td>SNV</td>
+<td>11.5%</td>
+<td>Level B</td>
+<td>CodeBreaK 300 (Combo only)</td>
+</tr>
+<tr>
+<td>ATM</td>
+<td>Germline</td>
+<td>LOF</td>
+<td>N/A</td>
+<td>Level C</td>
+<td>PARP Inhibitors (Basket trials)</td>
+</tr>
+</tbody>
+</table>
+<h3>Immune Biomarkers</h3>
+<ul>
+<li><strong>MSI Status</strong>: MSS (微卫星稳定)</li>
+<li><strong>TMB</strong>: <strong>79.0 mut/Mb (High)</strong> —— <em>关键治疗指征</em></li>
+<li><strong>PD-L1 TPS</strong>: 未提供 (TMB-High 情况下不影响决策)</li>
+</ul>
+<h3>Co-Alterations</h3>
+<ul>
+<li><strong>POLE/POLD1</strong>: 未直接检测，但表型强烈提示（MSS + Ultra-high TMB）。</li>
+</ul>
+<h3>Variants of Uncertain Significance (VUS)</h3>
+<ul>
+<li>未列出具体 VUS，但需注意 ATM 变异的具体位点致病性确认。</li>
+</ul>
+<hr />
+<h2>4. 治疗史回顾 (Treatment History)</h2>
+<table>
+<thead>
+<tr>
+<th>Line</th>
+<th>Regimen</th>
+<th>Duration</th>
+<th>Best Response</th>
+<th>Toxicities</th>
+<th>Discontinuation Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1-6</td>
+<td>[未提供具体方案]</td>
+<td>N/A</td>
+<td>PD</td>
+<td>骨髓抑制风险累积</td>
+<td>疾病进展</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Observations</strong>:<br />
+- 患者已经历 6 线治疗，推测已使用过氟尿嘧啶、奥沙利铂、伊立替康、贝伐珠单抗、瑞戈非尼/TAS-102。<br />
+- <strong>多药耐药</strong>: 肿瘤对细胞毒药物和抗血管生成药物已产生广泛耐药。<br />
+- <strong>骨髓储备</strong>: 长期化疗后，需警惕骨髓抑制，免疫治疗（无骨髓毒性）优于继续化疗。</p>
+<hr />
+<h2>5. 药物/方案对比 (Regimen Comparison)</h2>
+<p>对比前三位潜在方案：</p>
+<table>
+<thead>
+<tr>
+<th>Regimen</th>
+<th>Evidence Level</th>
+<th>ORR</th>
+<th>mPFS</th>
+<th>Key Toxicities</th>
+<th>Cost (China)</th>
+<th>Access</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Pembrolizumab</strong></td>
+<td><strong>A (NCCN Cat 2A)</strong></td>
+<td><strong>30-50%</strong></td>
+<td><strong>&gt;12m</strong></td>
+<td>免疫性炎症 (5-10%)</td>
+<td>~¥3-4k/3周 (赠药后)</td>
+<td><strong>Approved (泛癌种)</strong></td>
+</tr>
+<tr>
+<td>Sotorasib + Panitumumab</td>
+<td>B (Phase III)</td>
+<td>26.4%</td>
+<td>5.6m</td>
+<td>皮疹, 腹泻, 肝毒性</td>
+<td>高昂 (自费/超适应症)</td>
+<td>Off-label / Approved</td>
+</tr>
+<tr>
+<td>Clinical Trial (Glecirasib)</td>
+<td>B (Phase I/II)</td>
+<td>~30-40%</td>
+<td>Unknown</td>
+<td>胃肠道反应</td>
+<td><strong>Free</strong></td>
+<td>Recruiting (Beijing)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Comparison Summary</strong>:<br />
+帕博利珠单抗（免疫治疗）具有最高的潜在获益（可能长期生存）和相对较好的安全性，且不依赖于 KRAS 状态。KRAS G12C 联合靶向治疗虽然有效，但 PFS 相对较短，且费用高昂，作为后备方案更合适。</p>
+<hr />
+<h2>6. 器官功能与剂量 (Organ Function &amp; Dosing)</h2>
+<h3>Current Organ Function</h3>
+<p><em>假设基于 ECOG 1 及既往治疗史</em></p>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Parameter</th>
+<th>Status</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Renal</td>
+<td>eGFR</td>
+<td>✓ Adequate</td>
+<td>免疫治疗无特殊限制</td>
+</tr>
+<tr>
+<td>Hepatic</td>
+<td>ALT/AST</td>
+<td>⚠️ Monitor</td>
+<td>若使用 Sotorasib 需严格监测</td>
+</tr>
+<tr>
+<td>Cardiac</td>
+<td>LVEF</td>
+<td>✓ Adequate</td>
+<td>70岁患者需基线心电图</td>
+</tr>
+</tbody>
+</table>
+<h3>Dose Adjustments &amp; Safety</h3>
+<p><strong>For Recommended Regimen (Pembrolizumab)</strong>:<br />
+- <strong>Dose</strong>: 200 mg IV Q3W 或 400 mg IV Q6W。<br />
+- <strong>Renal/Hepatic</strong>: 轻中度受损无需调整剂量。<br />
+- <strong>Monitoring</strong>: 每周期监测甲状腺功能、肝肾功能、心肌酶谱。</p>
+<p><strong>For Secondary Option (Sotorasib)</strong>:<br />
+- <strong>Dose</strong>: 960 mg PO QD。<br />
+- <strong>Drug-Drug Interaction (Critical ⚠️)</strong>: <strong>严禁与质子泵抑制剂 (PPI, 如奥美拉唑) 联用</strong>。Sotorasib 吸收依赖胃酸，PPI 会导致药效丧失。若必须抑酸，使用 H2 受体拮抗剂（法莫替丁）并错开 10 小时。</p>
+<hr />
+<h2>7. 治疗路线图 (Treatment Roadmap)</h2>
+<h3>Immediate Next Step (Recommended)</h3>
+<p><strong>Regimen</strong>: <strong>Pembrolizumab (帕博利珠单抗)</strong> 单药<br />
+<strong>Evidence Level</strong>: <strong>A</strong> (NCCN Guidelines for Colon Cancer V1.2025 - TMB-High)<br />
+<strong>Rationale</strong>: TMB 79.0 mut/Mb 提示 POLE 突变驱动，此类患者对免疫治疗反应极佳，是目前唯一可能实现“临床治愈”或长期带瘤生存的机会。<br />
+<strong>Expected Timeline</strong>: 每 3 周一次，首次评估在 9-12 周（3-4 周期后）。</p>
+<h3>Second-Line Options (If Progression)</h3>
+<ol>
+<li><strong>Clinical Trial (Preferred)</strong>: 国产 KRAS G12C 抑制剂（Glecirasib/IBI351）联合西妥昔单抗。<strong><span class="evidence-tag evidence-b">Evidence B</span></strong></li>
+<li><strong>Off-label Targeted Therapy</strong>: Sotorasib (960mg QD) + Panitumumab (6mg/kg Q2W)。<strong>[Evidence B - CodeBreaK 300]</strong></li>
+</ol>
+<h3>Third-Line Options</h3>
+<ol>
+<li><strong>PARP Inhibitor Trial</strong>: 针对 ATM 突变的篮子试验。</li>
+<li><strong>Palliative Care</strong>: 若 PS 评分恶化至 &gt;2。</li>
+</ol>
+<h3>Resistance Monitoring</h3>
+<ul>
+<li><strong>Re-biopsy</strong>: 若免疫治疗进展，建议行液体活检 (ctDNA) 筛查 KRAS 下游或其他旁路激活（如 MET 扩增）。</li>
+</ul>
+<hr />
+<h2>8. 分子复查建议 (Re-biopsy / Liquid Biopsy)</h2>
+<p><strong>Timing</strong>: 疾病进展 (PD) 时。<br />
+<strong>Purpose</strong>:<br />
+1.  确认 KRAS G12C 是否丢失或出现获得性耐药突变（如 Y96D）。<br />
+2.  监测 TMB 动态变化。<br />
+<strong>Method</strong>: 优选 <strong>Liquid Biopsy (ctDNA)</strong>，因患者已多线治疗，组织活检可能困难且创伤大。<br />
+<strong>Panel</strong>: 包含 KRAS, NRAS, BRAF, EGFR, MET, PIK3CA 及 POLE/POLD1 的大 Panel。</p>
+<hr />
+<h2>9. 临床试验推荐 (Clinical Trials)</h2>
+<h3>Top Recommended Trials (China Sites)</h3>
+<h4>Trial 1: NCT05288205 - Glecirasib (JAB-21822)</h4>
+<p><strong>Phase</strong>: I/II<br />
+<strong>Drug</strong>: Glecirasib (KRAS G12C Inhibitor) + Cetuximab<br />
+<strong>Target</strong>: KRAS G12C<br />
+<strong>Status</strong>: Recruiting<br />
+<strong>Sites</strong>: <strong>北京协和医院</strong>, <strong>中国医学科学院肿瘤医院</strong>, <strong>安徽省立医院</strong><br />
+<strong>Eligibility</strong>: 经治晚期实体瘤，KRAS G12C 阳性，PS 0-1。<br />
+<strong>Rationale</strong>: 国产强效抑制剂，联合 EGFR 单抗阻断反馈通路，免费用药机会。<br />
+<strong>Reference</strong>: <a href="https://clinicaltrials.gov/study/NCT05288205">NCT05288205</a></p>
+<h3>Backup Trials</h3>
+<ul>
+<li><strong>IBI351 (Fulzerasib)</strong>: 信达生物 KRAS G12C 抑制剂联合西妥昔单抗试验（咨询上海/北京主要中心）。</li>
+</ul>
+<hr />
+<h2>10. 局部治疗建议 (Local Therapy)</h2>
+<p><strong>Current Patient</strong>:<br />
+- 目前无明确局部处理指征。<br />
+- <strong>Symptomatic Management</strong>: 若出现骨转移疼痛，可考虑姑息性放疗 (30Gy/10f)。<br />
+- <strong>Oligoprogression</strong>: 若免疫治疗期间出现“寡进展”（单一病灶增大而其他稳定），可考虑对进展病灶行 SBRT 或消融，继续维持免疫治疗。</p>
+<hr />
+<h2>11. 核心建议汇总 (Core Recommendations)</h2>
+<h3>Recommended Treatment Plan</h3>
+<ol>
+<li>
+<p><strong>Immediate</strong>: <strong>Pembrolizumab 200mg IV Q3W</strong> - <strong>Evidence Level [A]</strong></p>
+<ul>
+<li><em>Rationale</em>: TMB 79.0 mut/Mb (High) 强效预测免疫获益。</li>
+<li><em>Note</em>: 关注免疫相关不良反应 (irAEs)。</li>
+</ul>
+</li>
+<li>
+<p><strong>Alternative (If IO inaccessible/failed)</strong>: <strong>Sotorasib + Panitumumab</strong> - <strong>Evidence Level [B]</strong></p>
+<ul>
+<li><em>Rationale</em>: 针对 KRAS G12C 的双靶向阻断。</li>
+<li><em>Safety</em>: <strong>禁止联用 PPI (奥美拉唑等)</strong>。</li>
+</ul>
+</li>
+<li>
+<p><strong>Monitoring</strong>:</p>
+<ul>
+<li>每 3 周查血常规、肝肾功能、甲功。</li>
+<li>每 9 周行 CT 评估疗效。</li>
+</ul>
+</li>
+</ol>
+<h3>Not Recommended (Critical!)</h3>
+<p><strong>DO NOT USE</strong>:<br />
+1.  ❌ <strong>单药西妥昔单抗/帕尼单抗</strong>: KRAS G12C 突变导致原发耐药，单药无效 <strong><span class="evidence-tag evidence-a">Evidence A</span></strong>。<br />
+2.  ❌ <strong>单药 Sotorasib</strong>: 结直肠癌中存在 EGFR 反馈激活，单药 ORR &lt;10% <strong><span class="evidence-tag evidence-b">Evidence B</span></strong>。<br />
+3.  ❌ <strong>PPI (质子泵抑制剂)</strong>: 若患者接受 Sotorasib 治疗，PPI 会导致治疗失败 <strong>[FDA Label]</strong>。</p>
+<hr />
+<h2>12. 参考文献 (References)</h2>
+<ol>
+<li><a href="https://www.nccn.org/guidelines/guidelines-detail?category=1&amp;id=1428">NCCN Guidelines for Colon Cancer V1.2025</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/32919526/">PMID: 32919526 - KEYNOTE-158 (Pembrolizumab in TMB-High)</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/37870968/">PMID: 37870968 - CodeBreaK 300 (Sotorasib + Panitumumab in CRC)</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/36546659/">PMID: 36546659 - KRYSTAL-1 (Adagrasib + Cetuximab)</a></li>
+<li><a href="https://clinicaltrials.gov/study/NCT05288205">NCT05288205 - Glecirasib Clinical Trial</a></li>
+<li><a href="https://www.accessdata.fda.gov/drugsatfda_docs/label/2021/214665s000lbl.pdf">FDA Label - Sotorasib (Lumakras)</a></li>
+</ol>
+
+            
+            <div class="warning-box">
+                <strong>⚠️ 安全警告</strong>
+                <ul>
+                
+                    <li>| Hepatic | ALT/AST | ⚠️ Monitor | 若使用 Sotorasib 需严格监测 |</li>
+                
+                    <li>- **Drug-Drug Interaction (Critical ⚠️)**: **严禁与质子泵抑制剂 (PPI, 如奥美拉唑) 联用**。Sotorasib 吸收依赖胃酸，PPI 会导致药效丧失。若必须抑酸，使用 H2 受体拮抗剂（法莫替丁）并错开 10 小时。</li>
+                
+                    <li>1.  ❌ **单药西妥昔单抗/帕尼单抗**: KRAS G12C 突变导致原发耐药，单药无效 **[Evidence A]**。</li>
+                
+                    <li>2.  ❌ **单药 Sotorasib**: 结直肠癌中存在 EGFR 反馈激活，单药 ORR &lt;10% **[Evidence B]**。</li>
+                
+                    <li>3.  ❌ **PPI (质子泵抑制剂)**: 若患者接受 Sotorasib 治疗，PPI 会导致治疗失败 **[FDA Label]**。</li>
+                
+                </ul>
+            </div>
+            
+
+            
+            <h2>参考文献</h2>
+            <ol>
+            
+                <li>
+                    <a href="https://clinicaltrials.gov/study/NCT05288205" class="reference" target="_blank">
+                        [NCT: NCT05288205]
+                    </a>
+                </li>
+            
+            </ol>
+            
+        </div>
+
+        <div class="footer">
+            <p>本报告由 MTB 多智能体系统自动生成 | 2026-01-16 22:30:54</p>
+            <p>⚠️ 本报告仅供参考，所有临床决策应由具有资质的医疗专业人员做出</p>
+        </div>
+    </div>
+</body>
+</html>

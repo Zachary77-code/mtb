@@ -72,13 +72,14 @@ class RecruiterAgent(BaseAgent):
 **遗传学家分析摘要**:
 {geneticist_report[:1500]}...
 
-**搜索要求**:
-1. 使用 search_clinical_trials 搜索中国招募中的试验
-2. 优先匹配生物标志物驱动的试验
-3. 使用 search_nccn 确认指南推荐的试验策略
-4. 评估患者对每个试验的资格
+**工具调用清单** (必须全部执行):
 
-请按照提示词中的格式输出完整的试验推荐报告。
+☐ 第1步: 调用 search_clinical_trials(cancer_type="{cancer_type}", biomarker="主要生物标志物") 搜索中国招募中的试验
+☐ 第2步: 调用 search_nccn(cancer_type="{cancer_type}") 确认指南推荐的试验策略
+
+**警告**: 如果你跳过任何一个工具调用，试验匹配将不准确！
+
+请现在开始执行第1步，调用 search_clinical_trials。
 """
 
         result = self.invoke(task_prompt, context={

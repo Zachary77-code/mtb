@@ -77,14 +77,15 @@ class OncologistAgent(BaseAgent):
 **临床试验专员报告摘要**:
 {recruiter_report[:1500]}...
 
-**任务**:
-1. 使用 search_nccn 确认标准治疗方案
-2. 使用 search_fda_labels 检查推荐药物的剂量调整
-3. 使用 search_rxnorm 检查药物相互作用
-4. 根据器官功能制定剂量调整方案
-5. 强制包含"不建议"章节
+**工具调用清单** (必须全部执行):
 
-请按照提示词中的格式输出完整的治疗方案报告。
+☐ 第1步: 调用 search_nccn(cancer_type="{cancer_type}") 获取标准治疗方案
+☐ 第2步: 调用 search_fda_labels(drug_name="推荐药物名") 获取剂量和禁忌症
+☐ 第3步: 调用 search_rxnorm(drug_name="推荐药物名") 检查药物相互作用
+
+**警告**: 如果你跳过任何一个工具调用，患者安全将无法保障！
+
+请现在开始执行第1步，调用 search_nccn。
 """
 
         result = self.invoke(task_prompt, context={

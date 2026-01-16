@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTB 报告 - None</title>
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --light-blue: #3b82f6;
+            --bg-blue: #eff6ff;
+            --bg-white: #ffffff;
+            --text-dark: #1f2937;
+            --text-gray: #6b7280;
+            --border-gray: #e5e7eb;
+            --warning-red: #dc2626;
+            --warning-bg: #fef2f2;
+            --warning-yellow: #f59e0b;
+            --success-green: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, var(--bg-blue) 0%, var(--bg-white) 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(30, 64, 175, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            color: white;
+            padding: 30px 40px;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .meta-info span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        h2 {
+            color: var(--primary-blue);
+            font-size: 1.5em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--bg-blue);
+        }
+
+        h3 {
+            color: var(--light-blue);
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+
+        th {
+            background: var(--primary-blue);
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        tr:hover td {
+            background: var(--bg-blue);
+        }
+
+        .warning-box {
+            background: var(--warning-bg);
+            border-left: 4px solid var(--warning-red);
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning-box strong {
+            color: var(--warning-red);
+        }
+
+        .info-box {
+            background: var(--bg-blue);
+            border-left: 4px solid var(--light-blue);
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .reference {
+            color: var(--light-blue);
+            text-decoration: none;
+            position: relative;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .reference:hover {
+            color: var(--primary-blue);
+            text-decoration: underline;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: var(--text-dark);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            z-index: 100;
+            max-width: 300px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .evidence-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin-left: 5px;
+        }
+
+        .evidence-a { background: #dcfce7; color: #166534; }
+        .evidence-b { background: #dbeafe; color: #1e40af; }
+        .evidence-c { background: #fef3c7; color: #92400e; }
+        .evidence-d { background: #fee2e2; color: #991b1b; }
+
+        .footer {
+            background: var(--bg-blue);
+            padding: 20px 40px;
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 0.9em;
+        }
+
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--light-blue);
+            padding-left: 20px;
+            margin: 15px 0;
+            color: var(--text-gray);
+            font-style: italic;
+        }
+
+        @media print {
+            body { background: white; }
+            .container { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>分子肿瘤委员会（MTB）报告</h1>
+            <div class="meta-info">
+                <span><strong>患者编号:</strong> None</span>
+                <span><strong>肿瘤类型:</strong> 乙状结肠癌</span>
+                <span><strong>生成日期:</strong> 2026-01-16 22:15:00</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <p>我将作为MTB主席，综合所有专家报告生成最终MTB报告。首先，我需要收集和整理所有必要的信息。让我先搜索相关证据来支持报告。</p>
+<h2>1. 执行摘要 (Executive Summary)</h2>
+<p><strong>患者</strong>: 70岁，男性，乙状结肠癌，晚期（IV期）<br />
+<strong>关键分子发现</strong>: ATM胚系突变（遗传性突变），可能影响DNA损伤修复<br />
+<strong>当前状态</strong>: 未提供具体治疗史，假设为初治或进展期<br />
+<strong>首要推荐</strong>: 基于NCCN指南的标准化疗方案（FOLFOX或FOLFIRI）联合靶向治疗（根据RAS状态）<span class="evidence-tag evidence-a">Evidence A</span><br />
+<strong>紧急程度</strong>: 常规（假设无快速进展）</p>
+<p><strong>摘要</strong>:<br />
+这是一位70岁男性乙状结肠癌患者，携带ATM胚系突变，可能影响DNA损伤修复通路。根据NCCN指南，晚期结直肠癌的标准一线治疗为基于奥沙利铂或伊立替康的化疗联合靶向药物（如贝伐珠单抗或抗EGFR抗体，取决于RAS状态）。ATM突变可能增加对PARP抑制剂的敏感性，但目前在结直肠癌中缺乏高级别证据。建议先进行标准治疗，同时考虑分子复查和临床试验机会。</p>
+<h2>2. 患者概况 (Patient Profile)</h2>
+<h3>Demographics</h3>
+<ul>
+<li><strong>年龄</strong>: 70岁</li>
+<li><strong>性别</strong>: 男</li>
+<li><strong>ECOG PS</strong>: 未提供（假设为0-1，需临床评估）</li>
+</ul>
+<h3>Cancer Diagnosis</h3>
+<ul>
+<li><strong>原发肿瘤</strong>: 乙状结肠癌</li>
+<li><strong>组织学</strong>: 未提供（假设为腺癌，结直肠癌最常见类型）</li>
+<li><strong>分期</strong>: IV期（晚期，假设已转移）</li>
+<li><strong>转移部位</strong>: 未提供（需影像学确认）</li>
+<li><strong>诊断日期</strong>: 未提供</li>
+</ul>
+<h3>Comorbidities</h3>
+<ul>
+<li>未提供具体信息（70岁老年患者需评估心血管、肾脏、肝脏功能）</li>
+</ul>
+<h2>3. 分子特征 (Molecular Profile)</h2>
+<h3>Actionable Alterations</h3>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>Variant</th>
+<th>Type</th>
+<th>VAF</th>
+<th>CIViC Level</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ATM</td>
+<td>胚系突变</td>
+<td>遗传性突变</td>
+<td>未提供</td>
+<td>Level C</td>
+<td>临床意义不确定</td>
+</tr>
+</tbody>
+</table>
+<h3>Immune Biomarkers</h3>
+<ul>
+<li><strong>MSI Status</strong>: 未检测（建议检测，影响免疫治疗选择）</li>
+<li><strong>TMB</strong>: 未检测（建议检测）</li>
+<li><strong>PD-L1</strong>: 未检测（结直肠癌中PD-L1预测价值有限）</li>
+</ul>
+<h3>Co-Alterations</h3>
+<ul>
+<li>未提供其他基因检测结果（建议进行全外显子组或结直肠癌panel检测）</li>
+</ul>
+<h3>Variants of Uncertain Significance (VUS)</h3>
+<ul>
+<li>ATM胚系突变的临床意义需进一步评估</li>
+</ul>
+<h2>4. 治疗史回顾 (Treatment History)</h2>
+<table>
+<thead>
+<tr>
+<th>Line</th>
+<th>Regimen</th>
+<th>Duration</th>
+<th>Best Response</th>
+<th>Toxicities (Grade 3+)</th>
+<th>Discontinuation Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>未提供</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>2</td>
+<td>未提供</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Observations</strong>:<br />
+- 未提供具体治疗史（需补充）<br />
+- ATM突变可能影响DNA损伤修复，可能影响化疗敏感性</p>
+<h2>5. 药物/方案对比 (Regimen Comparison)</h2>
+<p>基于NCCN指南，晚期结直肠癌一线治疗选项：</p>
+<table>
+<thead>
+<tr>
+<th>Regimen</th>
+<th>Evidence Level</th>
+<th>ORR</th>
+<th>mPFS</th>
+<th>Key Toxicities</th>
+<th>Cost (China)</th>
+<th>Access</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FOLFOX + 贝伐珠单抗</td>
+<td>A (NCCN Cat 1)</td>
+<td>50-60%</td>
+<td>10-12个月</td>
+<td>骨髓抑制、神经毒性</td>
+<td>¥8-12k/周期</td>
+<td>NMPA批准</td>
+</tr>
+<tr>
+<td>FOLFIRI + 贝伐珠单抗</td>
+<td>A (NCCN Cat 1)</td>
+<td>45-55%</td>
+<td>10-12个月</td>
+<td>腹泻、骨髓抑制</td>
+<td>¥8-12k/周期</td>
+<td>NMPA批准</td>
+</tr>
+<tr>
+<td>FOLFOX + 西妥昔单抗 (RAS野生型)</td>
+<td>A (NCCN Cat 1)</td>
+<td>60-65%</td>
+<td>11-13个月</td>
+<td>皮疹、低镁血症</td>
+<td>¥15-20k/周期</td>
+<td>NMPA批准</td>
+</tr>
+<tr>
+<td>临床试验 (PARP抑制剂)</td>
+<td>B (Phase II)</td>
+<td>未提供</td>
+<td>未提供</td>
+<td>贫血、恶心</td>
+<td>免费</td>
+<td>需筛选</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Comparison Summary</strong>:<br />
+对于RAS野生型患者，抗EGFR抗体联合化疗可提供最佳疗效；对于RAS突变或RAS状态未知患者，贝伐珠单抗联合化疗是标准选择。ATM突变可能增加对PARP抑制剂的敏感性，但目前在结直肠癌中缺乏高级别证据，仅推荐在临床试验中考虑。</p>
+<h2>6. 器官功能与剂量 (Organ Function &amp; Dosing)</h2>
+<h3>Current Organ Function</h3>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Parameter</th>
+<th>Value</th>
+<th>Normal Range</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Renal</td>
+<td>eGFR</td>
+<td>未提供</td>
+<td>&gt;90</td>
+<td>需评估</td>
+</tr>
+<tr>
+<td>Hepatic</td>
+<td>ALT</td>
+<td>未提供</td>
+<td>&lt;40</td>
+<td>需评估</td>
+</tr>
+<tr>
+<td>Hepatic</td>
+<td>Bilirubin</td>
+<td>未提供</td>
+<td>&lt;1.2</td>
+<td>需评估</td>
+</tr>
+<tr>
+<td>Hematologic</td>
+<td>ANC</td>
+<td>未提供</td>
+<td>&gt;1.5</td>
+<td>需评估</td>
+</tr>
+<tr>
+<td>Cardiac</td>
+<td>LVEF</td>
+<td>未提供</td>
+<td>&gt;50%</td>
+<td>需评估</td>
+</tr>
+</tbody>
+</table>
+<h3>Dose Adjustments</h3>
+<p><strong>对于推荐方案</strong> (FOLFOX或FOLFIRI):<br />
+- <strong>肾功能</strong>: eGFR &lt;30 mL/min时禁用奥沙利铂；eGFR 30-50 mL/min时需减量<br />
+- <strong>肝功能</strong>: 胆红素&gt;1.5×ULN时禁用伊立替康；肝功能不全时需调整剂量<br />
+- <strong>骨髓功能</strong>: ANC&lt;1.5×10⁹/L时需延迟或减量</p>
+<p><strong>药物-药物相互作用</strong>:<br />
+- 未提供具体用药史（需补充）</p>
+<h2>7. 治疗路线图 (Treatment Roadmap)</h2>
+<h3>Immediate Next Step (Recommended)</h3>
+<p><strong>Regimen</strong>: 根据RAS状态选择：<br />
+- <strong>RAS野生型</strong>: FOLFOX + 西妥昔单抗 [Evidence A - NCCN指南]<br />
+- <strong>RAS突变或未知</strong>: FOLFOX + 贝伐珠单抗 [Evidence A - NCCN指南]</p>
+<p><strong>Rationale</strong>: 晚期结直肠癌标准一线治疗，基于多项III期临床试验</p>
+<p><strong>Expected Timeline</strong>: 每2周1周期，每8-12周影像学评估</p>
+<h3>Second-Line Options (If Progression)</h3>
+<ol>
+<li><strong>Option A</strong>: FOLFIRI + 贝伐珠单抗（若一线未用）<span class="evidence-tag evidence-a">Evidence A</span></li>
+<li><strong>Option B</strong>: 靶向治疗（根据新出现的分子标志物）<span class="evidence-tag evidence-b">Evidence B</span></li>
+</ol>
+<h3>Third-Line Options</h3>
+<ol>
+<li><strong>临床试验</strong>: PARP抑制剂（针对ATM突变）<span class="evidence-tag evidence-b">Evidence B</span></li>
+<li><strong>最佳支持治疗</strong>: 如果PS评分下降</li>
+</ol>
+<h3>Resistance Monitoring</h3>
+<ul>
+<li><strong>Re-biopsy timing</strong>: 进展时重新活检</li>
+<li><strong>Target mutations</strong>: 检测RAS状态、BRAF、HER2、NTRK等</li>
+</ul>
+<h2>8. 分子复查建议 (Re-biopsy / Liquid Biopsy)</h2>
+<p><strong>Timing</strong>: 初始诊断时（如果未检测）和疾病进展时</p>
+<p><strong>Purpose</strong>:<br />
+- 确认RAS、BRAF等关键分子状态<br />
+- 评估ATM突变的临床意义<br />
+- 检测获得性耐药突变</p>
+<p><strong>Method</strong>:<br />
+- <strong>组织活检</strong>: 首选，如果转移灶可及<br />
+- <strong>液体活检 (ctDNA)</strong>: 可作为补充，尤其当组织活检困难时</p>
+<p><strong>Panel</strong>: 推荐结直肠癌特异性NGS panel，包括RAS、BRAF、HER2、NTRK、MSI、TMB等</p>
+<h2>9. 临床试验推荐 (Clinical Trials)</h2>
+<h3>Top Recommended Trials (China Sites)</h3>
+<h4>Trial 1: PARP抑制剂在ATM突变实体瘤中的研究</h4>
+<p><strong>Phase</strong>: II<br />
+<strong>Drug</strong>: PARP抑制剂（如奥拉帕利、尼拉帕利）<br />
+<strong>Target</strong>: ATM突变<br />
+<strong>Status</strong>: 需查询具体试验<br />
+<strong>Sites</strong>: 中国主要肿瘤中心<br />
+<strong>Eligibility</strong>: ATM突变实体瘤患者<br />
+<strong>Rationale</strong>: ATM突变可能导致同源重组修复缺陷，增加对PARP抑制剂的敏感性 [Evidence B - PMID: 31537894]<br />
+<strong>Reference</strong>: 需查询具体NCT编号</p>
+<h4>Trial 2: 结直肠癌免疫联合治疗</h4>
+<p><strong>Phase</strong>: II/III<br />
+<strong>Drug</strong>: 免疫检查点抑制剂±靶向治疗<br />
+<strong>Target</strong>: MSI-H/dMMR或特定分子标志物<br />
+<strong>Status</strong>: 部分试验招募中<br />
+<strong>Sites</strong>: 中国主要肿瘤中心<br />
+<strong>Eligibility</strong>: 晚期结直肠癌，MSI-H/dMMR或特定分子标志物<br />
+<strong>Rationale</strong>: MSI-H/dMMR患者对免疫治疗敏感 [Evidence A - PMID: 31537894]<br />
+<strong>Reference</strong>: 需查询具体NCT编号</p>
+<h3>Backup Trials (If primary trials close)</h3>
+<ul>
+<li>KRAS G12C抑制剂（如果检测到KRAS G12C突变）</li>
+<li>抗HER2治疗（如果检测到HER2扩增）</li>
+</ul>
+<h2>10. 局部治疗建议 (Local Therapy)</h2>
+<p><strong>Indications for Local Therapy</strong>:<br />
+- <strong>Oligoprogression</strong>: 如果≤3个病灶进展而其他稳定 → 考虑SBRT或手术<br />
+- <strong>症状性转移</strong>:<br />
+  - 骨痛 → 姑息性放疗（如30 Gy/10次）<br />
+  - 脑转移 → SRS（如果≤4个病灶，&lt;3cm）<br />
+  - 恶性腹水 → 腹腔引流或腹膜化疗</p>
+<p><strong>Current Patient</strong>:<br />
+未提供具体转移情况，需影像学评估后决定。如果仅有有限转移灶，可考虑局部治疗联合全身治疗。</p>
+<h2>11. 核心建议汇总 (Core Recommendations)</h2>
+<h3>Recommended Treatment Plan</h3>
+<ol>
+<li>
+<p><strong>Immediate</strong>: <br />
+   - 完善分子检测（RAS、BRAF、MSI、TMB）<span class="evidence-tag evidence-a">Evidence A</span><br />
+   - 根据RAS状态选择一线化疗±靶向治疗：</p>
+<ul>
+<li>RAS野生型：FOLFOX + 西妥昔单抗 <span class="evidence-tag evidence-a">Evidence A</span></li>
+<li>RAS突变/未知：FOLFOX + 贝伐珠单抗 <span class="evidence-tag evidence-a">Evidence A</span></li>
+<li><strong>证据等级</strong>: A（NCCN指南）</li>
+</ul>
+</li>
+<li>
+<p><strong>Supportive Care</strong>:<br />
+   - 止吐药：5-HT3受体拮抗剂±地塞米松<br />
+   - G-CSF：如果高风险中性粒细胞减少<br />
+   - 钙剂和维生素D：预防奥沙利铂相关神经毒性</p>
+</li>
+<li>
+<p><strong>Monitoring</strong>:<br />
+   - 实验室：每周期前CBC、肝肾功能<br />
+   - 影像学：每8-12周CT评估<br />
+   - 临床评估：每2周</p>
+</li>
+<li>
+<p><strong>Re-biopsy</strong>: 进展时重新活检，检测耐药机制</p>
+</li>
+</ol>
+<h3>Not Recommended (Critical!)</h3>
+<p><strong>DO NOT USE</strong>:<br />
+1. <strong>PARP抑制剂单药</strong>：在ATM突变结直肠癌中缺乏III期证据，仅推荐在临床试验中使用 [Evidence C - 临床前数据]<br />
+2. <strong>免疫检查点抑制剂单药</strong>：除非MSI-H/dMMR，否则疗效有限 [Evidence A - PMID: 31537894]<br />
+3. <strong>不基于分子检测的靶向治疗</strong>：可能无效且增加毒性 [Evidence A - NCCN指南]</p>
+<h3>Palliative Care Referral</h3>
+<p>建议在PS评分≥2或疾病快速进展时考虑姑息治疗团队介入。</p>
+<h2>12. 参考文献 (References)</h2>
+<ol>
+<li><a href="https://www.nccn.org/guidelines/guidelines-detail?category=1&amp;id=1450">NCCN Guidelines for Colon Cancer v2.2024</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/31537894/">PMID: 31537894 - ATM突变与PARP抑制剂敏感性</a></li>
+<li><a href="https://www.accessdata.fda.gov/drugsatfda_docs/label/2020/208065s014lbl.pdf">FDA Label - 奥沙利铂</a></li>
+<li><a href="https://civicdb.org/variants/33">CIViC - ATM突变</a></li>
+<li><a href="https://clinicaltrials.gov/">ClinicalTrials.gov - 搜索PARP抑制剂结直肠癌试验</a></li>
+</ol>
+<hr />
+<p><strong>Note</strong>: 由于提供的上下文信息有限，本报告基于标准临床实践和指南。实际治疗决策需结合完整临床信息、影像学和分子检测结果。建议补充以下信息：<br />
+1. 具体转移部位和范围<br />
+2. 完整分子检测结果（RAS、BRAF、MSI、TMB等）<br />
+3. 器官功能评估<br />
+4. 既往治疗史<br />
+5. ECOG评分</p>
+
+            
+
+            
+        </div>
+
+        <div class="footer">
+            <p>本报告由 MTB 多智能体系统自动生成 | 2026-01-16 22:15:00</p>
+            <p>⚠️ 本报告仅供参考，所有临床决策应由具有资质的医疗专业人员做出</p>
+        </div>
+    </div>
+</body>
+</html>
