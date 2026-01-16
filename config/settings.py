@@ -20,10 +20,27 @@ OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/ap
 REPORTS_DIR = BASE_DIR / "reports"
 PROMPTS_DIR = BASE_DIR / "config" / "prompts"
 LOGS_DIR = BASE_DIR / "logs"
+DATA_DIR = BASE_DIR / "data"
 
 # 确保关键目录存在
 REPORTS_DIR.mkdir(exist_ok=True)
 LOGS_DIR.mkdir(exist_ok=True)
+DATA_DIR.mkdir(exist_ok=True)
+
+# ==================== API 工具配置 ====================
+USE_REAL_APIS = os.getenv("USE_REAL_APIS", "true").lower() == "true"
+
+# NCBI (PubMed + ClinVar) - 可选 API Key 提高限额
+NCBI_API_KEY = os.getenv("NCBI_API_KEY", "")
+NCBI_EMAIL = os.getenv("NCBI_EMAIL", "")
+
+# OncoKB Token (如已申请)
+ONCOKB_API_TOKEN = os.getenv("ONCOKB_API_TOKEN", "")
+
+# ==================== RAG 配置 ====================
+NCCN_PDF_DIR = BASE_DIR / os.getenv("NCCN_PDF_DIR", "NCCN_English")
+NCCN_VECTOR_DIR = DATA_DIR / "nccn_vectors"
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 
 # ==================== Agent 配置 ====================
 AGENT_TEMPERATURE = float(os.getenv("AGENT_TEMPERATURE", "0.2"))

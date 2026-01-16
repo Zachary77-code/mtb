@@ -4,7 +4,7 @@ Oncologist Agent（肿瘤学家）
 from typing import Dict, Any, List
 
 from src.agents.base_agent import BaseAgent
-from src.tools.guideline_tools import NCCNTool, FDALabelTool, DrugBankTool
+from src.tools.guideline_tools import NCCNTool, FDALabelTool, RxNormTool
 from src.tools.literature_tools import PubMedTool
 from config.settings import ONCOLOGIST_PROMPT_FILE
 
@@ -14,16 +14,16 @@ class OncologistAgent(BaseAgent):
     肿瘤学家 Agent
 
     制定治疗方案，进行安全性审查。
-    使用 NCCN, FDA Labels, DrugBank, PubMed 工具。
+    使用 NCCN (RAG), FDA Labels, RxNorm (替代 DrugBank), PubMed 工具。
     强制执行安全优先规则。
     """
 
     def __init__(self):
         tools = [
-            NCCNTool(),
-            FDALabelTool(),
-            DrugBankTool(),
-            PubMedTool()
+            NCCNTool(),       # NCCN 指南 (基于 RAG)
+            FDALabelTool(),   # FDA 药品说明书
+            RxNormTool(),     # 替代 DrugBank，提供药物相互作用
+            PubMedTool()      # 文献检索
         ]
 
         super().__init__(
@@ -80,7 +80,7 @@ class OncologistAgent(BaseAgent):
 **任务**:
 1. 使用 search_nccn 确认标准治疗方案
 2. 使用 search_fda_labels 检查推荐药物的剂量调整
-3. 使用 search_drugbank 检查药物相互作用
+3. 使用 search_rxnorm 检查药物相互作用
 4. 根据器官功能制定剂量调整方案
 5. 强制包含"不建议"章节
 

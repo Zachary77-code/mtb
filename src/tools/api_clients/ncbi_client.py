@@ -1,0 +1,313 @@
+"""
+NCBI E-utilities 客户端
+
+支持 PubMed 文献检索和 ClinVar 变异查询
+API 文档: https://www.ncbi.nlm.nih.gov/books/NBK25500/
+"""
+import requests
+import time
+import xml.etree.ElementTree as ET
+from typing import Dict, List, Any, Optional
+from src.utils.logger import mtb_logger as logger
+
+
+class NCBIClient:
+    """NCBI E-utilities API 客户端"""
+
+    BASE_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
+
+    def __init__(self, api_key: str = None, email: str = None):
+        """
+        初始化 NCBI 客户端
+
+        Args:
+            api_key: NCBI API Key (可选，提高请求限额至 10/秒)
+            email: 联系邮箱 (NCBI 建议提供)
+        """
+        self.api_key = api_key
+        self.email = email
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": "MTB-Workflow/1.0 (Medical Tumor Board)"
+        })
+        # 请求间隔 (无 API Key 限制 3/秒)
+        self._last_request_time = 0
+        self._min_interval = 0.34 if not api_key else 0.1
+
+    def _rate_limit(self):
+        """速率限制"""
+        elapsed = time.time() - self._last_request_time
+        if elapsed < self._min_interval:
+            time.sleep(self._min_interval - elapsed)
+        self._last_request_time = time.time()
+
+    def _build_params(self, params: Dict) -> Dict:
+        """构建请求参数"""
+        if self.api_key:
+            params["api_key"] = self.api_key
+        if self.email:
+            params["email"] = self.email
+        return params
+
+    # ==================== PubMed 相关 ====================
+
+    def search_pubmed(self, query: str, max_results: int = 10) -> List[Dict]:
+        """
+        搜索 PubMed 文献
+
+        Args:
+            query: 搜索关键词 (支持布尔运算符)
+            max_results: 最大结果数
+
+        Returns:
+            文献列表 [{pmid, title, authors, journal, year, abstract}]
+        """
+        self._rate_limit()
+
+        # Step 1: esearch 获取 PMID 列表
+        search_url = f"{self.BASE_URL}/esearch.fcgi"
+        params = self._build_params({
+            "db": "pubmed",
+            "term": query,
+            "retmax": max_results,
+            "retmode": "json",
+            "sort": "relevance"
+        })
+
+        try:
+            logger.debug(f"[NCBI] PubMed 搜索: {query}")
+            response = self.session.get(search_url, params=params, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+
+            pmids = data.get("esearchresult", {}).get("idlist", [])
+            if not pmids:
+                logger.info(f"[NCBI] PubMed 无结果: {query}")
+                return []
+
+            logger.debug(f"[NCBI] 找到 {len(pmids)} 篇文献")
+
+            # Step 2: efetch 获取详细信息
+            return self.fetch_abstracts(pmids)
+
+        except Exception as e:
+            logger.error(f"[NCBI] PubMed 搜索失败: {e}")
+            return []
+
+    def fetch_abstracts(self, pmids: List[str]) -> List[Dict]:
+        """
+        获取文献详细信息
+
+        Args:
+            pmids: PMID 列表
+
+        Returns:
+            文献详细信息列表
+        """
+        if not pmids:
+            return []
+
+        self._rate_limit()
+
+        fetch_url = f"{self.BASE_URL}/efetch.fcgi"
+        params = self._build_params({
+            "db": "pubmed",
+            "id": ",".join(pmids),
+            "rettype": "xml",
+            "retmode": "xml"
+        })
+
+        try:
+            response = self.session.get(fetch_url, params=params, timeout=60)
+            response.raise_for_status()
+
+            return self._parse_pubmed_xml(response.text)
+
+        except Exception as e:
+            logger.error(f"[NCBI] 获取摘要失败: {e}")
+            return []
+
+    def _parse_pubmed_xml(self, xml_text: str) -> List[Dict]:
+        """解析 PubMed XML 响应"""
+        results = []
+        try:
+            root = ET.fromstring(xml_text)
+
+            for article in root.findall(".//PubmedArticle"):
+                citation = article.find(".//MedlineCitation")
+                if citation is None:
+                    continue
+
+                pmid_elem = citation.find("PMID")
+                pmid = pmid_elem.text if pmid_elem is not None else ""
+
+                article_elem = citation.find("Article")
+                if article_elem is None:
+                    continue
+
+                # 标题
+                title_elem = article_elem.find("ArticleTitle")
+                title = title_elem.text if title_elem is not None else ""
+
+                # 作者
+                authors = []
+                author_list = article_elem.find("AuthorList")
+                if author_list is not None:
+                    for author in author_list.findall("Author"):
+                        last_name = author.find("LastName")
+                        initials = author.find("Initials")
+                        if last_name is not None:
+                            name = last_name.text
+                            if initials is not None:
+                                name += f" {initials.text}"
+                            authors.append(name)
+
+                # 期刊
+                journal_elem = article_elem.find(".//Journal/Title")
+                journal = journal_elem.text if journal_elem is not None else ""
+
+                # 年份
+                year_elem = article_elem.find(".//PubDate/Year")
+                year = year_elem.text if year_elem is not None else ""
+
+                # 摘要
+                abstract_elem = article_elem.find(".//Abstract/AbstractText")
+                abstract = ""
+                if abstract_elem is not None:
+                    abstract = abstract_elem.text or ""
+
+                results.append({
+                    "pmid": pmid,
+                    "title": title,
+                    "authors": authors[:3],  # 只取前3作者
+                    "journal": journal,
+                    "year": year,
+                    "abstract": abstract[:500] if abstract else ""  # 限制摘要长度
+                })
+
+        except ET.ParseError as e:
+            logger.error(f"[NCBI] XML 解析失败: {e}")
+
+        return results
+
+    # ==================== ClinVar 相关 ====================
+
+    def search_clinvar(self, gene: str, variant: str = None) -> List[Dict]:
+        """
+        搜索 ClinVar 变异
+
+        Args:
+            gene: 基因名称 (如 EGFR)
+            variant: 变异 (如 L858R)，可选
+
+        Returns:
+            变异列表 [{variation_id, gene, variant, classification, review_status}]
+        """
+        self._rate_limit()
+
+        # 构建查询
+        query = f"{gene}[gene]"
+        if variant:
+            query += f" AND {variant}"
+
+        search_url = f"{self.BASE_URL}/esearch.fcgi"
+        params = self._build_params({
+            "db": "clinvar",
+            "term": query,
+            "retmax": 10,
+            "retmode": "json"
+        })
+
+        try:
+            logger.debug(f"[NCBI] ClinVar 搜索: {query}")
+            response = self.session.get(search_url, params=params, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+
+            ids = data.get("esearchresult", {}).get("idlist", [])
+            if not ids:
+                logger.info(f"[NCBI] ClinVar 无结果: {query}")
+                return []
+
+            # 获取详细信息
+            return self._fetch_clinvar_details(ids)
+
+        except Exception as e:
+            logger.error(f"[NCBI] ClinVar 搜索失败: {e}")
+            return []
+
+    def _fetch_clinvar_details(self, variation_ids: List[str]) -> List[Dict]:
+        """获取 ClinVar 变异详细信息"""
+        if not variation_ids:
+            return []
+
+        self._rate_limit()
+
+        fetch_url = f"{self.BASE_URL}/efetch.fcgi"
+        params = self._build_params({
+            "db": "clinvar",
+            "id": ",".join(variation_ids),
+            "rettype": "vcv",
+            "retmode": "xml"
+        })
+
+        try:
+            response = self.session.get(fetch_url, params=params, timeout=60)
+            response.raise_for_status()
+
+            return self._parse_clinvar_xml(response.text)
+
+        except Exception as e:
+            logger.error(f"[NCBI] ClinVar 详情获取失败: {e}")
+            return []
+
+    def _parse_clinvar_xml(self, xml_text: str) -> List[Dict]:
+        """解析 ClinVar XML 响应"""
+        results = []
+        try:
+            root = ET.fromstring(xml_text)
+
+            for record in root.findall(".//VariationArchive"):
+                variation_id = record.get("VariationID", "")
+                variation_name = record.get("VariationName", "")
+
+                # 临床意义
+                classification_elem = record.find(".//ClassifiedRecord/Classifications/GermlineClassification/Description")
+                classification = classification_elem.text if classification_elem is not None else "Unknown"
+
+                # 审查状态
+                review_elem = record.find(".//ClassifiedRecord/Classifications/GermlineClassification/ReviewStatus")
+                review_status = review_elem.text if review_elem is not None else "Unknown"
+
+                # 基因
+                gene_elem = record.find(".//Gene")
+                gene = gene_elem.get("Symbol", "") if gene_elem is not None else ""
+
+                results.append({
+                    "variation_id": variation_id,
+                    "variation_name": variation_name,
+                    "gene": gene,
+                    "classification": classification,
+                    "review_status": review_status,
+                    "url": f"https://www.ncbi.nlm.nih.gov/clinvar/variation/{variation_id}/"
+                })
+
+        except ET.ParseError as e:
+            logger.error(f"[NCBI] ClinVar XML 解析失败: {e}")
+
+        return results
+
+
+if __name__ == "__main__":
+    # 测试
+    client = NCBIClient()
+
+    print("=== PubMed 搜索测试 ===")
+    results = client.search_pubmed("EGFR L858R osimertinib", max_results=3)
+    for r in results:
+        print(f"- PMID {r['pmid']}: {r['title'][:60]}...")
+
+    print("\n=== ClinVar 搜索测试 ===")
+    results = client.search_clinvar("EGFR", "L858R")
+    for r in results:
+        print(f"- {r['gene']} {r['variation_name']}: {r['classification']}")
