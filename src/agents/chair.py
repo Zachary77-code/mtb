@@ -4,6 +4,8 @@ Chair Agent（MTB 主席）
 from typing import Dict, Any, List
 
 from src.agents.base_agent import BaseAgent
+from src.tools.guideline_tools import NCCNTool, FDALabelTool
+from src.tools.literature_tools import PubMedTool
 from config.settings import CHAIR_PROMPT_FILE, REQUIRED_SECTIONS
 
 
@@ -16,10 +18,11 @@ class ChairAgent(BaseAgent):
     """
 
     def __init__(self):
-        # 注意：对于简单模型（如 xiaomi/mimo-v2-flash:free），禁用工具调用
-        # 让模型专注于综合报告生成，而不是调用工具
-        # 如果使用更强大的模型（如 GPT-4），可以启用工具
-        tools = []  # 禁用工具以提高报告生成质量
+        tools = [
+            NCCNTool(),
+            FDALabelTool(),
+            PubMedTool()
+        ]
 
         super().__init__(
             role="Chair",
