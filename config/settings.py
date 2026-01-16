@@ -28,8 +28,6 @@ LOGS_DIR.mkdir(exist_ok=True)
 DATA_DIR.mkdir(exist_ok=True)
 
 # ==================== API 工具配置 ====================
-USE_REAL_APIS = os.getenv("USE_REAL_APIS", "true").lower() == "true"
-
 # NCBI (PubMed + ClinVar) - 可选 API Key 提高限额
 NCBI_API_KEY = os.getenv("NCBI_API_KEY", "")
 NCBI_EMAIL = os.getenv("NCBI_EMAIL", "")

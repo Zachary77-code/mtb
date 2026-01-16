@@ -123,30 +123,6 @@ class CIViCTool(BaseTool):
 建议搜索: https://civicdb.org/genes/{gene}
 """
 
-    def _generate_mock_response(
-        self,
-        gene: str = "",
-        variant: str = "",
-        cancer_type: str = "",
-        **kwargs
-    ) -> str:
-        """生成模拟响应"""
-        return f"""**CIViC 查询结果（模拟数据）**
-
-**变异**: {gene} {variant}
-**肿瘤类型**: {cancer_type}
-**证据等级**: Level A (FDA-approved biomarker)
-
-**治疗推荐**:
-- Osimertinib (奥希替尼/泰瑞沙) - FDA approved, NMPA approved
-- Dacomitinib (达克替尼) - FDA approved (second-line)
-
-**临床试验**:
-- FLAURA Trial: 71% ORR, 18.9 months mPFS [PMID: 29151359]
-
-**参考**: https://civicdb.org/genes/{gene}
-"""
-
     def _get_parameters_schema(self) -> Dict[str, Any]:
         return {
             "type": "object",
@@ -231,18 +207,6 @@ class ClinVarTool(BaseTool):
 1. 检查变异命名是否正确
 2. 尝试使用 HGVS 格式 (如 NM_005228.5:c.2573T>G)
 3. 直接搜索: https://www.ncbi.nlm.nih.gov/clinvar/?term={gene}
-"""
-
-    def _generate_mock_response(self, gene: str = "", variant: str = "", **kwargs) -> str:
-        """生成模拟响应"""
-        return f"""**ClinVar 查询结果（模拟数据）**
-
-**变异**: {gene} {variant}
-**致病性分类**: Pathogenic (★★★★)
-**审查状态**: Reviewed by expert panel
-**临床意义**: 该变异与癌症易感性相关
-
-**参考**: https://www.ncbi.nlm.nih.gov/clinvar/?term={gene}[gene]+AND+{variant}
 """
 
     def _get_parameters_schema(self) -> Dict[str, Any]:
@@ -348,26 +312,6 @@ class cBioPortalTool(BaseTool):
 建议:
 1. 检查基因名称是否正确
 2. 直接访问: https://www.cbioportal.org/results/mutations?gene_list={gene}
-"""
-
-    def _generate_mock_response(
-        self,
-        gene: str = "",
-        variant: str = "",
-        cancer_type: str = "",
-        **kwargs
-    ) -> str:
-        """生成模拟响应"""
-        return f"""**cBioPortal 查询结果（模拟数据）**
-
-**变异**: {gene} {variant}
-**肿瘤类型**: {cancer_type}
-**突变频率**: 15.3% (n=2,405 samples)
-**突变类型分布**:
-- 替代突变 (Substitution): 98%
-- 缺失 (Deletion): 2%
-
-**参考**: https://www.cbioportal.org/results/mutations?gene_list={gene}
 """
 
     def _get_parameters_schema(self) -> Dict[str, Any]:

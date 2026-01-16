@@ -42,7 +42,7 @@ class BaseAgent:
         Args:
             role: Agent 角色名称
             prompt_file: 角色特定提示词文件名
-            tools: 可用工具列表（BaseMockTool 实例）
+            tools: 可用工具列表（BaseTool 实例）
             temperature: LLM 温度参数（可选，默认使用全局配置）
         """
         self.role = role

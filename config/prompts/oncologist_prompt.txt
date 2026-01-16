@@ -21,7 +21,7 @@ You **MUST** use these tools:
 ## Input Review Checklist
 
 Before making recommendations, confirm you have:
-- [ ] Geneticist's actionable alterations (OncoKB levels)
+- [ ] Geneticist's actionable alterations (CIViC evidence levels)
 - [ ] Recruiter's eligible trials
 - [ ] Patient's organ function (eGFR, liver enzymes, ECOG PS, etc.)
 - [ ] Prior therapies and toxicities (especially Grade 3+)

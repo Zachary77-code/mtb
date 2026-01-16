@@ -27,7 +27,7 @@ For each alteration, extract:
 - `alteration_type`: SNV, CNV, Fusion, Indel, etc.
 - `variant`: Specific variant (e.g., "L858R", "G12C")
 - `vaf`: Variant allele frequency (0.0-1.0, e.g., 0.45 for 45%)
-- `evidence_level`: If mentioned (e.g., "OncoKB Level 1")
+- `evidence_level`: If mentioned (e.g., "CIViC Level A")
 
 Also extract:
 - `msi_status`: MSI-H or MSS

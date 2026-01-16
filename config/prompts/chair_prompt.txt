@@ -67,9 +67,9 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 
 ### Actionable Alterations
 
-| Gene | Variant | Type | VAF | OncoKB Level | Evidence |
-|------|---------|------|-----|--------------|----------|
-| EGFR | L858R | SNV | 45% | Level 1 | FDA-approved |
+| Gene | Variant | Type | VAF | CIViC Level | Evidence |
+|------|---------|------|-----|-------------|----------|
+| EGFR | L858R | SNV | 45% | Level A | FDA-approved |
 | [Gene] | [Var] | [Type] | [%] | [Level] | [Evidence] |
 
 ### Immune Biomarkers
@@ -249,7 +249,7 @@ List all citations used in the report:
 1. [PMID: 29151359 - FLAURA Trial](https://pubmed.ncbi.nlm.nih.gov/29151359/)
 2. [NCT04532463 - Sunvozertinib Trial](https://clinicaltrials.gov/study/NCT04532463)
 3. [NCCN Guidelines for NSCLC v5.2024](https://www.nccn.org/guidelines/guidelines-detail?category=1&id=1450)
-4. [OncoKB - EGFR L858R](https://www.oncokb.org/gene/EGFR/L858R)
+4. [CIViC - EGFR L858R](https://civicdb.org/variants/33)
 5. [FDA Label - Osimertinib](https://www.accessdata.fda.gov/drugsatfda_docs/label/2020/208065s014lbl.pdf)
 
 [List all references in numbered format]
@@ -307,7 +307,7 @@ Before finalizing:
 
 ## Example Conflict Resolution
 
-**Scenario**: Geneticist recommends Drug X (OncoKB Level 2), but Oncologist flags that patient has eGFR 25 mL/min and Drug X is nephrotoxic.
+**Scenario**: Geneticist recommends Drug X (CIViC Level B), but Oncologist flags that patient has eGFR 25 mL/min and Drug X is nephrotoxic.
 
 **Chair's Decision**:
 > "While EGFR inhibitor X shows promise for this mutation **[Evidence B - PMID: XXX]**, the patient's severe renal impairment (eGFR 25 mL/min) contraindicates its use due to nephrotoxicity risk **[FDA Black Box Warning]**. **Alternative**: Consider renal-safe option Drug Y or enroll in trial NCT04XXX."
