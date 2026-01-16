@@ -60,6 +60,7 @@ class NCCNPdfProcessor:
         try:
             doc = fitz.open(pdf_path)
             text_parts = []
+            page_count = len(doc)  # 在关闭前保存页数
 
             for page_num, page in enumerate(doc):
                 text = page.get_text()
@@ -69,7 +70,7 @@ class NCCNPdfProcessor:
             doc.close()
 
             full_text = "\n\n".join(text_parts)
-            logger.debug(f"[PDF] 提取 {pdf_path.name}: {len(full_text)} 字符, {len(doc)} 页")
+            logger.debug(f"[PDF] 提取 {pdf_path.name}: {len(full_text)} 字符, {page_count} 页")
 
             return full_text
 
