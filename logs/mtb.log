@@ -688,3 +688,850 @@ UnicodeEncodeError: 'gbk' codec can't encode character '\u2705' in position 0: i
 2026-01-16 14:47:43 | INFO     | __main__:build_index:75 | [NCCN-RAG] 索引构建完成: 32622 个文档块
 2026-01-16 14:47:43 | INFO     | __main__:initialize:37 | [NCCN-RAG] 初始化中...
 2026-01-16 14:47:43 | INFO     | __main__:initialize:46 | [NCCN-RAG] 初始化完成
+2026-01-16 15:06:06 | INFO     | __main__:initialize:37 | [NCCN-RAG] 初始化中...
+2026-01-16 15:06:06 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 15:06:06 | INFO     | src.tools.rag.vector_store:initialize:80 | [VectorStore] 加载嵌入模型: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+2026-01-16 15:06:14 | INFO     | src.tools.rag.vector_store:initialize:84 | [VectorStore] 初始化完成，现有文档数: 32622
+2026-01-16 15:06:14 | INFO     | __main__:initialize:46 | [NCCN-RAG] 初始化完成
+2026-01-16 15:12:07 | INFO     | __main__:initialize:37 | [NCCN-RAG] 初始化中...
+2026-01-16 15:12:07 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 15:12:07 | INFO     | src.tools.rag.vector_store:initialize:80 | [VectorStore] 加载嵌入模型: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+2026-01-16 15:12:15 | INFO     | src.tools.rag.vector_store:initialize:84 | [VectorStore] 初始化完成，现有文档数: 32622
+2026-01-16 15:12:15 | INFO     | __main__:initialize:46 | [NCCN-RAG] 初始化完成
+2026-01-16 15:16:17 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 15:16:17 | INFO     | src.tools.rag.vector_store:initialize:83 | [VectorStore] 加载嵌入模型: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+2026-01-16 15:16:24 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化完成，现有文档数: 0
+2026-01-16 15:16:24 | INFO     | __main__:build_index:64 | [NCCN-RAG] 开始处理 PDF 并构建索引...
+2026-01-16 15:16:24 | INFO     | src.tools.rag.pdf_processor:list_pdfs:43 | [PDF] 找到 59 个 PDF 文件
+2026-01-16 15:16:24 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf
+2026-01-16 15:16:25 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf: 1463 个文档块
+2026-01-16 15:16:25 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：Castleman病.pdf
+2026-01-16 15:16:25 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：Castleman病.pdf: 113 个文档块
+2026-01-16 15:16:25 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf
+2026-01-16 15:16:25 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf: 314 个文档块
+2026-01-16 15:16:25 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf
+2026-01-16 15:16:25 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf: 805 个文档块
+2026-01-16 15:16:25 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：乳腺癌.pdf
+2026-01-16 15:16:26 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：乳腺癌.pdf: 1202 个文档块
+2026-01-16 15:16:26 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf
+2026-01-16 15:16:26 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf: 300 个文档块
+2026-01-16 15:16:26 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf
+2026-01-16 15:16:26 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf: 739 个文档块
+2026-01-16 15:16:26 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：前列腺癌.pdf
+2026-01-16 15:16:26 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：前列腺癌.pdf: 1045 个文档块
+2026-01-16 15:16:26 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf
+2026-01-16 15:16:26 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf: 204 个文档块
+2026-01-16 15:16:26 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf
+2026-01-16 15:16:27 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf: 556 个文档块
+2026-01-16 15:16:27 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf
+2026-01-16 15:16:27 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf: 312 个文档块
+2026-01-16 15:16:27 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf
+2026-01-16 15:16:27 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf: 555 个文档块
+2026-01-16 15:16:27 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf
+2026-01-16 15:16:27 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf: 1124 个文档块
+2026-01-16 15:16:27 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf
+2026-01-16 15:16:27 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf: 211 个文档块
+2026-01-16 15:16:27 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：姑息治疗.pdf
+2026-01-16 15:16:28 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：姑息治疗.pdf: 456 个文档块
+2026-01-16 15:16:28 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 15:16:28 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf: 597 个文档块
+2026-01-16 15:16:28 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 15:16:28 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：宫颈癌.pdf: 582 个文档块
+2026-01-16 15:16:28 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：小肠腺癌.pdf
+2026-01-16 15:16:28 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：小肠腺癌.pdf: 269 个文档块
+2026-01-16 15:16:28 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf
+2026-01-16 15:16:28 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf: 336 个文档块
+2026-01-16 15:16:28 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf
+2026-01-16 15:16:28 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf: 870 个文档块
+2026-01-16 15:16:28 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 15:16:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf: 427 个文档块
+2026-01-16 15:16:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf
+2026-01-16 15:16:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf: 128 个文档块
+2026-01-16 15:16:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf
+2026-01-16 15:16:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf: 322 个文档块
+2026-01-16 15:16:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：直肠癌.pdf
+2026-01-16 15:16:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：直肠癌.pdf: 860 个文档块
+2026-01-16 15:16:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf
+2026-01-16 15:16:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf: 153 个文档块
+2026-01-16 15:16:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：结肠癌.pdf
+2026-01-16 15:16:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：结肠癌.pdf: 1162 个文档块
+2026-01-16 15:16:29 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：老年肿瘤.pdf
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：老年肿瘤.pdf: 460 个文档块
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肛门癌.pdf
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肛门癌.pdf: 290 个文档块
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肺癌筛查.pdf
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肺癌筛查.pdf: 410 个文档块
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胰腺癌.pdf: 717 个文档块
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf: 178 个文档块
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：造血生长因子.pdf
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：造血生长因子.pdf: 445 个文档块
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf: 268 个文档块
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：阴茎癌.pdf
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：阴茎癌.pdf: 234 个文档块
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf: 286 个文档块
+2026-01-16 15:16:30 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf
+2026-01-16 15:16:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf: 76 个文档块
+2026-01-16 15:16:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 15:16:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf: 1392 个文档块
+2026-01-16 15:16:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌 (2).pdf
+2026-01-16 15:16:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌 (2).pdf: 453 个文档块
+2026-01-16 15:16:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌.pdf
+2026-01-16 15:16:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌.pdf: 453 个文档块
+2026-01-16 15:16:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf
+2026-01-16 15:16:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf: 593 个文档块
+2026-01-16 15:16:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf
+2026-01-16 15:16:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf: 319 个文档块
+2026-01-16 15:16:31 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf
+2026-01-16 15:16:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf: 753 个文档块
+2026-01-16 15:16:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 15:16:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf: 594 个文档块
+2026-01-16 15:16:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 15:16:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：宫颈癌.pdf: 583 个文档块
+2026-01-16 15:16:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 15:16:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf: 396 个文档块
+2026-01-16 15:16:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf
+2026-01-16 15:16:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf: 160 个文档块
+2026-01-16 15:16:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf
+2026-01-16 15:16:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf: 461 个文档块
+2026-01-16 15:16:32 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf
+2026-01-16 15:16:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf: 410 个文档块
+2026-01-16 15:16:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf
+2026-01-16 15:16:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf: 1110 个文档块
+2026-01-16 15:16:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：肾癌.pdf
+2026-01-16 15:16:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：肾癌.pdf: 391 个文档块
+2026-01-16 15:16:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 15:16:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：胰腺癌.pdf: 713 个文档块
+2026-01-16 15:16:33 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf
+2026-01-16 15:16:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf: 489 个文档块
+2026-01-16 15:16:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 15:16:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf: 1388 个文档块
+2026-01-16 15:16:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 15:16:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：宫颈癌.pdf: 585 个文档块
+2026-01-16 15:16:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 15:16:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf: 393 个文档块
+2026-01-16 15:16:34 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 15:16:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf: 461 个文档块
+2026-01-16 15:16:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：肾癌.pdf
+2026-01-16 15:16:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：肾癌.pdf: 386 个文档块
+2026-01-16 15:16:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：阴道癌.pdf
+2026-01-16 15:16:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：阴道癌.pdf: 280 个文档块
+2026-01-16 15:16:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 15:16:35 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf: 1390 个文档块
+2026-01-16 15:16:35 | INFO     | src.tools.rag.pdf_processor:process_all_pdfs:274 | [PDF] 总计处理 59 个 PDF，生成 32622 个文档块
+2026-01-16 15:16:35 | INFO     | src.tools.rag.vector_store:build_index:112 | [VectorStore] 开始构建索引: 32622 个文档
+2026-01-16 15:21:22 | INFO     | src.tools.rag.vector_store:build_index:144 | [VectorStore] 索引构建完成，总计 32622 个文档
+2026-01-16 15:21:22 | INFO     | __main__:build_index:75 | [NCCN-RAG] 索引构建完成: 32622 个文档块
+2026-01-16 15:21:22 | INFO     | __main__:initialize:37 | [NCCN-RAG] 初始化中...
+2026-01-16 15:21:22 | INFO     | __main__:initialize:46 | [NCCN-RAG] 初始化完成
+2026-01-16 15:46:50 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 15:46:50 | INFO     | src.tools.rag.vector_store:initialize:83 | [VectorStore] 加载嵌入模型: BAAI/bge-m3
+2026-01-16 16:15:37 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 16:15:37 | INFO     | src.tools.rag.vector_store:initialize:83 | [VectorStore] 加载嵌入模型: BAAI/bge-m3
+2026-01-16 16:16:13 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化完成，现有文档数: 0
+2026-01-16 16:16:13 | INFO     | __main__:build_index:64 | [NCCN-RAG] 开始处理 PDF 并构建索引...
+2026-01-16 16:16:13 | INFO     | src.tools.rag.pdf_processor:list_pdfs:43 | [PDF] 找到 59 个 PDF 文件
+2026-01-16 16:16:13 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf
+2026-01-16 16:16:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf: 1463 个文档块
+2026-01-16 16:16:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：Castleman病.pdf
+2026-01-16 16:16:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：Castleman病.pdf: 113 个文档块
+2026-01-16 16:16:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf
+2026-01-16 16:16:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf: 314 个文档块
+2026-01-16 16:16:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf
+2026-01-16 16:16:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf: 805 个文档块
+2026-01-16 16:16:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：乳腺癌.pdf
+2026-01-16 16:16:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：乳腺癌.pdf: 1202 个文档块
+2026-01-16 16:16:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf
+2026-01-16 16:16:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf: 300 个文档块
+2026-01-16 16:16:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf
+2026-01-16 16:16:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf: 739 个文档块
+2026-01-16 16:16:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：前列腺癌.pdf
+2026-01-16 16:16:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：前列腺癌.pdf: 1045 个文档块
+2026-01-16 16:16:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf
+2026-01-16 16:16:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf: 204 个文档块
+2026-01-16 16:16:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf
+2026-01-16 16:16:16 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf: 556 个文档块
+2026-01-16 16:16:16 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf
+2026-01-16 16:16:16 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf: 312 个文档块
+2026-01-16 16:16:16 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf
+2026-01-16 16:16:16 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf: 555 个文档块
+2026-01-16 16:16:16 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf
+2026-01-16 16:16:16 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf: 1124 个文档块
+2026-01-16 16:16:16 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf
+2026-01-16 16:16:16 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf: 211 个文档块
+2026-01-16 16:16:16 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：姑息治疗.pdf
+2026-01-16 16:16:16 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：姑息治疗.pdf: 456 个文档块
+2026-01-16 16:16:16 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 16:16:17 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf: 597 个文档块
+2026-01-16 16:16:17 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 16:16:17 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：宫颈癌.pdf: 582 个文档块
+2026-01-16 16:16:17 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：小肠腺癌.pdf
+2026-01-16 16:16:17 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：小肠腺癌.pdf: 269 个文档块
+2026-01-16 16:16:17 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf
+2026-01-16 16:16:17 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf: 336 个文档块
+2026-01-16 16:16:17 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf
+2026-01-16 16:16:17 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf: 870 个文档块
+2026-01-16 16:16:17 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 16:16:17 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf: 427 个文档块
+2026-01-16 16:16:17 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf
+2026-01-16 16:16:18 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf: 128 个文档块
+2026-01-16 16:16:18 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf
+2026-01-16 16:16:18 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf: 322 个文档块
+2026-01-16 16:16:18 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：直肠癌.pdf
+2026-01-16 16:16:18 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：直肠癌.pdf: 860 个文档块
+2026-01-16 16:16:18 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf
+2026-01-16 16:16:18 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf: 153 个文档块
+2026-01-16 16:16:18 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：结肠癌.pdf
+2026-01-16 16:16:18 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：结肠癌.pdf: 1162 个文档块
+2026-01-16 16:16:18 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：老年肿瘤.pdf
+2026-01-16 16:16:18 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：老年肿瘤.pdf: 460 个文档块
+2026-01-16 16:16:18 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肛门癌.pdf
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肛门癌.pdf: 290 个文档块
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肺癌筛查.pdf
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肺癌筛查.pdf: 410 个文档块
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胰腺癌.pdf: 717 个文档块
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf: 178 个文档块
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：造血生长因子.pdf
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：造血生长因子.pdf: 445 个文档块
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf: 268 个文档块
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：阴茎癌.pdf
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：阴茎癌.pdf: 234 个文档块
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf: 286 个文档块
+2026-01-16 16:16:19 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf
+2026-01-16 16:16:20 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf: 76 个文档块
+2026-01-16 16:16:20 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 16:16:20 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf: 1392 个文档块
+2026-01-16 16:16:20 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌 (2).pdf
+2026-01-16 16:16:20 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌 (2).pdf: 453 个文档块
+2026-01-16 16:16:20 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌.pdf
+2026-01-16 16:16:20 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌.pdf: 453 个文档块
+2026-01-16 16:16:20 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf
+2026-01-16 16:16:20 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf: 593 个文档块
+2026-01-16 16:16:20 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf
+2026-01-16 16:16:21 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf: 319 个文档块
+2026-01-16 16:16:21 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf
+2026-01-16 16:16:21 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf: 753 个文档块
+2026-01-16 16:16:21 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 16:16:21 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf: 594 个文档块
+2026-01-16 16:16:21 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 16:16:21 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：宫颈癌.pdf: 583 个文档块
+2026-01-16 16:16:21 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 16:16:21 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf: 396 个文档块
+2026-01-16 16:16:21 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf
+2026-01-16 16:16:22 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf: 160 个文档块
+2026-01-16 16:16:22 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf
+2026-01-16 16:16:22 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf: 461 个文档块
+2026-01-16 16:16:22 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf
+2026-01-16 16:16:22 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf: 410 个文档块
+2026-01-16 16:16:22 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf
+2026-01-16 16:16:22 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf: 1110 个文档块
+2026-01-16 16:16:22 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：肾癌.pdf
+2026-01-16 16:16:22 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：肾癌.pdf: 391 个文档块
+2026-01-16 16:16:22 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 16:16:23 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：胰腺癌.pdf: 713 个文档块
+2026-01-16 16:16:23 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf
+2026-01-16 16:16:23 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf: 489 个文档块
+2026-01-16 16:16:23 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 16:16:23 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf: 1388 个文档块
+2026-01-16 16:16:23 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 16:16:23 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：宫颈癌.pdf: 585 个文档块
+2026-01-16 16:16:23 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 16:16:24 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf: 393 个文档块
+2026-01-16 16:16:24 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 16:16:24 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf: 461 个文档块
+2026-01-16 16:16:24 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：肾癌.pdf
+2026-01-16 16:16:24 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：肾癌.pdf: 386 个文档块
+2026-01-16 16:16:24 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：阴道癌.pdf
+2026-01-16 16:16:24 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：阴道癌.pdf: 280 个文档块
+2026-01-16 16:16:24 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 16:16:24 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf: 1390 个文档块
+2026-01-16 16:16:24 | INFO     | src.tools.rag.pdf_processor:process_all_pdfs:274 | [PDF] 总计处理 59 个 PDF，生成 32622 个文档块
+2026-01-16 16:16:24 | INFO     | src.tools.rag.vector_store:build_index:112 | [VectorStore] 开始构建索引: 32622 个文档
+2026-01-16 16:58:47 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 16:58:47 | INFO     | src.tools.rag.vector_store:initialize:83 | [VectorStore] 加载嵌入模型: BAAI/bge-m3
+2026-01-16 16:59:05 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化完成，现有文档数: 0
+2026-01-16 16:59:05 | INFO     | __main__:build_index:64 | [NCCN-RAG] 开始处理 PDF 并构建索引...
+2026-01-16 16:59:05 | INFO     | src.tools.rag.pdf_processor:list_pdfs:43 | [PDF] 找到 59 个 PDF 文件
+2026-01-16 16:59:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf
+2026-01-16 16:59:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf: 1463 个文档块
+2026-01-16 16:59:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：Castleman病.pdf
+2026-01-16 16:59:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：Castleman病.pdf: 113 个文档块
+2026-01-16 16:59:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf
+2026-01-16 16:59:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf: 314 个文档块
+2026-01-16 16:59:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf
+2026-01-16 16:59:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf: 805 个文档块
+2026-01-16 16:59:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：乳腺癌.pdf
+2026-01-16 16:59:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：乳腺癌.pdf: 1202 个文档块
+2026-01-16 16:59:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf
+2026-01-16 16:59:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf: 300 个文档块
+2026-01-16 16:59:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf
+2026-01-16 16:59:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf: 739 个文档块
+2026-01-16 16:59:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：前列腺癌.pdf
+2026-01-16 16:59:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：前列腺癌.pdf: 1045 个文档块
+2026-01-16 16:59:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf
+2026-01-16 16:59:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf: 204 个文档块
+2026-01-16 16:59:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf
+2026-01-16 16:59:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf: 556 个文档块
+2026-01-16 16:59:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf
+2026-01-16 16:59:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf: 312 个文档块
+2026-01-16 16:59:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf
+2026-01-16 16:59:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf: 555 个文档块
+2026-01-16 16:59:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf
+2026-01-16 16:59:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf: 1124 个文档块
+2026-01-16 16:59:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf
+2026-01-16 16:59:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf: 211 个文档块
+2026-01-16 16:59:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：姑息治疗.pdf
+2026-01-16 16:59:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：姑息治疗.pdf: 456 个文档块
+2026-01-16 16:59:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 16:59:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf: 597 个文档块
+2026-01-16 16:59:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 16:59:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：宫颈癌.pdf: 582 个文档块
+2026-01-16 16:59:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：小肠腺癌.pdf
+2026-01-16 16:59:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：小肠腺癌.pdf: 269 个文档块
+2026-01-16 16:59:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf
+2026-01-16 16:59:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf: 336 个文档块
+2026-01-16 16:59:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf
+2026-01-16 16:59:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf: 870 个文档块
+2026-01-16 16:59:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 16:59:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf: 427 个文档块
+2026-01-16 16:59:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf
+2026-01-16 16:59:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf: 128 个文档块
+2026-01-16 16:59:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf
+2026-01-16 16:59:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf: 322 个文档块
+2026-01-16 16:59:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：直肠癌.pdf
+2026-01-16 16:59:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：直肠癌.pdf: 860 个文档块
+2026-01-16 16:59:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf
+2026-01-16 16:59:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf: 153 个文档块
+2026-01-16 16:59:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：结肠癌.pdf
+2026-01-16 16:59:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：结肠癌.pdf: 1162 个文档块
+2026-01-16 16:59:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：老年肿瘤.pdf
+2026-01-16 16:59:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：老年肿瘤.pdf: 460 个文档块
+2026-01-16 16:59:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肛门癌.pdf
+2026-01-16 16:59:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肛门癌.pdf: 290 个文档块
+2026-01-16 16:59:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肺癌筛查.pdf
+2026-01-16 16:59:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肺癌筛查.pdf: 410 个文档块
+2026-01-16 16:59:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 16:59:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胰腺癌.pdf: 717 个文档块
+2026-01-16 16:59:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf
+2026-01-16 16:59:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf: 178 个文档块
+2026-01-16 16:59:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：造血生长因子.pdf
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：造血生长因子.pdf: 445 个文档块
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf: 268 个文档块
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：阴茎癌.pdf
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：阴茎癌.pdf: 234 个文档块
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf: 286 个文档块
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf: 76 个文档块
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf: 1392 个文档块
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌 (2).pdf
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌 (2).pdf: 453 个文档块
+2026-01-16 16:59:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌.pdf
+2026-01-16 16:59:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌.pdf: 453 个文档块
+2026-01-16 16:59:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf
+2026-01-16 16:59:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf: 593 个文档块
+2026-01-16 16:59:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf
+2026-01-16 16:59:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf: 319 个文档块
+2026-01-16 16:59:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf
+2026-01-16 16:59:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf: 753 个文档块
+2026-01-16 16:59:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 16:59:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf: 594 个文档块
+2026-01-16 16:59:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 16:59:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：宫颈癌.pdf: 583 个文档块
+2026-01-16 16:59:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 16:59:13 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf: 396 个文档块
+2026-01-16 16:59:13 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf
+2026-01-16 16:59:13 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf: 160 个文档块
+2026-01-16 16:59:13 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf
+2026-01-16 16:59:13 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf: 461 个文档块
+2026-01-16 16:59:13 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf
+2026-01-16 16:59:13 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf: 410 个文档块
+2026-01-16 16:59:13 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf
+2026-01-16 16:59:13 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf: 1110 个文档块
+2026-01-16 16:59:13 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：肾癌.pdf
+2026-01-16 16:59:13 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：肾癌.pdf: 391 个文档块
+2026-01-16 16:59:13 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 16:59:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：胰腺癌.pdf: 713 个文档块
+2026-01-16 16:59:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf
+2026-01-16 16:59:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf: 489 个文档块
+2026-01-16 16:59:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 16:59:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf: 1388 个文档块
+2026-01-16 16:59:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 16:59:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：宫颈癌.pdf: 585 个文档块
+2026-01-16 16:59:14 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 16:59:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf: 393 个文档块
+2026-01-16 16:59:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 16:59:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf: 461 个文档块
+2026-01-16 16:59:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：肾癌.pdf
+2026-01-16 16:59:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：肾癌.pdf: 386 个文档块
+2026-01-16 16:59:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：阴道癌.pdf
+2026-01-16 16:59:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：阴道癌.pdf: 280 个文档块
+2026-01-16 16:59:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 16:59:15 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf: 1390 个文档块
+2026-01-16 16:59:15 | INFO     | src.tools.rag.pdf_processor:process_all_pdfs:274 | [PDF] 总计处理 59 个 PDF，生成 32622 个文档块
+2026-01-16 16:59:15 | INFO     | src.tools.rag.vector_store:build_index:112 | [VectorStore] 开始构建索引: 32622 个文档
+2026-01-16 17:00:27 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 17:00:27 | INFO     | src.tools.rag.vector_store:initialize:83 | [VectorStore] 加载嵌入模型: BAAI/bge-m3
+2026-01-16 17:00:36 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化完成，现有文档数: 0
+2026-01-16 17:00:36 | INFO     | __main__:build_index:64 | [NCCN-RAG] 开始处理 PDF 并构建索引...
+2026-01-16 17:00:36 | INFO     | src.tools.rag.pdf_processor:list_pdfs:43 | [PDF] 找到 59 个 PDF 文件
+2026-01-16 17:00:36 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf
+2026-01-16 17:00:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf: 1463 个文档块
+2026-01-16 17:00:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：Castleman病.pdf
+2026-01-16 17:00:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：Castleman病.pdf: 113 个文档块
+2026-01-16 17:00:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf
+2026-01-16 17:00:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf: 314 个文档块
+2026-01-16 17:00:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf
+2026-01-16 17:00:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf: 805 个文档块
+2026-01-16 17:00:37 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：乳腺癌.pdf
+2026-01-16 17:00:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：乳腺癌.pdf: 1202 个文档块
+2026-01-16 17:00:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf
+2026-01-16 17:00:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf: 300 个文档块
+2026-01-16 17:00:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf
+2026-01-16 17:00:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf: 739 个文档块
+2026-01-16 17:00:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：前列腺癌.pdf
+2026-01-16 17:00:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：前列腺癌.pdf: 1045 个文档块
+2026-01-16 17:00:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf
+2026-01-16 17:00:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf: 204 个文档块
+2026-01-16 17:00:38 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf
+2026-01-16 17:00:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf: 556 个文档块
+2026-01-16 17:00:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf
+2026-01-16 17:00:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf: 312 个文档块
+2026-01-16 17:00:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf
+2026-01-16 17:00:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf: 555 个文档块
+2026-01-16 17:00:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf
+2026-01-16 17:00:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf: 1124 个文档块
+2026-01-16 17:00:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf
+2026-01-16 17:00:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf: 211 个文档块
+2026-01-16 17:00:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：姑息治疗.pdf
+2026-01-16 17:00:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：姑息治疗.pdf: 456 个文档块
+2026-01-16 17:00:39 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 17:00:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf: 597 个文档块
+2026-01-16 17:00:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 17:00:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：宫颈癌.pdf: 582 个文档块
+2026-01-16 17:00:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：小肠腺癌.pdf
+2026-01-16 17:00:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：小肠腺癌.pdf: 269 个文档块
+2026-01-16 17:00:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf
+2026-01-16 17:00:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf: 336 个文档块
+2026-01-16 17:00:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf
+2026-01-16 17:00:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf: 870 个文档块
+2026-01-16 17:00:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 17:00:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf: 427 个文档块
+2026-01-16 17:00:40 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf
+2026-01-16 17:00:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf: 128 个文档块
+2026-01-16 17:00:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf
+2026-01-16 17:00:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf: 322 个文档块
+2026-01-16 17:00:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：直肠癌.pdf
+2026-01-16 17:00:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：直肠癌.pdf: 860 个文档块
+2026-01-16 17:00:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf
+2026-01-16 17:00:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf: 153 个文档块
+2026-01-16 17:00:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：结肠癌.pdf
+2026-01-16 17:00:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：结肠癌.pdf: 1162 个文档块
+2026-01-16 17:00:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：老年肿瘤.pdf
+2026-01-16 17:00:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：老年肿瘤.pdf: 460 个文档块
+2026-01-16 17:00:41 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肛门癌.pdf
+2026-01-16 17:00:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肛门癌.pdf: 290 个文档块
+2026-01-16 17:00:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肺癌筛查.pdf
+2026-01-16 17:00:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肺癌筛查.pdf: 410 个文档块
+2026-01-16 17:00:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 17:00:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胰腺癌.pdf: 717 个文档块
+2026-01-16 17:00:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf
+2026-01-16 17:00:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf: 178 个文档块
+2026-01-16 17:00:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：造血生长因子.pdf
+2026-01-16 17:00:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：造血生长因子.pdf: 445 个文档块
+2026-01-16 17:00:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf
+2026-01-16 17:00:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf: 268 个文档块
+2026-01-16 17:00:42 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：阴茎癌.pdf
+2026-01-16 17:00:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：阴茎癌.pdf: 234 个文档块
+2026-01-16 17:00:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf
+2026-01-16 17:00:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf: 286 个文档块
+2026-01-16 17:00:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf
+2026-01-16 17:00:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf: 76 个文档块
+2026-01-16 17:00:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 17:00:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf: 1392 个文档块
+2026-01-16 17:00:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌 (2).pdf
+2026-01-16 17:00:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌 (2).pdf: 453 个文档块
+2026-01-16 17:00:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌.pdf
+2026-01-16 17:00:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌.pdf: 453 个文档块
+2026-01-16 17:00:43 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf
+2026-01-16 17:00:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf: 593 个文档块
+2026-01-16 17:00:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf
+2026-01-16 17:00:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf: 319 个文档块
+2026-01-16 17:00:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf
+2026-01-16 17:00:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf: 753 个文档块
+2026-01-16 17:00:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 17:00:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf: 594 个文档块
+2026-01-16 17:00:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 17:00:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：宫颈癌.pdf: 583 个文档块
+2026-01-16 17:00:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 17:00:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf: 396 个文档块
+2026-01-16 17:00:44 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf
+2026-01-16 17:00:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf: 160 个文档块
+2026-01-16 17:00:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf
+2026-01-16 17:00:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf: 461 个文档块
+2026-01-16 17:00:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf
+2026-01-16 17:00:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf: 410 个文档块
+2026-01-16 17:00:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf
+2026-01-16 17:00:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf: 1110 个文档块
+2026-01-16 17:00:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：肾癌.pdf
+2026-01-16 17:00:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：肾癌.pdf: 391 个文档块
+2026-01-16 17:00:45 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 17:00:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：胰腺癌.pdf: 713 个文档块
+2026-01-16 17:00:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf
+2026-01-16 17:00:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf: 489 个文档块
+2026-01-16 17:00:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 17:00:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf: 1388 个文档块
+2026-01-16 17:00:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 17:00:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：宫颈癌.pdf: 585 个文档块
+2026-01-16 17:00:46 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 17:00:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf: 393 个文档块
+2026-01-16 17:00:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 17:00:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf: 461 个文档块
+2026-01-16 17:00:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：肾癌.pdf
+2026-01-16 17:00:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：肾癌.pdf: 386 个文档块
+2026-01-16 17:00:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：阴道癌.pdf
+2026-01-16 17:00:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：阴道癌.pdf: 280 个文档块
+2026-01-16 17:00:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 17:00:47 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf: 1390 个文档块
+2026-01-16 17:00:47 | INFO     | src.tools.rag.pdf_processor:process_all_pdfs:274 | [PDF] 总计处理 59 个 PDF，生成 32622 个文档块
+2026-01-16 17:00:47 | INFO     | src.tools.rag.vector_store:build_index:112 | [VectorStore] 开始构建索引: 32622 个文档
+2026-01-16 17:06:13 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 17:06:14 | INFO     | src.tools.rag.vector_store:initialize:83 | [VectorStore] 加载嵌入模型: BAAI/bge-m3
+2026-01-16 17:10:48 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 17:10:48 | INFO     | src.tools.rag.vector_store:initialize:83 | [VectorStore] 加载嵌入模型: BAAI/bge-m3 (CPU 模式)
+2026-01-16 17:10:57 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化完成，现有文档数: 0
+2026-01-16 17:10:57 | INFO     | __main__:build_index:64 | [NCCN-RAG] 开始处理 PDF 并构建索引...
+2026-01-16 17:10:57 | INFO     | src.tools.rag.pdf_processor:list_pdfs:43 | [PDF] 找到 59 个 PDF 文件
+2026-01-16 17:10:57 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf
+2026-01-16 17:10:57 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf: 1463 个文档块
+2026-01-16 17:10:57 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：Castleman病.pdf
+2026-01-16 17:10:57 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：Castleman病.pdf: 113 个文档块
+2026-01-16 17:10:57 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf
+2026-01-16 17:10:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf: 314 个文档块
+2026-01-16 17:10:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf
+2026-01-16 17:10:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf: 805 个文档块
+2026-01-16 17:10:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：乳腺癌.pdf
+2026-01-16 17:10:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：乳腺癌.pdf: 1202 个文档块
+2026-01-16 17:10:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf
+2026-01-16 17:10:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf: 300 个文档块
+2026-01-16 17:10:58 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf
+2026-01-16 17:10:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf: 739 个文档块
+2026-01-16 17:10:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：前列腺癌.pdf
+2026-01-16 17:10:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：前列腺癌.pdf: 1045 个文档块
+2026-01-16 17:10:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf
+2026-01-16 17:10:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf: 204 个文档块
+2026-01-16 17:10:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf
+2026-01-16 17:10:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf: 556 个文档块
+2026-01-16 17:10:59 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf
+2026-01-16 17:11:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf: 312 个文档块
+2026-01-16 17:11:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf
+2026-01-16 17:11:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf: 555 个文档块
+2026-01-16 17:11:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf
+2026-01-16 17:11:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf: 1124 个文档块
+2026-01-16 17:11:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf
+2026-01-16 17:11:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf: 211 个文档块
+2026-01-16 17:11:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：姑息治疗.pdf
+2026-01-16 17:11:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：姑息治疗.pdf: 456 个文档块
+2026-01-16 17:11:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 17:11:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf: 597 个文档块
+2026-01-16 17:11:00 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：宫颈癌.pdf: 582 个文档块
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：小肠腺癌.pdf
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：小肠腺癌.pdf: 269 个文档块
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf: 336 个文档块
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf: 870 个文档块
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf: 427 个文档块
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf: 128 个文档块
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf: 322 个文档块
+2026-01-16 17:11:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：直肠癌.pdf
+2026-01-16 17:11:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：直肠癌.pdf: 860 个文档块
+2026-01-16 17:11:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf
+2026-01-16 17:11:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf: 153 个文档块
+2026-01-16 17:11:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：结肠癌.pdf
+2026-01-16 17:11:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：结肠癌.pdf: 1162 个文档块
+2026-01-16 17:11:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：老年肿瘤.pdf
+2026-01-16 17:11:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：老年肿瘤.pdf: 460 个文档块
+2026-01-16 17:11:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肛门癌.pdf
+2026-01-16 17:11:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肛门癌.pdf: 290 个文档块
+2026-01-16 17:11:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肺癌筛查.pdf
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肺癌筛查.pdf: 410 个文档块
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胰腺癌.pdf: 717 个文档块
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf: 178 个文档块
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：造血生长因子.pdf
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：造血生长因子.pdf: 445 个文档块
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf: 268 个文档块
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：阴茎癌.pdf
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：阴茎癌.pdf: 234 个文档块
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf: 286 个文档块
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf: 76 个文档块
+2026-01-16 17:11:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 17:11:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf: 1392 个文档块
+2026-01-16 17:11:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌 (2).pdf
+2026-01-16 17:11:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌 (2).pdf: 453 个文档块
+2026-01-16 17:11:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌.pdf
+2026-01-16 17:11:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌.pdf: 453 个文档块
+2026-01-16 17:11:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf
+2026-01-16 17:11:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf: 593 个文档块
+2026-01-16 17:11:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf
+2026-01-16 17:11:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf: 319 个文档块
+2026-01-16 17:11:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf
+2026-01-16 17:11:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf: 753 个文档块
+2026-01-16 17:11:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 17:11:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf: 594 个文档块
+2026-01-16 17:11:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 17:11:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：宫颈癌.pdf: 583 个文档块
+2026-01-16 17:11:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 17:11:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf: 396 个文档块
+2026-01-16 17:11:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf
+2026-01-16 17:11:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf: 160 个文档块
+2026-01-16 17:11:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf
+2026-01-16 17:11:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf: 461 个文档块
+2026-01-16 17:11:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf
+2026-01-16 17:11:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf: 410 个文档块
+2026-01-16 17:11:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf
+2026-01-16 17:11:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf: 1110 个文档块
+2026-01-16 17:11:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：肾癌.pdf
+2026-01-16 17:11:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：肾癌.pdf: 391 个文档块
+2026-01-16 17:11:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 17:11:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：胰腺癌.pdf: 713 个文档块
+2026-01-16 17:11:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf
+2026-01-16 17:11:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf: 489 个文档块
+2026-01-16 17:11:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 17:11:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf: 1388 个文档块
+2026-01-16 17:11:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 17:11:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：宫颈癌.pdf: 585 个文档块
+2026-01-16 17:11:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 17:11:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf: 393 个文档块
+2026-01-16 17:11:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 17:11:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf: 461 个文档块
+2026-01-16 17:11:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：肾癌.pdf
+2026-01-16 17:11:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：肾癌.pdf: 386 个文档块
+2026-01-16 17:11:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：阴道癌.pdf
+2026-01-16 17:11:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：阴道癌.pdf: 280 个文档块
+2026-01-16 17:11:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 17:11:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf: 1390 个文档块
+2026-01-16 17:11:08 | INFO     | src.tools.rag.pdf_processor:process_all_pdfs:274 | [PDF] 总计处理 59 个 PDF，生成 32622 个文档块
+2026-01-16 17:11:08 | INFO     | src.tools.rag.vector_store:build_index:112 | [VectorStore] 开始构建索引: 32622 个文档
+2026-01-16 17:19:20 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_pubmed] 真实 API 调用成功
+2026-01-16 17:19:21 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinical_trials] 真实 API 调用成功
+2026-01-16 17:19:22 | ERROR    | src.tools.api_clients.civic_client:search_variant:100 | [CIViC] 搜索变异失败: 410 Client Error: Gone for url: https://civicdb.org/api/genes/EGFR
+2026-01-16 17:19:22 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_civic] 真实 API 调用成功
+2026-01-16 17:19:24 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinvar] 真实 API 调用成功
+2026-01-16 17:19:26 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_cbioportal] 真实 API 调用成功
+2026-01-16 17:19:28 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_fda_labels] 真实 API 调用成功
+2026-01-16 17:19:30 | ERROR    | src.tools.api_clients.rxnorm_client:get_drug_interactions:201 | [RxNorm] 查询相互作用失败: 404 Client Error: Not Found for url: https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=1721560
+2026-01-16 17:19:30 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_rxnorm] 真实 API 调用成功
+2026-01-16 17:28:13 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_pubmed] 真实 API 调用成功
+2026-01-16 17:28:14 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinical_trials] 真实 API 调用成功
+2026-01-16 17:28:15 | ERROR    | src.tools.api_clients.civic_client:_execute_query:42 | [CIViC] GraphQL 错误: [{'message': "Field 'evidenceItemsCount' doesn't exist on type 'MolecularProfile'", 'locations': [{'line': 16, 'column': 21}], 'path': ['query MolecularProfileSearch', 'molecularProfiles', 'nodes', 'evidenceItemsCount'], 'extensions': {'code': 'undefinedField', 'typeName': 'MolecularProfile', 'fieldName': 'evidenceItemsCount'}}, {'message': "Field 'evidenceItems' doesn't accept argument 'status'", 'locations': [{'line': 17, 'column': 46}], 'path': ['query MolecularProfileSearch', 'molecularProfiles', 'nodes', 'evidenceItems', 'status'], 'extensions': {'code': 'argumentNotAccepted', 'name': 'evidenceItems', 'typeName': 'Field', 'argumentName': 'status'}}]
+2026-01-16 17:28:15 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_civic] 真实 API 调用成功
+2026-01-16 17:28:24 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinvar] 真实 API 调用成功
+2026-01-16 17:28:26 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_cbioportal] 真实 API 调用成功
+2026-01-16 17:28:28 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_fda_labels] 真实 API 调用成功
+2026-01-16 17:28:30 | ERROR    | src.tools.api_clients.rxnorm_client:get_drug_interactions:201 | [RxNorm] 查询相互作用失败: 404 Client Error: Not Found for url: https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=1721560
+2026-01-16 17:28:30 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_rxnorm] 真实 API 调用成功
+2026-01-16 17:34:41 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_pubmed] 真实 API 调用成功
+2026-01-16 17:34:42 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinical_trials] 真实 API 调用成功
+2026-01-16 17:34:43 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_civic] 真实 API 调用成功
+2026-01-16 17:34:45 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinvar] 真实 API 调用成功
+2026-01-16 17:34:47 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_cbioportal] 真实 API 调用成功
+2026-01-16 17:34:49 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_fda_labels] 真实 API 调用成功
+2026-01-16 17:34:52 | ERROR    | src.tools.api_clients.rxnorm_client:get_drug_interactions:201 | [RxNorm] 查询相互作用失败: 404 Client Error: Not Found for url: https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=1721560
+2026-01-16 17:34:52 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_rxnorm] 真实 API 调用成功
+2026-01-16 17:36:20 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_pubmed] 真实 API 调用成功
+2026-01-16 17:36:21 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinical_trials] 真实 API 调用成功
+2026-01-16 17:36:22 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_civic] 真实 API 调用成功
+2026-01-16 17:36:24 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinvar] 真实 API 调用成功
+2026-01-16 17:36:26 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_cbioportal] 真实 API 调用成功
+2026-01-16 17:36:28 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_fda_labels] 真实 API 调用成功
+2026-01-16 17:36:30 | ERROR    | src.tools.api_clients.rxnorm_client:get_drug_interactions:201 | [RxNorm] 查询相互作用失败: 404 Client Error: Not Found for url: https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=1721560
+2026-01-16 17:36:30 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_rxnorm] 真实 API 调用成功
+2026-01-16 17:52:27 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_pubmed] 真实 API 调用成功
+2026-01-16 17:52:28 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinical_trials] 真实 API 调用成功
+2026-01-16 17:52:29 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_civic] 真实 API 调用成功
+2026-01-16 17:52:31 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinvar] 真实 API 调用成功
+2026-01-16 17:52:33 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_cbioportal] 真实 API 调用成功
+2026-01-16 17:52:34 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_fda_labels] 真实 API 调用成功
+2026-01-16 17:52:37 | ERROR    | src.tools.api_clients.rxnorm_client:get_drug_interactions:201 | [RxNorm] 查询相互作用失败: 404 Client Error: Not Found for url: https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=1721560
+2026-01-16 17:52:37 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_rxnorm] 真实 API 调用成功
+2026-01-16 17:55:48 | ERROR    | src.tools.api_clients.rxnorm_client:get_drug_interactions:201 | [RxNorm] 查询相互作用失败: 404 Client Error: Not Found for url: https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=1721560
+2026-01-16 17:55:50 | INFO     | src.tools.guideline_tools:_call_real_api:361 | [RxNormTool] RxNorm 无数据，使用 FDA 说明书补充
+2026-01-16 17:55:50 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_rxnorm] 真实 API 调用成功
+2026-01-16 17:56:51 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_pubmed] 真实 API 调用成功
+2026-01-16 17:56:52 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinical_trials] 真实 API 调用成功
+2026-01-16 17:56:54 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_civic] 真实 API 调用成功
+2026-01-16 17:56:55 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinvar] 真实 API 调用成功
+2026-01-16 17:56:58 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_cbioportal] 真实 API 调用成功
+2026-01-16 17:56:59 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_fda_labels] 真实 API 调用成功
+2026-01-16 17:57:02 | ERROR    | src.tools.api_clients.rxnorm_client:get_drug_interactions:201 | [RxNorm] 查询相互作用失败: 404 Client Error: Not Found for url: https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=1721560
+2026-01-16 17:57:04 | INFO     | src.tools.guideline_tools:_call_real_api:361 | [RxNormTool] RxNorm 无数据，使用 FDA 说明书补充
+2026-01-16 17:57:04 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_rxnorm] 真实 API 调用成功
+2026-01-16 18:00:04 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_pubmed] 真实 API 调用成功
+2026-01-16 18:00:05 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinical_trials] 真实 API 调用成功
+2026-01-16 18:00:06 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_civic] 真实 API 调用成功
+2026-01-16 18:00:08 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_clinvar] 真实 API 调用成功
+2026-01-16 18:00:10 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_cbioportal] 真实 API 调用成功
+2026-01-16 18:00:12 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_fda_labels] 真实 API 调用成功
+2026-01-16 18:00:14 | ERROR    | src.tools.api_clients.rxnorm_client:get_drug_interactions:201 | [RxNorm] 查询相互作用失败: 404 Client Error: Not Found for url: https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=1721560
+2026-01-16 18:00:16 | INFO     | src.tools.guideline_tools:_call_real_api:361 | [RxNormTool] RxNorm 无数据，使用 FDA 说明书补充
+2026-01-16 18:00:16 | INFO     | src.tools.base_tool:invoke:53 | [Tool:search_rxnorm] 真实 API 调用成功
+2026-01-16 18:08:12 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 18:08:12 | INFO     | src.tools.rag.vector_store:initialize:83 | [VectorStore] 加载嵌入模型: BAAI/bge-m3 (CPU 模式)
+2026-01-16 18:08:34 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化完成，现有文档数: 13800
+2026-01-16 18:12:41 | INFO     | src.tools.rag.nccn_rag:initialize:37 | [NCCN-RAG] 初始化中...
+2026-01-16 18:12:41 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 18:12:42 | INFO     | src.tools.rag.vector_store:initialize:83 | [VectorStore] 加载嵌入模型: BAAI/bge-m3 (CPU 模式)
+2026-01-16 18:13:06 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化完成，现有文档数: 14700
+2026-01-16 18:13:06 | INFO     | src.tools.rag.nccn_rag:initialize:46 | [NCCN-RAG] 初始化完成
+2026-01-16 18:13:22 | INFO     | src.tools.rag.nccn_rag:initialize:37 | [NCCN-RAG] 初始化中...
+2026-01-16 18:13:22 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 18:13:22 | INFO     | src.tools.rag.vector_store:initialize:83 | [VectorStore] 加载嵌入模型: BAAI/bge-m3 (CPU 模式)
+2026-01-16 18:13:45 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化完成，现有文档数: 14700
+2026-01-16 18:13:45 | INFO     | src.tools.rag.nccn_rag:initialize:46 | [NCCN-RAG] 初始化完成
+2026-01-16 18:14:05 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 18:14:05 | INFO     | src.tools.rag.vector_store:initialize:83 | [VectorStore] 加载嵌入模型: BAAI/bge-m3 (CPU 模式)
+2026-01-16 18:14:19 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化完成，现有文档数: 14700
+2026-01-16 18:14:55 | INFO     | src.tools.rag.pdf_processor:list_pdfs:43 | [PDF] 找到 59 个 PDF 文件
+2026-01-16 18:15:06 | INFO     | src.tools.rag.pdf_processor:list_pdfs:43 | [PDF] 找到 59 个 PDF 文件
+2026-01-16 18:15:24 | INFO     | src.tools.rag.vector_store:initialize:67 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 18:15:24 | INFO     | src.tools.rag.vector_store:initialize:83 | [VectorStore] 加载嵌入模型: BAAI/bge-m3 (CPU 模式)
+2026-01-16 18:15:36 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化完成，现有文档数: 14700
+2026-01-16 18:19:01 | INFO     | src.tools.rag.pdf_processor:list_pdfs:43 | [PDF] 找到 59 个 PDF 文件
+2026-01-16 18:19:01 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf
+2026-01-16 18:19:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：B细胞淋巴瘤.pdf: 1463 个文档块
+2026-01-16 18:19:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：Castleman病.pdf
+2026-01-16 18:19:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：Castleman病.pdf: 113 个文档块
+2026-01-16 18:19:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf
+2026-01-16 18:19:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：HIV感染者癌症.pdf: 314 个文档块
+2026-01-16 18:19:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf
+2026-01-16 18:19:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：T细胞淋巴瘤.pdf: 805 个文档块
+2026-01-16 18:19:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：乳腺癌.pdf
+2026-01-16 18:19:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：乳腺癌.pdf: 1202 个文档块
+2026-01-16 18:19:02 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf
+2026-01-16 18:19:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：儿童中枢神经系统肿瘤.pdf: 300 个文档块
+2026-01-16 18:19:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf
+2026-01-16 18:19:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：免疫治疗相关毒性的管理.pdf: 739 个文档块
+2026-01-16 18:19:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：前列腺癌.pdf
+2026-01-16 18:19:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：前列腺癌.pdf: 1045 个文档块
+2026-01-16 18:19:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf
+2026-01-16 18:19:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：卡波西肉瘤.pdf: 204 个文档块
+2026-01-16 18:19:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf
+2026-01-16 18:19:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：原发性皮肤淋巴瘤.pdf: 556 个文档块
+2026-01-16 18:19:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf
+2026-01-16 18:19:03 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：壶腹腺癌.pdf: 312 个文档块
+2026-01-16 18:19:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf
+2026-01-16 18:19:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：多发性骨髓瘤.pdf: 555 个文档块
+2026-01-16 18:19:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf
+2026-01-16 18:19:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：头颈部肿瘤.pdf: 1124 个文档块
+2026-01-16 18:19:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf
+2026-01-16 18:19:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：妊娠滋养细胞肿瘤.pdf: 211 个文档块
+2026-01-16 18:19:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：姑息治疗.pdf
+2026-01-16 18:19:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：姑息治疗.pdf: 456 个文档块
+2026-01-16 18:19:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 18:19:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：子宫肿瘤.pdf: 597 个文档块
+2026-01-16 18:19:04 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：宫颈癌.pdf: 582 个文档块
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：小肠腺癌.pdf
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：小肠腺癌.pdf: 269 个文档块
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：心理痛苦的处理.pdf: 336 个文档块
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：急性髓性白血病.pdf: 870 个文档块
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：慢性髓性白血病.pdf: 427 个文档块
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：毛细胞白血病.pdf: 128 个文档块
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：癌症相关疲劳.pdf: 322 个文档块
+2026-01-16 18:19:05 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：直肠癌.pdf
+2026-01-16 18:19:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：直肠癌.pdf: 860 个文档块
+2026-01-16 18:19:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf
+2026-01-16 18:19:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：系统性轻链淀粉样变性.pdf: 153 个文档块
+2026-01-16 18:19:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：结肠癌.pdf
+2026-01-16 18:19:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：结肠癌.pdf: 1162 个文档块
+2026-01-16 18:19:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：老年肿瘤.pdf
+2026-01-16 18:19:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：老年肿瘤.pdf: 460 个文档块
+2026-01-16 18:19:06 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肛门癌.pdf
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肛门癌.pdf: 290 个文档块
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：肺癌筛查.pdf
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：肺癌筛查.pdf: 410 个文档块
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胰腺癌.pdf: 717 个文档块
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：胸腺瘤和胸腺癌.pdf: 178 个文档块
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：造血生长因子.pdf
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：造血生长因子.pdf: 445 个文档块
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：间皮瘤：胸膜.pdf: 268 个文档块
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：阴茎癌.pdf
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：阴茎癌.pdf: 234 个文档块
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：降低乳腺癌风险.pdf: 286 个文档块
+2026-01-16 18:19:07 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf
+2026-01-16 18:19:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：隆突性皮肤纤维肉瘤.pdf: 76 个文档块
+2026-01-16 18:19:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 18:19:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：非小细胞肺癌.pdf: 1392 个文档块
+2026-01-16 18:19:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌 (2).pdf
+2026-01-16 18:19:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌 (2).pdf: 453 个文档块
+2026-01-16 18:19:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨癌.pdf
+2026-01-16 18:19:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨癌.pdf: 453 个文档块
+2026-01-16 18:19:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf
+2026-01-16 18:19:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V1）NCCN临床实践指南：骨髓增生异常综合征.pdf: 593 个文档块
+2026-01-16 18:19:08 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf
+2026-01-16 18:19:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：不明原发部位肿瘤[CUP].pdf: 319 个文档块
+2026-01-16 18:19:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf
+2026-01-16 18:19:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：儿童急性淋巴细胞白血病.pdf: 753 个文档块
+2026-01-16 18:19:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf
+2026-01-16 18:19:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：子宫肿瘤.pdf: 594 个文档块
+2026-01-16 18:19:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 18:19:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：宫颈癌.pdf: 583 个文档块
+2026-01-16 18:19:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 18:19:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：小细胞肺癌.pdf: 396 个文档块
+2026-01-16 18:19:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf
+2026-01-16 18:19:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：巨球蛋白血症／淋巴浆细胞性淋巴瘤.pdf: 160 个文档块
+2026-01-16 18:19:09 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf
+2026-01-16 18:19:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：慢性淋巴细胞白血病／小淋巴细胞淋巴瘤.pdf: 461 个文档块
+2026-01-16 18:19:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf
+2026-01-16 18:19:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤鳞状细胞癌.pdf: 410 个文档块
+2026-01-16 18:19:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf
+2026-01-16 18:19:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：皮肤黑色素瘤.pdf: 1110 个文档块
+2026-01-16 18:19:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：肾癌.pdf
+2026-01-16 18:19:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：肾癌.pdf: 391 个文档块
+2026-01-16 18:19:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：胰腺癌.pdf
+2026-01-16 18:19:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：胰腺癌.pdf: 713 个文档块
+2026-01-16 18:19:10 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf
+2026-01-16 18:19:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：青少年和年轻成年人肿瘤.pdf: 489 个文档块
+2026-01-16 18:19:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 18:19:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V2）NCCN临床实践指南：非小细胞肺癌.pdf: 1388 个文档块
+2026-01-16 18:19:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：宫颈癌.pdf
+2026-01-16 18:19:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：宫颈癌.pdf: 585 个文档块
+2026-01-16 18:19:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf
+2026-01-16 18:19:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：小细胞肺癌.pdf: 393 个文档块
+2026-01-16 18:19:11 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf
+2026-01-16 18:19:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：慢性髓性白血病.pdf: 461 个文档块
+2026-01-16 18:19:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：肾癌.pdf
+2026-01-16 18:19:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：肾癌.pdf: 386 个文档块
+2026-01-16 18:19:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：阴道癌.pdf
+2026-01-16 18:19:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：阴道癌.pdf: 280 个文档块
+2026-01-16 18:19:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:220 | [PDF] 处理: （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf
+2026-01-16 18:19:12 | INFO     | src.tools.rag.pdf_processor:process_single_pdf:241 | [PDF] （2025.V3）NCCN临床实践指南：非小细胞肺癌.pdf: 1390 个文档块
+2026-01-16 18:19:12 | INFO     | src.tools.rag.pdf_processor:process_all_pdfs:274 | [PDF] 总计处理 59 个 PDF，生成 32622 个文档块

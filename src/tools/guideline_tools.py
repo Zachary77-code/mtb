@@ -351,14 +351,24 @@ class RxNormTool(BaseTool):
             all_drugs = [drug_name] + check_interactions
             multi_interactions = self.client.check_interaction(all_drugs)
 
-        return self._format_results(drug_name, drug_info, interactions, multi_interactions)
+        # 如果 RxNorm 无相互作用数据，尝试从 FDA 说明书获取
+        fda_interactions = None
+        if not interactions:
+            fda_client = FDAClient()
+            label = fda_client.search_drug_label(drug_name)
+            if label:
+                fda_interactions = label.get("drug_interactions", "")
+                logger.info(f"[RxNormTool] RxNorm 无数据，使用 FDA 说明书补充")
+
+        return self._format_results(drug_name, drug_info, interactions, multi_interactions, fda_interactions)
 
     def _format_results(
         self,
         drug_name: str,
         drug_info: Optional[Dict],
         interactions: List[Dict],
-        multi_interactions: List[Dict]
+        multi_interactions: List[Dict],
+        fda_interactions: Optional[str] = None
     ) -> str:
         """格式化结果"""
         output = [
@@ -376,9 +386,9 @@ class RxNormTool(BaseTool):
 
         output.append("")
 
-        # 已知相互作用
+        # 已知相互作用 (RxNorm)
         if interactions:
-            output.append("### 主要药物相互作用\n")
+            output.append("### 主要药物相互作用 (RxNorm)\n")
             for i, intr in enumerate(interactions[:8], 1):
                 drugs = ", ".join(intr.get("drugs", []))
                 description = intr.get("description", "")
@@ -388,8 +398,18 @@ class RxNormTool(BaseTool):
                 output.append(f"- 严重程度: {severity}")
                 output.append(f"- 说明: {description[:200]}{'...' if len(description) > 200 else ''}")
                 output.append("")
+        elif fda_interactions:
+            # 使用 FDA 说明书数据作为补充
+            output.append("### 药物相互作用 (FDA 说明书)\n")
+            output.append("*注: RxNorm 无数据，以下信息来自 FDA 药品说明书*\n")
+            # 限制长度并格式化
+            fda_text = fda_interactions[:1500]
+            if len(fda_interactions) > 1500:
+                fda_text += "\n...(更多信息请查阅完整说明书)"
+            output.append(fda_text)
+            output.append("")
         else:
-            output.append("未找到已知的药物相互作用记录。\n")
+            output.append("未找到药物相互作用记录。\n")
 
         # 多药相互作用
         if multi_interactions:

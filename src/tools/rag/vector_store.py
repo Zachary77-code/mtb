@@ -70,15 +70,18 @@ class NCCNVectorStore:
             settings=Settings(anonymized_telemetry=False)
         )
 
-        # 获取或创建集合
+        # 获取或创建集合 (使用余弦相似度，更适合文本嵌入)
         self.collection = self.client.get_or_create_collection(
             name=self.COLLECTION_NAME,
-            metadata={"description": "NCCN Guidelines for MTB"}
+            metadata={
+                "description": "NCCN Guidelines for MTB",
+                "hnsw:space": "cosine"  # 使用余弦距离而非 L2
+            }
         )
 
-        # 加载嵌入模型
-        logger.info(f"[VectorStore] 加载嵌入模型: {self.embedding_model_name}")
-        self.embedding_model = SentenceTransformer(self.embedding_model_name)
+        # 加载嵌入模型 (强制 CPU 模式，RTX 50 系列暂不支持)
+        logger.info(f"[VectorStore] 加载嵌入模型: {self.embedding_model_name} (CPU 模式)")
+        self.embedding_model = SentenceTransformer(self.embedding_model_name, device='cpu')
 
         self._initialized = True
         logger.info(f"[VectorStore] 初始化完成，现有文档数: {self.collection.count()}")
@@ -136,7 +139,10 @@ class NCCNVectorStore:
                 metadatas=metadatas
             )
 
-            logger.debug(f"[VectorStore] 已索引 {min(i + batch_size, len(documents))}/{len(documents)}")
+            # 显示进度
+            progress = min(i + batch_size, len(documents))
+            percent = progress / len(documents) * 100
+            logger.info(f"[VectorStore] 进度: {progress}/{len(documents)} ({percent:.1f}%)")
 
         logger.info(f"[VectorStore] 索引构建完成，总计 {self.collection.count()} 个文档")
 
@@ -181,10 +187,14 @@ class NCCNVectorStore:
         formatted_results = []
         if results and results["documents"]:
             for i, doc in enumerate(results["documents"][0]):
+                # 余弦距离转相似度: similarity = 1 - cosine_distance
+                # 余弦距离范围 [0, 2]，相似度范围 [-1, 1]，通常为 [0, 1]
+                distance = results["distances"][0][i] if results["distances"] else 0
+                score = max(0, 1 - distance)  # 确保非负
                 formatted_results.append({
                     "text": doc,
                     "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
-                    "score": 1 - results["distances"][0][i] if results["distances"] else 0  # 距离转相似度
+                    "score": score
                 })
 
         logger.debug(f"[VectorStore] 搜索 '{query[:30]}...' 返回 {len(formatted_results)} 个结果")

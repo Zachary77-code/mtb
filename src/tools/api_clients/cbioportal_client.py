@@ -80,48 +80,54 @@ class cBioPortalClient:
             return {"gene": gene, "error": "Gene not found"}
 
         entrez_id = gene_info.get("entrezGeneId")
-
-        # 获取所有研究中的突变数据
-        url = f"{self.BASE_URL}/mutations"
-
-        # 使用 POST 查询多个研究
-        # 先获取一些主要研究的 ID
-        studies = self._get_major_studies(cancer_type)
-
-        if not studies:
-            return {"gene": gene, "error": "No studies found"}
+        hugo_symbol = gene_info.get("hugoGeneSymbol", gene)
 
         result = {
-            "gene": gene,
+            "gene": hugo_symbol,
             "entrez_id": entrez_id,
-            "studies_analyzed": len(studies),
+            "studies_analyzed": 0,
             "mutations": [],
             "by_cancer_type": {},
-            "common_mutations": {}
+            "common_mutations": {},
+            "top_mutations": []
         }
 
-        # 查询每个研究的突变
-        for study in studies[:10]:  # 限制研究数量
-            study_id = study.get("studyId")
+        # 使用 MSK-IMPACT 等大型研究直接获取突变
+        major_study_ids = [
+            "msk_impact_2017",      # MSK-IMPACT Clinical Sequencing
+            "tcga_pan_can_atlas_2018",  # TCGA Pan-Cancer Atlas
+            "genie_public"          # AACR GENIE
+        ]
+
+        all_mutations = []
+        for study_id in major_study_ids:
             mutations = self._get_study_mutations(study_id, entrez_id)
+            if mutations:
+                result["studies_analyzed"] += 1
+                all_mutations.extend(mutations)
 
-            cancer_type_id = study.get("cancerTypeId", "Unknown")
+        if not all_mutations:
+            # 尝试获取更多研究
+            studies = self._get_major_studies(cancer_type)
+            for study in studies[:5]:
+                study_id = study.get("studyId")
+                mutations = self._get_study_mutations(study_id, entrez_id)
+                if mutations:
+                    result["studies_analyzed"] += 1
+                    all_mutations.extend(mutations)
 
-            if cancer_type_id not in result["by_cancer_type"]:
-                result["by_cancer_type"][cancer_type_id] = {
-                    "study_count": 0,
-                    "mutation_count": 0,
-                    "sample_count": 0
-                }
+        # 统计突变
+        for mut in all_mutations:
+            # cBioPortal 使用 proteinChange 字段
+            aa_change = mut.get("proteinChange") or mut.get("aminoAcidChange", "")
+            if aa_change:
+                result["common_mutations"][aa_change] = result["common_mutations"].get(aa_change, 0) + 1
 
-            result["by_cancer_type"][cancer_type_id]["study_count"] += 1
-            result["by_cancer_type"][cancer_type_id]["mutation_count"] += len(mutations)
-
-            # 统计常见突变
-            for mut in mutations:
-                aa_change = mut.get("aminoAcidChange", "")
-                if aa_change:
-                    result["common_mutations"][aa_change] = result["common_mutations"].get(aa_change, 0) + 1
+            # 按癌症类型统计
+            cancer = mut.get("studyId", "").split("_")[0] if mut.get("studyId") else "unknown"
+            if cancer not in result["by_cancer_type"]:
+                result["by_cancer_type"][cancer] = {"mutation_count": 0}
+            result["by_cancer_type"][cancer]["mutation_count"] += 1
 
         # 排序常见突变
         sorted_mutations = sorted(
@@ -130,6 +136,7 @@ class cBioPortalClient:
             reverse=True
         )
         result["top_mutations"] = [{"mutation": m[0], "count": m[1]} for m in sorted_mutations[:10]]
+        result["total_mutations"] = len(all_mutations)
 
         return result
 
@@ -160,20 +167,34 @@ class cBioPortalClient:
 
     def _get_study_mutations(self, study_id: str, entrez_gene_id: int) -> List[Dict]:
         """获取特定研究中基因的突变"""
-        url = f"{self.BASE_URL}/molecular-profiles/{study_id}_mutations/mutations"
-        params = {
-            "entrezGeneId": entrez_gene_id,
-            "projection": "SUMMARY"
+        # 使用 POST 端点查询突变
+        url = f"{self.BASE_URL}/molecular-profiles/{study_id}_mutations/mutations/fetch"
+
+        # POST body - 查询特定基因
+        body = {
+            "entrezGeneIds": [entrez_gene_id],
+            "sampleListId": f"{study_id}_all"  # 使用 all samples
         }
 
         try:
-            response = self.session.get(url, params=params, timeout=30)
+            response = self.session.post(
+                url,
+                json=body,
+                headers={"Content-Type": "application/json"},
+                timeout=30
+            )
 
             if response.status_code == 404:
                 return []
 
             response.raise_for_status()
-            return response.json()
+            mutations = response.json()
+
+            # 添加 studyId 到每个突变
+            for mut in mutations:
+                mut["studyId"] = study_id
+
+            return mutations
 
         except Exception as e:
             logger.debug(f"[cBioPortal] 获取 {study_id} 突变失败: {e}")
@@ -228,22 +249,27 @@ class cBioPortalClient:
         if "error" in mutation_data:
             return mutation_data
 
-        # 查找特定变异
+        # 查找特定变异 (支持多种格式: L858R, p.L858R, L858)
         variant_upper = variant.upper()
         variant_count = 0
-        total_mutations = sum(mutation_data.get("common_mutations", {}).values())
+        total_mutations = mutation_data.get("total_mutations", 0)
 
         for mut, count in mutation_data.get("common_mutations", {}).items():
-            if variant_upper in mut.upper():
+            mut_upper = mut.upper()
+            # 精确匹配或包含匹配
+            if (variant_upper == mut_upper or
+                variant_upper in mut_upper or
+                f"P.{variant_upper}" == mut_upper):
                 variant_count += count
 
         return {
-            "gene": gene,
+            "gene": mutation_data.get("gene", gene),
             "variant": variant,
             "variant_count": variant_count,
             "total_gene_mutations": total_mutations,
             "frequency_percentage": round(variant_count / total_mutations * 100, 2) if total_mutations > 0 else 0,
             "studies_analyzed": mutation_data.get("studies_analyzed", 0),
+            "top_mutations": mutation_data.get("top_mutations", []),
             "by_cancer_type": mutation_data.get("by_cancer_type", {}),
             "cbioportal_url": f"https://www.cbioportal.org/results/mutations?gene_list={gene}"
         }

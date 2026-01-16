@@ -1,8 +1,9 @@
 """
 CIViC (Clinical Interpretation of Variants in Cancer) API 客户端
 
-提供变异证据等级和治疗意义查询 (替代 OncoKB)
-API 文档: https://docs.civicdb.org/en/latest/api.html
+使用 GraphQL API (v2)
+API 文档: https://griffithlab.github.io/civic-v2/
+GraphiQL: https://civicdb.org/api/graphiql
 许可证: CC0 (公共领域)
 """
 import requests
@@ -11,9 +12,8 @@ from src.utils.logger import mtb_logger as logger
 
 
 class CIViCClient:
-    """CIViC API 客户端"""
+    """CIViC GraphQL API 客户端"""
 
-    BASE_URL = "https://civicdb.org/api"
     GRAPHQL_URL = "https://civicdb.org/api/graphql"
 
     def __init__(self):
@@ -23,6 +23,31 @@ class CIViCClient:
             "Content-Type": "application/json"
         })
 
+    def _execute_query(self, query: str, variables: Dict = None) -> Optional[Dict]:
+        """执行 GraphQL 查询"""
+        payload = {"query": query}
+        if variables:
+            payload["variables"] = variables
+
+        try:
+            response = self.session.post(
+                self.GRAPHQL_URL,
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            if "errors" in data:
+                logger.error(f"[CIViC] GraphQL 错误: {data['errors']}")
+                return None
+
+            return data.get("data")
+
+        except Exception as e:
+            logger.error(f"[CIViC] GraphQL 查询失败: {e}")
+            return None
+
     def search_gene(self, gene_name: str) -> Optional[Dict]:
         """
         搜索基因
@@ -31,111 +56,151 @@ class CIViCClient:
             gene_name: 基因名称 (如 EGFR)
 
         Returns:
-            基因信息 {id, name, description, variants_count}
+            基因信息 {id, name, description}
         """
-        url = f"{self.BASE_URL}/genes/{gene_name}"
-
-        try:
-            logger.debug(f"[CIViC] 搜索基因: {gene_name}")
-            response = self.session.get(url, timeout=15)
-
-            if response.status_code == 404:
-                logger.info(f"[CIViC] 未找到基因: {gene_name}")
-                return None
-
-            response.raise_for_status()
-            data = response.json()
-
-            return {
-                "id": data.get("id"),
-                "name": data.get("name"),
-                "entrez_id": data.get("entrez_id"),
-                "description": data.get("description", "")[:500],
-                "variants_count": len(data.get("variants", []))
+        query = """
+        query GeneSearch($name: String!) {
+            genes(name: $name) {
+                nodes {
+                    id
+                    name
+                    description
+                    entrezId
+                }
             }
+        }
+        """
 
-        except Exception as e:
-            logger.error(f"[CIViC] 搜索基因失败: {e}")
+        logger.debug(f"[CIViC] 搜索基因: {gene_name}")
+        data = self._execute_query(query, {"name": gene_name})
+
+        if not data:
             return None
+
+        nodes = data.get("genes", {}).get("nodes", [])
+        if not nodes:
+            logger.info(f"[CIViC] 未找到基因: {gene_name}")
+            return None
+
+        gene = nodes[0]
+        return {
+            "id": gene.get("id"),
+            "name": gene.get("name"),
+            "entrez_id": gene.get("entrezId"),
+            "description": (gene.get("description") or "")[:500]
+        }
 
     def search_variant(self, gene: str, variant: str) -> Optional[Dict]:
         """
-        搜索变异
+        搜索变异 (通过 Molecular Profile)
 
         Args:
             gene: 基因名称 (如 EGFR)
             variant: 变异名称 (如 L858R)
 
         Returns:
-            变异信息 {id, name, gene, variant_types, evidence_items_count}
+            变异信息
         """
-        # 先获取基因的所有变异
-        url = f"{self.BASE_URL}/genes/{gene}"
+        # CIViC v2 使用 Molecular Profile 模型
+        # 搜索格式: "EGFR L858R"
+        mp_name = f"{gene} {variant}"
 
-        try:
-            logger.debug(f"[CIViC] 搜索变异: {gene} {variant}")
-            response = self.session.get(url, timeout=15)
-
-            if response.status_code == 404:
-                logger.info(f"[CIViC] 未找到基因: {gene}")
-                return None
-
-            response.raise_for_status()
-            data = response.json()
-
-            # 在变异列表中查找匹配的变异
-            variants = data.get("variants", [])
-            variant_upper = variant.upper()
-
-            for v in variants:
-                v_name = v.get("name", "").upper()
-                # 精确匹配或包含匹配
-                if v_name == variant_upper or variant_upper in v_name:
-                    return self.get_variant_details(v.get("id"))
-
-            logger.info(f"[CIViC] 未找到变异: {gene} {variant}")
-            return None
-
-        except Exception as e:
-            logger.error(f"[CIViC] 搜索变异失败: {e}")
-            return None
-
-    def get_variant_details(self, variant_id: int) -> Optional[Dict]:
-        """
-        获取变异详细信息
-
-        Args:
-            variant_id: CIViC 变异 ID
-
-        Returns:
-            变异详细信息
-        """
-        url = f"{self.BASE_URL}/variants/{variant_id}"
-
-        try:
-            response = self.session.get(url, timeout=15)
-            response.raise_for_status()
-            data = response.json()
-
-            return {
-                "id": data.get("id"),
-                "name": data.get("name"),
-                "gene": data.get("gene", {}).get("name", ""),
-                "description": data.get("description", "")[:500],
-                "variant_types": [vt.get("display_name") for vt in data.get("variant_types", [])],
-                "evidence_items": self._get_evidence_summary(data.get("evidence_items", [])),
-                "coordinates": {
-                    "chromosome": data.get("coordinates", {}).get("chromosome"),
-                    "start": data.get("coordinates", {}).get("start"),
-                    "reference_bases": data.get("coordinates", {}).get("reference_bases"),
-                    "variant_bases": data.get("coordinates", {}).get("variant_bases")
-                },
-                "civic_url": f"https://civicdb.org/variants/{variant_id}"
+        query = """
+        query MolecularProfileSearch($name: String!) {
+            molecularProfiles(name: $name) {
+                nodes {
+                    id
+                    name
+                    description
+                    link
+                    variants {
+                        id
+                        name
+                        variantTypes {
+                            name
+                        }
+                    }
+                    evidenceItems(first: 20) {
+                        totalCount
+                        nodes {
+                            id
+                            status
+                            evidenceType
+                            evidenceLevel
+                            evidenceDirection
+                            significance
+                            disease {
+                                name
+                                doid
+                            }
+                            therapies {
+                                name
+                                ncitId
+                            }
+                            source {
+                                sourceType
+                                citationId
+                            }
+                        }
+                    }
+                }
             }
+        }
+        """
 
-        except Exception as e:
-            logger.error(f"[CIViC] 获取变异详情失败: {e}")
+        logger.debug(f"[CIViC] 搜索 Molecular Profile: {mp_name}")
+        data = self._execute_query(query, {"name": mp_name})
+
+        if not data:
             return None
+
+        nodes = data.get("molecularProfiles", {}).get("nodes", [])
+
+        # 查找精确匹配或包含匹配
+        target_mp = None
+        for mp in nodes:
+            mp_name_upper = mp.get("name", "").upper()
+            if mp_name_upper == f"{gene} {variant}".upper():
+                target_mp = mp
+                break
+            elif gene.upper() in mp_name_upper and variant.upper() in mp_name_upper:
+                target_mp = mp
+                break
+
+        if not target_mp:
+            logger.info(f"[CIViC] 未找到 Molecular Profile: {mp_name}")
+            return None
+
+        return self._format_molecular_profile(target_mp)
+
+    def _format_molecular_profile(self, mp: Dict) -> Dict:
+        """格式化 Molecular Profile 数据"""
+        evidence_data = mp.get("evidenceItems", {})
+        evidence_items = evidence_data.get("nodes", [])
+        evidence_count = evidence_data.get("totalCount", len(evidence_items))
+
+        # 只处理已接受的证据
+        accepted_evidence = [e for e in evidence_items if e.get("status") == "ACCEPTED"]
+
+        # 汇总证据
+        evidence_summary = self._get_evidence_summary(accepted_evidence)
+
+        return {
+            "id": mp.get("id"),
+            "name": mp.get("name"),
+            "description": (mp.get("description") or "")[:500],
+            "variants": [
+                {
+                    "id": v.get("id"),
+                    "name": v.get("name"),
+                    "types": [vt.get("name") for vt in v.get("variantTypes", [])]
+                }
+                for v in mp.get("variants", [])
+            ],
+            "evidence_count": evidence_count,
+            "evidence_items": evidence_summary,
+            "civic_url": mp.get("link") or f"https://civicdb.org/molecular-profiles/{mp.get('id')}"
+        }
 
     def _get_evidence_summary(self, evidence_items: List[Dict]) -> Dict:
         """汇总证据项"""
@@ -150,41 +215,43 @@ class CIViCClient:
 
         for item in evidence_items:
             # 按类型统计
-            etype = item.get("evidence_type", "Unknown")
+            etype = item.get("evidenceType", "Unknown")
             summary["by_type"][etype] = summary["by_type"].get(etype, 0) + 1
 
             # 按等级统计
-            level = item.get("evidence_level", "Unknown")
+            level = item.get("evidenceLevel", "Unknown")
             summary["by_level"][level] = summary["by_level"].get(level, 0) + 1
 
-            # 提取治疗相关证据
-            if etype == "Predictive":
-                drugs = [d.get("name") for d in item.get("drugs", [])]
-                clinical_significance = item.get("clinical_significance", "")
-                disease = item.get("disease", {}).get("display_name", "")
+            # 提取疾病和治疗信息
+            disease = item.get("disease", {})
+            disease_name = disease.get("name", "") if disease else ""
+            therapies = item.get("therapies", []) or []
+            drug_names = [t.get("name") for t in therapies if t]
+            significance = item.get("significance", "")
+            direction = item.get("evidenceDirection", "")
 
-                summary["therapeutic"].append({
-                    "drugs": drugs,
-                    "disease": disease,
-                    "clinical_significance": clinical_significance,
-                    "evidence_level": level,
-                    "evidence_direction": item.get("evidence_direction", ""),
-                    "pubmed_id": item.get("source", {}).get("pubmed_id")
-                })
+            # 获取 PubMed ID
+            source = item.get("source", {})
+            pmid = None
+            if source and source.get("sourceType") == "PUBMED":
+                pmid = source.get("citationId")
 
-            elif etype == "Diagnostic":
-                summary["diagnostic"].append({
-                    "disease": item.get("disease", {}).get("display_name", ""),
-                    "clinical_significance": item.get("clinical_significance", ""),
-                    "evidence_level": level
-                })
+            evidence_entry = {
+                "drugs": drug_names,
+                "disease": disease_name,
+                "clinical_significance": significance,
+                "evidence_level": level,
+                "evidence_direction": direction,
+                "pubmed_id": pmid
+            }
 
-            elif etype == "Prognostic":
-                summary["prognostic"].append({
-                    "disease": item.get("disease", {}).get("display_name", ""),
-                    "clinical_significance": item.get("clinical_significance", ""),
-                    "evidence_level": level
-                })
+            # 分类存储
+            if etype == "PREDICTIVE":
+                summary["therapeutic"].append(evidence_entry)
+            elif etype == "DIAGNOSTIC":
+                summary["diagnostic"].append(evidence_entry)
+            elif etype == "PROGNOSTIC":
+                summary["prognostic"].append(evidence_entry)
 
         # 限制数量
         summary["therapeutic"] = summary["therapeutic"][:5]
@@ -216,7 +283,8 @@ class CIViCClient:
                 "gene": gene,
                 "variant": variant,
                 "has_therapeutic_evidence": False,
-                "message": "No therapeutic evidence found in CIViC"
+                "message": "No therapeutic evidence found in CIViC",
+                "civic_url": variant_info.get("civic_url")
             }
 
         # 按证据等级排序
@@ -242,19 +310,21 @@ if __name__ == "__main__":
     gene = client.search_gene("EGFR")
     if gene:
         print(f"基因 ID: {gene['id']}")
-        print(f"变异数量: {gene['variants_count']}")
+        print(f"基因名称: {gene['name']}")
 
     print("\n=== CIViC 变异搜索: EGFR L858R ===")
     variant = client.search_variant("EGFR", "L858R")
     if variant:
-        print(f"变异 ID: {variant['id']}")
-        print(f"变异类型: {variant['variant_types']}")
-        print(f"证据项数量: {variant['evidence_items']['total_count']}")
-        print(f"按等级: {variant['evidence_items']['by_level']}")
+        print(f"Molecular Profile: {variant['name']}")
+        print(f"证据数量: {variant['evidence_count']}")
+        print(f"证据等级: {variant['evidence_items']['by_level']}")
+        print(f"URL: {variant['civic_url']}")
 
     print("\n=== 治疗意义查询 ===")
     implications = client.get_therapeutic_implications("EGFR", "L858R")
-    if implications and implications.get("has_therapeutic_evidence"):
-        print(f"证据等级分布: {implications['evidence_by_level']}")
-        for e in implications["top_therapeutic_evidence"][:3]:
-            print(f"- {e['drugs']}: {e['clinical_significance']} (Level {e['evidence_level']})")
+    if implications:
+        print(f"有治疗证据: {implications.get('has_therapeutic_evidence')}")
+        if implications.get("has_therapeutic_evidence"):
+            print(f"证据等级分布: {implications['evidence_by_level']}")
+            for e in implications.get("top_therapeutic_evidence", [])[:3]:
+                print(f"- {e['drugs']}: {e['clinical_significance']} (Level {e['evidence_level']})")

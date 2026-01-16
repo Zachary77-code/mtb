@@ -205,17 +205,22 @@ class NCBIClient:
         """
         self._rate_limit()
 
-        # 构建查询
-        query = f"{gene}[gene]"
+        # 构建更精确的查询
+        # 使用 gene symbol 精确匹配
+        query_parts = [f'"{gene}"[gene]']
         if variant:
-            query += f" AND {variant}"
+            # 变异名可能是 L858R 或 p.L858R 格式
+            query_parts.append(f'("{variant}" OR "p.{variant}")')
+
+        query = " AND ".join(query_parts)
 
         search_url = f"{self.BASE_URL}/esearch.fcgi"
         params = self._build_params({
             "db": "clinvar",
             "term": query,
-            "retmax": 10,
-            "retmode": "json"
+            "retmax": 20,  # 增加结果数以便过滤
+            "retmode": "json",
+            "sort": "clinical_significance"  # 按临床意义排序
         })
 
         try:
@@ -229,8 +234,14 @@ class NCBIClient:
                 logger.info(f"[NCBI] ClinVar 无结果: {query}")
                 return []
 
-            # 获取详细信息
-            return self._fetch_clinvar_details(ids)
+            # 获取详细信息并过滤
+            results = self._fetch_clinvar_details(ids)
+
+            # 过滤确保基因匹配
+            filtered = [r for r in results if r.get("gene", "").upper() == gene.upper()]
+
+            # 如果过滤后没有结果，返回原始结果
+            return filtered if filtered else results[:5]
 
         except Exception as e:
             logger.error(f"[NCBI] ClinVar 搜索失败: {e}")
