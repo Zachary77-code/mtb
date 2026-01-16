@@ -2381,3 +2381,13 @@ UnicodeEncodeError: 'gbk' codec can't encode character '\u2705' in position 0: i
 2026-01-16 21:26:19 | INFO     | src.tools.rag.vector_store:initialize:71 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
 2026-01-16 21:26:19 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化 DashScope Embedding: text-embedding-v4
 2026-01-16 21:26:19 | INFO     | src.tools.rag.vector_store:initialize:94 | [VectorStore] 初始化完成，现有文档数: 32622
+2026-01-16 21:30:59 | INFO     | __main__:initialize:37 | [NCCN-RAG] 初始化中...
+2026-01-16 21:30:59 | INFO     | src.tools.rag.vector_store:initialize:71 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 21:30:59 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化 DashScope Embedding: text-embedding-v4
+2026-01-16 21:30:59 | INFO     | src.tools.rag.vector_store:initialize:94 | [VectorStore] 初始化完成，现有文档数: 32622
+2026-01-16 21:30:59 | INFO     | __main__:initialize:46 | [NCCN-RAG] 初始化完成
+2026-01-16 21:43:15 | INFO     | __main__:initialize:37 | [NCCN-RAG] 初始化中...
+2026-01-16 21:43:15 | INFO     | src.tools.rag.vector_store:initialize:71 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-16 21:43:15 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化 DashScope Embedding: text-embedding-v4
+2026-01-16 21:43:16 | INFO     | src.tools.rag.vector_store:initialize:94 | [VectorStore] 初始化完成，现有文档数: 32622
+2026-01-16 21:43:16 | INFO     | __main__:initialize:46 | [NCCN-RAG] 初始化完成
