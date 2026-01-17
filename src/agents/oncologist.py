@@ -58,12 +58,15 @@ class OncologistAgent(BaseAgent):
         # 安全性预检
         safety_concerns = self._check_safety_concerns(organ_function, treatment_lines)
 
+        # 计算实际治疗线数
+        max_line = max((t.get('line_number', 0) for t in treatment_lines), default=0)
+
         # 构建任务请求
         task_prompt = f"""
 请为以下患者制定治疗方案：
 
 **肿瘤类型**: {cancer_type}
-**既往治疗线数**: {len(treatment_lines)}
+**既往治疗线数**: {max_line}（共{len(treatment_lines)}条记录）
 
 **器官功能评估**:
 {self._format_organ_function(organ_function)}

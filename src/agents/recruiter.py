@@ -54,6 +54,9 @@ class RecruiterAgent(BaseAgent):
         treatment_lines = structured_case.get("treatment_lines", [])
         organ_function = structured_case.get("organ_function", {})
 
+        # 计算实际治疗线数
+        max_line = max((t.get('line_number', 0) for t in treatment_lines), default=0)
+
         # 提取主要生物标志物
         biomarkers = self._extract_biomarkers(molecular_profile)
 
@@ -63,7 +66,7 @@ class RecruiterAgent(BaseAgent):
 
 **肿瘤类型**: {cancer_type}
 **当前状态**: {current_status}
-**既往治疗线数**: {len(treatment_lines)}
+**既往治疗线数**: {max_line}（共{len(treatment_lines)}条记录）
 **ECOG PS**: {organ_function.get('ecog_ps', '未知')}
 
 **主要生物标志物**:

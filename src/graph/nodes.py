@@ -137,6 +137,9 @@ MSI状态: {case.get('msi_status', 'N/A')} | TMB: {case.get('tmb_score', 'N/A')}
 
 治疗史 ({max((t.get('line_number', 0) for t in treatment_lines), default=0)} 线, {len(treatment_lines)} 条记录):
 {treatment_str}"""
+
+    # 计算实际治疗线数（用于后续节点）
+    max_line = max((t.get('line_number', 0) for t in treatment_lines), default=0)
     _print_section("[PATHOLOGIST] 输出 - 结构化病例", output_summary)
 
     if result["parsing_errors"]:
@@ -200,8 +203,14 @@ def recruiter_node(state: MtbState) -> Dict[str, Any]:
     # 打印输入
     case = state["structured_case"]
     geneticist_report = state.get("geneticist_report", "")
+
+    # 计算实际治疗线数
+    treatment_lines = case.get('treatment_lines', [])
+    max_line = max((t.get('line_number', 0) for t in treatment_lines), default=0)
+
     input_summary = f"""肿瘤类型: {case.get('primary_cancer', 'N/A')}
 分期: {case.get('stage', 'N/A')}
+治疗线数: {max_line}（共{len(treatment_lines)}条记录）
 ECOG PS: {case.get('organ_function', {}).get('ecog_ps', 'N/A')}
 
 遗传学家报告摘要 (前1000字符):
@@ -244,8 +253,13 @@ def oncologist_node(state: MtbState) -> Dict[str, Any]:
     organ = case.get("organ_function", {})
     geneticist_report = state.get("geneticist_report", "")
     recruiter_report = state.get("recruiter_report", "")
+
+    # 计算实际治疗线数
+    treatment_lines = case.get('treatment_lines', [])
+    max_line = max((t.get('line_number', 0) for t in treatment_lines), default=0)
+
     input_summary = f"""肿瘤类型: {case.get('primary_cancer', 'N/A')}
-治疗线数: {len(case.get('treatment_lines', []))}
+治疗线数: {max_line}（共{len(treatment_lines)}条记录）
 
 器官功能:
 - ECOG PS: {organ.get('ecog_ps', 'N/A')}
@@ -304,6 +318,11 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
     geneticist_report = state.get("geneticist_report", "")
     recruiter_report = state.get("recruiter_report", "")
     oncologist_plan = state.get("oncologist_plan", "")
+
+    # 计算总输入量
+    total_input_chars = len(geneticist_report) + len(recruiter_report) + len(oncologist_plan)
+    logger.info(f"[CHAIR] 输入总量: {total_input_chars} 字符")
+
     input_summary = f"""迭代次数: {iteration + 1}
 缺失模块: {missing if missing else '无'}
 

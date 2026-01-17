@@ -87,10 +87,32 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 
 ## 4. 治疗史回顾 (Treatment History)
 
-| Line | Regimen | Duration | Best Response | Toxicities (Grade 3+) | Discontinuation Reason |
-|------|---------|----------|---------------|----------------------|------------------------|
-| 1 | [Drug] | [X] months | [CR/PR/SD/PD] | [List or None] | [Reason] |
-| 2 | [Drug] | [X] months | [Response] | [Toxicities] | [Reason] |
+**重要**：必须展示患者的**完整治疗历程**，包括每一线治疗的所有记录（新辅助、手术、辅助、维持等）。
+
+使用 :::timeline 格式（将被渲染为可视化时间线）：
+
+:::timeline
+- line: 1线
+  date: 2022.08-2022.12
+  regimen: 奥沙利铂+卡培他滨+贝伐珠单抗
+  response: PR
+  type: neoadjuvant
+  note: 新辅助化疗，共5程
+
+- line: 1线
+  date: 2023.01
+  regimen: 根治性手术
+  response: TRG2
+  type: surgery
+  note: 切除原发灶+肝转移+淋巴结清扫
+
+[继续列出所有治疗记录...]
+:::
+
+**注意**：
+- 一线治疗可能包含多条记录（如新辅助+手术+辅助）
+- 每条记录都要单独列出，不要合并
+- 使用正确的type标记：neoadjuvant、surgery、adjuvant、maint、pd、current、event
 
 **Key Observations**:
 - Prior exposure to [drug class] → Consider resistance mechanisms
@@ -253,6 +275,50 @@ List all citations used in the report:
 5. [FDA Label - Osimertinib](https://www.accessdata.fda.gov/drugsatfda_docs/label/2020/208065s014lbl.pdf)
 
 [List all references in numbered format]
+
+---
+
+## 信息完整性要求（Critical!）
+
+**核心原则**：你的职责是**汇总整合**，而非**摘要压缩**。
+
+### 必须完整保留的内容
+
+1. **临床试验推荐（第9模块）**：
+   - ✅ 保留Recruiter报告中的**所有主要试验**（至少Top 5）
+   - ✅ 每个试验必须包含：NCT号、试验名称、阶段、靶点、入组标准、联系方式
+   - ❌ **禁止**只保留2个试验就结束
+   - ❌ **禁止**删减试验的关键信息字段
+
+2. **治疗史回顾（第4模块）**：
+   - ✅ 必须展示**所有治疗记录**（使用:::timeline格式）
+   - ✅ 一线治疗的多条记录（新辅助+手术+辅助）都要单独列出
+   - ❌ **禁止**合并或省略任何治疗记录
+
+3. **分子特征分析**：
+   - ✅ 保留Geneticist报告中的**所有可行动变异**及其证据等级
+   - ✅ 保留临床证据、机制解释、参考文献
+   - ❌ **禁止**删除低频但重要的变异（如胚系突变）
+
+4. **治疗方案对比（第5模块）**：
+   - ✅ 保留Oncologist报告中的**完整方案对比表**
+   - ✅ 包含所有备选方案及其ORR、PFS、毒性数据
+   - ❌ **禁止**只保留首选方案而删除备选
+
+### 整合策略（而非压缩）
+
+当各专家报告内容重叠时：
+- ✅ **保留最详细版本**：如果Geneticist和Oncologist都提到KRAS G12C，使用更详细的那个
+- ✅ **交叉引用**：在不同模块间建立引用链接，避免完全重复
+- ✅ **结构化呈现**：用表格、列表、timeline等格式提高可读性
+- ❌ **禁止简化为一句话**："详见XX报告"这类引用是不可接受的
+
+### 输出长度说明
+
+- 你的输出没有严格的字数上限
+- Gemini模型支持长文本生成（Max Output Tokens: 66k）
+- 优先考虑**完整性**而非**简洁性**
+- 如果需要在12个模块中完整呈现所有信息，预期输出为8000-12000字符
 
 ---
 
