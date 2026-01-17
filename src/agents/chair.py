@@ -57,6 +57,14 @@ class ChairAgent(BaseAgent):
         age = structured_case.get("age", "?")
         sex = structured_case.get("sex", "?")
 
+        # 提取详细治疗史
+        treatment_lines = structured_case.get("treatment_lines", [])
+        treatment_history_detail = self._format_treatment_history(treatment_lines)
+
+        # 提取分子特征
+        molecular_profile = structured_case.get("molecular_profile", [])
+        molecular_detail = self._format_molecular_profile(molecular_profile)
+
         # 构建综合请求
         regenerate_note = ""
         if missing_sections:
@@ -72,6 +80,12 @@ class ChairAgent(BaseAgent):
 - 年龄: {age}岁
 - 性别: {sex}
 - 肿瘤类型: {cancer_type}
+
+**完整治疗史（共{len(treatment_lines)}条记录）**:
+{treatment_history_detail}
+
+**分子特征详情**:
+{molecular_detail}
 
 {regenerate_note}
 
@@ -97,11 +111,13 @@ class ChairAgent(BaseAgent):
 
 **关键要求**:
 1. 报告必须包含**全部 12 个模块**，按顺序排列
-2. 如果某模块不适用，仍需包含该模块并说明"本病例不适用"
-3. 每条建议都需要证据等级标注 [Evidence A/B/C/D]
-4. 必须包含"不建议"章节
-5. 仲裁原则：当安全性与疗效冲突时，以安全性为准
-6. 所有引用使用 [PMID: xxx] 或 [NCT xxx] 格式
+2. 第4模块"治疗史回顾"必须使用:::timeline格式展示上述**所有{len(treatment_lines)}条治疗记录**
+3. 第9模块"临床试验推荐"必须保留临床试验专员报告中的**所有试验**（不少于3个）
+4. **禁止压缩、合并、简化**任何治疗记录或试验信息
+5. 每条建议都需要证据等级标注 [Evidence A/B/C/D]
+6. 必须包含"不建议"章节
+7. 仲裁原则：当安全性与疗效冲突时，以安全性为准
+8. 所有引用使用 [PMID: xxx] 或 [NCT xxx] 格式
 
 请生成完整的 Markdown 格式 MTB 报告。
 """
@@ -117,6 +133,54 @@ class ChairAgent(BaseAgent):
             "synthesis": result["output"],
             "references": all_references
         }
+
+    def _format_treatment_history(self, treatment_lines: List[Dict]) -> str:
+        """格式化治疗史为详细列表"""
+        if not treatment_lines:
+            return "无治疗史"
+
+        lines = []
+        for i, t in enumerate(treatment_lines, 1):
+            line_num = t.get('line_number', '?')
+            regimen = t.get('regimen', '未知方案')
+            start = t.get('start_date', '')
+            end = t.get('end_date', '')
+            response = t.get('best_response', '')
+            note = t.get('notes', '')
+
+            date_range = f"{start}-{end}" if start and end else (start or end or "日期未知")
+
+            line_text = f"{i}. [{line_num}线] {regimen} ({date_range})"
+            if response:
+                line_text += f" -> {response}"
+            if note:
+                line_text += f" | {note}"
+            lines.append(line_text)
+
+        return "\n".join(lines)
+
+    def _format_molecular_profile(self, molecular_profile: List[Dict]) -> str:
+        """格式化分子特征"""
+        if not molecular_profile:
+            return "无分子检测结果"
+
+        lines = []
+        for m in molecular_profile:
+            gene = m.get('gene', '?')
+            variant = m.get('variant', '')
+            alt_type = m.get('alteration_type', '')
+            vaf = m.get('vaf', '')
+
+            line_text = f"- {gene}"
+            if variant:
+                line_text += f" {variant}"
+            if alt_type:
+                line_text += f" ({alt_type})"
+            if vaf:
+                line_text += f" [VAF: {vaf*100:.1f}%]"
+            lines.append(line_text)
+
+        return "\n".join(lines)
 
 
 if __name__ == "__main__":

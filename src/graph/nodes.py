@@ -165,12 +165,33 @@ def geneticist_node(state: MtbState) -> Dict[str, Any]:
 
     # 打印输入
     case = state["structured_case"]
-    input_summary = f"""肿瘤类型: {case.get('primary_cancer', 'N/A')}
-MSI状态: {case.get('msi_status', 'N/A')} | TMB: {case.get('tmb_score', 'N/A')}
+    organ = case.get("organ_function", {})
+    treatment_lines = case.get("treatment_lines", [])
+    max_line = max((t.get('line_number', 0) for t in treatment_lines), default=0)
+    comorbidities = case.get("comorbidities", [])
 
-分子特征:
-{json.dumps(case.get('molecular_profile', []), ensure_ascii=False, indent=2)}"""
-    _print_section("[GENETICIST] 输入 - 分子特征", input_summary)
+    input_summary = f"""**患者背景**:
+- 年龄: {case.get('age', '?')}岁
+- 性别: {case.get('sex', '?')}
+- 肿瘤类型: {case.get('primary_cancer', 'N/A')}
+- 分期: {case.get('stage', '?')}
+
+**既往治疗史**: {max_line}线（共{len(treatment_lines)}条记录）
+
+**分子特征**:
+{json.dumps(case.get('molecular_profile', []), ensure_ascii=False, indent=2)}
+
+**免疫标志物**:
+- MSI状态: {case.get('msi_status', 'N/A')}
+- TMB: {case.get('tmb_score', 'N/A')} mut/Mb
+- PD-L1 TPS: {case.get('pd_l1_tps', 'N/A')}%
+
+**器官功能**:
+- ECOG PS: {organ.get('ecog_ps', '?')}
+- eGFR: {organ.get('egfr_ml_min', '?')} mL/min
+
+**合并症**: {', '.join(comorbidities) if comorbidities else '无'}"""
+    _print_section("[GENETICIST] 输入 - 完整患者信息", input_summary)
 
     agent = GeneticistAgent()
     result = agent.analyze(state["structured_case"])
@@ -208,14 +229,36 @@ def recruiter_node(state: MtbState) -> Dict[str, Any]:
     treatment_lines = case.get('treatment_lines', [])
     max_line = max((t.get('line_number', 0) for t in treatment_lines), default=0)
 
-    input_summary = f"""肿瘤类型: {case.get('primary_cancer', 'N/A')}
-分期: {case.get('stage', 'N/A')}
-治疗线数: {max_line}（共{len(treatment_lines)}条记录）
-ECOG PS: {case.get('organ_function', {}).get('ecog_ps', 'N/A')}
+    # 提取器官功能详细信息
+    organ = case.get('organ_function', {})
+    metastatic_sites = case.get('metastatic_sites', [])
+    comorbidities = case.get('comorbidities', [])
+
+    input_summary = f"""**患者入组筛查信息**:
+- 年龄: {case.get('age', '?')}岁
+- 性别: {case.get('sex', '?')}
+- 肿瘤类型: {case.get('primary_cancer', 'N/A')}
+- 分期: {case.get('stage', 'N/A')}
+- 转移部位: {', '.join(metastatic_sites) if metastatic_sites else '无'}
+
+**治疗史**:
+- 既往治疗线数: {max_line}（共{len(treatment_lines)}条记录）
+- 当前状态: {case.get('current_status', '未知')}
+
+**器官功能**:
+- ECOG PS: {organ.get('ecog_ps', '未知')}
+- eGFR: {organ.get('egfr_ml_min', '?')} mL/min
+- ALT: {organ.get('alt_u_l', '?')} U/L
+- AST: {organ.get('ast_u_l', '?')} U/L
+- 血小板: {organ.get('platelet_count', '?')} × 10^9/L
+- ANC: {organ.get('neutrophil_count', '?')} × 10^9/L
+- LVEF: {organ.get('lvef_percent', '?')}%
+
+**合并症**: {', '.join(comorbidities) if comorbidities else '无'}
 
 遗传学家报告摘要 (前1000字符):
 {geneticist_report[:1000] if geneticist_report else '无'}"""
-    _print_section("[RECRUITER] 输入 - 试验匹配条件", input_summary)
+    _print_section("[RECRUITER] 输入 - 完整试验筛查信息", input_summary)
 
     agent = RecruiterAgent()
     result = agent.search_trials(
@@ -258,20 +301,46 @@ def oncologist_node(state: MtbState) -> Dict[str, Any]:
     treatment_lines = case.get('treatment_lines', [])
     max_line = max((t.get('line_number', 0) for t in treatment_lines), default=0)
 
-    input_summary = f"""肿瘤类型: {case.get('primary_cancer', 'N/A')}
-治疗线数: {max_line}（共{len(treatment_lines)}条记录）
+    # 提取新增字段
+    metastatic_sites = case.get('metastatic_sites', [])
+    comorbidities = case.get('comorbidities', [])
+    tumor_markers = case.get('tumor_markers', {})
 
-器官功能:
+    # 格式化肿瘤标志物
+    markers_str = ""
+    if tumor_markers:
+        markers_items = [f"  - {k.replace('_', ' ').upper()}: {v}" for k, v in tumor_markers.items()]
+        markers_str = "\n".join(markers_items)
+    else:
+        markers_str = "  无"
+
+    input_summary = f"""**患者基本信息**:
+- 年龄: {case.get('age', '?')}岁
+- 性别: {case.get('sex', '?')}
+- 肿瘤类型: {case.get('primary_cancer', 'N/A')}
+- 分期: {case.get('stage', '?')}
+- 转移部位: {', '.join(metastatic_sites) if metastatic_sites else '无'}
+
+**既往治疗线数**: {max_line}（共{len(treatment_lines)}条记录）
+
+**器官功能评估**:
 - ECOG PS: {organ.get('ecog_ps', 'N/A')}
 - eGFR: {organ.get('egfr_ml_min', 'N/A')} mL/min
 - 肌酐: {organ.get('creatinine', 'N/A')}
+- ALT: {organ.get('alt_u_l', '?')} U/L
+- 血小板: {organ.get('platelet_count', '?')} × 10^9/L
+
+**合并症**: {', '.join(comorbidities) if comorbidities else '无'}
+
+**肿瘤标志物**:
+{markers_str}
 
 遗传学家报告摘要 (前800字符):
 {geneticist_report[:800] if geneticist_report else '无'}
 
 试验专员报告摘要 (前800字符):
 {recruiter_report[:800] if recruiter_report else '无'}"""
-    _print_section("[ONCOLOGIST] 输入 - 治疗规划条件", input_summary)
+    _print_section("[ONCOLOGIST] 输入 - 完整治疗规划条件", input_summary)
 
     agent = OncologistAgent()
     result = agent.create_plan(
