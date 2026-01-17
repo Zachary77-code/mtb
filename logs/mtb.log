@@ -2970,3 +2970,225 @@ During task with name 'recruiter' and id '3a7cae1e-070a-8c9f-8115-1546ae737f14'
 2026-01-17 14:59:31 | INFO     | src.graph.nodes:case_parsing_node:60 | [PARSE] 完成，解析字段: ['patient_id', 'age', 'sex', 'primary_cancer', 'histology', 'stage', 'metastatic_sites', 'molecular_profile', 'ihc_markers', 'msi_status', 'tmb_score', 'pd_l1_tps', 'pd_l1_cps', 'treatment_lines', 'current_status', 'organ_function', 'comorbidities', 'tumor_markers', 'raw_text']
 2026-01-17 14:59:31 | INFO     | src.graph.nodes:geneticist_node:161 | [GENETICIST] 开始分子分析...
 2026-01-17 14:59:31 | INFO     | src.agents.base_agent:invoke:127 | [Geneticist] 开始处理...
+2026-01-17 15:03:25 | INFO     | __main__:main:35 | ============================================================
+2026-01-17 15:03:25 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-17 15:03:25 | INFO     | __main__:main:37 | ============================================================
+2026-01-17 15:03:25 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-17 15:03:25 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/test_report.pdf
+2026-01-17 15:03:25 | INFO     | __main__:main:52 | 病例文本长度: 1243 字符
+2026-01-17 15:03:25 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-17 15:03:25 | INFO     | src.graph.nodes:case_parsing_node:51 | [PARSE] 开始解析病例文本...
+2026-01-17 15:03:25 | INFO     | src.agents.base_agent:invoke:127 | [Pathologist] 开始处理...
+2026-01-17 15:04:08 | INFO     | src.agents.base_agent:invoke:161 | [Pathologist] 完成，输出长度: 5464 字符
+2026-01-17 15:04:08 | INFO     | src.graph.nodes:case_parsing_node:60 | [PARSE] 完成，解析字段: ['patient_id', 'age', 'sex', 'primary_cancer', 'histology', 'stage', 'metastatic_sites', 'molecular_profile', 'ihc_markers', 'msi_status', 'tmb_score', 'pd_l1_tps', 'pd_l1_cps', 'treatment_lines', 'current_status', 'organ_function', 'comorbidities', 'tumor_markers', 'raw_text']
+2026-01-17 15:04:08 | INFO     | src.graph.nodes:geneticist_node:161 | [GENETICIST] 开始分子分析...
+2026-01-17 15:04:08 | INFO     | src.agents.base_agent:invoke:127 | [Geneticist] 开始处理...
+2026-01-17 15:04:30 | INFO     | src.agents.base_agent:invoke:156 | [Geneticist] 检测到工具调用: 6 个
+2026-01-17 15:04:31 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_civic] API 调用成功
+2026-01-17 15:04:32 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinvar] API 调用成功
+2026-01-17 15:04:35 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_cbioportal] API 调用成功
+2026-01-17 15:04:37 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-17 15:04:38 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-17 15:04:39 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-17 15:05:23 | INFO     | src.graph.nodes:geneticist_node:177 | [GENETICIST] 完成，报告长度: 3825 字符，引用数: 0
+2026-01-17 15:05:23 | INFO     | src.graph.nodes:recruiter_node:198 | [RECRUITER] 开始搜索临床试验...
+2026-01-17 15:05:23 | INFO     | src.agents.base_agent:invoke:127 | [Recruiter] 开始处理...
+2026-01-17 15:05:35 | INFO     | src.agents.base_agent:invoke:156 | [Recruiter] 检测到工具调用: 4 个
+2026-01-17 15:05:36 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-17 15:05:37 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-17 15:05:37 | INFO     | src.tools.api_clients.clinicaltrials_client:search_trials:85 | [CT.gov] 无匹配试验: Colorectal Cancer ATM
+2026-01-17 15:05:37 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-17 15:05:37 | INFO     | src.tools.rag.nccn_rag:initialize:37 | [NCCN-RAG] 初始化中...
+2026-01-17 15:05:37 | INFO     | src.tools.rag.vector_store:initialize:71 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-17 15:05:38 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化 DashScope Embedding: text-embedding-v4
+2026-01-17 15:05:38 | INFO     | src.tools.rag.vector_store:initialize:94 | [VectorStore] 初始化完成，现有文档数: 32622
+2026-01-17 15:05:38 | INFO     | src.tools.rag.nccn_rag:initialize:46 | [NCCN-RAG] 初始化完成
+2026-01-17 15:05:40 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_nccn] API 调用成功
+2026-01-17 15:05:58 | INFO     | src.graph.nodes:recruiter_node:219 | [RECRUITER] 完成，报告长度: 0 字符，试验数: 0
+2026-01-17 15:05:58 | INFO     | src.graph.nodes:oncologist_node:240 | [ONCOLOGIST] 开始制定治疗方案...
+2026-01-17 15:05:58 | INFO     | src.agents.base_agent:invoke:127 | [Oncologist] 开始处理...
+2026-01-17 15:06:07 | INFO     | src.agents.base_agent:invoke:156 | [Oncologist] 检测到工具调用: 2 个
+2026-01-17 15:06:09 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_nccn] API 调用成功
+2026-01-17 15:06:10 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_nccn] API 调用成功
+2026-01-17 15:06:30 | INFO     | src.graph.nodes:oncologist_node:271 | [ONCOLOGIST] 完成，方案长度: 0 字符，安全警告: 0
+2026-01-17 15:06:30 | INFO     | src.graph.nodes:chair_node:301 | [CHAIR] 开始综合所有报告...
+2026-01-17 15:06:30 | INFO     | src.agents.base_agent:invoke:127 | [Chair] 开始处理...
+2026-01-17 15:19:15 | INFO     | __main__:main:35 | ============================================================
+2026-01-17 15:19:15 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-17 15:19:15 | INFO     | __main__:main:37 | ============================================================
+2026-01-17 15:19:15 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-17 15:19:15 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/test_report.pdf
+2026-01-17 15:19:15 | INFO     | __main__:main:52 | 病例文本长度: 1243 字符
+2026-01-17 15:19:15 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-17 15:19:15 | INFO     | src.graph.nodes:case_parsing_node:51 | [PARSE] 开始解析病例文本...
+2026-01-17 15:19:15 | INFO     | src.agents.base_agent:invoke:127 | [Pathologist] 开始处理...
+2026-01-17 15:19:59 | INFO     | src.agents.base_agent:invoke:161 | [Pathologist] 完成，输出长度: 4938 字符
+2026-01-17 15:19:59 | INFO     | src.graph.nodes:case_parsing_node:60 | [PARSE] 完成，解析字段: ['patient_id', 'age', 'sex', 'primary_cancer', 'histology', 'stage', 'metastatic_sites', 'molecular_profile', 'ihc_markers', 'msi_status', 'tmb_score', 'pd_l1_tps', 'pd_l1_cps', 'treatment_lines', 'current_status', 'organ_function', 'comorbidities', 'tumor_markers', 'raw_text']
+2026-01-17 15:19:59 | INFO     | src.graph.nodes:geneticist_node:161 | [GENETICIST] 开始分子分析...
+2026-01-17 15:19:59 | INFO     | src.agents.base_agent:invoke:127 | [Geneticist] 开始处理...
+2026-01-17 15:20:14 | INFO     | src.agents.base_agent:invoke:156 | [Geneticist] 检测到工具调用: 6 个
+2026-01-17 15:20:16 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_civic] API 调用成功
+2026-01-17 15:20:18 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_cbioportal] API 调用成功
+2026-01-17 15:20:20 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-17 15:20:20 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_civic] API 调用成功
+2026-01-17 15:20:21 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-17 15:20:22 | ERROR    | src.tools.api_clients.ncbi_client:fetch_abstracts:127 | [NCBI] 获取摘要失败: Response ended prematurely
+2026-01-17 15:20:22 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-17 15:20:27 | ERROR    | __main__:main:111 | 工作流执行失败: ('Connection aborted.', ConnectionResetError(10054, '远程主机强迫关闭了一个现有的连接。', None, 10054, None))
+Traceback (most recent call last):
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connectionpool.py", line 773, in urlopen
+    self._prepare_proxy(conn)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connectionpool.py", line 1042, in _prepare_proxy
+    conn.connect()
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connection.py", line 796, in connect
+    sock_and_verified = _ssl_wrap_socket_and_match_hostname(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connection.py", line 975, in _ssl_wrap_socket_and_match_hostname
+    ssl_sock = ssl_wrap_socket(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\util\ssl_.py", line 483, in ssl_wrap_socket
+    ssl_sock = _ssl_wrap_socket_impl(sock, context, tls_in_tls, server_hostname)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\util\ssl_.py", line 527, in _ssl_wrap_socket_impl
+    return ssl_context.wrap_socket(sock, server_hostname=server_hostname)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\ssl.py", line 455, in wrap_socket
+    return self.sslsocket_class._create(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\ssl.py", line 1076, in _create
+    self.do_handshake()
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\ssl.py", line 1372, in do_handshake
+    self._sslobj.do_handshake()
+
+ConnectionResetError: [WinError 10054] 远程主机强迫关闭了一个现有的连接。
+
+
+During handling of the above exception, another exception occurred:
+
+
+Traceback (most recent call last):
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\adapters.py", line 667, in send
+    resp = conn.urlopen(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\util\retry.py", line 490, in increment
+    raise reraise(type(error), error, _stacktrace)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\util\util.py", line 38, in reraise
+    raise value.with_traceback(tb)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connectionpool.py", line 773, in urlopen
+    self._prepare_proxy(conn)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connectionpool.py", line 1042, in _prepare_proxy
+    conn.connect()
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connection.py", line 796, in connect
+    sock_and_verified = _ssl_wrap_socket_and_match_hostname(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\connection.py", line 975, in _ssl_wrap_socket_and_match_hostname
+    ssl_sock = ssl_wrap_socket(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\util\ssl_.py", line 483, in ssl_wrap_socket
+    ssl_sock = _ssl_wrap_socket_impl(sock, context, tls_in_tls, server_hostname)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\urllib3\util\ssl_.py", line 527, in _ssl_wrap_socket_impl
+    return ssl_context.wrap_socket(sock, server_hostname=server_hostname)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\ssl.py", line 455, in wrap_socket
+    return self.sslsocket_class._create(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\ssl.py", line 1076, in _create
+    self.do_handshake()
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\ssl.py", line 1372, in do_handshake
+    self._sslobj.do_handshake()
+
+urllib3.exceptions.ProtocolError: ('Connection aborted.', ConnectionResetError(10054, '远程主机强迫关闭了一个现有的连接。', None, 10054, None))
+
+
+During handling of the above exception, another exception occurred:
+
+
+Traceback (most recent call last):
+
+  File "D:\MTB\main.py", line 153, in <module>
+    main(case_path)
+
+> File "D:\MTB\main.py", line 74, in main
+    final_state = run_mtb_workflow(input_text)
+
+  File "D:\MTB\src\graph\state_graph.py", line 110, in run_mtb_workflow
+    final_state = workflow.invoke(initial_state)
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 3071, in invoke
+    for chunk in self.stream(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 2646, in stream
+    for _ in runner.tick(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_runner.py", line 167, in tick
+    run_with_retry(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_retry.py", line 42, in run_with_retry
+    return task.proc.invoke(task.input, config)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\_internal\_runnable.py", line 656, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\_internal\_runnable.py", line 400, in invoke
+    ret = self.func(*args, **kwargs)
+
+  File "D:\MTB\src\graph\nodes.py", line 173, in geneticist_node
+    result = agent.analyze(state["structured_case"])
+
+  File "D:\MTB\src\agents\geneticist.py", line 75, in analyze
+    result = self.invoke(task_prompt, context={"cancer_type": cancer_type})
+
+  File "D:\MTB\src\agents\base_agent.py", line 157, in invoke
+    return self._handle_tool_calls(message, messages)
+
+  File "D:\MTB\src\agents\base_agent.py", line 239, in _handle_tool_calls
+    final_result = self._call_api(messages, include_tools=False)
+
+  File "D:\MTB\src\agents\base_agent.py", line 100, in _call_api
+    response = requests.post(
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\api.py", line 115, in post
+    return request("post", url, data=data, json=json, **kwargs)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\requests\adapters.py", line 682, in send
+    raise ConnectionError(err, request=request)
+
+requests.exceptions.ConnectionError: ('Connection aborted.', ConnectionResetError(10054, '远程主机强迫关闭了一个现有的连接。', None, 10054, None))
+During task with name 'geneticist' and id '4cf3a547-31cb-5f18-ea42-4c9140fce926'
+2026-01-17 15:21:34 | INFO     | __main__:main:35 | ============================================================
+2026-01-17 15:21:34 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-17 15:21:34 | INFO     | __main__:main:37 | ============================================================
+2026-01-17 15:21:34 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-17 15:21:34 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/test_report.pdf
+2026-01-17 15:21:34 | INFO     | __main__:main:52 | 病例文本长度: 1243 字符
+2026-01-17 15:21:34 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-17 15:21:34 | INFO     | src.graph.nodes:case_parsing_node:51 | [PARSE] 开始解析病例文本...
+2026-01-17 15:21:34 | INFO     | src.agents.base_agent:invoke:127 | [Pathologist] 开始处理...
+2026-01-17 15:22:24 | INFO     | src.agents.base_agent:invoke:161 | [Pathologist] 完成，输出长度: 4707 字符
+2026-01-17 15:22:24 | INFO     | src.graph.nodes:case_parsing_node:60 | [PARSE] 完成，解析字段: ['patient_id', 'age', 'sex', 'primary_cancer', 'histology', 'stage', 'metastatic_sites', 'molecular_profile', 'ihc_markers', 'msi_status', 'tmb_score', 'pd_l1_tps', 'pd_l1_cps', 'treatment_lines', 'current_status', 'organ_function', 'comorbidities', 'tumor_markers', 'raw_text']
+2026-01-17 15:22:24 | INFO     | src.graph.nodes:geneticist_node:161 | [GENETICIST] 开始分子分析...
+2026-01-17 15:22:24 | INFO     | src.agents.base_agent:invoke:127 | [Geneticist] 开始处理...
+2026-01-17 15:22:35 | WARNING  | src.agents.base_agent:invoke:142 | [Geneticist] 带工具调用失败，重试无工具模式
+2026-01-17 15:23:23 | INFO     | src.agents.base_agent:invoke:161 | [Geneticist] 完成，输出长度: 4805 字符
+2026-01-17 15:23:23 | INFO     | src.graph.nodes:geneticist_node:177 | [GENETICIST] 完成，报告长度: 4805 字符，引用数: 0
+2026-01-17 15:23:23 | INFO     | src.graph.nodes:recruiter_node:198 | [RECRUITER] 开始搜索临床试验...
+2026-01-17 15:23:23 | INFO     | src.agents.base_agent:invoke:127 | [Recruiter] 开始处理...
+2026-01-17 15:23:32 | INFO     | src.agents.base_agent:invoke:156 | [Recruiter] 检测到工具调用: 3 个
+2026-01-17 15:23:33 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-17 15:23:33 | INFO     | src.tools.api_clients.clinicaltrials_client:search_trials:85 | [CT.gov] 无匹配试验: Solid Tumor TMB
+2026-01-17 15:23:33 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-17 15:23:34 | INFO     | src.tools.api_clients.clinicaltrials_client:search_trials:85 | [CT.gov] 无匹配试验: Solid Tumor ATM
+2026-01-17 15:23:34 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-17 15:23:50 | INFO     | src.agents.base_agent:_handle_tool_calls:240 | [Recruiter] 第二次API响应: {"id": "gen-1768634613-B6GlZsJ8zdgngyYQORk9", "provider": "Google", "model": "google/gemini-3-pro-preview", "object": "chat.completion", "created": 1768634613, "choices": [{"logprobs": null, "finish_reason": "tool_calls", "native_finish_reason": "UNEXPECTED_TOOL_CALL", "index": 0, "message": {"role": "assistant", "content": "", "refusal": null, "reasoning": "**Evaluating Trial Options**\n\nI'm currently focused on the patient's eligibility for clinical trials, considering the extensive prior treatments. Ten prior lines of therapy significantly narrow the options. My priority is to identify trials suitable for heavily pretreated colorectal cancer patients with an ECOG PS of 1. Biomarker information is key to refining the search.\n\n\n**Expanding Search Strategies**\n\nI am now pivoting to b
+2026-01-17 15:23:50 | WARNING  | src.agents.base_agent:_handle_tool_calls:248 | [Recruiter] 警告：工具调用后 LLM 返回空内容，完整响应: {"id": "gen-1768634613-B6GlZsJ8zdgngyYQORk9", "provider": "Google", "model": "google/gemini-3-pro-preview", "object": "chat.completion", "created": 1768634613, "choices": [{"logprobs": null, "finish_reason": "tool_calls", "native_finish_reason": "UNEXPECTED_TOOL_CALL", "index": 0, "message": {"role": "assistant", "content": "", "refusal": null, "reasoning": "**Evaluating Trial Options**\n\nI'm currently focused on the patient's eligibility for clinical trials, considering the extensive prior treatments. Ten prior lines of therapy significantly narrow the options. My priority is to identify trials suitable for heavily pretreated colorectal cancer patients with an ECOG PS of 1. Biomarker information is key to refining the search.\n\n\n**Expanding Search Strategies**\n\nI am now pivoting to broaden the search parameters. Initial queries for TMB and ATM yielded no direct hits. I'm modifying my approach to include immunotherapy trials and basket trials, since TMB-High status strongly indicates a good response to immunotherapy. I'll need to manually evaluate the inclusion criteria of the PD-1/PD-L1 trials identified, focusing on their TMB eligibility.\n\n\n**Prioritizing Treatment Options**\n\nI'm now focusing on a more specific search strategy. Initial searches for TMB-high trials were too narrow. Therefore, I will now search for Chinese-based clinical trials, specifically those using known KRAS G12C inhibitors such as Glecirasib, D-1553, and IBI351. In addition, I will also begin researching immunotherapy trials.\n\n\n**Revising Search Parameters**\n\nI'm now revising my search strategy to account for the patient's extensive prior treatments. Given the patient's ten prior lines of therapy, I am expanding my search to include Phase I trials, which often have less stringent prior treatment requirements. I will also incorporate searches using specific KRAS G12C inhibitor names like Garsorasib, D-1553, and IBI351. Additionally, the NCCN guidelines search is underway.\n\n\n", "tool_calls": [{"type": "function", "index": 0, "id": "tool_search_nccn_O6SnWqBQxJfOVd0LEI4p", "function": {"name": "search_nccn", "arguments": "{\"cancer_type\":\"Colon Cancer\"}"}}], "reasoning_details": [{"format": "google-gemini-v1", "index": 0, "type": "reasoning.text", "text": "**Evaluating Trial Options**\n\nI'm currently focused on the patient's eligibility for clinical trials, considering the extensive prior treatments. Ten prior lines of therapy significantly narrow the options. My priority is to identify trials suitable for heavily pretreated colorectal cancer patients with an ECOG PS of 1. Biomarker information is key to refining the search.\n\n\n**Expanding Search Strategies**\n\nI am now pivoting to broaden the search parameters. Initial queries for TMB and ATM yielded no direct hits. I'm modifying my approach to include immunotherapy trials and basket trials, since TMB-High status strongly indicates a good response to immunotherapy. I'll need to manually evaluate the inclusion criteria of the PD-1/PD-L1 trials identified, focusing on their TMB eligibility.\n\n\n**Prioritizing Treatment Options**\n\nI'm now focusing on a more specific search strategy. Initial searches for TMB-high trials were too narrow. Therefore, I will now search for Chinese-based clinical trials, specifically those using known KRAS G12C inhibitors such as Glecirasib, D-1553, and IBI351. In addition, I will also begin researching immunotherapy trials.\n\n\n**Revising Search Parameters**\n\nI'm now revising my search strategy to account for the patient's extensive prior treatments. Given the patient's ten prior lines of therapy, I am expanding my search to include Phase I trials, which often have less stringent prior treatment requirements. I will also incorporate searches using specific KRAS G12C inhibitor names like Garsorasib, D-1553, and IBI351. Additionally, the NCCN guidelines search is underway.\n\n\n"}, {"id": "tool_search_nccn_O6SnWqBQxJfOVd0LEI4p", "format": "google-gemini-v1", "index": 0, "type": "reasoning.encrypted", "data": "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"}], "annotations": []}}], "usage": {"prompt_tokens": 4005, "completion_tokens": 9, "total_tokens": 4014, "cost": 0.008118, "is_byok": false, "prompt_tokens_details": {"cached_tokens": 0, "audio_tokens": 0, "video_tokens": 0}, "cost_details": {"upstream_inference_cost": null, "upstream_inference_prompt_cost": 0.00801, "upstream_inference_completions_cost": 0.000108}, "completion_tokens_details": {"reasoning_tokens": 420, "image_tokens": 0}}}
+2026-01-17 15:23:50 | INFO     | src.graph.nodes:recruiter_node:219 | [RECRUITER] 完成，报告长度: 0 字符，试验数: 0
+2026-01-17 15:23:50 | INFO     | src.graph.nodes:oncologist_node:240 | [ONCOLOGIST] 开始制定治疗方案...
+2026-01-17 15:23:50 | INFO     | src.agents.base_agent:invoke:127 | [Oncologist] 开始处理...
+2026-01-17 15:23:59 | INFO     | src.agents.base_agent:invoke:156 | [Oncologist] 检测到工具调用: 3 个
+2026-01-17 15:24:00 | INFO     | src.tools.rag.nccn_rag:initialize:37 | [NCCN-RAG] 初始化中...
+2026-01-17 15:24:00 | INFO     | src.tools.rag.vector_store:initialize:71 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-17 15:24:00 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化 DashScope Embedding: text-embedding-v4
+2026-01-17 15:24:00 | INFO     | src.tools.rag.vector_store:initialize:94 | [VectorStore] 初始化完成，现有文档数: 32622
+2026-01-17 15:24:00 | INFO     | src.tools.rag.nccn_rag:initialize:46 | [NCCN-RAG] 初始化完成
+2026-01-17 15:24:03 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_nccn] API 调用成功
+2026-01-17 15:24:04 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-17 15:24:05 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-17 15:24:20 | INFO     | src.agents.base_agent:_handle_tool_calls:240 | [Oncologist] 第二次API响应: {"id": "gen-1768634644-jrYQ4hpg0m5qSuhzC6bE", "provider": "Google", "model": "google/gemini-3-pro-preview", "object": "chat.completion", "created": 1768634644, "choices": [{"logprobs": null, "finish_reason": "tool_calls", "native_finish_reason": "UNEXPECTED_TOOL_CALL", "index": 0, "message": {"role": "assistant", "content": "", "refusal": null, "reasoning": "**Considering Treatment Options**\n\nI'm currently reviewing the patient's data, particularly focusing on the extensive prior treatment history. With ten prior lines of therapy, this is clearly a complex case. The ECOG PS of 1 suggests a reasonable performance status. The creatinine of 1.4 will be considered in the next step. I am beginning to consider what therapies are available.\n\n\n**Assessing Patient Suitability**\n\nI am now del
+2026-01-17 15:24:20 | WARNING  | src.agents.base_agent:_handle_tool_calls:248 | [Oncologist] 警告：工具调用后 LLM 返回空内容，完整响应: {"id": "gen-1768634644-jrYQ4hpg0m5qSuhzC6bE", "provider": "Google", "model": "google/gemini-3-pro-preview", "object": "chat.completion", "created": 1768634644, "choices": [{"logprobs": null, "finish_reason": "tool_calls", "native_finish_reason": "UNEXPECTED_TOOL_CALL", "index": 0, "message": {"role": "assistant", "content": "", "refusal": null, "reasoning": "**Considering Treatment Options**\n\nI'm currently reviewing the patient's data, particularly focusing on the extensive prior treatment history. With ten prior lines of therapy, this is clearly a complex case. The ECOG PS of 1 suggests a reasonable performance status. The creatinine of 1.4 will be considered in the next step. I am beginning to consider what therapies are available.\n\n\n**Assessing Patient Suitability**\n\nI am now delving into the renal function assessment, calculating the eGFR to precisely evaluate kidney health based on the creatinine level of 1.4. I'm also confirming no apparent safety concerns. Simultaneously, I'm integrating the comprehensive molecular profile, particularly the KRAS G12C mutation with a VAF of 11.5%, which strongly points towards a targeted therapy approach.\n\n\n**Synthesizing Treatment Strategies**\n\nNow, I'm integrating the information to formulate a treatment plan. My initial focus is on the KRAS G12C mutation, given its high VAF. While CodeBreaK 300 and KRYSTAL-1 are key, the patient's renal function, with that creatinine level, raises a red flag requiring further investigation. I'll need to calculate eGFR and check renal adjustments for each medication considered.\n\n\n**Formulating Treatment Recommendations**\n\nI'm now prioritizing the KRAS G12C mutation, given the patient's advanced stage and prior treatments. Renal function is a significant factor. I'll need to use FDA labels to confirm dosage adjustments for Sotorasib, Adagrasib, and any EGFR inhibitors, given the elevated creatinine. The high TMB score supports the potential use of immunotherapy. I will start by focusing on the KRAS G12C therapies and then assess the possibility of immunotherapy.\n\n\n**Prioritizing Drug Adjustments**\n\nI'm now focusing on calculating the patient's renal function to determine the need for medication adjustments, particularly for Sotorasib and Adagrasib. Then, I'll search for FDA label specifics for Pembrolizumab, in light of the high TMB score. I'll need to synthesize this information and determine the best approach, considering both the KRAS G12C mutation and potential for immunotherapy.\n\n\n", "tool_calls": [{"type": "function", "index": 0, "id": "tool_search_fda_labels_PxbmctH1ojCibqChzYWF", "function": {"name": "search_fda_labels", "arguments": "{\"drug_name\":\"Sotorasib\"}"}}], "reasoning_details": [{"format": "google-gemini-v1", "index": 0, "type": "reasoning.text", "text": "**Considering Treatment Options**\n\nI'm currently reviewing the patient's data, particularly focusing on the extensive prior treatment history. With ten prior lines of therapy, this is clearly a complex case. The ECOG PS of 1 suggests a reasonable performance status. The creatinine of 1.4 will be considered in the next step. I am beginning to consider what therapies are available.\n\n\n**Assessing Patient Suitability**\n\nI am now delving into the renal function assessment, calculating the eGFR to precisely evaluate kidney health based on the creatinine level of 1.4. I'm also confirming no apparent safety concerns. Simultaneously, I'm integrating the comprehensive molecular profile, particularly the KRAS G12C mutation with a VAF of 11.5%, which strongly points towards a targeted therapy approach.\n\n\n**Synthesizing Treatment Strategies**\n\nNow, I'm integrating the information to formulate a treatment plan. My initial focus is on the KRAS G12C mutation, given its high VAF. While CodeBreaK 300 and KRYSTAL-1 are key, the patient's renal function, with that creatinine level, raises a red flag requiring further investigation. I'll need to calculate eGFR and check renal adjustments for each medication considered.\n\n\n**Formulating Treatment Recommendations**\n\nI'm now prioritizing the KRAS G12C mutation, given the patient's advanced stage and prior treatments. Renal function is a significant factor. I'll need to use FDA labels to confirm dosage adjustments for Sotorasib, Adagrasib, and any EGFR inhibitors, given the elevated creatinine. The high TMB score supports the potential use of immunotherapy. I will start by focusing on the KRAS G12C therapies and then assess the possibility of immunotherapy.\n\n\n**Prioritizing Drug Adjustments**\n\nI'm now focusing on calculating the patient's renal function to determine the need for medication adjustments, particularly for Sotorasib and Adagrasib. Then, I'll search for FDA label specifics for Pembrolizumab, in light of the high TMB score. I'll need to synthesize this information and determine the best approach, considering both the KRAS G12C mutation and potential for immunotherapy.\n\n\n"}, {"id": "tool_search_fda_labels_PxbmctH1ojCibqChzYWF", "format": "google-gemini-v1", "index": 0, "type": "reasoning.encrypted", "data": "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"}], "annotations": []}}], "usage": {"prompt_tokens": 6361, "completion_tokens": 12, "total_tokens": 6373, "cost": 0.012866, "is_byok": false, "prompt_tokens_details": {"cached_tokens": 0, "audio_tokens": 0, "video_tokens": 0}, "cost_details": {"upstream_inference_cost": null, "upstream_inference_prompt_cost": 0.012722, "upstream_inference_completions_cost": 0.000144}, "completion_tokens_details": {"reasoning_tokens": 555, "image_tokens": 0}}}
+2026-01-17 15:24:20 | INFO     | src.graph.nodes:oncologist_node:271 | [ONCOLOGIST] 完成，方案长度: 0 字符，安全警告: 0
+2026-01-17 15:24:20 | INFO     | src.graph.nodes:chair_node:301 | [CHAIR] 开始综合所有报告...
+2026-01-17 15:24:20 | INFO     | src.agents.base_agent:invoke:127 | [Chair] 开始处理...

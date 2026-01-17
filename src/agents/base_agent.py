@@ -176,24 +176,30 @@ class BaseAgent:
     def _handle_tool_calls(
         self,
         assistant_message: Dict[str, Any],
-        messages: List[Dict[str, Any]]
+        messages: List[Dict[str, Any]],
+        iteration: int = 1,
+        max_iterations: int = 5
     ) -> Dict[str, Any]:
         """
-        处理工具调用
+        处理工具调用（支持多轮工具调用）
 
         Args:
             assistant_message: 包含 tool_calls 的助手消息
             messages: 当前消息历史
+            iteration: 当前迭代次数
+            max_iterations: 最大迭代次数
 
         Returns:
             最终响应
         """
         tool_calls = assistant_message.get("tool_calls", [])
 
+        logger.info(f"[{self.role}] 工具调用轮次 {iteration}/{max_iterations}，调用数: {len(tool_calls)}")
+
         # 添加助手消息到历史
         messages.append({
             "role": "assistant",
-            "content": assistant_message.get("content"),
+            "content": assistant_message.get("content") or "",
             "tool_calls": [
                 {
                     "id": tc.get("id"),
@@ -235,17 +241,30 @@ class BaseAgent:
                 "content": tool_result
             })
 
-        # 继续生成最终响应
-        final_result = self._call_api(messages, include_tools=False)
+        # 继续生成响应（保持工具可用，以支持多轮调用）
+        next_result = self._call_api(messages, include_tools=bool(self.tools))
 
-        if "choices" not in final_result or len(final_result["choices"]) == 0:
-            raise Exception(f"API 响应格式错误: {final_result}")
+        if "choices" not in next_result or len(next_result["choices"]) == 0:
+            raise Exception(f"API 响应格式错误: {next_result}")
 
-        final_content = final_result["choices"][0].get("message", {}).get("content", "")
+        next_message = next_result["choices"][0].get("message", {})
+        next_tool_calls = next_message.get("tool_calls")
+        next_content = next_message.get("content", "")
+
+        # 如果模型还想调用工具，递归处理
+        if next_tool_calls and iteration < max_iterations:
+            logger.info(f"[{self.role}] 模型请求继续调用工具，进入下一轮")
+            return self._handle_tool_calls(next_message, messages, iteration + 1, max_iterations)
+
+        # 如果达到最大迭代或模型返回了内容
+        if not next_content:
+            logger.warning(f"[{self.role}] 警告：达到最大迭代或无内容，finish_reason: {next_result['choices'][0].get('finish_reason')}")
+
+        logger.info(f"[{self.role}] 工具调用完成，最终输出长度: {len(next_content)} 字符")
 
         return {
-            "output": final_content,
-            "references": self._extract_references(final_content)
+            "output": next_content,
+            "references": self._extract_references(next_content)
         }
 
     def _extract_references(self, text: str) -> List[Dict[str, str]]:
