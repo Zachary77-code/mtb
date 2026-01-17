@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python:*)",
       "Bash(__NEW_LINE__ curl -s \"https://www.cbioportal.org/api/studies?pageSize=3000\")",
-      "Bash(paste:*)"
+      "Bash(paste:*)",
+      "Bash(find:*)"
     ]
   }
 }
