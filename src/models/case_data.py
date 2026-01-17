@@ -1,7 +1,7 @@
 """
 病例数据模型（Pydantic）
 """
-from typing import List, Optional
+from typing import List, Optional, Dict
 from pydantic import BaseModel, Field
 
 
@@ -86,6 +86,11 @@ class OrganFunction(BaseModel):
         None,
         ge=0.0,
         description="肌酐清除率（CrCl），mL/min"
+    )
+    creatinine: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description="血肌酐，umol/L 或 mg/dL"
     )
 
     # 肝功能
@@ -190,6 +195,11 @@ class CaseData(BaseModel):
         le=100.0,
         description="PD-L1 TPS（肿瘤比例得分），%"
     )
+    pd_l1_cps: Optional[float] = Field(
+        None,
+        ge=0.0,
+        description="PD-L1 CPS（联合阳性评分）"
+    )
 
     # ==================== 治疗史 ====================
     treatment_lines: List[TreatmentLine] = Field(
@@ -205,6 +215,18 @@ class CaseData(BaseModel):
     organ_function: OrganFunction = Field(
         default_factory=OrganFunction,
         description="器官功能参数"
+    )
+
+    # ==================== 合并症 ====================
+    comorbidities: Optional[List[str]] = Field(
+        default_factory=list,
+        description="合并症列表，如 ['高血压', '糖尿病', '肾损伤']"
+    )
+
+    # ==================== 肿瘤标志物 ====================
+    tumor_markers: Optional[Dict[str, float]] = Field(
+        default_factory=dict,
+        description="肿瘤标志物，如 {'cea_ng_ml': 112, 'ca199_u_ml': 145}"
     )
 
     # ==================== 原始文本（用于调试） ====================
@@ -231,6 +253,7 @@ class CaseData(BaseModel):
                 "msi_status": "MSS",
                 "tmb_score": 5.2,
                 "pd_l1_tps": 10.0,
+                "pd_l1_cps": 15.0,
                 "treatment_lines": [
                     {
                         "line_number": 1,
@@ -243,8 +266,11 @@ class CaseData(BaseModel):
                 "current_status": "progressed",
                 "organ_function": {
                     "ecog_ps": 1,
-                    "egfr_ml_min": 85.0
+                    "egfr_ml_min": 85.0,
+                    "creatinine": 80.0
                 },
+                "comorbidities": ["高血压", "糖尿病"],
+                "tumor_markers": {"cea_ng_ml": 5.2, "ca199_u_ml": 25.0},
                 "raw_text": "患者男性，65岁，诊断为非小细胞肺癌..."
             }
         }

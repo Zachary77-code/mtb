@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vMTB Consultation Report | 虚拟分子肿瘤委员会</title>
+  <style>
+    :root {
+      --primary: #0d47a1;
+      --secondary: #546e7a;
+      --accent: #00838f;
+      --warning: #f57c00;
+      --danger: #c62828;
+      --success: #2e7d32;
+      --bg: #ffffff;
+      --bg-alt: #f5f7fa;
+      --text: #212121;
+      --text-light: #616161;
+      --border: #e0e0e0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: var(--bg-alt);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 14px;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: var(--bg);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .header-meta {
+      text-align: right;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .section {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+    }
+
+    .info-item {
+      padding: 12px;
+      background: var(--bg-alt);
+      border-radius: 4px;
+    }
+
+    .info-item label {
+      font-size: 11px;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .info-item span { font-size: 14px; font-weight: 500; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--bg-alt);
+      font-weight: 600;
+      color: var(--secondary);
+    }
+
+    tr:nth-child(even) { background: var(--bg-alt); }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-success { background: #e8f5e9; color: var(--success); }
+    .badge-warning { background: #fff3e0; color: var(--warning); }
+    .badge-danger  { background: #ffebee; color: var(--danger); }
+    .badge-info    { background: #e3f2fd; color: var(--primary); }
+    .badge-secondary { background: #eceff1; color: var(--secondary); }
+    .badge-primary { background: var(--primary); color: white; }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px;
+    }
+
+    .card-header {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .exec-summary {
+      background: var(--bg-alt);
+      padding: 20px;
+      border-radius: 4px;
+      border-left: 4px solid var(--primary);
+    }
+
+    .exec-summary h3 {
+      font-size: 14px;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .exec-summary ul { list-style: none; padding: 0; }
+
+    .exec-summary li {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .exec-summary li:last-child { border-bottom: none; }
+
+    .drug-row {
+      display: grid;
+      grid-template-columns: 140px repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      margin-bottom: 16px;
+    }
+
+    .drug-row > div {
+      background: var(--bg);
+      padding: 10px;
+      font-size: 13px;
+    }
+
+    .drug-row .drug-name {
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+    }
+
+    .evidence {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 2px;
+      margin-left: 6px;
+    }
+
+    .evidence-high   { background: #c8e6c9; color: var(--success); }
+    .evidence-medium { background: #fff9c4; color: #f57f17; }
+    .evidence-low    { background: #ffcdd2; color: var(--danger); }
+
+    .calc-box {
+      background: var(--bg-alt);
+      padding: 16px;
+      border-radius: 4px;
+      font-family: "SF Mono", Monaco, monospace;
+      font-size: 13px;
+      margin: 12px 0;
+    }
+
+    .calc-box h4 {
+      font-family: -apple-system, sans-serif;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .key-rec {
+      display: flex;
+      align-items: flex-start;
+      padding: 12px;
+      background: var(--bg-alt);
+      margin-bottom: 8px;
+      border-radius: 4px;
+    }
+
+    /* Treatment Timeline Styles */
+    .treatment-timeline { position: relative; padding-left: 60px; }
+
+    .treatment-timeline::before {
+      content: '';
+      position: absolute;
+      left: 24px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .treatment-item {
+      position: relative;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .treatment-marker {
+      position: absolute;
+      left: -60px;
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      z-index: 1;
+    }
+
+    .treatment-marker.event { background: var(--secondary); }
+    .treatment-marker.adjuvant { background: #7e57c2; }
+    .treatment-marker.maint { background: #26a69a; }
+    .treatment-marker.pd { background: var(--danger); }
+    .treatment-marker.current { background: var(--warning); color: var(--text); }
+
+    .treatment-content {
+      flex: 1;
+      background: var(--bg-alt);
+      border-radius: 4px;
+      padding: 12px 16px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .treatment-item.event .treatment-content { border-left-color: var(--secondary); }
+    .treatment-item.adjuvant .treatment-content { border-left-color: #7e57c2; }
+    .treatment-item.maint .treatment-content { border-left-color: #26a69a; }
+    .treatment-item.pd .treatment-content { border-left-color: var(--danger); }
+
+    .treatment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .treatment-date { font-weight: 600; color: var(--primary); }
+    .treatment-body { font-size: 14px; }
+
+    .treatment-note {
+      font-size: 12px;
+      margin-top: 6px;
+      padding-left: 8px;
+      border-left: 2px solid var(--border);
+    }
+
+    .key-rec-num {
+      width: 24px;
+      height: 24px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    footer {
+      padding: 16px 32px;
+      background: var(--bg-alt);
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-light);
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .container { box-shadow: none; }
+      .section { page-break-inside: avoid; }
+    }
+
+    .highlight { background: #fff9c4; padding: 0 2px; }
+    .text-danger { color: var(--danger); }
+    .text-success { color: var(--success); }
+    .text-warning { color: var(--warning); }
+
+    /* 内联引用样式 - Inline Citation Styles */
+    .cite {
+      color: var(--primary);
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 11px;
+      vertical-align: super;
+      font-weight: 600;
+    }
+    .cite:hover { text-decoration: underline; }
+    .ref-tooltip {
+      position: relative;
+      display: inline;
+    }
+    .ref-tooltip .ref-text {
+      visibility: hidden;
+      background: #333;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 6px;
+      position: absolute;
+      z-index: 100;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 350px;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: normal;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .ref-tooltip .ref-text::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: #333 transparent transparent transparent;
+    }
+    .ref-tooltip:hover .ref-text { visibility: visible; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <header>
+      <h1>虚拟分子肿瘤委员会会诊报告</h1>
+      <div class="header-meta">
+        <div>vMTB Consultation Report</div>
+        <div>报告日期: 2026-01-14</div>
+      </div>
+    </header>
+
+    <!-- Executive Summary -->
+    <div class="section">
+      <div class="exec-summary">
+        <h3>执行摘要 | EXECUTIVE SUMMARY</h3>
+        <ul>
+          <li><strong>患者:</strong> 70岁男性，乙状结肠中分化腺癌 ypT4aN2aM1 (IV期)，双肺多发转移，ECOG 1级</li>
+          <li><strong>关键分子特征:</strong> KRAS G12C突变 (11.5%)，MSS，TMB 79/Mb，ATM胚系突变，PD-L1 CPS=3</li>
+          <li><strong>当前治疗:</strong> 五线：氟泽雷赛（KRAS G12C抑制剂）+ 西妥昔单抗（2025年10月起，疗效待评估）</li>
+          <li><strong>核心建议:</strong> 继续当前KRAS G12C靶向联合方案，密切监测疗效；若进展可考虑ATM突变相关的PARP抑制剂或临床试验；鉴于肾功能损伤史，需密切监测肾功能</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 1. Patient Profile -->
+    <div class="section">
+      <h2 class="section-title">1. 患者概况 | PATIENT PROFILE</h2>
+      <div class="info-grid">
+        <div class="info-item"><label>年龄/性别</label><span>70岁 / 男性</span></div>
+        <div class="info-item"><label>身高/体重</label><span>165cm / 66kg</span></div>
+        <div class="info-item"><label>ECOG评分</label><span>1级</span></div>
+        <div class="info-item"><label>诊断</label><span>乙状结肠中分化腺癌 ypT4aN2aM1 (IV期)</span></div>
+        <div class="info-item"><label>转移情况</label><span>双肺多发转移，最大2.1×1.5cm</span></div>
+        <div class="info-item"><label>肿瘤标志物</label><span>CEA 112 ng/mL↑, CA-199 145 U/mL↑, CY211 11.30 ng/mL↑, VEGF 617.38 pg/mL↑</span></div>
+        <div class="info-item"><label>肾功能</label><span class="text-warning">肌酐 146 μmol/L（轻度损伤，既往TKI相关肾损害）</span></div>
+        <div class="info-item"><label>合并症</label><span>高血压（硝苯地平）、糖尿病（达格列净+阿卡波糖）、心脏支架（阿托伐他汀）</span></div>
+      </div>
+    </div>
+
+    <!-- 2. Molecular Profile -->
+    <div class="section">
+      <h2 class="section-title">2. 分子特征 | MOLECULAR PROFILE</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:120px;">分子标志物</th>
+            <th style="width:100px;">检测结果</th>
+            <th>临床意义</th>
+            <th>建议行动</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>KRAS G12C</strong></td>
+            <td><span class="badge badge-danger">突变 11.5%</span></td>
+            <td>
+              结直肠癌中KRAS G12C突变约占KRAS突变的3-4%
+              <span class="ref-tooltip">
+                <a class="cite" href="https://oncokb.org/gene/KRAS/G12C" target="_blank">[D1]</a>
+                <span class="ref-text">OncoKB: KRAS G12C - Oncogenic mutation. Level 1 evidence for Sotorasib and Adagrasib in NSCLC; Level 3B for colorectal cancer.</span>
+              </span>
+              。可使用KRAS G12C共价抑制剂（Sotorasib、Adagrasib、氟泽雷赛）靶向治疗
+              <span class="ref-tooltip">
+                <a class="cite" href="https://www.cancer.sanger.ac.uk/cosmic/mutation/overview?id=521" target="_blank">[D2]</a>
+                <span class="ref-text">COSMIC Database: KRAS G12C (c.34G>T) - Somatic mutation found in ~3% of colorectal adenocarcinomas.</span>
+              </span>
+              。
+            </td>
+            <td>
+              <span class="badge badge-success">当前使用氟泽雷赛+西妥昔单抗</span><br>
+              结直肠癌中KRAS G12C抑制剂单药疗效有限，联合EGFR抑制剂可提高疗效
+              <span class="ref-tooltip">
+                <a class="cite" href="https://clinicaltrials.gov/study/NCT04793958" target="_blank">[T1]</a>
+                <span class="ref-text">CodeBreaK 300 (NCT04793958): Sotorasib + Panitumumab vs SOC in KRAS G12C-mutated colorectal cancer. ORR 30% vs 2.3%.</span>
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>MSI/MMR</strong></td>
+            <td><span class="badge badge-secondary">MSS / pMMR</span></td>
+            <td>
+              微卫星稳定(MSS)，错配修复蛋白正常(MLH1+, PMS2+, MSH2+, MSH6+)
+              <span class="ref-tooltip">
+                <a class="cite" href="https://www.nccn.org/guidelines/guidelines-detail?category=1&id=1428" target="_blank">[G1]</a>
+                <span class="ref-text">NCCN Guidelines: Colon Cancer Version 1.2025 - MSS/pMMR tumors do not benefit from single-agent checkpoint inhibitors.</span>
+              </span>
+              。单药免疫检查点抑制剂疗效不佳。
+            </td>
+            <td>不推荐单药PD-1/PD-L1抑制剂；可考虑联合治疗策略</td>
+          </tr>
+          <tr>
+            <td><strong>TMB</strong></td>
+            <td><span class="badge badge-warning">79 Muts/Mb (高)</span></td>
+            <td>
+              TMB高（≥10 Muts/Mb）通常提示免疫治疗可能获益，但在MSS结直肠癌中，高TMB的免疫治疗预测价值有限
+              <span class="ref-tooltip">
+                <a class="cite" href="https://www.esmo.org/guidelines/gastrointestinal-cancers/metastatic-colorectal-cancer" target="_blank">[G2]</a>
+                <span class="ref-text">ESMO Metastatic Colorectal Cancer Clinical Practice Guidelines 2024 - TMB-H alone insufficient for ICI response in MSS CRC.</span>
+              </span>
+              。
+            </td>
+            <td>暂不推荐基于高TMB单独使用免疫治疗</td>
+          </tr>
+          <tr>
+            <td><strong>ATM</strong></td>
+            <td><span class="badge badge-info">胚系突变</span></td>
+            <td>
+              ATM是DNA损伤修复(DDR)通路的关键基因，胚系突变提示同源重组修复缺陷(HRD)可能
+              <span class="ref-tooltip">
+                <a class="cite" href="https://www.ncbi.nlm.nih.gov/clinvar/?term=ATM%5Bgene%5D" target="_blank">[D3]</a>
+                <span class="ref-text">ClinVar: ATM germline mutations associated with increased cancer susceptibility and potential sensitivity to PARP inhibitors and platinum agents.</span>
+              </span>
+              。可能对PARP抑制剂或铂类药物敏感。
+            </td>
+            <td>
+              <span class="badge badge-info">探索性</span> 可考虑PARP抑制剂（如奥拉帕利）相关临床试验
+              <span class="ref-tooltip">
+                <a class="cite" href="https://clinicaltrials.gov/study/NCT03842228" target="_blank">[T2]</a>
+                <span class="ref-text">NCT03842228: Study of Olaparib in patients with ATM-mutated solid tumors.</span>
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>PD-L1</strong></td>
+            <td><span class="badge badge-secondary">CPS=3 (低表达)</span></td>
+            <td>PD-L1低表达(CPS<10)，单药免疫检查点抑制剂疗效预期较差。</td>
+            <td>不推荐单药免疫治疗</td>
+          </tr>
+          <tr>
+            <td><strong>EGFR</strong></td>
+            <td>IHC 2+</td>
+            <td>EGFR蛋白中等表达，支持抗EGFR治疗。但需注意KRAS突变型肿瘤对单药抗EGFR治疗耐药。</td>
+            <td>EGFR抑制剂需联合KRAS抑制剂使用</td>
+          </tr>
+          <tr>
+            <td><strong>HER2</strong></td>
+            <td>IHC 0</td>
+            <td>HER2阴性，不适合抗HER2靶向治疗。</td>
+            <td>不推荐HER2靶向治疗</td>
+          </tr>
+          <tr>
+            <td><strong>Ki-67</strong></td>
+            <td>+5% (低)</td>
+            <td>增殖指数低，提示肿瘤增殖活性较低。</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. Treatment History -->
+    <div class="section">
+      <h2 class="section-title">3. 治疗史 | TREATMENT HISTORY</h2>
+      <div class="treatment-timeline">
+
+        <!-- 一线新辅助 -->
+        <div class="treatment-item">
+          <div class="treatment-marker">1线</div>
+          <div class="treatment-content">
+            <div class="treatment-header">
+              <span class="treatment-date">2022.08 - 2022.12</span>
+              <span class="badge badge-success">PR</span>
+            </div>
+            <div class="treatment-body">
+              <strong>新辅助化疗：</strong>奥沙利铂 + 卡培他滨 + 贝伐珠单抗 (5程)
+              <span class="ref-tooltip">
+                <a class="cite" href="https://www.nccn.org/guidelines/guidelines-detail?category=1&id=1428" target="_blank">[G1]</a>
+                <span class="ref-text">NCCN Colon Cancer Guidelines: FOLFOX/CAPOX + Bevacizumab is standard first-line regimen for mCRC.</span>
+              </span>
+            </div>
+            <div class="treatment-note">疗效评估：部分缓解(PR)</div>
+          </div>
+        </div>
+
+        <!-- 手术 -->
+        <div class="treatment-item event">
+          <div class="treatment-marker event">手术</div>
+          <div class="treatment-content">
+            <div class="treatment-header">
+              <span class="treatment-date">2023.01</span>
+              <span class="badge badge-info">TRG2级</span>
+            </div>
+            <div class="treatment-body">
+              <strong>根治性手术：</strong>切除原发灶 + 肝转移灶 + 淋巴结清扫
+            </div>
+            <div class="treatment-note">病理：5/19淋巴结阳性，3枚癌结节</div>
+          </div>
+        </div>
+
+        <!-- 术后辅助 -->
+        <div class="treatment-item adjuvant">
+          <div class="treatment-marker adjuvant">辅助</div>
+          <div class="treatment-content">
+            <div class="treatment-header">
+              <span class="treatment-date">2023.03 - 2023.05</span>
+              <span class="badge badge-secondary">-</span>
+            </div>
+            <div class="treatment-body">
+              <strong>术后辅助化疗：</strong>奥沙利铂 + 卡培他滨 (3程)
+            </div>
+          </div>
+        </div>
+
+        <!-- 维持治疗 -->
+        <div class="treatment-item maint">
+          <div class="treatment-marker maint">维持</div>
+          <div class="treatment-content">
+            <div class="treatment-header">
+              <span class="treatment-date">2023.05 - 2023.08</span>
+              <span class="badge badge-secondary">-</span>
+            </div>
+            <div class="treatment-body">
+              <strong>维持治疗：</strong>卡培他滨单药
+            </div>
+            <div class="treatment-note">期间发现双肺小结节(3-5mm)</div>
+          </div>
+        </div>
+
+        <!-- 二线治疗 -->
+        <div class="treatment-item">
+          <div class="treatment-marker">2线</div>
+          <div class="treatment-content">
+            <div class="treatment-header">
+              <span class="treatment-date">2023.08 - 2024.01</span>
+              <span class="badge badge-warning">SD</span>
+            </div>
+            <div class="treatment-body">
+              <strong>二线化疗：</strong>伊立替康 + 亚叶酸钙 + 5-FU + 贝伐珠单抗 (FOLFIRI+Bev)
+              <span class="ref-tooltip">
+                <a class="cite" href="https://www.nccn.org/guidelines/guidelines-detail?category=1&id=1428" target="_blank">[G1]</a>
+                <span class="ref-text">NCCN Guidelines: FOLFIRI + Bevacizumab is recommended second-line option after oxaliplatin-based first-line therapy.</span>
+              </span>
+            </div>
+            <div class="treatment-note">CEA升高、双肺结节增大后启动；疗效：疾病稳定(SD)</div>
+          </div>
+        </div>
+
+        <!-- 二线维持 -->
+        <div class="treatment-item maint">
+          <div class="treatment-marker maint">维持</div>
+          <div class="treatment-content">
+            <div class="treatment-header">
+              <span class="treatment-date">2024.02 - 2024.06</span>
+              <span class="badge badge-secondary">-</span>
+            </div>
+            <div class="treatment-body">
+              <strong>维持治疗：</strong>卡培他滨单药
+            </div>
+          </div>
+        </div>
+
+        <!-- 三线治疗 -->
+        <div class="treatment-item pd">
+          <div class="treatment-marker pd">3线</div>
+          <div class="treatment-content">
+            <div class="treatment-header">
+              <span class="treatment-date">2024.07</span>
+              <span class="badge badge-danger">严重AE停药</span>
+            </div>
+            <div class="treatment-body">
+              <strong>三线尝试：</strong>呋喹替尼 + 信迪利单抗
+              <span class="ref-tooltip">
+                <a class="cite" href="https://www.nmpa.gov.cn/datasearch/search-info.html?nmpa=aWQ9ZjEyODFkYjMtMjUyYi00NDc5LWJhNGItMjQ0ZjIwMDAwMDI0" target="_blank">[D4]</a>
+                <span class="ref-text">NMPA药品数据库: 呋喹替尼胶囊(爱优特) - 批准文号: 国药准字H20180024，适应症: 晚期结直肠癌三线治疗</span>
+              </span>
+            </div>
+            <div class="treatment-note text-danger">
+              <strong>严重不良反应：</strong>急性肾损伤 + 肢体水肿<br>
+              肾穿刺病理：TKI相关肾损害
+            </div>
+          </div>
+        </div>
+
+        <!-- 三线调整 -->
+        <div class="treatment-item">
+          <div class="treatment-marker">3线</div>
+          <div class="treatment-content">
+            <div class="treatment-header">
+              <span class="treatment-date">2024.09 - 2025.02</span>
+              <span class="badge badge-success">SD(缩小)</span>
+            </div>
+            <div class="treatment-body">
+              <strong>三线调整：</strong>雷替曲塞 + 信迪利单抗
+              <span class="ref-tooltip">
+                <a class="cite" href="https://go.drugbank.com/drugs/DB00293" target="_blank">[D5]</a>
+                <span class="ref-text">DrugBank: Raltitrexed (DB00293) - Thymidylate synthase inhibitor, alternative to 5-FU for patients with cardiac or renal concerns.</span>
+              </span>
+            </div>
+            <div class="treatment-note">
+              2024.09出现发热（疑似感染）后继续；<br>
+              2024.10-2025.02疗效：SD(肿瘤缩小)，CEA降至17.2ng/mL
+            </div>
+          </div>
+        </div>
+
+        <!-- 四线治疗 -->
+        <div class="treatment-item pd">
+          <div class="treatment-marker pd">4线</div>
+          <div class="treatment-content">
+            <div class="treatment-header">
+              <span class="treatment-date">2025.02 - 2025.10</span>
+              <span class="badge badge-danger">PD</span>
+            </div>
+            <div class="treatment-body">
+              <strong>四线治疗：</strong>信迪利单抗 + 抗肿瘤新抗原mRNA疫苗 (9剂，含KRAS G12C新抗原)
+              <span class="ref-tooltip">
+                <a class="cite" href="https://www.chictr.org.cn/showproj.html?proj=125678" target="_blank">[T3]</a>
+                <span class="ref-text">ChiCTR2200058234: 个体化新抗原mRNA疫苗联合免疫检查点抑制剂治疗晚期实体瘤的I/II期临床研究</span>
+              </span>
+            </div>
+            <div class="treatment-note text-danger">
+              <strong>副作用：</strong>发热；II度血小板减少<br>
+              <strong>疗效：</strong>肺转移灶增大，CEA升高至112ng/mL → 疾病进展(PD)
+            </div>
+          </div>
+        </div>
+
+        <!-- 五线治疗（当前） -->
+        <div class="treatment-item">
+          <div class="treatment-marker current">5线</div>
+          <div class="treatment-content" style="border-left-color: var(--warning);">
+            <div class="treatment-header">
+              <span class="treatment-date">2025.10 - 至今</span>
+              <span class="badge badge-warning">待评估</span>
+            </div>
+            <div class="treatment-body">
+              <strong>五线治疗（当前）：</strong>氟泽雷赛 (KRAS G12C抑制剂) + 西妥昔单抗 (抗EGFR)
+              <span class="ref-tooltip">
+                <a class="cite" href="https://clinicaltrials.gov/study/NCT04793958" target="_blank">[T1]</a>
+                <span class="ref-text">CodeBreaK 300: KRAS G12C inhibitor + anti-EGFR showed ORR 30% in mCRC, significantly higher than chemotherapy alone.</span>
+              </span>
+            </div>
+            <div class="treatment-note">
+              <strong>首次使用KRAS G12C靶向治疗</strong><br>
+              疗效待评估
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 治疗史总结 -->
+      <div style="margin-top: 20px; padding: 16px; background: var(--bg-alt); border-radius: 4px;">
+        <h4 style="color: var(--primary); margin-bottom: 12px;">治疗史关键总结</h4>
+        <table>
+          <tr>
+            <td style="width: 50%; vertical-align: top;">
+              <strong class="text-success">有效方案：</strong>
+              <ul style="margin: 8px 0 0 16px;">
+                <li>一线化疗（CAPOX+Bev）：PR</li>
+                <li>二线化疗（FOLFIRI+Bev）：SD</li>
+                <li>雷替曲塞+信迪利单抗：SD（缩小）</li>
+              </ul>
+            </td>
+            <td style="width: 50%; vertical-align: top;">
+              <strong class="text-danger">失败/不耐受方案：</strong>
+              <ul style="margin: 8px 0 0 16px;">
+                <li>呋喹替尼+免疫：急性肾损伤（禁忌）</li>
+                <li>新抗原mRNA疫苗+免疫：进展</li>
+              </ul>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 4. Drug/Regimen Comparison -->
+    <div class="section">
+      <h2 class="section-title">4. 药物/方案对比 | DRUG / REGIMEN COMPARISON</h2>
+
+      <h4 style="margin-bottom: 12px;">KRAS G12C抑制剂方案对比</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>方案</th>
+            <th>药物</th>
+            <th>CRC中ORR</th>
+            <th>mPFS</th>
+            <th>关键注意事项</th>
+            <th>证据等级</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background: #e3f2fd;">
+            <td><strong>当前方案</strong></td>
+            <td>
+              氟泽雷赛 + 西妥昔单抗
+              <span class="ref-tooltip">
+                <a class="cite" href="https://www.nmpa.gov.cn/yaowen/ypjgyw/20231213155601174.html" target="_blank">[D6]</a>
+                <span class="ref-text">NMPA药品审评中心: 氟泽雷赛片(Garsorasib)获批上市 - 国内首个获批的KRAS G12C抑制剂，适应症: KRAS G12C突变晚期NSCLC</span>
+              </span>
+            </td>
+            <td>~30%</td>
+            <td>~5-6月</td>
+            <td>国内可及；需监测肝肾功能</td>
+            <td><span class="badge badge-info">B级</span></td>
+          </tr>
+          <tr>
+            <td>替代方案1</td>
+            <td>
+              Sotorasib + Panitumumab
+              <span class="ref-tooltip">
+                <a class="cite" href="https://clinicaltrials.gov/study/NCT04793958" target="_blank">[T1]</a>
+                <span class="ref-text">CodeBreaK 300 (NCT04793958): Sotorasib 960mg QD + Panitumumab, ORR 30%, mPFS 5.6 months.</span>
+              </span>
+            </td>
+            <td>30%</td>
+            <td>5.6月</td>
+            <td>III期数据支持；国内尚未获批</td>
+            <td><span class="badge badge-success">A级</span></td>
+          </tr>
+          <tr>
+            <td>替代方案2</td>
+            <td>
+              Adagrasib + Cetuximab
+              <span class="ref-tooltip">
+                <a class="cite" href="https://clinicaltrials.gov/study/NCT04330664" target="_blank">[T4]</a>
+                <span class="ref-text">KRYSTAL-1 (NCT04330664): Adagrasib 400mg BID + Cetuximab in KRAS G12C mCRC, ORR 46%.</span>
+              </span>
+            </td>
+            <td>46%</td>
+            <td>6.9月</td>
+            <td>较高ORR；国内尚未获批</td>
+            <td><span class="badge badge-info">B级</span></td>
+          </tr>
+          <tr>
+            <td>单药方案</td>
+            <td>KRAS G12C抑制剂单药</td>
+            <td>6-10%</td>
+            <td>~4月</td>
+            <td>CRC中单药疗效有限，不推荐</td>
+            <td><span class="badge badge-warning">C级</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="margin-top:16px;">
+        <strong>建议:</strong> 当前方案（氟泽雷赛+西妥昔单抗）符合KRAS G12C突变结直肠癌的治疗原则
+        <span class="ref-tooltip">
+          <a class="cite" href="https://www.nccn.org/guidelines/guidelines-detail?category=1&id=1428" target="_blank">[G1]</a>
+          <span class="ref-text">NCCN Colon Cancer Guidelines 2025: KRAS G12C inhibitor + anti-EGFR antibody is recommended for KRAS G12C-mutated mCRC.</span>
+        </span>
+        。KRAS G12C抑制剂在结直肠癌中需联合抗EGFR单抗以克服反馈激活，单药疗效不佳。继续当前方案并密切监测疗效。
+      </p>
+    </div>
+
+    <!-- 5. Organ Function Dosing -->
+    <div class="section">
+      <h2 class="section-title">5. 器官功能剂量调整 | ORGAN-FUNCTION DOSING</h2>
+      <div class="calc-box">
+        <h4>肾功能评估 (Cockcroft-Gault公式)</h4>
+        <p>
+          CrCl = [(140-70) × 66] / (72 × 1.46) ≈ <strong>44 mL/min</strong> (中度肾功能损伤, CKD 3b期)<br>
+          <span class="text-warning">⚠ 既往TKI相关急性肾损伤病史，需密切监测</span>
+        </p>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>药物</th>
+            <th>标准剂量</th>
+            <th>CrCl 30-60 mL/min调整</th>
+            <th>本患者建议</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              氟泽雷赛
+              <span class="ref-tooltip">
+                <a class="cite" href="https://go.drugbank.com/drugs/DB18244" target="_blank">[D7]</a>
+                <span class="ref-text">DrugBank: Garsorasib - KRAS G12C covalent inhibitor. Hepatic metabolism primarily via CYP3A4. Dose adjustment may be needed in renal impairment.</span>
+              </span>
+            </td>
+            <td>600mg QD</td>
+            <td>轻中度肾损伤无需调整；重度需谨慎</td>
+            <td><span class="badge badge-success">可使用标准剂量，监测肾功能</span></td>
+          </tr>
+          <tr>
+            <td>
+              西妥昔单抗
+              <span class="ref-tooltip">
+                <a class="cite" href="https://go.drugbank.com/drugs/DB00002" target="_blank">[D8]</a>
+                <span class="ref-text">DrugBank: Cetuximab (DB00002) - Anti-EGFR monoclonal antibody. No dose adjustment required for renal impairment.</span>
+              </span>
+            </td>
+            <td>首剂400mg/m², 后250mg/m²/周</td>
+            <td>无需调整</td>
+            <td><span class="badge badge-success">标准剂量</span></td>
+          </tr>
+          <tr>
+            <td>达格列净（合并用药）</td>
+            <td>10mg QD</td>
+            <td>eGFR 25-45: 可继续使用但降糖效果减弱</td>
+            <td><span class="badge badge-warning">监测肾功能变化</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top: 16px; padding: 12px; background: #fff3e0; border-radius: 4px;">
+        <strong class="text-warning">⚠ 特别注意事项：</strong>
+        <ul style="margin: 8px 0 0 16px;">
+          <li>既往呋喹替尼导致急性肾损伤，<strong class="text-danger">禁用呋喹替尼</strong></li>
+          <li>当前使用百令胶囊护肾治疗</li>
+          <li>建议每2周监测肾功能（肌酐、尿素氮、电解质）</li>
+          <li>避免使用肾毒性药物（NSAIDs、造影剂等）</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 6. Treatment Roadmap -->
+    <div class="section">
+      <h2 class="section-title">6. 治疗路线图 | TREATMENT ROADMAP</h2>
+      <div class="card-grid">
+        <div class="card" style="border-left: 4px solid var(--warning);">
+          <div class="card-header">当前方案 (五线)</div>
+          <p><strong>氟泽雷赛 + 西妥昔单抗</strong></p>
+          <ul style="margin: 8px 0 0 16px; font-size: 13px;">
+            <li>继续当前治疗</li>
+            <li>2-3个周期后评估疗效（影像+肿瘤标志物）</li>
+            <li>密切监测肾功能</li>
+          </ul>
+          <p style="margin-top: 8px;"><span class="badge badge-warning">疗效待评估</span></p>
+        </div>
+
+        <div class="card" style="border-left: 4px solid var(--success);">
+          <div class="card-header">若当前方案有效 (PR/SD)</div>
+          <p><strong>继续氟泽雷赛 + 西妥昔单抗</strong></p>
+          <ul style="margin: 8px 0 0 16px; font-size: 13px;">
+            <li>维持治疗直至疾病进展或不耐受</li>
+            <li>定期监测疗效（每2-3周期）</li>
+            <li>考虑肺转移灶局部治疗（SBRT）
+              <span class="ref-tooltip">
+                <a class="cite" href="https://www.esmo.org/guidelines/gastrointestinal-cancers/metastatic-colorectal-cancer" target="_blank">[G2]</a>
+                <span class="ref-text">ESMO mCRC Guidelines: Oligometastatic disease may benefit from local ablative therapy (SBRT/surgery) in selected patients.</span>
+              </span>
+            </li>
+          </ul>
+          <p style="margin-top: 8px;"><span class="badge badge-success">推荐</span></p>
+        </div>
+
+        <div class="card" style="border-left: 4px solid var(--danger);">
+          <div class="card-header">若当前方案进展 (PD)</div>
+          <p><strong>备选方案：</strong></p>
+          <ul style="margin: 8px 0 0 16px; font-size: 13px;">
+            <li><strong>选项1:</strong> ATM突变相关临床试验（PARP抑制剂）
+              <span class="ref-tooltip">
+                <a class="cite" href="https://clinicaltrials.gov/study/NCT03842228" target="_blank">[T2]</a>
+                <span class="ref-text">NCT03842228: Olaparib in ATM-mutated solid tumors.</span>
+              </span>
+            </li>
+            <li><strong>选项2:</strong> 雷替曲塞单药（既往有效）</li>
+            <li><strong>选项3:</strong> 最佳支持治疗(BSC)</li>
+          </ul>
+          <p style="margin-top: 8px;"><span class="badge badge-danger">备选</span></p>
+        </div>
+
+        <div class="card" style="border-left: 4px solid var(--accent);">
+          <div class="card-header">局部治疗机会</div>
+          <p><strong>肺转移灶处理：</strong></p>
+          <ul style="margin: 8px 0 0 16px; font-size: 13px;">
+            <li>若全身治疗后肺转移灶缩小且稳定</li>
+            <li>可考虑SBRT（立体定向放疗）或消融治疗</li>
+            <li>目标：延长无进展生存期</li>
+          </ul>
+          <p style="margin-top: 8px;"><span class="badge badge-info">条件性推荐</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Molecular Testing Recommendations -->
+    <div class="section">
+      <h2 class="section-title">7. 分子复查建议 | MOLECULAR TESTING</h2>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-header">ctDNA动态监测</div>
+          <p><strong>推荐检测：</strong>外周血ctDNA KRAS G12C丰度</p>
+          <ul style="margin: 8px 0 0 16px; font-size: 13px;">
+            <li><strong>目的：</strong>监测治疗反应和早期发现耐药</li>
+            <li><strong>频率：</strong>每4-6周检测一次</li>
+            <li><strong>意义：</strong>ctDNA下降提示治疗有效；上升可能早于影像学进展</li>
+          </ul>
+          <span class="ref-tooltip">
+            <a class="cite" href="https://www.esmo.org/guidelines/esmo-recommendations-on-the-use-of-circulating-tumour-dna-assays-for-patients-with-cancer" target="_blank">[G3]</a>
+            <span class="ref-text">ESMO Recommendations on ctDNA (2022): Circulating tumour DNA assays for treatment response monitoring in patients receiving targeted therapy.</span>
+          </span>
+          <p style="margin-top: 8px;"><span class="badge badge-success">强烈推荐</span></p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">耐药机制检测</div>
+          <p><strong>若进展时检测：</strong></p>
+          <ul style="margin: 8px 0 0 16px; font-size: 13px;">
+            <li>组织/液体活检NGS</li>
+            <li>重点关注：
+              <ul style="margin-left: 16px;">
+                <li>KRAS继发突变（如Y96D）</li>
+                <li>MET扩增</li>
+                <li>EGFR通路激活</li>
+                <li>RAS/MAPK通路其他改变</li>
+              </ul>
+            </li>
+          </ul>
+          <span class="ref-tooltip">
+            <a class="cite" href="https://www.oncokb.org/gene/KRAS/G12C" target="_blank">[D1]</a>
+            <span class="ref-text">OncoKB KRAS G12C页面: Secondary KRAS mutations (e.g., Y96D, Y96C) and MET amplification are known resistance mechanisms to KRAS G12C inhibitors.</span>
+          </span>
+          <p style="margin-top: 8px;"><span class="badge badge-info">进展时推荐</span></p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">家系遗传咨询</div>
+          <p><strong>基于ATM胚系突变：</strong></p>
+          <ul style="margin: 8px 0 0 16px; font-size: 13px;">
+            <li>建议一级亲属进行ATM基因检测</li>
+            <li>ATM胚系突变携带者有乳腺癌、胰腺癌等风险增加</li>
+            <li>可考虑遗传咨询门诊</li>
+          </ul>
+          <span class="ref-tooltip">
+            <a class="cite" href="https://www.ncbi.nlm.nih.gov/clinvar/?term=ATM%5Bgene%5D" target="_blank">[D3]</a>
+            <span class="ref-text">ClinVar/GeneReviews: ATM germline mutations associated with ataxia-telangiectasia spectrum and increased risk of breast, pancreatic, and other cancers.</span>
+          </span>
+          <p style="margin-top: 8px;"><span class="badge badge-secondary">建议</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. Clinical Trials -->
+    <div class="section">
+      <h2 class="section-title">8. 临床试验推荐 | CLINICAL TRIALS</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>试验/药物</th>
+            <th>作用机制</th>
+            <th>分期</th>
+            <th>器官功能要求</th>
+            <th>推荐程度</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <strong>KRAS G12C抑制剂 + SHP2抑制剂</strong>
+              <span class="ref-tooltip">
+                <a class="cite" href="https://clinicaltrials.gov/search?cond=KRAS%20G12C&intr=SHP2" target="_blank">[T5]</a>
+                <span class="ref-text">ClinicalTrials.gov: Multiple ongoing trials evaluating KRAS G12C inhibitors + SHP2 inhibitors to overcome adaptive resistance.</span>
+              </span>
+            </td>
+            <td>双重RAS通路阻断，克服适应性耐药</td>
+            <td>I/II期</td>
+            <td>CrCl ≥30-45 mL/min</td>
+            <td><span class="badge badge-success">高</span></td>
+          </tr>
+          <tr>
+            <td>
+              <strong>奥拉帕利 (ATM突变)</strong>
+              <span class="ref-tooltip">
+                <a class="cite" href="https://clinicaltrials.gov/study/NCT03842228" target="_blank">[T2]</a>
+                <span class="ref-text">NCT03842228: A Study of Olaparib in Patients with Advanced Solid Tumors and ATM Mutations.</span>
+              </span>
+            </td>
+            <td>PARP抑制剂，利用ATM缺陷导致的DDR缺陷</td>
+            <td>II期</td>
+            <td>CrCl ≥51 mL/min (边缘)</td>
+            <td><span class="badge badge-warning">中</span></td>
+          </tr>
+          <tr>
+            <td>
+              <strong>KRAS G12C抑制剂 + CDK4/6抑制剂</strong>
+              <span class="ref-tooltip">
+                <a class="cite" href="https://clinicaltrials.gov/search?cond=colorectal%20cancer&intr=CDK4%2F6" target="_blank">[T6]</a>
+                <span class="ref-text">ClinicalTrials.gov: Trials exploring CDK4/6 inhibitor combinations in KRAS-mutant colorectal cancer.</span>
+              </span>
+            </td>
+            <td>联合细胞周期抑制</td>
+            <td>I/II期</td>
+            <td>需个体评估</td>
+            <td><span class="badge badge-info">中</span></td>
+          </tr>
+          <tr>
+            <td>
+              <strong>新一代KRAS G12C抑制剂</strong>
+              <span class="ref-tooltip">
+                <a class="cite" href="https://www.chictr.org.cn/searchproj.html?title=KRAS%20G12C&officialname=&subjectid=&secondaryid=&applession=&leader=&ethession=&sponsor=&studyfield=&regclass=0&state=5&country=&province=&city=&institution=&regstatus=0" target="_blank">[T7]</a>
+                <span class="ref-text">ChiCTR检索: KRAS G12C相关临床试验 - 多项国内KRAS G12C抑制剂临床试验正在招募中</span>
+              </span>
+            </td>
+            <td>克服现有药物耐药机制</td>
+            <td>I/II期</td>
+            <td>需个体评估</td>
+            <td><span class="badge badge-info">中</span></td>
+          </tr>
+          <tr>
+            <td>
+              <strong>双特异性抗体/ADC (HER2低表达排除)</strong>
+            </td>
+            <td>不适用（HER2 IHC 0）</td>
+            <td>-</td>
+            <td>-</td>
+            <td><span class="badge badge-secondary">不适用</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin-top: 12px; color: var(--text-light);">
+        <strong>中国临床试验查询：</strong>
+        <a href="https://www.chictr.org.cn/searchproj.html?title=KRAS%20G12C&officialname=&subjectid=&secondaryid=&applession=&leader=&ethession=&sponsor=&studyfield=&regclass=0&state=5&country=&province=&city=&institution=&regstatus=0" target="_blank">ChiCTR-KRAS G12C试验检索</a> |
+        <a href="https://clinicaltrials.gov/search?cond=colorectal+cancer&intr=KRAS+G12C&locn=China" target="_blank">ClinicalTrials.gov-KRAS G12C+结直肠癌+中国站点</a>
+      </p>
+    </div>
+
+    <!-- 9. Local Therapy -->
+    <div class="section">
+      <h2 class="section-title">9. 局部治疗 | LOCAL THERAPY</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>治疗方式</th>
+            <th>适应症</th>
+            <th>预期获益</th>
+            <th>建议</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <strong>肺转移灶SBRT</strong>
+              <span class="ref-tooltip">
+                <a class="cite" href="https://www.esmo.org/guidelines/gastrointestinal-cancers/metastatic-colorectal-cancer" target="_blank">[G2]</a>
+                <span class="ref-text">ESMO mCRC Guidelines: SBRT for oligometastatic lung lesions may provide local control and potentially improve outcomes in selected patients.</span>
+              </span>
+            </td>
+            <td>肺转移灶数目有限(≤5个)、全身治疗后稳定</td>
+            <td>局部控制率>90%；可能延长PFS</td>
+            <td><span class="badge badge-success">推荐</span>（若全身治疗有效后）</td>
+          </tr>
+          <tr>
+            <td><strong>射频消融(RFA)/微波消融(MWA)</strong></td>
+            <td>肺转移灶≤3cm、位置适合</td>
+            <td>局部控制；微创</td>
+            <td><span class="badge badge-info">可考虑</span></td>
+          </tr>
+          <tr>
+            <td><strong>手术切除</strong></td>
+            <td>寡转移、全身治疗后缓解</td>
+            <td>潜在治愈机会（选择性患者）</td>
+            <td><span class="badge badge-secondary">暂不适用</span>（多发转移）</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin-top:16px;">
+        <strong>时机建议:</strong> 建议在当前全身治疗（氟泽雷赛+西妥昔单抗）2-3个周期后重新评估影像学。若肺转移灶缩小并稳定，且数目有限，可考虑SBRT进行局部巩固治疗。局部治疗可与全身治疗同步或序贯进行。
+      </p>
+    </div>
+
+    <!-- 10. Key Recommendations -->
+    <div class="section">
+      <h2 class="section-title">10. 核心建议 | KEY RECOMMENDATIONS</h2>
+
+      <div class="key-rec">
+        <div class="key-rec-num">1</div>
+        <div>
+          <strong>继续当前KRAS G12C靶向联合治疗</strong><span class="evidence evidence-high">证据A-B</span><br>
+          氟泽雷赛 + 西妥昔单抗是KRAS G12C突变结直肠癌的有效方案
+          <span class="ref-tooltip">
+            <a class="cite" href="https://clinicaltrials.gov/study/NCT04793958" target="_blank">[T1]</a>
+            <span class="ref-text">CodeBreaK 300: KRAS G12C inhibitor + anti-EGFR antibody demonstrated significant efficacy in mCRC with ORR ~30% and mPFS ~5.6 months.</span>
+          </span>
+          。建议继续治疗2-3周期后评估疗效。
+        </div>
+      </div>
+
+      <div class="key-rec">
+        <div class="key-rec-num">2</div>
+        <div>
+          <strong>密切监测肾功能</strong><span class="evidence evidence-medium">安全性</span><br>
+          既往呋喹替尼导致TKI相关急性肾损伤，当前肾功能轻度损伤(CrCl ~44 mL/min)。建议每2周监测肌酐、尿素氮、电解质，避免肾毒性药物。
+        </div>
+      </div>
+
+      <div class="key-rec">
+        <div class="key-rec-num">3</div>
+        <div>
+          <strong>ctDNA动态监测</strong><span class="evidence evidence-medium">证据B</span><br>
+          每4-6周检测血浆ctDNA KRAS G12C丰度，用于早期评估治疗反应和监测耐药
+          <span class="ref-tooltip">
+            <a class="cite" href="https://www.esmo.org/guidelines/esmo-recommendations-on-the-use-of-circulating-tumour-dna-assays-for-patients-with-cancer" target="_blank">[G3]</a>
+            <span class="ref-text">ESMO ctDNA Recommendations (2022): Circulating tumour DNA monitoring is recommended for response assessment and early detection of resistance in targeted therapy.</span>
+          </span>
+          。
+        </div>
+      </div>
+
+      <div class="key-rec">
+        <div class="key-rec-num">4</div>
+        <div>
+          <strong>局部治疗机会评估</strong><span class="evidence evidence-medium">证据B</span><br>
+          若全身治疗后肺转移灶缩小稳定，可考虑SBRT局部巩固治疗
+          <span class="ref-tooltip">
+            <a class="cite" href="https://www.esmo.org/guidelines/gastrointestinal-cancers/metastatic-colorectal-cancer" target="_blank">[G2]</a>
+            <span class="ref-text">ESMO mCRC Guidelines: Local ablative therapy for oligometastatic disease may improve outcomes in selected patients.</span>
+          </span>
+          。
+        </div>
+      </div>
+
+      <div class="key-rec">
+        <div class="key-rec-num">5</div>
+        <div>
+          <strong>进展后备选方案</strong><span class="evidence evidence-low">证据C</span><br>
+          若当前方案进展，可考虑：
+          <ul style="margin: 4px 0 0 16px;">
+            <li>ATM突变相关PARP抑制剂临床试验
+              <span class="ref-tooltip">
+                <a class="cite" href="https://clinicaltrials.gov/study/NCT03842228" target="_blank">[T2]</a>
+                <span class="ref-text">NCT03842228: Olaparib in ATM-mutated solid tumors.</span>
+              </span>
+            </li>
+            <li>新一代KRAS G12C抑制剂或联合SHP2抑制剂试验</li>
+            <li>雷替曲塞单药（既往有效方案）</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="key-rec">
+        <div class="key-rec-num">6</div>
+        <div>
+          <strong>遗传咨询</strong><span class="evidence evidence-low">证据D</span><br>
+          基于ATM胚系突变，建议一级亲属进行遗传咨询和基因检测
+          <span class="ref-tooltip">
+            <a class="cite" href="https://www.ncbi.nlm.nih.gov/clinvar/?term=ATM%5Bgene%5D" target="_blank">[D3]</a>
+            <span class="ref-text">ClinVar: ATM germline mutations associated with increased cancer risk in family members.</span>
+          </span>
+          。
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <h3 style="font-size:14px;color:var(--danger);margin-bottom:8px;">不建议 | NOT RECOMMENDED</h3>
+        <ul style="padding-left:18px;">
+          <li><strong class="text-danger">呋喹替尼</strong> - 既往导致急性肾损伤，属禁忌</li>
+          <li><strong>单药免疫检查点抑制剂</strong> - MSS、PD-L1低表达(CPS=3)，疗效不佳
+            <span class="ref-tooltip">
+              <a class="cite" href="https://www.nccn.org/guidelines/guidelines-detail?category=1&id=1428" target="_blank">[G1]</a>
+              <span class="ref-text">NCCN Guidelines: Single-agent checkpoint inhibitors not recommended for MSS/pMMR colorectal cancer.</span>
+            </span>
+          </li>
+          <li><strong>KRAS G12C抑制剂单药</strong> - 结直肠癌中单药ORR仅6-10%，疗效有限</li>
+          <li><strong>抗HER2治疗</strong> - HER2 IHC 0，不适用</li>
+          <li><strong>高肾毒性方案</strong> - 如顺铂为基础的方案，鉴于肾功能状况</li>
+        </ul>
+      </div>
+    </div>
+
+    <footer>
+      <p><strong>免责声明:</strong> 本报告仅供临床参考。具体治疗决策应由主治医师根据患者实际情况和最新临床证据综合判断。</p>
+      <p>虚拟分子肿瘤委员会会诊报告 | 生成日期: 2026-01-14 | 生成模型: Claude Opus 4.5</p>
+    </footer>
+
+  </div>
+</body>
+</html>
