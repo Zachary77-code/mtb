@@ -135,7 +135,7 @@ MSI状态: {case.get('msi_status', 'N/A')} | TMB: {case.get('tmb_score', 'N/A')}
 
 合并症: {comorbidities_str}
 
-治疗史 ({len(treatment_lines)} 线):
+治疗史 ({max((t.get('line_number', 0) for t in treatment_lines), default=0)} 线, {len(treatment_lines)} 条记录):
 {treatment_str}"""
     _print_section("[PATHOLOGIST] 输出 - 结构化病例", output_summary)
 

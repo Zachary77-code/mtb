@@ -2930,3 +2930,43 @@ During task with name 'recruiter' and id '3a7cae1e-070a-8c9f-8115-1546ae737f14'
 2026-01-17 14:52:15 | INFO     | src.graph.nodes:webpage_generator_node:415 | [HTML] 报告已保存: D:\MTB\reports\MTB_Report_Unknown_20260117_145215.html
 2026-01-17 14:52:15 | INFO     | __main__:main:81 | 报告生成成功: D:\MTB\reports\MTB_Report_Unknown_20260117_145215.html
 2026-01-17 14:52:15 | INFO     | __main__:main:82 | 执行时间: 297.74秒
+2026-01-17 14:54:47 | INFO     | __main__:main:35 | ============================================================
+2026-01-17 14:54:47 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-17 14:54:47 | INFO     | __main__:main:37 | ============================================================
+2026-01-17 14:54:47 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-17 14:54:47 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/test_report.pdf
+2026-01-17 14:54:47 | INFO     | __main__:main:52 | 病例文本长度: 1243 字符
+2026-01-17 14:54:47 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-17 14:54:47 | INFO     | src.graph.nodes:case_parsing_node:51 | [PARSE] 开始解析病例文本...
+2026-01-17 14:54:47 | INFO     | src.agents.base_agent:invoke:127 | [Pathologist] 开始处理...
+2026-01-17 14:55:30 | INFO     | src.agents.base_agent:invoke:161 | [Pathologist] 完成，输出长度: 4978 字符
+2026-01-17 14:55:30 | INFO     | src.graph.nodes:case_parsing_node:60 | [PARSE] 完成，解析字段: ['primary_cancer', 'current_status', 'raw_text', 'molecular_profile', 'treatment_lines', 'organ_function']
+2026-01-17 14:55:30 | WARNING  | src.graph.nodes:case_parsing_node:143 | [PARSE] 解析警告: ['数据验证错误: 3 validation errors for CaseData\ntumor_markers.ca125_u_ml\n  Input should be a valid number [type=float_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.9/v/float_type\ntumor_markers.afp_ng_ml\n  Input should be a valid number [type=float_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.9/v/float_type\ntumor_markers.psa_ng_ml\n  Input should be a valid number [type=float_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.9/v/float_type']
+2026-01-17 14:55:30 | INFO     | src.graph.nodes:geneticist_node:161 | [GENETICIST] 开始分子分析...
+2026-01-17 14:55:30 | INFO     | src.agents.base_agent:invoke:127 | [Geneticist] 开始处理...
+2026-01-17 14:57:47 | INFO     | __main__:main:35 | ============================================================
+2026-01-17 14:57:47 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-17 14:57:47 | INFO     | __main__:main:37 | ============================================================
+2026-01-17 14:57:47 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-17 14:57:47 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/test_report.pdf
+2026-01-17 14:57:47 | INFO     | __main__:main:52 | 病例文本长度: 1243 字符
+2026-01-17 14:57:47 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-17 14:57:47 | INFO     | src.graph.nodes:case_parsing_node:51 | [PARSE] 开始解析病例文本...
+2026-01-17 14:57:47 | INFO     | src.agents.base_agent:invoke:127 | [Pathologist] 开始处理...
+2026-01-17 14:58:39 | INFO     | src.agents.base_agent:invoke:161 | [Pathologist] 完成，输出长度: 5026 字符
+2026-01-17 14:58:39 | INFO     | src.graph.nodes:case_parsing_node:60 | [PARSE] 完成，解析字段: ['patient_id', 'age', 'sex', 'primary_cancer', 'histology', 'stage', 'metastatic_sites', 'molecular_profile', 'ihc_markers', 'msi_status', 'tmb_score', 'pd_l1_tps', 'pd_l1_cps', 'treatment_lines', 'current_status', 'organ_function', 'comorbidities', 'tumor_markers', 'raw_text']
+2026-01-17 14:58:39 | INFO     | src.graph.nodes:geneticist_node:161 | [GENETICIST] 开始分子分析...
+2026-01-17 14:58:39 | INFO     | src.agents.base_agent:invoke:127 | [Geneticist] 开始处理...
+2026-01-17 14:58:47 | INFO     | __main__:main:35 | ============================================================
+2026-01-17 14:58:47 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-17 14:58:47 | INFO     | __main__:main:37 | ============================================================
+2026-01-17 14:58:47 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-17 14:58:47 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/test_report.pdf
+2026-01-17 14:58:47 | INFO     | __main__:main:52 | 病例文本长度: 1243 字符
+2026-01-17 14:58:47 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-17 14:58:47 | INFO     | src.graph.nodes:case_parsing_node:51 | [PARSE] 开始解析病例文本...
+2026-01-17 14:58:47 | INFO     | src.agents.base_agent:invoke:127 | [Pathologist] 开始处理...
+2026-01-17 14:59:31 | INFO     | src.agents.base_agent:invoke:161 | [Pathologist] 完成，输出长度: 4956 字符
+2026-01-17 14:59:31 | INFO     | src.graph.nodes:case_parsing_node:60 | [PARSE] 完成，解析字段: ['patient_id', 'age', 'sex', 'primary_cancer', 'histology', 'stage', 'metastatic_sites', 'molecular_profile', 'ihc_markers', 'msi_status', 'tmb_score', 'pd_l1_tps', 'pd_l1_cps', 'treatment_lines', 'current_status', 'organ_function', 'comorbidities', 'tumor_markers', 'raw_text']
+2026-01-17 14:59:31 | INFO     | src.graph.nodes:geneticist_node:161 | [GENETICIST] 开始分子分析...
+2026-01-17 14:59:31 | INFO     | src.agents.base_agent:invoke:127 | [Geneticist] 开始处理...

@@ -65,6 +65,14 @@ class PathologistAgent(BaseAgent):
 
             parsed_data = json.loads(output)
 
+            # 清理数据：过滤掉 tumor_markers 中的 None 值
+            # （Pydantic 的 Dict[str, float] 不接受 None）
+            if 'tumor_markers' in parsed_data and parsed_data['tumor_markers']:
+                parsed_data['tumor_markers'] = {
+                    k: v for k, v in parsed_data['tumor_markers'].items()
+                    if v is not None
+                }
+
             # 验证数据
             case_data = CaseData(**parsed_data)
 
