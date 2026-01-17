@@ -61,19 +61,82 @@ def case_parsing_node(state: MtbState) -> Dict[str, Any]:
 
     # 打印输出
     case = result["structured_case"]
+
+    # 格式化免疫组化标记物
+    ihc_markers = case.get('ihc_markers', [])
+    ihc_str = ""
+    if ihc_markers:
+        ihc_items = [f"  - {m.get('marker', 'N/A')}: {m.get('result', 'N/A')}" for m in ihc_markers]
+        ihc_str = "\n".join(ihc_items)
+    else:
+        ihc_str = "  无"
+
+    # 格式化肿瘤标志物
+    tumor_markers = case.get('tumor_markers', {})
+    markers_str = ""
+    if tumor_markers:
+        markers_items = [f"  - {k}: {v}" for k, v in tumor_markers.items()]
+        markers_str = "\n".join(markers_items)
+    else:
+        markers_str = "  无"
+
+    # 格式化治疗史
+    treatment_lines = case.get('treatment_lines', [])
+    treatment_str = ""
+    if treatment_lines:
+        for t in treatment_lines:
+            line_num = t.get('line_number', '?')
+            regimen = t.get('regimen', 'N/A')
+            start = t.get('start_date', '')
+            end = t.get('end_date', '')
+            time_range = f"{start}-{end}" if start else ""
+            response = t.get('best_response', '-')
+            notes = t.get('notes', '')
+            treatment_str += f"  [{line_num}线] {regimen}"
+            if time_range:
+                treatment_str += f" ({time_range})"
+            if response:
+                treatment_str += f" -> {response}"
+            if notes:
+                treatment_str += f" | {notes}"
+            treatment_str += "\n"
+    else:
+        treatment_str = "  无\n"
+
+    # 格式化合并症
+    comorbidities = case.get('comorbidities', [])
+    comorbidities_str = ", ".join(comorbidities) if comorbidities else "无"
+
+    # 格式化器官功能
+    organ = case.get('organ_function', {})
+    organ_str = f"ECOG PS: {organ.get('ecog_ps', 'N/A')}"
+    if organ.get('creatinine'):
+        organ_str += f" | 肌酐: {organ.get('creatinine')}"
+    if organ.get('egfr_ml_min'):
+        organ_str += f" | eGFR: {organ.get('egfr_ml_min')}"
+
     output_summary = f"""患者ID: {case.get('patient_id', 'Unknown')}
 年龄: {case.get('age', 'N/A')}岁 | 性别: {case.get('sex', 'N/A')}
 肿瘤类型: {case.get('primary_cancer', 'N/A')}
 组织学: {case.get('histology', 'N/A')}
 分期: {case.get('stage', 'N/A')}
-转移部位: {case.get('metastatic_sites', 'N/A')}
-MSI状态: {case.get('msi_status', 'N/A')} | TMB: {case.get('tmb_score', 'N/A')} | PD-L1: {case.get('pd_l1_tps', 'N/A')}
-ECOG PS: {case.get('organ_function', {}).get('ecog_ps', 'N/A')}
+转移部位: {case.get('metastatic_sites', [])}
+MSI状态: {case.get('msi_status', 'N/A')} | TMB: {case.get('tmb_score', 'N/A')} | PD-L1 CPS: {case.get('pd_l1_cps', 'N/A')}
+器官功能: {organ_str}
+
+免疫组化:
+{ihc_str}
 
 分子特征:
 {json.dumps(case.get('molecular_profile', []), ensure_ascii=False, indent=2)}
 
-治疗史: {len(case.get('treatment_lines', []))} 线"""
+肿瘤标志物:
+{markers_str}
+
+合并症: {comorbidities_str}
+
+治疗史 ({len(treatment_lines)} 线):
+{treatment_str}"""
     _print_section("[PATHOLOGIST] 输出 - 结构化病例", output_summary)
 
     if result["parsing_errors"]:

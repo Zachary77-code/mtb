@@ -4,21 +4,61 @@
 from pathlib import Path
 from typing import Optional
 
+import fitz  # PyMuPDF
 
-def read_case_file(file_path: str, encoding: str = "utf-8") -> str:
+
+def read_pdf_file(file_path: str) -> str:
     """
-    读取病例文件
+    读取 PDF 文件并提取文本
 
     Args:
-        file_path: 文件路径
-        encoding: 文件编码（默认 UTF-8）
+        file_path: PDF 文件路径
 
     Returns:
-        文件内容
+        提取的文本内容
 
     Raises:
         FileNotFoundError: 文件不存在
-        UnicodeDecodeError: 编码错误
+        ValueError: 文件格式错误或无法提取文本
+    """
+    path = Path(file_path).resolve()
+
+    if not path.exists():
+        raise FileNotFoundError(f"文件不存在: {path}")
+
+    if path.suffix.lower() != ".pdf":
+        raise ValueError(f"仅支持 PDF 文件格式，当前: {path.suffix}")
+
+    # 使用 PyMuPDF 提取文本
+    doc = fitz.open(str(path))
+    text_parts = []
+
+    for page_num, page in enumerate(doc, 1):
+        text = page.get_text()
+        if text.strip():
+            text_parts.append(f"=== 第 {page_num} 页 ===\n{text}")
+
+    doc.close()
+
+    if not text_parts:
+        raise ValueError(f"PDF 文件为空或无法提取文本: {path}")
+
+    return "\n\n".join(text_parts)
+
+
+def read_case_file(file_path: str) -> str:
+    """
+    读取病例文件（仅支持 PDF 格式）
+
+    Args:
+        file_path: PDF 文件路径
+
+    Returns:
+        提取的文本内容
+
+    Raises:
+        FileNotFoundError: 文件不存在
+        ValueError: 文件格式不是 PDF
     """
     path = Path(file_path).resolve()
 
@@ -28,8 +68,12 @@ def read_case_file(file_path: str, encoding: str = "utf-8") -> str:
     if not path.is_file():
         raise ValueError(f"路径不是文件: {path}")
 
-    with open(path, "r", encoding=encoding) as f:
-        return f.read()
+    if path.suffix.lower() != ".pdf":
+        raise ValueError(
+            f"仅支持 PDF 文件格式。当前文件: {path.name} ({path.suffix})"
+        )
+
+    return read_pdf_file(str(path))
 
 
 def write_file(file_path: str, content: str, encoding: str = "utf-8") -> str:

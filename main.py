@@ -2,10 +2,10 @@
 MTB 多智能体工作流系统 - 主入口
 
 使用方法:
-    python main.py <病例文件路径>
+    python main.py <病例PDF文件路径>
 
 示例:
-    python main.py tests/fixtures/sample_case.txt
+    python main.py tests/fixtures/sample_case.pdf
 """
 import sys
 import time
@@ -120,10 +120,13 @@ MTB 多智能体工作流系统
 ======================
 
 使用方法:
-    python main.py <病例文件路径>
+    python main.py <病例PDF文件路径>
 
 示例:
-    python main.py tests/fixtures/sample_case.txt
+    python main.py tests/fixtures/sample_case.pdf
+
+输入格式:
+    仅支持 PDF 格式的病例报告
 
 输出:
     生成的 HTML 报告保存在 reports/ 目录

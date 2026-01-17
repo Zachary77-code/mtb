@@ -37,6 +37,18 @@ Do NOT make recommendations—only extract facts.
 
 ### C. 治疗史 (Prior Lines)
 
+**治疗线字段说明**（每条治疗记录）:
+- `line_number`: 治疗线数
+- `regimen`: 治疗方案名称
+- `start_date`: 开始日期（如 "2022.8"）
+- `end_date`: 结束日期（如 "2022.12" 或 "今"）
+- `cycles`: 治疗程数（如 5）
+- `duration_months`: 持续月数
+- `best_response`: 最佳疗效
+- `discontinuation_reason`: 停药原因
+- `grade3_plus_toxicities`: 严重不良反应列表
+- `notes`: 关键事件/备注
+
 **识别治疗线标记**:
 | 标记 | line_number |
 |-----|-------------|
@@ -45,18 +57,18 @@ Do NOT make recommendations—only extract facts.
 | "三线治疗"、"3L" | 3 |
 | "四线治疗"、"4L" | 4 |
 | "五线治疗"、"5L" | 5 |
-| "新辅助"、"术前" | 标记在 regimen 中 |
-| "辅助"、"术后" | 标记在 regimen 中 |
-| "维持治疗" | 归入当前治疗线 |
+| "新辅助"、"术前" | 标记在 regimen 和 notes 中 |
+| "辅助"、"术后" | 标记在 regimen 和 notes 中 |
+| "维持治疗" | 归入当前治疗线，标记在 notes 中 |
 
-**时间格式解析**（计算 duration_months）:
-| 时间格式 | 计算方法 |
-|---------|---------|
-| "2022.8-12" | 同年跨月：12-8=4个月 |
-| "2023.1-2024.1" | 跨年：12个月 |
-| "2024.2-6" | 同年跨月：6-2=4个月 |
-| "(5程)" | 约 2.5-5 个月（每程约2-4周） |
-| "2025.10-今" | 当前进行中，duration_months=null |
+**时间格式解析**:
+| 时间格式 | start_date | end_date | duration_months |
+|---------|-----------|----------|-----------------|
+| "2022.8-12" | "2022.8" | "2022.12" | 4 |
+| "2023.1-2024.1" | "2023.1" | "2024.1" | 12 |
+| "2024.2-6" | "2024.2" | "2024.6" | 4 |
+| "(5程)" | 从上下文推断 | 从上下文推断 | 约 2.5-5 |
+| "2025.10-今" | "2025.10" | "今" | null |
 
 **疗效评估**（best_response）:
 | 文本 | 标准值 |
@@ -72,6 +84,11 @@ Do NOT make recommendations—only extract facts.
 - 寻找"不良反应"、"毒性"、"AE"、"严重不良反应"关键词
 - 识别导致停药的严重反应
 - 示例："急性肾损伤"、"肢体水肿"、"II度血小板减少"、"发热"
+
+**关键事件/备注提取**（notes）:
+- 提取治疗表格中的"关键事件/备注"列
+- 包括：病理结果、手术范围、维持治疗说明等
+- 示例："切除原发灶+肝转移+淋巴结清扫；病理：5/19淋巴结(+)，3枚癌结节"
 
 ### D. 分子特征 (Molecular Profile)
 
@@ -99,6 +116,43 @@ Do NOT make recommendations—only extract facts.
 | `pd_l1_cps` | "CPS=3"→3.0, "PD-L1 CPS 10"→10.0 |
 
 **注意**：TPS 和 CPS 是不同的评分系统，需分别提取。
+
+### E2. 免疫组化标记物 (IHC Markers)
+
+**重要**：从病理报告/免疫组化病理中提取所有免疫组化结果到 `ihc_markers` 列表。
+
+| 标记物 | 常见结果格式 | 提取示例 |
+|--------|-------------|---------|
+| EGFR | "(2+)", "(3+)", "(1+)", "(0)" | {"marker": "EGFR", "result": "2+"} |
+| HER2 | "(0)", "(1+)", "(2+)", "(3+)" | {"marker": "HER2", "result": "0"} |
+| Ki-67 | "(+5%)", "(+30%)", "高表达" | {"marker": "Ki-67", "result": "+5%"} |
+| MLH1 | "(+)", "(-)", "阳性", "阴性" | {"marker": "MLH1", "result": "(+)"} |
+| PMS2 | "(+)", "(-)" | {"marker": "PMS2", "result": "(+)"} |
+| MSH2 | "(+)", "(-)" | {"marker": "MSH2", "result": "(+)"} |
+| MSH6 | "(+)", "(-)" | {"marker": "MSH6", "result": "(+)"} |
+| panTRK | "(+)", "(-)" | {"marker": "panTRK", "result": "(-)"} |
+| PD-L1 | "CPS=3", "TPS 50%" | 注意：PD-L1 同时记录到 pd_l1_tps/pd_l1_cps 字段 |
+
+示例输入：
+```
+术后免疫组化病理：EGFR (2+), HER2 (0), Ki-67 (+5%)，MLH1(+), PMS2(+), MSH2(+), MSH6 (+), panTRF (-), PD-L1 (22C3) (CPS=3)
+```
+
+示例输出：
+```json
+"ihc_markers": [
+  {"marker": "EGFR", "result": "2+"},
+  {"marker": "HER2", "result": "0"},
+  {"marker": "Ki-67", "result": "+5%"},
+  {"marker": "MLH1", "result": "(+)"},
+  {"marker": "PMS2", "result": "(+)"},
+  {"marker": "MSH2", "result": "(+)"},
+  {"marker": "MSH6", "result": "(+)"},
+  {"marker": "panTRK", "result": "(-)"}
+]
+```
+
+**注意**：panTRF 和 panTRK 是同一标记物的不同写法，统一记录为 panTRK。
 
 ### F. 器官功能约束 (Organ Function)
 
@@ -185,6 +239,18 @@ Do NOT make recommendations—only extract facts.
 ### 混合格式
 可能同时包含表格、叙述、列表，需要综合提取所有信息。
 
+### PDF 提取文本特点
+从 PDF 提取的文本可能包含：
+- 页码标记（如 "=== 第 1 页 ==="）
+- 表格内容变为空格/制表符分隔的文本
+- 段落换行可能不规则
+- 特殊字符可能丢失或转换
+
+处理策略：
+- 忽略页码标记，合并各页内容
+- 识别表格结构，按列提取数据
+- 根据语义而非格式理解内容
+
 ---
 
 ## Output Format
@@ -199,10 +265,20 @@ Do NOT make recommendations—only extract facts.
   "primary_cancer": "乙状结肠癌",
   "histology": "中分化腺癌",
   "stage": "IV期",
-  "metastatic_sites": ["肺"],
+  "metastatic_sites": ["肺", "肝", "淋巴结"],
   "molecular_profile": [
     {"gene": "KRAS", "alteration_type": "SNV", "variant": "G12C", "vaf": 0.115},
     {"gene": "ATM", "alteration_type": "Germline", "variant": "胚系突变", "vaf": null}
+  ],
+  "ihc_markers": [
+    {"marker": "EGFR", "result": "2+"},
+    {"marker": "HER2", "result": "0"},
+    {"marker": "Ki-67", "result": "+5%"},
+    {"marker": "MLH1", "result": "(+)"},
+    {"marker": "PMS2", "result": "(+)"},
+    {"marker": "MSH2", "result": "(+)"},
+    {"marker": "MSH6", "result": "(+)"},
+    {"marker": "panTRK", "result": "(-)"}
   ],
   "msi_status": "MSS",
   "tmb_score": 79,
@@ -211,11 +287,27 @@ Do NOT make recommendations—only extract facts.
   "treatment_lines": [
     {
       "line_number": 1,
-      "regimen": "奥沙利铂+卡培他滨+贝伐珠单抗（新辅助）",
+      "regimen": "奥沙利铂+卡培他滨+贝伐珠单抗",
+      "start_date": "2022.8",
+      "end_date": "2022.12",
+      "cycles": 5,
       "duration_months": 4,
       "best_response": "PR",
       "discontinuation_reason": null,
-      "grade3_plus_toxicities": []
+      "grade3_plus_toxicities": [],
+      "notes": "新辅助化疗"
+    },
+    {
+      "line_number": 1,
+      "regimen": "根治性手术",
+      "start_date": "2023.1",
+      "end_date": "2023.1",
+      "cycles": null,
+      "duration_months": null,
+      "best_response": "TRG2",
+      "discontinuation_reason": null,
+      "grade3_plus_toxicities": [],
+      "notes": "切除原发灶+肝转移+淋巴结清扫；病理：5/19淋巴结(+)，3枚癌结节"
     }
   ],
   "current_status": "ongoing",
@@ -256,7 +348,7 @@ Do NOT make recommendations—only extract facts.
 时间段	治疗方案	疗效	关键事件
 一线治疗
 2022.8-12	奥沙利铂+卡培他滨+贝伐珠单抗 (5程)	PR	新辅助化疗
-2023.1	根治性手术	TRG2级	切除原发灶
+2023.1	根治性手术	TRG2级	切除原发灶+肝转移
 二线治疗
 2023.8-2024.1	伊立替康+亚叶酸钙+5-FU+贝伐珠单抗	SD
 三线治疗
@@ -269,35 +361,51 @@ Do NOT make recommendations—only extract facts.
   "treatment_lines": [
     {
       "line_number": 1,
-      "regimen": "奥沙利铂+卡培他滨+贝伐珠单抗（新辅助）",
+      "regimen": "奥沙利铂+卡培他滨+贝伐珠单抗",
+      "start_date": "2022.8",
+      "end_date": "2022.12",
+      "cycles": 5,
       "duration_months": 4,
       "best_response": "PR",
       "discontinuation_reason": null,
-      "grade3_plus_toxicities": []
+      "grade3_plus_toxicities": [],
+      "notes": "新辅助化疗"
     },
     {
       "line_number": 1,
       "regimen": "根治性手术",
+      "start_date": "2023.1",
+      "end_date": "2023.1",
+      "cycles": null,
       "duration_months": null,
       "best_response": "TRG2",
       "discontinuation_reason": null,
-      "grade3_plus_toxicities": []
+      "grade3_plus_toxicities": [],
+      "notes": "切除原发灶+肝转移"
     },
     {
       "line_number": 2,
       "regimen": "伊立替康+亚叶酸钙+5-FU+贝伐珠单抗",
+      "start_date": "2023.8",
+      "end_date": "2024.1",
+      "cycles": null,
       "duration_months": 5,
       "best_response": "SD",
       "discontinuation_reason": null,
-      "grade3_plus_toxicities": []
+      "grade3_plus_toxicities": [],
+      "notes": null
     },
     {
       "line_number": 3,
       "regimen": "呋喹替尼+信迪利单抗",
+      "start_date": "2024.7",
+      "end_date": null,
+      "cycles": null,
       "duration_months": null,
       "best_response": null,
       "discontinuation_reason": "严重不良反应",
-      "grade3_plus_toxicities": ["急性肾损伤"]
+      "grade3_plus_toxicities": ["急性肾损伤"],
+      "notes": "严重不良反应：急性肾损伤+肢体水肿"
     }
   ]
 }

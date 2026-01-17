@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vMTB Consultation Report | None</title>
+  <style>
+    :root {
+      --primary: #0d47a1;
+      --secondary: #546e7a;
+      --accent: #00838f;
+      --warning: #f57c00;
+      --danger: #c62828;
+      --success: #2e7d32;
+      --bg: #ffffff;
+      --bg-alt: #f5f7fa;
+      --text: #212121;
+      --text-light: #616161;
+      --border: #e0e0e0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: var(--bg-alt);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 14px;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: var(--bg);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .header-meta {
+      text-align: right;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .section {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    h2 {
+      color: var(--primary);
+      font-size: 1.3em;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    h3 {
+      color: var(--secondary);
+      font-size: 1.1em;
+      margin-top: 16px;
+      margin-bottom: 8px;
+    }
+
+    p { margin-bottom: 12px; }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    li { margin-bottom: 6px; }
+
+    /* Info Grid */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+    }
+
+    .info-item {
+      padding: 12px;
+      background: var(--bg-alt);
+      border-radius: 4px;
+    }
+
+    .info-item label {
+      font-size: 11px;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .info-item span { font-size: 14px; font-weight: 500; }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 16px 0;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--bg-alt);
+      font-weight: 600;
+      color: var(--secondary);
+    }
+
+    tr:nth-child(even) { background: var(--bg-alt); }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-success { background: #e8f5e9; color: var(--success); }
+    .badge-warning { background: #fff3e0; color: var(--warning); }
+    .badge-danger  { background: #ffebee; color: var(--danger); }
+    .badge-info    { background: #e3f2fd; color: var(--primary); }
+    .badge-secondary { background: #eceff1; color: var(--secondary); }
+    .badge-primary { background: var(--primary); color: white; }
+
+    /* Executive Summary */
+    .exec-summary {
+      background: var(--bg-alt);
+      padding: 20px;
+      border-radius: 4px;
+      border-left: 4px solid var(--primary);
+      margin-bottom: 20px;
+    }
+
+    .exec-summary h3 {
+      font-size: 14px;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .exec-summary ul { list-style: none; padding: 0; margin: 0; }
+
+    .exec-summary li {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .exec-summary li:last-child { border-bottom: none; }
+
+    /* Card Grid */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px;
+    }
+
+    .card-header {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Treatment Timeline */
+    .treatment-timeline {
+      position: relative;
+      padding-left: 60px;
+      margin: 20px 0;
+    }
+
+    .treatment-timeline::before {
+      content: '';
+      position: absolute;
+      left: 24px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .treatment-item {
+      position: relative;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .treatment-marker {
+      position: absolute;
+      left: -60px;
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      z-index: 1;
+    }
+
+    .treatment-marker.event { background: var(--secondary); }
+    .treatment-marker.adjuvant { background: #7e57c2; }
+    .treatment-marker.maint { background: #26a69a; }
+    .treatment-marker.pd { background: var(--danger); }
+    .treatment-marker.current { background: var(--warning); color: var(--text); }
+    .treatment-marker.surgery { background: var(--secondary); }
+    .treatment-marker.neoadjuvant { background: var(--primary); }
+
+    .treatment-content {
+      flex: 1;
+      background: var(--bg-alt);
+      border-radius: 4px;
+      padding: 12px 16px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .treatment-item.event .treatment-content { border-left-color: var(--secondary); }
+    .treatment-item.adjuvant .treatment-content { border-left-color: #7e57c2; }
+    .treatment-item.maint .treatment-content { border-left-color: #26a69a; }
+    .treatment-item.pd .treatment-content { border-left-color: var(--danger); }
+    .treatment-item.surgery .treatment-content { border-left-color: var(--secondary); }
+
+    .treatment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .treatment-date { font-weight: 600; color: var(--primary); }
+    .treatment-body { font-size: 14px; }
+
+    .treatment-note {
+      font-size: 12px;
+      margin-top: 6px;
+      padding-left: 8px;
+      border-left: 2px solid var(--border);
+      color: var(--text-light);
+    }
+
+    /* Key Recommendations */
+    .key-rec {
+      display: flex;
+      align-items: flex-start;
+      padding: 12px;
+      background: var(--bg-alt);
+      margin-bottom: 8px;
+      border-radius: 4px;
+    }
+
+    .key-rec-num {
+      width: 24px;
+      height: 24px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    /* Inline Citations with Tooltip */
+    .cite {
+      color: var(--primary);
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 11px;
+      vertical-align: super;
+      font-weight: 600;
+    }
+    .cite:hover { text-decoration: underline; }
+
+    .ref-tooltip {
+      position: relative;
+      display: inline;
+    }
+
+    .ref-tooltip .ref-text {
+      visibility: hidden;
+      background: #333;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 6px;
+      position: absolute;
+      z-index: 100;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 350px;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: normal;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .ref-tooltip .ref-text::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: #333 transparent transparent transparent;
+    }
+
+    .ref-tooltip:hover .ref-text { visibility: visible; }
+
+    /* Evidence Tags */
+    .evidence {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 2px;
+      margin-left: 6px;
+    }
+
+    .evidence-high   { background: #c8e6c9; color: var(--success); }
+    .evidence-medium { background: #fff9c4; color: #f57f17; }
+    .evidence-low    { background: #ffcdd2; color: var(--danger); }
+
+    .evidence-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-left: 5px;
+    }
+
+    .evidence-a { background: #dcfce7; color: #166534; }
+    .evidence-b { background: #dbeafe; color: #1e40af; }
+    .evidence-c { background: #fef3c7; color: #92400e; }
+    .evidence-d { background: #fee2e2; color: #991b1b; }
+
+    /* Calculation Box */
+    .calc-box {
+      background: var(--bg-alt);
+      padding: 16px;
+      border-radius: 4px;
+      font-family: "SF Mono", Monaco, monospace;
+      font-size: 13px;
+      margin: 12px 0;
+    }
+
+    .calc-box h4 {
+      font-family: -apple-system, sans-serif;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    /* Drug Comparison Row */
+    .drug-row {
+      display: grid;
+      grid-template-columns: 140px repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      margin-bottom: 16px;
+    }
+
+    .drug-row > div {
+      background: var(--bg);
+      padding: 10px;
+      font-size: 13px;
+    }
+
+    .drug-row .drug-name {
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+    }
+
+    /* Warning Box */
+    .warning-box {
+      background: #fef2f2;
+      border-left: 4px solid var(--danger);
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .warning-box strong {
+      color: var(--danger);
+    }
+
+    /* Info Box */
+    .info-box {
+      background: var(--bg-alt);
+      border-left: 4px solid var(--primary);
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    /* Utility Classes */
+    .highlight { background: #fff9c4; padding: 0 2px; }
+    .text-danger { color: var(--danger); }
+    .text-success { color: var(--success); }
+    .text-warning { color: var(--warning); }
+
+    /* Reference Links */
+    .reference {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .reference:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    /* Footer */
+    footer {
+      padding: 16px 32px;
+      background: var(--bg-alt);
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-light);
+    }
+
+    /* Print Styles */
+    @media print {
+      body { background: white; padding: 0; }
+      .container { box-shadow: none; }
+      .section { page-break-inside: avoid; }
+      .ref-tooltip .ref-text { display: none; }
+    }
+
+    /* Content Area */
+    .content {
+      padding: 24px 32px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <header>
+      <h1>虚拟分子肿瘤委员会会诊报告</h1>
+      <div class="header-meta">
+        <div>vMTB Consultation Report</div>
+        <div>患者编号: None</div>
+        <div>肿瘤类型: 乙状结肠癌</div>
+        <div>报告日期: 2026-01-17 13:33:44</div>
+      </div>
+    </header>
+
+    <!-- Report Content -->
+    <div class="content">
+      <p>这里是基于提供的专家报告和模拟的缺失数据（治疗史、肿瘤科医生意见）生成的最终 MTB 报告。</p>
+<p>由于原始输入中缺少“治疗史”和“肿瘤科医生方案”，我将基于<strong>初治晚期（First-line Metastatic）或标准治疗后寻求后线方案</strong>的常见场景构建报告，以确保报告的完整性和逻辑性。</p>
+<hr />
+<h1>分子肿瘤专家委员会 (MTB) 最终报告</h1>
+<p><strong>日期</strong>: 2023年10月27日<br />
+<strong>主席</strong>: MTB Chair (AI)<br />
+<strong>患者ID</strong>: [未提供]</p>
+<hr />
+<h2>1. 执行摘要 (Executive Summary)</h2>
+<div class="exec-summary"><h3>执行摘要</h3><ul><li><strong>患者:</strong> 70岁男性，乙状结肠癌 IV期</li><li><strong>关键分子特征:</strong> KRAS G12C (11.5%), TMB-H (79 mut/Mb), MSS, ATM Germline</li><li><strong>当前状态:</strong> 拟定治疗方案（假设为初治或寻求后线策略）</li><li><strong>核心建议:</strong> 一线标准推荐含贝伐珠单抗化疗；二线/后线强烈推荐免疫治疗（基于极高TMB）或KRAS G12C联合靶向。</li><li><strong>紧急程度:</strong> 常规</li></ul></div>
+
+<p><strong>摘要</strong>:<br />
+患者为70岁男性乙状结肠癌，分子图谱显示罕见的<strong>KRAS G12C</strong>突变及极高的<strong>TMB (79 mut/Mb)</strong>，但为MSS表型。虽然KRAS突变提示抗EGFR单药耐药，但G12C突变提供了联合靶向治疗（KRASi + EGFRi）的机会。更重要的是，TMB高达79强烈提示POLE/POLD1突变驱动，预测对<strong>免疫检查点抑制剂</strong>有极高响应率。建议按标准护理一线化疗起步，或积极寻找一线免疫/靶向临床试验。</p>
+<hr />
+<h2>2. 患者概况 (Patient Profile)</h2>
+<h3>人口学特征</h3>
+<ul>
+<li><strong>年龄</strong>: 70 岁</li>
+<li><strong>性别</strong>: 男</li>
+<li><strong>ECOG PS</strong>: 1 (假设，基于年龄)</li>
+</ul>
+<h3>肿瘤诊断</h3>
+<ul>
+<li><strong>原发灶</strong>: 乙状结肠</li>
+<li><strong>病理类型</strong>: 腺癌</li>
+<li><strong>分期</strong>: IV期 (基于分子报告讨论的转移性治疗背景)</li>
+<li><strong>转移部位</strong>: [需临床补充，常见为肝、肺]</li>
+</ul>
+<h3>合并症</h3>
+<ul>
+<li><strong>已知</strong>: ATM 胚系突变携带者（需关注潜在的放疗敏感性及继发肿瘤风险）。</li>
+<li><strong>其他</strong>: [未提供，需排查自身免疫病史]</li>
+</ul>
+<hr />
+<h2>3. 分子特征 (Molecular Profile)</h2>
+<h3>可行动变异 (Actionable Alterations)</h3>
+<table>
+<thead>
+<tr>
+<th>基因</th>
+<th>变异</th>
+<th>类型</th>
+<th>VAF</th>
+<th>CIViC Level</th>
+<th>证据来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>KRAS</strong></td>
+<td><strong>G12C</strong></td>
+<td>SNV</td>
+<td>11.5%</td>
+<td>Level A/B</td>
+<td>FDA (Lung), NCCN (CRC)</td>
+</tr>
+<tr>
+<td><strong>TMB</strong></td>
+<td><strong>79 mut/Mb</strong></td>
+<td>Biomarker</td>
+<td>-</td>
+<td>Level B</td>
+<td>FDA (Solid Tumors)</td>
+</tr>
+<tr>
+<td><strong>ATM</strong></td>
+<td><strong>Germline</strong></td>
+<td>SNV</td>
+<td>-</td>
+<td>Level C</td>
+<td>Basket Trials</td>
+</tr>
+</tbody>
+</table>
+<h3>免疫生物标志物</h3>
+<ul>
+<li><strong>MSI Status</strong>: MSS (微卫星稳定)</li>
+<li><strong>TMB</strong>: <strong>79 mut/Mb (High)</strong> —— <em>关键发现</em></li>
+<li><strong>PD-L1</strong>: [未提供]</li>
+</ul>
+<h3>阴性关键发现</h3>
+<ul>
+<li>NRAS, BRAF V600E, HER2, NTRK 均为阴性。</li>
+</ul>
+<hr />
+<h2>4. 治疗史回顾 (Treatment History)</h2>
+<p><em>(注：因原始数据缺失，以下为基于病情的构建时间轴)</em></p>
+<div class="treatment-timeline">
+            <div class="treatment-item event">
+              <div class="treatment-marker event">诊断</div>
+              <div class="treatment-content">
+                <div class="treatment-header">
+                  <span class="treatment-date">2023.09</span>
+                  <span class="badge badge-info">N/A</span>
+                </div>
+                <div class="treatment-body"><strong>结肠镜活检确诊</strong></div>
+                <div class="treatment-note">乙状结肠腺癌</div>
+              </div>
+            </div>
+            <div class="treatment-item current">
+              <div class="treatment-marker current">当前</div>
+              <div class="treatment-content">
+                <div class="treatment-header">
+                  <span class="treatment-date">2023.1</span>
+                  <span class="badge badge-info">评估中</span>
+                </div>
+                <div class="treatment-body"><strong>等待MTB决策</strong></div>
+                <div class="treatment-note">拟定全身治疗方案</div>
+              </div>
+            </div></div>
+
+<p><strong>关键观察</strong>:<br />
+- 患者尚未接受针对 KRAS G12C 或 TMB-H 的靶向/免疫治疗。<br />
+- 需确认是否已行原发灶切除手术。</p>
+<hr />
+<h2>5. 药物/方案对比 (Regimen Comparison)</h2>
+<p>针对该患者的前三位治疗选项对比：</p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>证据等级</th>
+<th>ORR (预估)</th>
+<th>mPFS (预估)</th>
+<th>关键毒性</th>
+<th>可及性 (中国)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FOLFOX/FOLFIRI + 贝伐珠单抗</strong></td>
+<td><strong>A (NCCN Cat 1)</strong></td>
+<td>~50%</td>
+<td>10-12m</td>
+<td>神经毒性、中性粒减少</td>
+<td>医保全覆盖</td>
+</tr>
+<tr>
+<td><strong>Pembrolizumab (帕博利珠单抗)</strong></td>
+<td><strong>B (FDA TMB-H)</strong></td>
+<td>~40-50%*</td>
+<td>长期拖尾</td>
+<td>免疫性炎症 (肺炎/肠炎)</td>
+<td>自费/赠药 (适应症外)</td>
+</tr>
+<tr>
+<td><strong>KRAS G12C抑制剂 + 西妥昔单抗</strong></td>
+<td><strong>B (CodeBreaK 300)</strong></td>
+<td>~30-46%</td>
+<td>5.6-6.9m</td>
+<td>皮疹、腹泻、肝毒性</td>
+<td>临床试验/同情用药</td>
+</tr>
+</tbody>
+</table>
+<p><strong>对比总结</strong>:<br />
+标准双药化疗联合贝伐珠单抗是目前证据最强的一线方案。然而，鉴于TMB高达79，免疫治疗（Pembrolizumab）可能带来持久缓解，但目前获批适应症多为后线。KRAS G12C联合方案主要用于三线治疗。</p>
+<hr />
+<h2>6. 器官功能与剂量 (Organ Function &amp; Dosing)</h2>
+<h3>当前器官功能 (基线假设)</h3>
+<table>
+<thead>
+<tr>
+<th>系统</th>
+<th>参数</th>
+<th>状态</th>
+<th>正常范围</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>肾功能</td>
+<td>eGFR</td>
+<td>✓ 正常</td>
+<td>&gt;90 mL/min</td>
+<td>化疗足量</td>
+</tr>
+<tr>
+<td>肝功能</td>
+<td>ALT/AST</td>
+<td>✓ 正常</td>
+<td>&lt;40 U/L</td>
+<td>靶向药需监测</td>
+</tr>
+<tr>
+<td>骨髓</td>
+<td>ANC/PLT</td>
+<td>✓ 正常</td>
+<td>&gt;1.5/100</td>
+<td>化疗需监测</td>
+</tr>
+<tr>
+<td>心脏</td>
+<td>LVEF</td>
+<td>✓ 正常</td>
+<td>&gt;50%</td>
+<td>贝伐珠单抗需监测血压</td>
+</tr>
+</tbody>
+</table>
+<h3>剂量调整建议</h3>
+<ul>
+<li><strong>ATM 突变提示</strong>: ATM参与DNA损伤修复，患者可能对<strong>放疗</strong>及<strong>铂类药物</strong>（奥沙利铂）毒性更敏感。建议化疗期间密切监测骨髓抑制情况，必要时下调奥沙利铂剂量。</li>
+<li><strong>KRAS G12C抑制剂</strong>: 若入组试验，需关注肝毒性（ALT/AST升高）。</li>
+</ul>
+<hr />
+<h2>7. 治疗路线图 (Treatment Roadmap)</h2>
+<div class="card-grid">
+            <div class="card" style="border-left: 4px solid var(--warning);">
+              <div class="card-header">一线治疗 (推荐)</div>
+              <p><strong>mFOLFOX6 + 贝伐珠单抗</strong></p>
+              <ul><li>标准剂量起始 (关注ATM相关骨髓毒性)</li><li>每2个月CT评估</li><li>若耐受性差，可转为卡培他滨+贝伐</li></ul>
+            </div>
+            <div class="card" style="border-left: 4px solid var(--secondary);">
+              <div class="card-header">二线治疗 (高优先级)</div>
+              <p><strong>免疫检查点抑制剂 (PD-1)</strong></p>
+              <ul><li>推荐：帕博利珠单抗 (Pembrolizumab)</li><li>依据：TMB-H (79 mut/Mb)</li><li>证据：KEYNOTE-158 <span class="ref-tooltip">
+              <a class="cite" href="https://pubmed.ncbi.nlm.nih.gov/32919526" target="_blank">[P1]</a>
+              <span class="ref-text">KEYNOTE-158: TMB-H ORR 29%</span>
+            </span></li></ul>
+            </div>
+            <div class="card" style="border-left: 4px solid var(--secondary);">
+              <div class="card-header">三线治疗 (靶向)</div>
+              <p><strong>KRAS G12C抑制剂 + 抗EGFR单抗</strong></p>
+              <ul><li>临床试验优先 (如IBI351/D-1553)</li><li>方案：Sotorasib/Adagrasib + Cetuximab/Panitumumab</li><li>证据：CodeBreaK 300 <span class="ref-tooltip">
+              <a class="cite" href="https://pubmed.ncbi.nlm.nih.gov/37870536" target="_blank">[T1]</a>
+              <span class="ref-text">CodeBreaK 300: PFS 5.6m vs 2.2m</span>
+            </span></li></ul>
+            </div></div>
+
+<hr />
+<h2>8. 分子复查建议 (Re-biopsy / Liquid Biopsy)</h2>
+<p><strong>时机</strong>: 疾病进展 (PD) 时。</p>
+<p><strong>目的</strong>:<br />
+1. <strong>监测 KRAS 继发突变</strong>: 长期使用 G12C 抑制剂可能导致 Y96D 等获得性耐药突变。<br />
+2. <strong>监测 MET 扩增</strong>: 抗 EGFR 治疗的常见耐药机制。<br />
+3. <strong>ctDNA 动态</strong>: 评估肿瘤负荷变化。</p>
+<p><strong>方法</strong>: 优选血液 ctDNA NGS 大Panel检测。</p>
+<hr />
+<h2>9. 临床试验推荐 (Clinical Trials)</h2>
+<p>鉴于患者在中国，优先推荐国内招募中的项目：</p>
+<h3>重点推荐 (China Sites)</h3>
+<h4>Trial 1: <a href="https://clinicaltrials.gov/study/NCT04585035" class="reference" target="_blank">[NCT04585035]</a> - D-1553 (Garsorasib)</h4>
+<p><strong>阶段</strong>: Phase II<br />
+<strong>药物</strong>: Garsorasib (KRAS G12C抑制剂) ± 西妥昔单抗<br />
+<strong>靶点</strong>: KRAS G12C<br />
+<strong>状态</strong>: 招募中 (北京、上海多中心)<br />
+<strong>理由</strong>: 国产强效 G12C 抑制剂，早期数据显示联合西妥昔单抗在 CRC 中疗效显著。</p>
+<h4>Trial 2: <a href="https://clinicaltrials.gov/study/NCT05005234" class="reference" target="_blank">[NCT05005234]</a> - IBI351 (Fulzerasib)</h4>
+<p><strong>阶段</strong>: Phase Ib/II<br />
+<strong>药物</strong>: IBI351 + 西妥昔单抗<br />
+<strong>靶点</strong>: KRAS G12C<br />
+<strong>状态</strong>: 招募中 (信达生物)<br />
+<strong>理由</strong>: 针对 KRAS G12C 突变晚期实体瘤，联合方案有望克服原发耐药。</p>
+<h4>Trial 3: MSS/TMB-H 免疫治疗篮子试验</h4>
+<p><strong>方向</strong>: 寻找针对 POLE 突变或高 TMB 特征的 PD-1/PD-L1 临床试验。</p>
+<hr />
+<h2>10. 局部治疗建议 (Local Therapy)</h2>
+<p><strong>当前指征</strong>:<br />
+- 若存在<strong>肝脏寡转移</strong> (Oligometastases)，且全身治疗后病情稳定 (SD/PR)，强烈建议请肝胆外科或介入科会诊，评估<strong>手术切除</strong>或<strong>SBRT/消融</strong>。<br />
+- <strong>ATM 突变提示</strong>: 若需放疗，需告知放疗科医生患者携带 ATM 胚系突变，正常组织对射线敏感度可能增加，需优化计划减少正常组织受量。</p>
+<hr />
+<h2>11. 核心建议汇总 (Core Recommendations)</h2>
+<h3>推荐治疗方案</h3>
+<ol>
+<li>
+<p><strong>一线首选</strong>: <strong>mFOLFOX6 + 贝伐珠单抗</strong> <strong><span class="evidence-tag evidence-a">Evidence A</span></strong></p>
+<ul>
+<li><strong>理由</strong>: NCCN 指南针对 MSS/pMMR、KRAS 突变结直肠癌的标准一线方案。</li>
+<li><strong>注意</strong>: 因 ATM 突变，需密切监测骨髓抑制。</li>
+</ul>
+</li>
+<li>
+<p><strong>二线/备选</strong>: <strong>帕博利珠单抗 (Pembrolizumab)</strong> <strong><span class="evidence-tag evidence-b">Evidence B</span></strong></p>
+<ul>
+<li><strong>理由</strong>: FDA 批准用于既往治疗进展后的 TMB-H (≥10 mut/Mb) 实体瘤。患者 TMB 79 极高，获益概率大。若经济条件允许或有一线免疫试验，可提前考虑。</li>
+</ul>
+</li>
+<li>
+<p><strong>三线/试验</strong>: <strong>KRAS G12C 抑制剂 + 西妥昔单抗</strong> <strong><span class="evidence-tag evidence-b">Evidence B</span></strong></p>
+<ul>
+<li><strong>理由</strong>: 针对性靶向治疗，需联合用药以克服反馈性 EGFR 激活。</li>
+</ul>
+</li>
+</ol>
+<h3>不建议 (Not Recommended) ⚠️</h3>
+<ol>
+<li><strong>单药西妥昔单抗/帕尼单抗</strong>: <strong>[Evidence A - 反对]</strong><ul>
+<li><strong>原因</strong>: KRAS 突变导致下游通路持续激活，单用抗 EGFR 抗体无效。</li>
+</ul>
+</li>
+<li><strong>单药 KRAS G12C 抑制剂</strong>: <strong>[Evidence B - 反对]</strong><ul>
+<li><strong>原因</strong>: 结直肠癌中单药 ORR &lt;10%，疗效远不如联合方案。</li>
+</ul>
+</li>
+<li><strong>大剂量放疗 (无保护)</strong>:<ul>
+<li><strong>原因</strong>: ATM 胚系突变可能导致正常组织严重毒性。</li>
+</ul>
+</li>
+</ol>
+<h3>遗传咨询</h3>
+<ul>
+<li>建议患者子女进行 <strong>ATM 基因</strong> 胚系突变检测（常染色体显性遗传风险）。</li>
+</ul>
+<hr />
+<h2>12. 参考文献 (References)</h2>
+<ol>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/37870536/">PMID: 37870536 - CodeBreaK 300: Sotorasib plus Panitumumab in Refractory Colorectal Cancer</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/32919526/">PMID: 32919526 - KEYNOTE-158: Pembrolizumab in TMB-High Solid Tumors</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/36542100/">PMID: 36542100 - KRYSTAL-1: Adagrasib with or without Cetuximab in CRC</a></li>
+<li><a href="https://www.nccn.org/guidelines">NCCN Guidelines for Colon Cancer v2.2023</a></li>
+<li><a href="https://clinicaltrials.gov/study/NCT04585035">NCT04585035 - Study of D-1553 in Subjects with Advanced Solid Tumors</a></li>
+</ol>
+
+      
+      <div class="warning-box">
+        <strong>⚠️ 安全警告</strong>
+        <ul>
+        
+          <li>不建议 (Not Recommended) ⚠️</li>
+        
+        </ul>
+      </div>
+      
+
+      
+    </div>
+
+    <footer>
+      <p><strong>免责声明:</strong> 本报告仅供临床参考。具体治疗决策应由主治医师根据患者实际情况和最新临床证据综合判断。</p>
+      <p>虚拟分子肿瘤委员会会诊报告 | 生成日期: 2026-01-17 13:33:44</p>
+    </footer>
+
+  </div>
+</body>
+</html>

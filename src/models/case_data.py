@@ -5,6 +5,23 @@ from typing import List, Optional, Dict
 from pydantic import BaseModel, Field
 
 
+class IHCMarker(BaseModel):
+    """免疫组化标记物"""
+
+    marker: str = Field(..., description="标记物名称，如 EGFR、HER2、Ki-67")
+    result: str = Field(..., description="结果，如 '2+'、'0'、'+5%'、'(+)'、'(-)'")
+    interpretation: Optional[str] = Field(None, description="解读，如 '阳性'、'阴性'、'高表达'")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "marker": "EGFR",
+                "result": "2+",
+                "interpretation": None
+            }
+        }
+
+
 class MolecularAlteration(BaseModel):
     """分子变异"""
 
@@ -42,6 +59,9 @@ class TreatmentLine(BaseModel):
 
     line_number: int = Field(..., ge=1, description="治疗线数（1、2、3...）")
     regimen: str = Field(..., description="治疗方案名称")
+    start_date: Optional[str] = Field(None, description="开始日期，如 '2022.8'")
+    end_date: Optional[str] = Field(None, description="结束日期，如 '2022.12' 或 '今'")
+    cycles: Optional[int] = Field(None, ge=1, description="治疗程数")
     duration_months: Optional[float] = Field(
         None,
         ge=0.0,
@@ -59,16 +79,21 @@ class TreatmentLine(BaseModel):
         default_factory=list,
         description="3级及以上不良反应"
     )
+    notes: Optional[str] = Field(None, description="关键事件/备注")
 
     class Config:
         json_schema_extra = {
             "example": {
                 "line_number": 1,
-                "regimen": "吉非替尼（Gefitinib）",
-                "duration_months": 12.0,
+                "regimen": "奥沙利铂+卡培他滨+贝伐珠单抗（新辅助）",
+                "start_date": "2022.8",
+                "end_date": "2022.12",
+                "cycles": 5,
+                "duration_months": 4.0,
                 "best_response": "PR",
-                "discontinuation_reason": "疾病进展",
-                "grade3_plus_toxicities": []
+                "discontinuation_reason": None,
+                "grade3_plus_toxicities": [],
+                "notes": "新辅助化疗"
             }
         }
 
@@ -180,6 +205,10 @@ class CaseData(BaseModel):
         default_factory=list,
         description="分子变异列表"
     )
+    ihc_markers: List[IHCMarker] = Field(
+        default_factory=list,
+        description="免疫组化标记物列表，如 EGFR、HER2、Ki-67、MLH1 等"
+    )
     msi_status: Optional[str] = Field(
         None,
         description="微卫星不稳定性状态：MSI-H（高）、MSS（稳定）"
@@ -244,11 +273,21 @@ class CaseData(BaseModel):
                 "metastatic_sites": ["骨", "肝"],
                 "molecular_profile": [
                     {
-                        "gene": "EGFR",
+                        "gene": "KRAS",
                         "alteration_type": "SNV",
-                        "variant": "L858R",
-                        "vaf": 0.45
+                        "variant": "G12C",
+                        "vaf": 0.115
                     }
+                ],
+                "ihc_markers": [
+                    {"marker": "EGFR", "result": "2+"},
+                    {"marker": "HER2", "result": "0"},
+                    {"marker": "Ki-67", "result": "+5%"},
+                    {"marker": "MLH1", "result": "(+)"},
+                    {"marker": "PMS2", "result": "(+)"},
+                    {"marker": "MSH2", "result": "(+)"},
+                    {"marker": "MSH6", "result": "(+)"},
+                    {"marker": "panTRK", "result": "(-)"}
                 ],
                 "msi_status": "MSS",
                 "tmb_score": 5.2,
