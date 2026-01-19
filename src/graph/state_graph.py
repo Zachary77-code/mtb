@@ -1,18 +1,24 @@
 """
 LangGraph 主工作流定义
+
+新架构：
+1. PDF 解析节点（提取原始文本，不结构化）
+2. MTB 子图（并行执行 + 汇总）
+   - 并行：pathologist, geneticist, recruiter
+   - 顺序：oncologist → chair
+3. 格式验证（失败时回到 chair 重试）
+4. HTML 生成
 """
 from langgraph.graph import StateGraph, END
 
 from src.models.state import MtbState
 from src.graph.nodes import (
-    case_parsing_node,
-    geneticist_node,
-    recruiter_node,
-    oncologist_node,
-    chair_node,
+    pdf_parser_node,
     format_verification_node,
-    webpage_generator_node
+    webpage_generator_node,
+    chair_node
 )
+from src.graph.mtb_subgraph import create_mtb_subgraph
 from src.graph.edges import should_retry_chair
 
 
@@ -23,14 +29,22 @@ def create_mtb_workflow():
     工作流拓扑:
     [开始]
       ↓
-    [Case Parsing] (Pathologist)
+    [PDF Parser] - 提取原始文本
       ↓
-    [MDT Collaboration]
-      ├─ Geneticist → Recruiter → Oncologist → Chair
-      ↓
-    [Format Verification]
-      ├─ 通过 → [HTML Generator] → [结束]
-      └─ 失败 → 回到 Chair（最多 2 次重试）
+    [MTB Subgraph] ─────────────────────────────────┐
+      │  ┌─────────────┐  ┌─────────────┐  ┌──────────┐
+      │  │ pathologist │  │ geneticist  │  │ recruiter│  (并行)
+      │  └──────┬──────┘  └──────┬──────┘  └────┬─────┘
+      │         └─────────────────┼──────────────┘
+      │                           ↓
+      │                    [oncologist]
+      │                           ↓
+      │                      [chair]
+      └─────────────────────────────────────────────┘
+                              ↓
+                    [Format Verification]
+                      ├─ 通过 → [HTML Generator] → [结束]
+                      └─ 失败 → 回到 Chair（最多 2 次重试）
 
     Returns:
         编译后的工作流
@@ -40,17 +54,18 @@ def create_mtb_workflow():
 
     # ==================== 添加节点 ====================
 
-    # 阶段 1: 病例解析
-    workflow.add_node("parse_case", case_parsing_node)
+    # 阶段 1: PDF 解析（提取原始文本，不结构化）
+    workflow.add_node("pdf_parser", pdf_parser_node)
 
-    # 阶段 2: MDT 协作（顺序执行）
-    workflow.add_node("geneticist", geneticist_node)
-    workflow.add_node("recruiter", recruiter_node)
-    workflow.add_node("oncologist", oncologist_node)
-    workflow.add_node("chair", chair_node)
+    # 阶段 2: MTB 分析（并行子图）
+    mtb_subgraph = create_mtb_subgraph()
+    workflow.add_node("mtb_analysis", mtb_subgraph)
 
     # 阶段 3: 格式验证
     workflow.add_node("verify_format", format_verification_node)
+
+    # 阶段 3.5: Chair 重试节点（验证失败时使用）
+    workflow.add_node("chair_retry", chair_node)
 
     # 阶段 4: HTML 生成
     workflow.add_node("generate_html", webpage_generator_node)
@@ -58,24 +73,26 @@ def create_mtb_workflow():
     # ==================== 设置边 ====================
 
     # 入口点
-    workflow.set_entry_point("parse_case")
+    workflow.set_entry_point("pdf_parser")
 
-    # 线性流程: 解析 → MDT 协作
-    workflow.add_edge("parse_case", "geneticist")
-    workflow.add_edge("geneticist", "recruiter")
-    workflow.add_edge("recruiter", "oncologist")
-    workflow.add_edge("oncologist", "chair")
-    workflow.add_edge("chair", "verify_format")
+    # PDF 解析 → MTB 子图
+    workflow.add_edge("pdf_parser", "mtb_analysis")
+
+    # MTB 子图 → 格式验证
+    workflow.add_edge("mtb_analysis", "verify_format")
 
     # 条件边: 验证结果决定下一步
     workflow.add_conditional_edges(
         "verify_format",
         should_retry_chair,
         {
-            "regenerate": "chair",  # 回到 Chair 重新生成
-            "proceed": "generate_html"  # 继续到 HTML 生成
+            "regenerate": "chair_retry",  # 回到 Chair 重新生成
+            "proceed": "generate_html"    # 继续到 HTML 生成
         }
     )
+
+    # Chair 重试 → 格式验证
+    workflow.add_edge("chair_retry", "verify_format")
 
     # 终点
     workflow.add_edge("generate_html", END)
@@ -117,6 +134,7 @@ def run_mtb_workflow(input_text: str) -> MtbState:
 
 if __name__ == "__main__":
     print("MTB 工作流模块加载成功")
+    print("新架构: PDF Parser → [Pathologist|Geneticist|Recruiter] → Oncologist → Chair → Verify → HTML")
 
     # 测试工作流创建
     try:

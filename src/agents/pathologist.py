@@ -1,11 +1,13 @@
 """
-Pathologist Agent（病例解析）
+Pathologist Agent（病理学/影像学分析）
+
+负责基于病历原文进行病理学和影像学分析，使用 PubMed 和 cBioPortal 工具查询相关数据。
 """
-import json
 from typing import Dict, Any
 
 from src.agents.base_agent import BaseAgent
-from src.models.case_data import CaseData
+from src.tools.literature_tools import PubMedTool
+from src.tools.molecular_tools import cBioPortalTool
 from config.settings import PATHOLOGIST_PROMPT_FILE
 
 
@@ -13,95 +15,64 @@ class PathologistAgent(BaseAgent):
     """
     病理医生 Agent
 
-    负责从非结构化病历文本中提取结构化数据。
-    无需工具，直接使用 LLM 的信息提取能力。
+    负责基于病历原文进行病理学和影像学分析:
+    - 分析病理学发现的临床意义
+    - 解读影像学表现
+    - 评估 IHC 标记物的意义
+    - 使用 PubMed 查询病理相关文献
+    - 使用 cBioPortal 查询组织学类型的突变频率
     """
 
     def __init__(self):
+        tools = [
+            PubMedTool(),      # 文献检索（病理相关）
+            cBioPortalTool(),  # 组织学类型突变频率
+        ]
         super().__init__(
             role="Pathologist",
             prompt_file=PATHOLOGIST_PROMPT_FILE,
-            tools=[],  # 不需要工具
-            temperature=0.0  # 结构化提取需要低温度
+            tools=tools,
+            temperature=0.3  # 分析任务需要一定创造性
         )
 
-    def parse_case(self, raw_text: str) -> Dict[str, Any]:
+    def analyze(self, raw_pdf_text: str) -> Dict[str, Any]:
         """
-        解析病例文本
+        基于病历原文进行病理学和影像学分析
 
         Args:
-            raw_text: 原始病历文本
+            raw_pdf_text: PDF 解析后的完整病历原文
 
         Returns:
-            结构化病例数据和解析错误
+            包含分析报告和引用的字典
         """
         task_prompt = f"""
-请从以下病历文本中提取结构化信息，输出为 JSON 格式。
+请基于以下病历原文进行病理学和影像学分析:
 
-**病历文本**:
-{raw_text}
+**病历原文**:
+{raw_pdf_text}
 
-**要求**:
-1. 严格按照 CaseData schema 输出
-2. 缺失信息使用 null 或空列表
-3. 不要添加解释，只输出 JSON
-4. 确保 JSON 格式正确
+**分析任务**:
+1. 首先从病历中提取关键病理信息（肿瘤类型、病理类型、分期、IHC 结果等）
+2. 使用 search_pubmed 查询与该病理类型/组织学类型相关的文献（例如：特定组织学亚型的预后、治疗响应等）
+3. 使用 search_cbioportal 查询该组织学类型在相应癌种中的突变频率分布
+4. 分析病理学发现的临床意义
+5. 解读影像学表现及其对分期/治疗的影响
+6. 评估 IHC 标记物的意义（如 HER2、Ki-67、MMR 蛋白等）
+
+**输出格式**:
+请输出完整的病理学分析报告，包含:
+- 病理学概况（肿瘤类型、组织学、分级、分期）
+- IHC 标记物解读
+- 影像学发现分析
+- 相关文献支持（附 PMID 引用）
+- 病理学角度的治疗提示
+
+请确保报告完整详尽，不要省略任何重要信息。
 """
-
         result = self.invoke(task_prompt)
-        output = result["output"]
-
-        # 尝试解析 JSON
-        try:
-            # 提取 JSON 块（如果包裹在 ```json ``` 中）
-            if "```json" in output:
-                json_start = output.find("```json") + 7
-                json_end = output.find("```", json_start)
-                output = output[json_start:json_end].strip()
-            elif "```" in output:
-                json_start = output.find("```") + 3
-                json_end = output.find("```", json_start)
-                output = output[json_start:json_end].strip()
-
-            parsed_data = json.loads(output)
-
-            # 清理数据：过滤掉 tumor_markers 中的 None 值
-            # （Pydantic 的 Dict[str, float] 不接受 None）
-            if 'tumor_markers' in parsed_data and parsed_data['tumor_markers']:
-                parsed_data['tumor_markers'] = {
-                    k: v for k, v in parsed_data['tumor_markers'].items()
-                    if v is not None
-                }
-
-            # 验证数据
-            case_data = CaseData(**parsed_data)
-
-            return {
-                "structured_case": case_data.model_dump(),
-                "parsing_errors": []
-            }
-
-        except json.JSONDecodeError as e:
-            return {
-                "structured_case": self._create_fallback_case(raw_text),
-                "parsing_errors": [f"JSON解析错误: {str(e)}"]
-            }
-
-        except Exception as e:
-            return {
-                "structured_case": self._create_fallback_case(raw_text),
-                "parsing_errors": [f"数据验证错误: {str(e)}"]
-            }
-
-    def _create_fallback_case(self, raw_text: str) -> Dict[str, Any]:
-        """创建回退病例数据"""
         return {
-            "primary_cancer": "未提取",
-            "current_status": "unknown",
-            "raw_text": raw_text,
-            "molecular_profile": [],
-            "treatment_lines": [],
-            "organ_function": {}
+            "report": result["output"],
+            "references": result["references"]
         }
 
 

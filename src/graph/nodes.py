@@ -1,7 +1,6 @@
 """
 LangGraph 节点函数
 """
-import json
 from typing import Dict, Any
 
 from src.models.state import MtbState
@@ -11,6 +10,29 @@ from src.agents.recruiter import RecruiterAgent
 from src.agents.oncologist import OncologistAgent
 from src.agents.chair import ChairAgent
 from src.utils.logger import mtb_logger as logger
+
+
+def pdf_parser_node(state: MtbState) -> Dict[str, Any]:
+    """
+    PDF 解析节点
+
+    将输入文本直接传递为 raw_pdf_text，供后续并行节点使用。
+    不进行结构化处理，每个专家节点自行处理所需的结构化信息。
+
+    Args:
+        state: 当前状态
+
+    Returns:
+        更新的状态字段
+    """
+    logger.info("[PDF_PARSER] 开始解析 PDF 文本...")
+
+    input_text = state["input_text"]
+    logger.info(f"[PDF_PARSER] 原始文本长度: {len(input_text)} 字符")
+
+    return {
+        "raw_pdf_text": input_text
+    }
 
 
 def _print_section(title: str, content: str, max_len: int = 3000):
@@ -38,9 +60,9 @@ def _print_section(title: str, content: str, max_len: int = 3000):
         print("=" * 70)
 
 
-def case_parsing_node(state: MtbState) -> Dict[str, Any]:
+def pathologist_node(state: MtbState) -> Dict[str, Any]:
     """
-    病例解析节点（Pathologist）
+    病理学家节点（病理学/影像学分析）
 
     Args:
         state: 当前状态
@@ -48,106 +70,27 @@ def case_parsing_node(state: MtbState) -> Dict[str, Any]:
     Returns:
         更新的状态字段
     """
-    logger.info("[PARSE] 开始解析病例文本...")
+    logger.info("[PATHOLOGIST] 开始病理学分析...")
 
-    # 打印输入
-    _print_section("[PATHOLOGIST] 输入 - 原始病例文本", state["input_text"])
+    raw_pdf_text = state.get("raw_pdf_text", "")
+
+    # 打印输入摘要
+    input_summary = f"原始病历文本长度: {len(raw_pdf_text)} 字符"
+    _print_section("[PATHOLOGIST] 输入", input_summary)
 
     agent = PathologistAgent()
-    result = agent.parse_case(state["input_text"])
+    result = agent.analyze(raw_pdf_text)
 
-    case_keys = list(result["structured_case"].keys()) if result["structured_case"] else []
-    logger.info(f"[PARSE] 完成，解析字段: {case_keys}")
+    report_len = len(result["report"]) if result["report"] else 0
+    ref_count = len(result["references"]) if result["references"] else 0
+    logger.info(f"[PATHOLOGIST] 完成，报告长度: {report_len} 字符，引用数: {ref_count}")
 
     # 打印输出
-    case = result["structured_case"]
-
-    # 格式化免疫组化标记物
-    ihc_markers = case.get('ihc_markers', [])
-    ihc_str = ""
-    if ihc_markers:
-        ihc_items = [f"  - {m.get('marker', 'N/A')}: {m.get('result', 'N/A')}" for m in ihc_markers]
-        ihc_str = "\n".join(ihc_items)
-    else:
-        ihc_str = "  无"
-
-    # 格式化肿瘤标志物
-    tumor_markers = case.get('tumor_markers', {})
-    markers_str = ""
-    if tumor_markers:
-        markers_items = [f"  - {k}: {v}" for k, v in tumor_markers.items()]
-        markers_str = "\n".join(markers_items)
-    else:
-        markers_str = "  无"
-
-    # 格式化治疗史
-    treatment_lines = case.get('treatment_lines', [])
-    treatment_str = ""
-    if treatment_lines:
-        for t in treatment_lines:
-            line_num = t.get('line_number', '?')
-            regimen = t.get('regimen', 'N/A')
-            start = t.get('start_date', '')
-            end = t.get('end_date', '')
-            time_range = f"{start}-{end}" if start else ""
-            response = t.get('best_response', '-')
-            notes = t.get('notes', '')
-            treatment_str += f"  [{line_num}线] {regimen}"
-            if time_range:
-                treatment_str += f" ({time_range})"
-            if response:
-                treatment_str += f" -> {response}"
-            if notes:
-                treatment_str += f" | {notes}"
-            treatment_str += "\n"
-    else:
-        treatment_str = "  无\n"
-
-    # 格式化合并症
-    comorbidities = case.get('comorbidities', [])
-    comorbidities_str = ", ".join(comorbidities) if comorbidities else "无"
-
-    # 格式化器官功能
-    organ = case.get('organ_function', {})
-    organ_str = f"ECOG PS: {organ.get('ecog_ps', 'N/A')}"
-    if organ.get('creatinine'):
-        organ_str += f" | 肌酐: {organ.get('creatinine')}"
-    if organ.get('egfr_ml_min'):
-        organ_str += f" | eGFR: {organ.get('egfr_ml_min')}"
-
-    output_summary = f"""患者ID: {case.get('patient_id', 'Unknown')}
-年龄: {case.get('age', 'N/A')}岁 | 性别: {case.get('sex', 'N/A')}
-肿瘤类型: {case.get('primary_cancer', 'N/A')}
-组织学: {case.get('histology', 'N/A')}
-分期: {case.get('stage', 'N/A')}
-转移部位: {case.get('metastatic_sites', [])}
-MSI状态: {case.get('msi_status', 'N/A')} | TMB: {case.get('tmb_score', 'N/A')} | PD-L1 CPS: {case.get('pd_l1_cps', 'N/A')}
-器官功能: {organ_str}
-
-免疫组化:
-{ihc_str}
-
-分子特征:
-{json.dumps(case.get('molecular_profile', []), ensure_ascii=False, indent=2)}
-
-肿瘤标志物:
-{markers_str}
-
-合并症: {comorbidities_str}
-
-治疗史 ({max((t.get('line_number', 0) for t in treatment_lines), default=0)} 线, {len(treatment_lines)} 条记录):
-{treatment_str}"""
-
-    # 计算实际治疗线数（用于后续节点）
-    max_line = max((t.get('line_number', 0) for t in treatment_lines), default=0)
-    _print_section("[PATHOLOGIST] 输出 - 结构化病例", output_summary)
-
-    if result["parsing_errors"]:
-        logger.warning(f"[PARSE] 解析警告: {result['parsing_errors']}")
+    _print_section("[PATHOLOGIST] 输出 - 病理学分析报告", result["report"] or "无报告")
 
     return {
-        "structured_case": result["structured_case"],
-        "parsing_errors": result["parsing_errors"]
+        "pathologist_report": result["report"],
+        "pathologist_references": result["references"]
     }
 
 
@@ -163,38 +106,14 @@ def geneticist_node(state: MtbState) -> Dict[str, Any]:
     """
     logger.info("[GENETICIST] 开始分子分析...")
 
-    # 打印输入
-    case = state["structured_case"]
-    organ = case.get("organ_function", {})
-    treatment_lines = case.get("treatment_lines", [])
-    max_line = max((t.get('line_number', 0) for t in treatment_lines), default=0)
-    comorbidities = case.get("comorbidities", [])
+    raw_pdf_text = state.get("raw_pdf_text", "")
 
-    input_summary = f"""**患者背景**:
-- 年龄: {case.get('age', '?')}岁
-- 性别: {case.get('sex', '?')}
-- 肿瘤类型: {case.get('primary_cancer', 'N/A')}
-- 分期: {case.get('stage', '?')}
-
-**既往治疗史**: {max_line}线（共{len(treatment_lines)}条记录）
-
-**分子特征**:
-{json.dumps(case.get('molecular_profile', []), ensure_ascii=False, indent=2)}
-
-**免疫标志物**:
-- MSI状态: {case.get('msi_status', 'N/A')}
-- TMB: {case.get('tmb_score', 'N/A')} mut/Mb
-- PD-L1 TPS: {case.get('pd_l1_tps', 'N/A')}%
-
-**器官功能**:
-- ECOG PS: {organ.get('ecog_ps', '?')}
-- eGFR: {organ.get('egfr_ml_min', '?')} mL/min
-
-**合并症**: {', '.join(comorbidities) if comorbidities else '无'}"""
-    _print_section("[GENETICIST] 输入 - 完整患者信息", input_summary)
+    # 打印输入摘要
+    input_summary = f"原始病历文本长度: {len(raw_pdf_text)} 字符"
+    _print_section("[GENETICIST] 输入", input_summary)
 
     agent = GeneticistAgent()
-    result = agent.analyze(state["structured_case"])
+    result = agent.analyze(raw_pdf_text)
 
     report_len = len(result["report"]) if result["report"] else 0
     ref_count = len(result["references"]) if result["references"] else 0
@@ -221,50 +140,14 @@ def recruiter_node(state: MtbState) -> Dict[str, Any]:
     """
     logger.info("[RECRUITER] 开始搜索临床试验...")
 
-    # 打印输入
-    case = state["structured_case"]
-    geneticist_report = state.get("geneticist_report", "")
+    raw_pdf_text = state.get("raw_pdf_text", "")
 
-    # 计算实际治疗线数
-    treatment_lines = case.get('treatment_lines', [])
-    max_line = max((t.get('line_number', 0) for t in treatment_lines), default=0)
-
-    # 提取器官功能详细信息
-    organ = case.get('organ_function', {})
-    metastatic_sites = case.get('metastatic_sites', [])
-    comorbidities = case.get('comorbidities', [])
-
-    input_summary = f"""**患者入组筛查信息**:
-- 年龄: {case.get('age', '?')}岁
-- 性别: {case.get('sex', '?')}
-- 肿瘤类型: {case.get('primary_cancer', 'N/A')}
-- 分期: {case.get('stage', 'N/A')}
-- 转移部位: {', '.join(metastatic_sites) if metastatic_sites else '无'}
-
-**治疗史**:
-- 既往治疗线数: {max_line}（共{len(treatment_lines)}条记录）
-- 当前状态: {case.get('current_status', '未知')}
-
-**器官功能**:
-- ECOG PS: {organ.get('ecog_ps', '未知')}
-- eGFR: {organ.get('egfr_ml_min', '?')} mL/min
-- ALT: {organ.get('alt_u_l', '?')} U/L
-- AST: {organ.get('ast_u_l', '?')} U/L
-- 血小板: {organ.get('platelet_count', '?')} × 10^9/L
-- ANC: {organ.get('neutrophil_count', '?')} × 10^9/L
-- LVEF: {organ.get('lvef_percent', '?')}%
-
-**合并症**: {', '.join(comorbidities) if comorbidities else '无'}
-
-遗传学家报告摘要 (前1000字符):
-{geneticist_report[:1000] if geneticist_report else '无'}"""
-    _print_section("[RECRUITER] 输入 - 完整试验筛查信息", input_summary)
+    # 打印输入摘要
+    input_summary = f"原始病历文本长度: {len(raw_pdf_text)} 字符"
+    _print_section("[RECRUITER] 输入", input_summary)
 
     agent = RecruiterAgent()
-    result = agent.search_trials(
-        state["structured_case"],
-        geneticist_report
-    )
+    result = agent.search_trials(raw_pdf_text)
 
     report_len = len(result["report"]) if result["report"] else 0
     trial_count = len(result["trials"]) if result["trials"] else 0
@@ -283,6 +166,8 @@ def oncologist_node(state: MtbState) -> Dict[str, Any]:
     """
     肿瘤学家节点
 
+    接收所有并行节点的完整报告，制定治疗方案。
+
     Args:
         state: 当前状态
 
@@ -291,62 +176,28 @@ def oncologist_node(state: MtbState) -> Dict[str, Any]:
     """
     logger.info("[ONCOLOGIST] 开始制定治疗方案...")
 
-    # 打印输入
-    case = state["structured_case"]
-    organ = case.get("organ_function", {})
+    # 获取所有输入（完整，不截断）
+    raw_pdf_text = state.get("raw_pdf_text", "")
+    pathologist_report = state.get("pathologist_report", "")
     geneticist_report = state.get("geneticist_report", "")
     recruiter_report = state.get("recruiter_report", "")
 
-    # 计算实际治疗线数
-    treatment_lines = case.get('treatment_lines', [])
-    max_line = max((t.get('line_number', 0) for t in treatment_lines), default=0)
+    # 打印输入摘要
+    total_input = len(raw_pdf_text) + len(pathologist_report) + len(geneticist_report) + len(recruiter_report)
+    input_summary = f"""**输入总量**: {total_input} 字符
 
-    # 提取新增字段
-    metastatic_sites = case.get('metastatic_sites', [])
-    comorbidities = case.get('comorbidities', [])
-    tumor_markers = case.get('tumor_markers', {})
-
-    # 格式化肿瘤标志物
-    markers_str = ""
-    if tumor_markers:
-        markers_items = [f"  - {k.replace('_', ' ').upper()}: {v}" for k, v in tumor_markers.items()]
-        markers_str = "\n".join(markers_items)
-    else:
-        markers_str = "  无"
-
-    input_summary = f"""**患者基本信息**:
-- 年龄: {case.get('age', '?')}岁
-- 性别: {case.get('sex', '?')}
-- 肿瘤类型: {case.get('primary_cancer', 'N/A')}
-- 分期: {case.get('stage', '?')}
-- 转移部位: {', '.join(metastatic_sites) if metastatic_sites else '无'}
-
-**既往治疗线数**: {max_line}（共{len(treatment_lines)}条记录）
-
-**器官功能评估**:
-- ECOG PS: {organ.get('ecog_ps', 'N/A')}
-- eGFR: {organ.get('egfr_ml_min', 'N/A')} mL/min
-- 肌酐: {organ.get('creatinine', 'N/A')}
-- ALT: {organ.get('alt_u_l', '?')} U/L
-- 血小板: {organ.get('platelet_count', '?')} × 10^9/L
-
-**合并症**: {', '.join(comorbidities) if comorbidities else '无'}
-
-**肿瘤标志物**:
-{markers_str}
-
-遗传学家报告摘要 (前800字符):
-{geneticist_report[:800] if geneticist_report else '无'}
-
-试验专员报告摘要 (前800字符):
-{recruiter_report[:800] if recruiter_report else '无'}"""
-    _print_section("[ONCOLOGIST] 输入 - 完整治疗规划条件", input_summary)
+- 原始病历文本: {len(raw_pdf_text)} 字符
+- 病理学分析报告: {len(pathologist_report)} 字符
+- 分子分析报告: {len(geneticist_report)} 字符
+- 临床试验推荐: {len(recruiter_report)} 字符"""
+    _print_section("[ONCOLOGIST] 输入", input_summary)
 
     agent = OncologistAgent()
     result = agent.create_plan(
-        state["structured_case"],
-        geneticist_report,
-        recruiter_report
+        raw_pdf_text=raw_pdf_text,
+        pathologist_report=pathologist_report,
+        geneticist_report=geneticist_report,
+        recruiter_report=recruiter_report
     )
 
     plan_len = len(result["plan"]) if result["plan"] else 0
@@ -369,6 +220,9 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
     """
     主席节点
 
+    汇总整合所有专家报告，生成最终 MTB 报告。
+    注意：是汇总整合，不是摘要压缩！
+
     Args:
         state: 当前状态
 
@@ -381,38 +235,35 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
     if iteration > 0:
         logger.info(f"[CHAIR] 重新生成报告 (第 {iteration + 1} 次)，需补充模块: {missing}")
     else:
-        logger.info("[CHAIR] 开始综合所有报告...")
+        logger.info("[CHAIR] 开始汇总整合所有报告...")
 
-    # 打印输入
+    # 获取所有输入（完整，不截断）
+    raw_pdf_text = state.get("raw_pdf_text", "")
+    pathologist_report = state.get("pathologist_report", "")
     geneticist_report = state.get("geneticist_report", "")
     recruiter_report = state.get("recruiter_report", "")
     oncologist_plan = state.get("oncologist_plan", "")
 
     # 计算总输入量
-    total_input_chars = len(geneticist_report) + len(recruiter_report) + len(oncologist_plan)
-    logger.info(f"[CHAIR] 输入总量: {total_input_chars} 字符")
+    total_input = (len(raw_pdf_text) + len(pathologist_report) +
+                   len(geneticist_report) + len(recruiter_report) + len(oncologist_plan))
+    logger.info(f"[CHAIR] 输入总量: {total_input} 字符")
 
-    input_summary = f"""迭代次数: {iteration + 1}
-缺失模块: {missing if missing else '无'}
+    input_summary = f"""**迭代次数**: {iteration + 1}
+**缺失模块**: {missing if missing else '无'}
 
-遗传学家报告长度: {len(geneticist_report)} 字符
-试验专员报告长度: {len(recruiter_report)} 字符
-肿瘤学家方案长度: {len(oncologist_plan)} 字符
-
-各报告摘要:
---- 遗传学家 (前500字符) ---
-{geneticist_report[:500] if geneticist_report else '无'}
-
---- 试验专员 (前500字符) ---
-{recruiter_report[:500] if recruiter_report else '无'}
-
---- 肿瘤学家 (前500字符) ---
-{oncologist_plan[:500] if oncologist_plan else '无'}"""
-    _print_section("[CHAIR] 输入 - 各专家报告汇总", input_summary)
+**输入总量**: {total_input} 字符
+- 原始病历文本: {len(raw_pdf_text)} 字符
+- 病理学分析报告: {len(pathologist_report)} 字符
+- 分子分析报告: {len(geneticist_report)} 字符
+- 临床试验推荐: {len(recruiter_report)} 字符
+- 治疗方案: {len(oncologist_plan)} 字符"""
+    _print_section("[CHAIR] 输入", input_summary)
 
     agent = ChairAgent()
     result = agent.synthesize(
-        structured_case=state["structured_case"],
+        raw_pdf_text=raw_pdf_text,
+        pathologist_report=pathologist_report,
         geneticist_report=geneticist_report,
         recruiter_report=recruiter_report,
         oncologist_plan=oncologist_plan,
@@ -488,7 +339,7 @@ def webpage_generator_node(state: MtbState) -> Dict[str, Any]:
 
     generator = HtmlReportGenerator()
     output_path = generator.generate(
-        structured_case=state["structured_case"],
+        raw_pdf_text=state.get("raw_pdf_text", ""),
         chair_synthesis=state.get("chair_synthesis", ""),
         references=state.get("chair_final_references", [])
     )

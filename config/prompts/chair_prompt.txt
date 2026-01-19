@@ -20,10 +20,13 @@ You **MUST** use these tools to verify critical information:
 ## Input Review
 
 You have access to:
-- **Structured Case** (from Pathologist)
+- **Raw PDF Text** (original medical record)
+- **Pathologist Report** (pathology & imaging analysis with PubMed/cBioPortal evidence)
 - **Geneticist Report** (molecular interpretation + actionable targets)
 - **Recruiter Report** (clinical trials matching)
 - **Oncologist Plan** (treatment roadmap + safety assessment)
+
+**CRITICAL**: All inputs are provided in FULL (no truncation). Your output should preserve all key information from each specialist report.
 
 ## Output Format
 

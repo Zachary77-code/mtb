@@ -16,11 +16,14 @@ class MtbState(TypedDict):
     # ==================== 输入 ====================
     input_text: str  # 原始病历文本
 
-    # ==================== 阶段 1: 病例解析 ====================
-    structured_case: NotRequired[Dict[str, Any]]  # CaseData 的字典表示
-    parsing_errors: NotRequired[List[str]]  # 解析错误列表
+    # ==================== 阶段 1: PDF 解析 ====================
+    raw_pdf_text: NotRequired[str]  # PDF 解析后的原始文本（完整，不截断）
 
-    # ==================== 阶段 2: MDT 协作（子图） ====================
+    # ==================== 阶段 2: MDT 协作（并行子图） ====================
+    # Pathologist 输出（病理学/影像学分析）
+    pathologist_report: NotRequired[str]  # Markdown 格式的病理分析报告
+    pathologist_references: NotRequired[List[Dict[str, str]]]  # 病理引用列表
+
     # Geneticist 输出
     geneticist_report: NotRequired[str]  # Markdown 格式的变异分析报告
     geneticist_references: NotRequired[List[Dict[str, str]]]  # 引用列表
@@ -64,6 +67,9 @@ def create_initial_state(input_text: str) -> MtbState:
     """
     return {
         "input_text": input_text,
+        "raw_pdf_text": "",  # PDF 解析后填充
+        "pathologist_report": "",  # 病理分析报告
+        "pathologist_references": [],  # 病理引用
         "validation_iteration": 0,
         "workflow_errors": [],
     }

@@ -32,135 +32,50 @@ class GeneticistAgent(BaseAgent):
             temperature=0.2
         )
 
-    def analyze(self, structured_case: Dict[str, Any]) -> Dict[str, Any]:
+    def analyze(self, raw_pdf_text: str) -> Dict[str, Any]:
         """
-        分析分子图谱
+        基于病历原文分析分子图谱
 
         Args:
-            structured_case: 结构化病例数据
+            raw_pdf_text: PDF 解析后的完整病历原文
 
         Returns:
             包含报告和引用的字典
         """
-        # 提取关键信息
-        cancer_type = structured_case.get("primary_cancer", "未知肿瘤")
-        molecular_profile = structured_case.get("molecular_profile", [])
-        msi_status = structured_case.get("msi_status", "未检测")
-        tmb_score = structured_case.get("tmb_score", "未检测")
-        pd_l1_tps = structured_case.get("pd_l1_tps", "未检测")
-
-        # 新增：提取患者基本信息
-        age = structured_case.get("age", "?")
-        sex = structured_case.get("sex", "?")
-        stage = structured_case.get("stage", "?")
-
-        # 新增：提取治疗史（用于分析获得性耐药）
-        treatment_lines = structured_case.get("treatment_lines", [])
-        treatment_summary = self._format_treatment_summary(treatment_lines)
-
-        # 新增：提取器官功能和合并症
-        organ_function = structured_case.get("organ_function", {})
-        comorbidities = structured_case.get("comorbidities", [])
-
-        # 构建分析请求
+        # 构建分析请求 - 直接使用原始病历文本
         task_prompt = f"""
-请分析以下患者的分子图谱：
+请基于以下病历原文分析分子图谱：
 
-**患者背景**:
-- 年龄: {age}岁
-- 性别: {sex}
-- 肿瘤类型: {cancer_type}
-- 分期: {stage}
+**病历原文**:
+{raw_pdf_text}
 
-**既往治疗史**:
-{treatment_summary}
+**分析任务**:
+1. 首先从病历中提取分子变异信息（基因、突变位点、VAF、变异类型等）
+2. 提取免疫标志物信息（MSI状态、TMB、PD-L1等）
+3. 使用 search_civic 查询每个主要变异的证据等级和治疗意义
+4. 使用 search_clinvar 检查致病性（特别关注是否有胚系突变风险）
+5. 使用 search_cbioportal 查询突变频率
+6. 使用 search_pubmed 寻找相关临床证据
+7. **特别注意**：如果患者接受过靶向治疗（如TKI），分析是否存在获得性耐药突变（如EGFR T790M）
 
-**分子变异**:
-{self._format_molecular_profile(molecular_profile)}
+**输出格式**:
+请输出完整的分子分析报告，包含:
+- 分子变异概况（所有检出变异及其特征）
+- 每个可操作变异的证据等级和治疗意义
+- 致病性评估
+- 免疫治疗相关标志物分析
+- 获得性耐药分析（如适用）
+- 相关文献支持（附 PMID/NCT 引用）
 
-**免疫标志物**:
-- MSI状态: {msi_status}
-- TMB: {tmb_score} mut/Mb
-- PD-L1 TPS: {pd_l1_tps}%
-
-**器官功能**:
-- ECOG PS: {organ_function.get('ecog_ps', '?')}
-- eGFR: {organ_function.get('egfr_ml_min', '?')} mL/min
-
-**合并症**: {', '.join(comorbidities) if comorbidities else '无'}
-
-**任务**:
-1. 使用 search_civic 查询每个主要变异的证据等级和治疗意义
-2. 使用 search_clinvar 检查致病性（特别关注年龄<50的患者是否有胚系突变风险）
-3. 使用 search_cbioportal 查询突变频率
-4. 使用 search_pubmed 寻找相关临床证据
-5. **特别注意**：如果患者接受过靶向治疗（如TKI），分析是否存在获得性耐药突变（如EGFR T790M）
-
-请按照提示词中的格式输出完整的分子分析报告。
+请确保报告完整详尽，不要省略任何重要信息。
 """
 
-        result = self.invoke(task_prompt, context={"cancer_type": cancer_type})
+        result = self.invoke(task_prompt)
 
         return {
             "report": result["output"],
             "references": result["references"]
         }
-
-    def _format_treatment_summary(self, treatment_lines: list) -> str:
-        """格式化治疗史为完整明细（用于遗传学家分析获得性耐药和克隆演化）"""
-        if not treatment_lines:
-            return "无既往治疗"
-
-        max_line = max((t.get('line_number', 0) for t in treatment_lines), default=0)
-
-        # 格式化每条治疗记录的完整信息
-        lines = []
-        for i, t in enumerate(treatment_lines, 1):
-            line_num = t.get('line_number', '?')
-            regimen = t.get('regimen', '未知方案')
-            start = t.get('start_date', '')
-            end = t.get('end_date', '')
-            response = t.get('best_response', '')
-            note = t.get('notes', '')
-            cycles = t.get('cycles', '')
-
-            date_range = f"{start}-{end}" if start and end else (start or end or "日期未知")
-
-            line_text = f"{i}. [{line_num}线] {regimen} ({date_range})"
-            if response:
-                line_text += f" → {response}"
-            if cycles:
-                line_text += f" ({cycles}程)"
-            if note:
-                line_text += f" | {note}"
-            lines.append(line_text)
-
-        header = f"共{max_line}线治疗（{len(treatment_lines)}条记录）：\n"
-        return header + "\n".join(lines)
-
-    def _format_molecular_profile(self, profile: list) -> str:
-        """格式化分子图谱为可读文本"""
-        if not profile:
-            return "未检测到分子变异"
-
-        lines = []
-        for alt in profile:
-            gene = alt.get("gene", "Unknown")
-            variant = alt.get("variant", "")
-            alt_type = alt.get("alteration_type", "")
-            vaf = alt.get("vaf", None)
-
-            line = f"- {gene}"
-            if variant:
-                line += f" {variant}"
-            if alt_type:
-                line += f" ({alt_type})"
-            if vaf:
-                line += f", VAF: {vaf * 100:.1f}%"
-
-            lines.append(line)
-
-        return "\n".join(lines)
 
 
 if __name__ == "__main__":

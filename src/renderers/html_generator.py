@@ -320,7 +320,7 @@ class HtmlReportGenerator:
 
     def generate(
         self,
-        structured_case: Dict[str, Any],
+        raw_pdf_text: str,
         chair_synthesis: str,
         references: List[Dict[str, str]]
     ) -> str:
@@ -328,7 +328,7 @@ class HtmlReportGenerator:
         生成 HTML 报告
 
         Args:
-            structured_case: 结构化病例数据
+            raw_pdf_text: 原始病历文本（用于提取患者信息）
             chair_synthesis: Chair 综合报告（Markdown）
             references: 引用列表
 
@@ -346,10 +346,13 @@ class HtmlReportGenerator:
         # 提取警告
         warnings = self._extract_warnings(chair_synthesis)
 
+        # 从原始文本提取患者信息
+        patient_id, cancer_type = self._extract_patient_info(raw_pdf_text, chair_synthesis)
+
         # 准备上下文
         context = {
-            "patient_id": structured_case.get("patient_id", "Unknown"),
-            "cancer_type": structured_case.get("primary_cancer", "未知"),
+            "patient_id": patient_id,
+            "cancer_type": cancer_type,
             "generation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "report_content": html_content,
             "references": references,
@@ -635,6 +638,53 @@ class HtmlReportGenerator:
                     warnings.append(clean)
 
         return warnings[:5]  # 限制数量
+
+    def _extract_patient_info(self, raw_pdf_text: str, chair_synthesis: str) -> tuple:
+        """
+        从原始文本或综合报告中提取患者信息
+
+        Args:
+            raw_pdf_text: 原始病历文本
+            chair_synthesis: Chair 综合报告
+
+        Returns:
+            (patient_id, cancer_type) 元组
+        """
+        patient_id = "Unknown"
+        cancer_type = "未知"
+
+        # 合并文本进行搜索
+        combined_text = f"{raw_pdf_text}\n{chair_synthesis}"
+
+        # 尝试提取患者编号 (多种格式)
+        id_patterns = [
+            r'患者编号[：:]\s*([A-Za-z0-9\-_]+)',
+            r'病历号[：:]\s*([A-Za-z0-9\-_]+)',
+            r'住院号[：:]\s*([A-Za-z0-9\-_]+)',
+            r'门诊号[：:]\s*([A-Za-z0-9\-_]+)',
+            r'Patient\s*ID[：:]\s*([A-Za-z0-9\-_]+)',
+        ]
+
+        for pattern in id_patterns:
+            match = re.search(pattern, combined_text, re.IGNORECASE)
+            if match:
+                patient_id = match.group(1)
+                break
+
+        # 尝试提取肿瘤类型
+        cancer_patterns = [
+            r'(?:诊断|肿瘤类型|癌症类型)[：:]\s*([^\n,，。]+)',
+            r'((?:非小细胞|小细胞)?肺癌|乳腺癌|结直肠癌|胃癌|肝癌|胰腺癌|卵巢癌|前列腺癌|食管癌|甲状腺癌|膀胱癌|肾癌|黑色素瘤)',
+            r'(NSCLC|SCLC|Lung\s*Cancer|Breast\s*Cancer|Colorectal\s*Cancer)',
+        ]
+
+        for pattern in cancer_patterns:
+            match = re.search(pattern, combined_text, re.IGNORECASE)
+            if match:
+                cancer_type = match.group(1).strip()
+                break
+
+        return patient_id, cancer_type
 
 
 if __name__ == "__main__":

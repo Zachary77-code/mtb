@@ -48,7 +48,7 @@ def should_retry_chair(state: MtbState) -> Literal["regenerate", "proceed"]:
 
 def check_parsing_success(state: MtbState) -> Literal["success", "error"]:
     """
-    检查病例解析是否成功
+    检查 PDF 解析是否成功
 
     Args:
         state: 当前状态
@@ -57,17 +57,13 @@ def check_parsing_success(state: MtbState) -> Literal["success", "error"]:
         "success": 解析成功
         "error": 解析失败
     """
-    if state.get("structured_case") is None:
-        logger.error("[EDGE] 病例解析失败: structured_case 为空")
+    raw_pdf_text = state.get("raw_pdf_text", "")
+
+    if not raw_pdf_text or len(raw_pdf_text.strip()) < 100:
+        logger.error("[EDGE] PDF 解析失败: raw_pdf_text 为空或太短")
         return "error"
 
-    # 检查是否有关键数据
-    case = state["structured_case"]
-    if not case.get("primary_cancer") or case.get("primary_cancer") == "未提取":
-        logger.error("[EDGE] 病例解析失败: primary_cancer 未提取")
-        return "error"
-
-    logger.info("[EDGE] 病例解析检查通过")
+    logger.info(f"[EDGE] PDF 解析检查通过，文本长度: {len(raw_pdf_text)} 字符")
     return "success"
 
 
