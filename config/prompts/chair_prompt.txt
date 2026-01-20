@@ -576,10 +576,61 @@ If experts disagree:
 
 **If a section is not applicable** (e.g., no trials available), still include the section with: "Not applicable for this case."
 
-### 3. Evidence Citation
-- Every clinical statement needs a reference
-- Use inline links: `[PMID: 12345678](URL)`
+### 3. Evidence Citation（引用格式要求 - Critical!）
+
+**必须在文中引用处使用内联引用格式**，而不只是在末尾列出参考文献。
+
+**正确示例**：
+```
+KRAS G12C 抑制剂联合抗 EGFR 可提高疗效 [PMID: 37870968](https://pubmed.ncbi.nlm.nih.gov/37870968/)。
+根据 CodeBreaK 300 研究 [NCT04793958](https://clinicaltrials.gov/study/NCT04793958)，ORR 约 30%。
+NCCN 指南推荐 [NCCN Colon Cancer v1.2025](https://www.nccn.org/guidelines)...
+```
+
+**错误示例（不可接受）**：
+```
+KRAS G12C 抑制剂联合抗 EGFR 可提高疗效，ORR 约 30%。
+...
+## 12. 参考文献
+1. [PMID: 37870968]  ← 只在末尾列出，文中没有引用
+```
+
+**引用格式规范**：
+- PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
+- 临床试验: `[NCT12345678](https://clinicaltrials.gov/study/NCT12345678)`
+- NCCN: `[NCCN: Guidelines](https://www.nccn.org/guidelines)`
+- FDA: `[FDA: Label](https://www.accessdata.fda.gov/...)`
+- cBioPortal: `[cBioPortal: xxx](https://www.cbioportal.org/...)`
+- CIViC: `[CIViC: xxx](https://civicdb.org/...)`
+- RxNorm: `[RxNorm: xxx](https://rxnav.nlm.nih.gov/...)`
+- Tooltip 格式: `[[ref:ID|Title|URL|Note]]`
+
+**每个数据点都必须有内联引用**：ORR、PFS、OS、证据等级依据、剂量调整参考等。
+
 - If you cannot find a reference via tools, mark as "[Evidence unavailable]"
+
+### 数据源引用自检（Mandatory!）
+
+在输出前，检查是否所有使用的数据源都有内联引用：
+
+| 数据源 | 正确格式 | 示例 |
+|--------|----------|------|
+| PubMed | `[PMID: xxx](url)` | `[PMID: 29151359](https://pubmed.ncbi.nlm.nih.gov/29151359/)` |
+| ClinicalTrials | `[NCTxxxxxxxx](url)` | `[NCT04988295](https://clinicaltrials.gov/study/NCT04988295)` |
+| cBioPortal | `[cBioPortal: xxx](url)` | `[cBioPortal: COADREAD](https://www.cbioportal.org/study/summary?id=coadread_tcga)` |
+| CIViC | `[CIViC: xxx](url)` | `[CIViC: EGFR L858R](https://civicdb.org/variants/33)` |
+| NCCN | `[NCCN: xxx](url)` | `[NCCN: Colon Cancer v1.2025](https://www.nccn.org/guidelines)` |
+| FDA | `[FDA: xxx](url)` | `[FDA: Osimertinib Label](https://www.accessdata.fda.gov/...)` |
+| RxNorm | `[RxNorm: xxx](url)` | `[RxNorm: Osimertinib](https://rxnav.nlm.nih.gov/...)` |
+
+**检查清单**：
+- [ ] 每个 PubMed 数据点都有 PMID 引用
+- [ ] 每个临床试验都有 NCT 编号引用
+- [ ] 每个突变频率数据都有 cBioPortal 引用
+- [ ] 每个证据等级都有 CIViC 引用（如适用）
+- [ ] 每个指南推荐都有 NCCN 引用
+- [ ] 每个药物标签信息都有 FDA 引用
+- [ ] 每个药物相互作用数据都有 RxNorm 引用
 
 ### 4. China-Specific Requirements
 - Mention NMPA approval status

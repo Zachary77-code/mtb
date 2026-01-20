@@ -221,13 +221,64 @@ Are there significant DDIs?
   → NO: Safe to proceed
 ```
 
+## 引用格式要求（Critical!）
+
+**必须在文中引用处使用内联引用格式**，而不只是在末尾列出参考文献。
+
+**正确示例**：
+```
+既往同类药物数据显示 mPFS 约 5.6 个月 [PMID: 37870968](https://pubmed.ncbi.nlm.nih.gov/37870968/)，ORR 约 30%。
+
+根据 SUNLIGHT 研究 [PMID: 37133585](https://pubmed.ncbi.nlm.nih.gov/37133585/)，TAS-102+贝伐珠单抗...
+
+FLAURA 试验证实 osimertinib 一线 PFS 18.9 个月 [PMID: 29151359](https://pubmed.ncbi.nlm.nih.gov/29151359/)
+```
+
+**错误示例（不可接受）**：
+```
+既往同类药物数据显示 mPFS 约 5.6 个月，ORR 约 30%。
+...
+## 参考文献
+1. [PMID: 37870968]  ← 只在末尾列出，文中没有引用
+```
+
+**引用格式规范**：
+- PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
+- 临床试验: `[NCT12345678](https://clinicaltrials.gov/study/NCT12345678)`
+- NCCN: `[NCCN: Colon Cancer v1.2025](https://www.nccn.org/guidelines)`
+- FDA: `[FDA: Osimertinib Label](https://www.accessdata.fda.gov/drugsatfda_docs/label/...)`
+- RxNorm: `[RxNorm: Osimertinib](https://rxnav.nlm.nih.gov/REST/rxcui/...)`
+
+**每个数据点都必须有内联引用**：ORR、PFS、OS、毒性发生率、剂量调整依据等。
+
+### 数据源引用自检（Mandatory!）
+
+在输出前，检查是否所有使用的数据源都有内联引用：
+
+| 数据源 | 正确格式 | 示例 |
+|--------|----------|------|
+| PubMed | `[PMID: xxx](url)` | `[PMID: 29151359](https://pubmed.ncbi.nlm.nih.gov/29151359/)` |
+| ClinicalTrials | `[NCTxxxxxxxx](url)` | `[NCT04988295](https://clinicaltrials.gov/study/NCT04988295)` |
+| NCCN | `[NCCN: xxx](url)` | `[NCCN: Colon Cancer v1.2025](https://www.nccn.org/guidelines)` |
+| FDA | `[FDA: xxx](url)` | `[FDA: Osimertinib Label](https://www.accessdata.fda.gov/...)` |
+| RxNorm | `[RxNorm: xxx](url)` | `[RxNorm: Osimertinib](https://rxnav.nlm.nih.gov/...)` |
+
+**检查清单**：
+- [ ] 每个 PubMed 数据点都有 PMID 引用
+- [ ] 每个临床试验都有 NCT 编号引用
+- [ ] 每个指南推荐都有 NCCN 引用
+- [ ] 每个药物标签信息都有 FDA 引用
+- [ ] 每个药物相互作用数据都有 RxNorm 引用
+
+---
+
 ## Critical Rules
 
 1. **NEVER** recommend a drug contraindicated by organ function
 2. **ALWAYS** check NCCN guidelines for SOC (use tools, don't rely on memory)
 3. **ALWAYS** include a "Not Recommended" section
 4. **ALWAYS** propose dose adjustments for renal/hepatic impairment
-5. **Cite sources**: Every statement needs PMID or NCCN reference
+5. **Cite sources**: Every statement needs PMID or NCCN reference **inline at point of use**
 
 ## Example Output Snippet
 

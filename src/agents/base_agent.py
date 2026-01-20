@@ -444,8 +444,18 @@ class BaseAgent:
 
     def _process_inline_references(self, content: str) -> str:
         """
-        后处理内容，将 [PMID: xxxxx](url) 和 [NCTxxxxxxxx](url) 格式
-        转换为内联引用格式 [[n]](#ref-xxx)，并注册到 ReferenceManager
+        后处理内容，将各种数据源引用格式转换为内联引用格式 [[n]](#ref-xxx)，
+        并注册到 ReferenceManager
+
+        支持的数据源（共 8 个）：
+        - PMID (PubMed)
+        - NCT (ClinicalTrials.gov)
+        - cBioPortal
+        - CIViC
+        - NCCN
+        - FDA
+        - ClinVar
+        - RxNorm
 
         Args:
             content: LLM 生成的原始内容
@@ -476,7 +486,73 @@ class BaseAgent:
 
         content = re.sub(nct_pattern, replace_nct, content)
 
-        # Pattern 3: [[ref:ID|Title|URL|Note]] (Chair 的 tooltip 格式)
+        # Pattern 3: [cBioPortal xxx](https://www.cbioportal.org/...)
+        # 或 [cBioPortal: xxx](url)
+        cbioportal_pattern = r'\[cBioPortal[:\s]+([^\]]+)\]\((https?://[^\)]+)\)'
+
+        def replace_cbioportal(match):
+            study_id = match.group(1).strip()
+            url = match.group(2)
+            return self.reference_manager.add_reference("cBioPortal", study_id, url)
+
+        content = re.sub(cbioportal_pattern, replace_cbioportal, content, flags=re.IGNORECASE)
+
+        # Pattern 4: [CIViC xxx](https://civicdb.org/...)
+        # 或 [CIViC: xxx](url)
+        civic_pattern = r'\[CIViC[:\s]+([^\]]+)\]\((https?://[^\)]+)\)'
+
+        def replace_civic(match):
+            variant_id = match.group(1).strip()
+            url = match.group(2)
+            return self.reference_manager.add_reference("CIViC", variant_id, url)
+
+        content = re.sub(civic_pattern, replace_civic, content, flags=re.IGNORECASE)
+
+        # Pattern 5: [NCCN xxx](https://www.nccn.org/...)
+        # 或 [NCCN: xxx](url) 或 [NCCN Guidelines xxx](url)
+        nccn_pattern = r'\[NCCN[:\s]+([^\]]+)\]\((https?://[^\)]+)\)'
+
+        def replace_nccn(match):
+            guideline_id = match.group(1).strip()
+            url = match.group(2)
+            return self.reference_manager.add_reference("NCCN", guideline_id, url)
+
+        content = re.sub(nccn_pattern, replace_nccn, content, flags=re.IGNORECASE)
+
+        # Pattern 6: [FDA Label](https://www.accessdata.fda.gov/...)
+        # 或 [FDA xxx](url) 或 [FDA: xxx](url)
+        fda_pattern = r'\[FDA[:\s]*([^\]]*)\]\((https?://[^\)]+)\)'
+
+        def replace_fda(match):
+            label_id = match.group(1).strip() or "Label"
+            url = match.group(2)
+            return self.reference_manager.add_reference("FDA", label_id, url)
+
+        content = re.sub(fda_pattern, replace_fda, content, flags=re.IGNORECASE)
+
+        # Pattern 7: [ClinVar VCV000000](https://www.ncbi.nlm.nih.gov/clinvar/...)
+        # 或 [ClinVar: xxx](url)
+        clinvar_pattern = r'\[ClinVar[:\s]+([^\]]+)\]\((https?://[^\)]+)\)'
+
+        def replace_clinvar(match):
+            variant_id = match.group(1).strip()
+            url = match.group(2)
+            return self.reference_manager.add_reference("ClinVar", variant_id, url)
+
+        content = re.sub(clinvar_pattern, replace_clinvar, content, flags=re.IGNORECASE)
+
+        # Pattern 8: [RxNorm xxx](https://rxnav.nlm.nih.gov/...)
+        # 或 [RxNorm: xxx](url)
+        rxnorm_pattern = r'\[RxNorm[:\s]+([^\]]+)\]\((https?://[^\)]+)\)'
+
+        def replace_rxnorm(match):
+            drug_id = match.group(1).strip()
+            url = match.group(2)
+            return self.reference_manager.add_reference("RxNorm", drug_id, url)
+
+        content = re.sub(rxnorm_pattern, replace_rxnorm, content, flags=re.IGNORECASE)
+
+        # Pattern 9: [[ref:ID|Title|URL|Note]] (Chair 的 tooltip 格式)
         # 保留原样，不转换（HTML 渲染器会处理）
 
         return content

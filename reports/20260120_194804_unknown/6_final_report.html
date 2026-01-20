@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vMTB Consultation Report | Unknown</title>
+  <style>
+    :root {
+      --primary: #0d47a1;
+      --secondary: #546e7a;
+      --accent: #00838f;
+      --warning: #f57c00;
+      --danger: #c62828;
+      --success: #2e7d32;
+      --bg: #ffffff;
+      --bg-alt: #f5f7fa;
+      --text: #212121;
+      --text-light: #616161;
+      --border: #e0e0e0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: var(--bg-alt);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 14px;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: var(--bg);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .header-meta {
+      text-align: right;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .section {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    h2 {
+      color: var(--primary);
+      font-size: 1.3em;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    h3 {
+      color: var(--secondary);
+      font-size: 1.1em;
+      margin-top: 16px;
+      margin-bottom: 8px;
+    }
+
+    p { margin-bottom: 12px; }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    li { margin-bottom: 6px; }
+
+    /* Info Grid */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+    }
+
+    .info-item {
+      padding: 12px;
+      background: var(--bg-alt);
+      border-radius: 4px;
+    }
+
+    .info-item label {
+      font-size: 11px;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .info-item span { font-size: 14px; font-weight: 500; }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 16px 0;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--bg-alt);
+      font-weight: 600;
+      color: var(--secondary);
+    }
+
+    tr:nth-child(even) { background: var(--bg-alt); }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-success { background: #e8f5e9; color: var(--success); }
+    .badge-warning { background: #fff3e0; color: var(--warning); }
+    .badge-danger  { background: #ffebee; color: var(--danger); }
+    .badge-info    { background: #e3f2fd; color: var(--primary); }
+    .badge-secondary { background: #eceff1; color: var(--secondary); }
+    .badge-primary { background: var(--primary); color: white; }
+
+    /* Executive Summary */
+    .exec-summary {
+      background: var(--bg-alt);
+      padding: 20px;
+      border-radius: 4px;
+      border-left: 4px solid var(--primary);
+      margin-bottom: 20px;
+    }
+
+    .exec-summary h3 {
+      font-size: 14px;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .exec-summary ul { list-style: none; padding: 0; margin: 0; }
+
+    .exec-summary li {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .exec-summary li:last-child { border-bottom: none; }
+
+    /* Card Grid */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px;
+    }
+
+    .card-header {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Treatment Timeline */
+    .treatment-timeline {
+      position: relative;
+      padding-left: 60px;
+      margin: 20px 0;
+    }
+
+    .treatment-timeline::before {
+      content: '';
+      position: absolute;
+      left: 24px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .treatment-item {
+      position: relative;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .treatment-marker {
+      position: absolute;
+      left: -60px;
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      z-index: 1;
+    }
+
+    .treatment-marker.event { background: var(--secondary); }
+    .treatment-marker.adjuvant { background: #7e57c2; }
+    .treatment-marker.maint { background: #26a69a; }
+    .treatment-marker.pd { background: var(--danger); }
+    .treatment-marker.current { background: var(--warning); color: var(--text); }
+    .treatment-marker.surgery { background: var(--secondary); }
+    .treatment-marker.neoadjuvant { background: var(--primary); }
+
+    .treatment-content {
+      flex: 1;
+      background: var(--bg-alt);
+      border-radius: 4px;
+      padding: 12px 16px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .treatment-item.event .treatment-content { border-left-color: var(--secondary); }
+    .treatment-item.adjuvant .treatment-content { border-left-color: #7e57c2; }
+    .treatment-item.maint .treatment-content { border-left-color: #26a69a; }
+    .treatment-item.pd .treatment-content { border-left-color: var(--danger); }
+    .treatment-item.surgery .treatment-content { border-left-color: var(--secondary); }
+
+    .treatment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .treatment-date { font-weight: 600; color: var(--primary); }
+    .treatment-body { font-size: 14px; }
+
+    .treatment-note {
+      font-size: 12px;
+      margin-top: 6px;
+      padding-left: 8px;
+      border-left: 2px solid var(--border);
+      color: var(--text-light);
+    }
+
+    /* Key Recommendations */
+    .key-rec {
+      display: flex;
+      align-items: flex-start;
+      padding: 12px;
+      background: var(--bg-alt);
+      margin-bottom: 8px;
+      border-radius: 4px;
+    }
+
+    .key-rec-num {
+      width: 24px;
+      height: 24px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    /* Inline Citations with Tooltip */
+    .cite {
+      color: var(--primary);
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 11px;
+      vertical-align: super;
+      font-weight: 600;
+    }
+    .cite:hover { text-decoration: underline; }
+
+    .ref-tooltip {
+      position: relative;
+      display: inline;
+    }
+
+    .ref-tooltip .ref-text {
+      visibility: hidden;
+      background: #333;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 6px;
+      position: absolute;
+      z-index: 100;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 350px;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: normal;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .ref-tooltip .ref-text::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: #333 transparent transparent transparent;
+    }
+
+    .ref-tooltip:hover .ref-text { visibility: visible; }
+
+    /* Evidence Tags */
+    .evidence {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 2px;
+      margin-left: 6px;
+    }
+
+    .evidence-high   { background: #c8e6c9; color: var(--success); }
+    .evidence-medium { background: #fff9c4; color: #f57f17; }
+    .evidence-low    { background: #ffcdd2; color: var(--danger); }
+
+    .evidence-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-left: 5px;
+    }
+
+    .evidence-a { background: #dcfce7; color: #166534; }
+    .evidence-b { background: #dbeafe; color: #1e40af; }
+    .evidence-c { background: #fef3c7; color: #92400e; }
+    .evidence-d { background: #fee2e2; color: #991b1b; }
+
+    /* Calculation Box */
+    .calc-box {
+      background: var(--bg-alt);
+      padding: 16px;
+      border-radius: 4px;
+      font-family: "SF Mono", Monaco, monospace;
+      font-size: 13px;
+      margin: 12px 0;
+    }
+
+    .calc-box h4 {
+      font-family: -apple-system, sans-serif;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    /* Drug Comparison Row */
+    .drug-row {
+      display: grid;
+      grid-template-columns: 140px repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      margin-bottom: 16px;
+    }
+
+    .drug-row > div {
+      background: var(--bg);
+      padding: 10px;
+      font-size: 13px;
+    }
+
+    .drug-row .drug-name {
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+    }
+
+    /* Warning Box */
+    .warning-box {
+      background: #fef2f2;
+      border-left: 4px solid var(--danger);
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .warning-box strong {
+      color: var(--danger);
+    }
+
+    /* Info Box */
+    .info-box {
+      background: var(--bg-alt);
+      border-left: 4px solid var(--primary);
+      padding: 15px 20px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    /* Utility Classes */
+    .highlight { background: #fff9c4; padding: 0 2px; }
+    .text-danger { color: var(--danger); }
+    .text-success { color: var(--success); }
+    .text-warning { color: var(--warning); }
+
+    /* Reference Links */
+    .reference {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .reference:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    /* Footer */
+    footer {
+      padding: 16px 32px;
+      background: var(--bg-alt);
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-light);
+    }
+
+    /* Print Styles */
+    @media print {
+      body { background: white; padding: 0; }
+      .container { box-shadow: none; }
+      .section { page-break-inside: avoid; }
+      .ref-tooltip .ref-text { display: none; }
+    }
+
+    /* Content Area */
+    .content {
+      padding: 24px 32px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <header>
+      <h1>虚拟分子肿瘤委员会会诊报告</h1>
+      <div class="header-meta">
+        <div>vMTB Consultation Report</div>
+        <div>患者编号: Unknown</div>
+        <div>肿瘤类型: 乙状结肠中分化腺癌</div>
+        <div>报告日期: 2026-01-20 19:56:30</div>
+      </div>
+    </header>
+
+    <!-- Report Content -->
+    <div class="content">
+      <p>这里是基于您提供的专家报告汇总生成的最终 MTB 报告。</p>
+<hr />
+<h1>分子肿瘤专家委员会 (MTB) 综合报告</h1>
+<h2>1. 执行摘要 (Executive Summary)</h2>
+<div class="exec-summary"><h3>执行摘要</h3><ul><li><strong>患者:</strong> 70岁男性，乙状结肠中分化腺癌 IV期 (ypT4aN2aM1)</li><li><strong>关键分子特征:</strong> KRAS G12C (11.5%), ATM (胚系), TMB-High (79 mut/MB), MSS</li><li><strong>当前治疗:</strong> 氟泽雷赛 + 西妥昔单抗 (2025.10起，五线治疗)</li><li><strong>核心建议:</strong> 继续当前方案，需密切监测肾功能及药物相互作用；后线首选减量TAS-102联合方案。</li><li><strong>紧急程度:</strong> 常规 (但在肾功能监测上需紧急关注)</li></ul></div>
+
+<p><strong>摘要</strong>:<br />
+患者为70岁男性，IV期乙状结肠癌，携带罕见的 <strong>KRAS G12C</strong> 突变及 <strong>ATM 胚系突变</strong>。尽管为 MSS 型，但 TMB 极高 (79 mut/MB)。既往经历了四线治疗（含化疗、贝伐珠单抗、免疫、mRNA疫苗），且对呋喹替尼有严重肾毒性反应（肌酐 146 μmol/L，eGFR ~40 mL/min）。目前正在接受五线 <strong>氟泽雷赛+西妥昔单抗</strong> 治疗。MTB 建议继续当前方案，这是目前证据等级最高的选择 <span class="ref-tooltip">
+              <a class="cite" href="https://pubmed.ncbi.nlm.nih.gov/37870968/" target="_blank">[T1]</a>
+              <span class="ref-text">CodeBreaK 300: PFS获益显著</span>
+            </span> <span class="evidence-tag evidence-a">Evidence A</span>。鉴于肾功能受损，后续治疗需严格避免肾毒性药物，优先考虑减量的 TAS-102 联合方案或针对 ATM 的 PARP 抑制剂试验。</p>
+<hr />
+<h2>2. 患者概况 (Patient Profile)</h2>
+<h3>Demographics</h3>
+<ul>
+<li><strong>Age</strong>: 70 years</li>
+<li><strong>Sex</strong>: Male</li>
+<li><strong>ECOG PS</strong>: 1</li>
+<li><strong>Height/Weight</strong>: 165cm / 66kg</li>
+</ul>
+<h3>Cancer Diagnosis</h3>
+<ul>
+<li><strong>Primary Cancer</strong>: 乙状结肠恶性肿瘤</li>
+<li><strong>Histology</strong>: 中分化腺癌 (Moderately differentiated Adenocarcinoma)</li>
+<li><strong>Stage</strong>: IV期 (ypT4aN2aM1)</li>
+<li><strong>Metastatic Sites</strong>: 双肺多发转移 (最大 2.1×1.5cm)，肝脏 (既往已切除)</li>
+<li><strong>Current Status</strong>: 五线治疗中，疗效待评估</li>
+</ul>
+<h3>Comorbidities &amp; Organ Function</h3>
+<ul>
+<li><strong>Renal</strong>: <strong>慢性肾功能不全</strong> (Cr 146 μmol/L, eGFR ~40 mL/min)，既往 TKI 相关急性肾损伤。</li>
+<li><strong>Cardiac</strong>: 心脏支架植入史，高血压。</li>
+<li><strong>Metabolic</strong>: 糖尿病。</li>
+</ul>
+<hr />
+<h2>3. 分子特征 (Molecular Profile)</h2>
+<h3>3.1 主要驱动突变</h3>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>Variant</th>
+<th>Type</th>
+<th>VAF</th>
+<th>Frequency (cBioPortal)</th>
+<th>CIViC Level</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>KRAS</strong></td>
+<td><strong>G12C</strong></td>
+<td>Missense</td>
+<td>11.5%</td>
+<td>3-4% in CRC <span class="ref-tooltip">
+              <a class="cite" href="https://pubmed.ncbi.nlm.nih.gov/38052910" target="_blank">[C1</td>
+<td>cBioPortal</td>
+<td>https://www.cbioportal.org</td>
+</tr>
+<tr>
+<td><strong>ATM</strong></td>
+<td><strong>Germline</strong></td>
+<td>Truncating</td>
+<td>-</td>
+<td>5-7% in CRC</td>
+<td>Level C</td>
+<td><span class="evidence-tag evidence-c">Evidence C</span></td>
+</tr>
+</tbody>
+</table>
+<p><strong>临床意义解读</strong>:<br />
+- <strong>KRAS G12C</strong>: 核心治疗靶点。在 CRC 中，G12C 抑制剂单药会导致 EGFR 反馈性激活，必须联合抗 EGFR 抗体（如西妥昔单抗）使用 [[ref:P1]</a>
+              <span class="ref-text">Nature Medicine: Divarasib+Cetuximab</span>
+            </span>。<br />
+- <strong>ATM (胚系)</strong>: 提示同源重组修复缺陷 (HRD) 潜力，可能对 PARP 抑制剂或铂类敏感。</p>
+<h3>3.2 免疫治疗标志物</h3>
+<ul>
+<li><strong>MSI/MMR 状态</strong>: <strong>MSS / pMMR</strong> (微卫星稳定)</li>
+<li><strong>TMB</strong>: <strong>79 mut/Mb (High)</strong><ul>
+<li><em>注</em>: MSS 型结直肠癌出现如此高的 TMB 极罕见，可能与 POLE/POLD1 突变或既往化疗诱导有关。解释了患者既往对免疫联合治疗曾有短暂获益 (SD)。</li>
+</ul>
+</li>
+<li><strong>PD-L1</strong>: CPS = 3 (22C3)</li>
+<li><strong>HER2</strong>: 0 (阴性)</li>
+</ul>
+<h3>3.3 Co-Alterations</h3>
+<ul>
+<li><strong>EGFR</strong>: IHC 2+ (过表达，非扩增，提示抗 EGFR 抗体结合位点存在)</li>
+<li><strong>Ki-67</strong>: +5% (注：此为术后残留病灶数据，不代表当前高负荷转移灶的增殖活性)</li>
+</ul>
+<hr />
+<h2>4. 治疗史回顾 (Treatment History)</h2>
+<div class="treatment-timeline"><p>- line: 1线
+  date: 2022.08-2022.12
+  regimen: 奥沙利铂+卡培他滨+贝伐珠单抗
+  response: PR
+  type: neoadjuvant
+  note: 新辅助化疗，共5程
+
+- line: 1线
+  date: 2023.01
+  regimen: 根治性手术
+  response: TRG2
+  type: surgery
+  note: 切除原发灶+肝转移+淋巴结清扫 (5/19 阳性)
+
+- line: 1线
+  date: 2023.03-2023.05
+  regimen: 奥沙利铂+卡培他滨
+  response: -
+  type: adjuvant
+  note: 术后辅助化疗，3程
+
+- line: 1线
+  date: 2023.05-2023.08
+  regimen: 卡培他滨单药
+  response: -
+  type: maint
+  note: 维持治疗
+
+- line: 2线
+  date: 2023.08-2024.01
+  regimen: 伊立替康+亚叶酸钙+5-FU+贝伐珠单抗
+  response: SD
+  type: pd
+  note: 因CEA升高、肺结节增大换方案
+
+- line: 2线
+  date: 2024.02-2024.06
+  regimen: 卡培他滨单药
+  response: -
+  type: maint
+  note: 维持治疗
+
+- line: 3线
+  date: 2024.07
+  regimen: 呋喹替尼+信迪利单抗
+  response: -
+  type: event
+  note: 严重不良反应：急性肾损伤+肢体水肿
+
+- line: 3线
+  date: 2024.09
+  regimen: 雷替曲塞+信迪利单抗
+  response: -
+  type: event
+  note: 出现发热（疑似感染）
+
+- line: 3线
+  date: 2024.10-2025.02
+  regimen: 雷替曲塞+信迪利单抗
+  response: SD
+  type: pd
+  note: 病情暂时控制，CEA降低至17.2
+
+- line: 4线
+  date: 2025.02-2025.10
+  regimen: 信迪利单抗+抗肿瘤新抗原mRNA疫苗
+  response: PD
+  type: pd
+  note: 含KRAS G12C新抗原；副作用发热、II度血小板减少；肺转移增大
+
+- line: 5线
+  date: 2025.10-今
+  regimen: 氟泽雷赛+西妥昔单抗
+  response: 待评估
+  type: current
+  note: 当前治疗</p></div>
+
+<p><strong>Key Observations</strong>:<br />
+- <strong>铂类敏感</strong>: 一线治疗获 PR，可能与 ATM 突变有关。<br />
+- <strong>肾毒性高危</strong>: 呋喹替尼导致严重肾损伤，限制了后续 TKI 的使用。<br />
+- <strong>免疫获益有限</strong>: 多次免疫联合治疗最佳疗效为 SD，符合 MSS/TMB-H 特征。</p>
+<hr />
+<h2>5. 药物/方案对比 (Regimen Comparison)</h2>
+<h3>5.1 方案对比表</h3>
+<table>
+<thead>
+<tr>
+<th>Regimen</th>
+<th>Evidence Level</th>
+<th>具体给药剂量</th>
+<th>肾功能调整 (eGFR ~40)</th>
+<th>ORR</th>
+<th>mPFS</th>
+<th>Key Toxicities</th>
+<th>Access</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>氟泽雷赛+西妥昔单抗</strong></td>
+<td><strong>[A]</strong></td>
+<td>氟泽雷赛 600mg BID<br>西妥昔 500mg/m² Q2W</td>
+<td>无需调整<br>(需防脱水)</td>
+<td>~26%</td>
+<td>5.6m</td>
+<td>皮疹, 低镁血症</td>
+<td>赠药/自费</td>
+</tr>
+<tr>
+<td><strong>TAS-102+贝伐珠单抗</strong></td>
+<td><strong>[A]</strong></td>
+<td>TAS-102 <strong>20mg/m²</strong> BID<br>贝伐 5mg/kg Q2W</td>
+<td><strong>减量至20mg/m²</strong><br>(标准35mg/m²)</td>
+<td>~6-10%</td>
+<td>5-6m</td>
+<td>骨髓抑制, 乏力</td>
+<td>医保</td>
+</tr>
+<tr>
+<td><strong>奥拉帕利 (PARP)</strong></td>
+<td><strong>[C]</strong></td>
+<td>200mg BID</td>
+<td><strong>减量至200mg</strong><br>(标准300mg)</td>
+<td>~10-20%</td>
+<td>N/A</td>
+<td>贫血, 恶心</td>
+<td>自费/超适应症</td>
+</tr>
+</tbody>
+</table>
+<h3>5.2 各方案详细说明</h3>
+<h4>方案 1: 氟泽雷赛 (Fulzerasib) + 西妥昔单抗 (Cetuximab)</h4>
+<p><strong>证据级别</strong>: <span class="evidence-tag evidence-a">Evidence A</span> (基于 CodeBreaK 300 研究 <span class="ref-tooltip">
+              <a class="cite" href="https://clinicaltrials.gov/study/NCT04793958" target="_blank">[T2]</a>
+              <span class="ref-text">NCT04793958: Sotorasib+Panitumumab</span>
+            </span>)<br />
+<strong>治疗定位</strong>: 五线挽救治疗 (当前方案)</p>
+<p><strong>给药方案</strong>:<br />
+- <strong>氟泽雷赛</strong>: 600 mg 口服 BID，连续服用。<br />
+- <strong>西妥昔单抗</strong>: 500 mg/m² 静脉输注，每 2 周一次。</p>
+<p><strong>器官功能调整</strong>:<br />
+- <strong>肾功能</strong>: 该组合主要经肝代谢或蛋白水解，对 eGFR 40 mL/min 患者相对安全。无需调整起始剂量，但需严防腹泻导致的肾前性肾衰。</p>
+<p><strong>科学依据</strong>:<br />
+KRAS G12C 突变在 CRC 中会导致 EGFR 信号通路的反馈性激活。单独抑制 KRAS G12C 疗效有限（ORR &lt;10%）。联合 EGFR 单抗可阻断反馈回路，显著提升疗效（ORR ~26-30%）。</p>
+<h4>方案 2: TAS-102 + 贝伐珠单抗</h4>
+<p><strong>证据级别</strong>: <span class="evidence-tag evidence-a">Evidence A</span> (SUNLIGHT 研究 <span class="ref-tooltip">
+              <a class="cite" href="https://pubmed.ncbi.nlm.nih.gov/37133585/" target="_blank">[P2]</a>
+              <span class="ref-text">PMID: 37133585: OS benefit</span>
+            </span>)<br />
+<strong>治疗定位</strong>: 后线标准治疗</p>
+<p><strong>给药方案</strong>:<br />
+- <strong>TAS-102</strong>: <strong>20 mg/m²</strong> 口服 BID，d1-5, d8-12，每 28 天一周期。<br />
+- <strong>贝伐珠单抗</strong>: 5 mg/kg 静脉输注，每 2 周一次。</p>
+<p><strong>器官功能调整</strong>:<br />
+- <strong>CrCl 30-49 mL/min</strong>: <strong>必须减量</strong>。标准剂量为 35 mg/m²，肾损患者推荐起始剂量 20 mg/m² <span class="ref-tooltip">
+              <a class="cite" href="https://www.accessdata.fda.gov/drugsatfda_docs/label/2023/207981s012lbl.pdf" target="_blank">[FDA]</a>
+              <span class="ref-text">LONSURF Label: Dose Adjustment</span>
+            </span>。</p>
+<h3>5.3 禁用方案及原因</h3>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>禁用原因</th>
+<th>证据来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>呋喹替尼 / 瑞戈非尼</strong></td>
+<td><strong>严重肾毒性风险</strong>。患者既往使用呋喹替尼发生 AKI，瑞戈非尼为同类药，交叉毒性风险极大。</td>
+<td>病史记录</td>
+</tr>
+<tr>
+<td><strong>顺铂 / 高剂量甲氨蝶呤</strong></td>
+<td><strong>绝对禁忌</strong>。eGFR &lt; 60 mL/min 禁用。</td>
+<td>FDA 说明书</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>6. 器官功能与剂量 (Organ Function &amp; Dosing)</h2>
+<h3>6.1 当前器官功能</h3>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Parameter</th>
+<th>Value</th>
+<th>Normal Range</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Renal</strong></td>
+<td><strong>Creatinine</strong></td>
+<td><strong>146 μmol/L</strong></td>
+<td>57-97</td>
+<td><strong>⚠️ Impaired (G2)</strong></td>
+</tr>
+<tr>
+<td><strong>Renal</strong></td>
+<td><strong>eGFR</strong></td>
+<td><strong>~40 mL/min</strong></td>
+<td>&gt;90</td>
+<td><strong>⚠️ Moderate Decrease</strong></td>
+</tr>
+<tr>
+<td>Hepatic</td>
+<td>Liver Mets</td>
+<td>Resected</td>
+<td>-</td>
+<td>✓ Stable</td>
+</tr>
+<tr>
+<td>Cardiac</td>
+<td>History</td>
+<td>Stents</td>
+<td>-</td>
+<td>⚠️ Monitor LVEF</td>
+</tr>
+</tbody>
+</table>
+<h3>6.2 剂量调整（各药物）</h3>
+<table>
+<thead>
+<tr>
+<th>药物</th>
+<th>标准剂量</th>
+<th>当前患者推荐剂量</th>
+<th>调整依据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TAS-102</strong></td>
+<td>35 mg/m² BID</td>
+<td><strong>20 mg/m² BID</strong></td>
+<td>FDA Label: CrCl 30-49 mL/min</td>
+</tr>
+<tr>
+<td><strong>奥拉帕利</strong></td>
+<td>300 mg BID</td>
+<td><strong>200 mg BID</strong></td>
+<td>FDA Label: CrCl 31-50 mL/min</td>
+</tr>
+<tr>
+<td><strong>氟泽雷赛</strong></td>
+<td>600 mg BID</td>
+<td>600 mg BID</td>
+<td>主要经肝代谢，无需调整</td>
+</tr>
+</tbody>
+</table>
+<h3>6.3 药物相互作用 (Drug-Drug Interactions)</h3>
+<table>
+<thead>
+<tr>
+<th>当前用药</th>
+<th>风险等级</th>
+<th>相互作用机制</th>
+<th>处理建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>硝苯地平</strong></td>
+<td>⚠️ 高风险</td>
+<td>CYP3A4 诱导 (KRAS抑制剂)</td>
+<td>监测血压，可能需换用赖诺普利</td>
+</tr>
+<tr>
+<td><strong>阿托伐他汀</strong></td>
+<td>⚠️ 高风险</td>
+<td>CYP3A4 诱导</td>
+<td>监测血脂，建议换用瑞舒伐他汀</td>
+</tr>
+<tr>
+<td><strong>PPI (抑酸药)</strong></td>
+<td>❌ 禁忌</td>
+<td>pH 依赖性吸收</td>
+<td>避免使用，改用抗酸剂 (间隔4h)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>7. 治疗路线图 (Treatment Roadmap)</h2>
+<h3>7.1 当前推荐方案（详细）</h3>
+<h4>方案名称: 氟泽雷赛 + 西妥昔单抗</h4>
+<p><strong>证据等级</strong>: <span class="evidence-tag evidence-a">Evidence A</span><br />
+<strong>治疗定位</strong>: 五线治疗 (维持中)</p>
+<p><strong>科学依据</strong>:<br />
+针对 KRAS G12C 突变，联合抑制 KRAS 和 EGFR 可克服原发性耐药。CodeBreaK 300 研究显示，类似方案（Sotorasib+Panitumumab）相比标准治疗显著延长 PFS（5.6 vs 2.2 个月）。</p>
+<p><strong>给药方案</strong>:<br />
+- <strong>氟泽雷赛</strong>: 600 mg PO BID，持续给药。<br />
+- <strong>西妥昔单抗</strong>: 500 mg/m² IV Q2W。</p>
+<p><strong>毒性管理</strong>:<br />
+- <strong>皮肤毒性</strong>: 预防性使用米诺环素 100mg PO QD + 润肤霜。<br />
+- <strong>低镁血症</strong>: 每次输注前监测镁离子，必要时补镁。<br />
+- <strong>肾功能</strong>: 避免腹泻导致的脱水。若发生 ≥G2 腹泻，立即暂停并补液。</p>
+<p><strong>预期疗效</strong>:<br />
+- 预期 ORR: ~26%<br />
+- 预期 mPFS: ~5.6 个月</p>
+<h3>7.2 后线选择（详细排序）</h3>
+<table>
+<thead>
+<tr>
+<th>优先级</th>
+<th>方案</th>
+<th>证据等级</th>
+<th>适用条件</th>
+<th>关键数据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>TAS-102 + 贝伐珠单抗</strong></td>
+<td>[A]</td>
+<td>肾功能允许 (减量)</td>
+<td>mOS 10.8m</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>PARP 抑制剂 (奥拉帕利)</strong></td>
+<td>[C]</td>
+<td>ATM 胚系突变</td>
+<td>篮子试验获益</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>双免疫 (CTLA-4+PD-1)</strong></td>
+<td>[B]</td>
+<td>TMB-High 挽救</td>
+<td>需临床试验</td>
+</tr>
+</tbody>
+</table>
+<h3>7.3 治疗决策流程图</h3>
+<div class="card-grid"><div class="card"><p>- title: 当前方案 (五线)
+  status: current
+  regimen: 氟泽雷赛 + 西妥昔单抗
+  actions:
+    - 监测肾功能 (eGFR)
+    - 预防皮疹 (米诺环素)
+    - 监测药物相互作用 (血压/血脂)
+
+- title: 若有效 (PR/SD)
+  status: success
+  regimen: 维持治疗
+  actions:
+    - 每 6-8 周 CT 评估
+    - 持续至进展或毒性不耐受
+
+- title: 若进展 (PD)
+  status: danger
+  regimen: TAS-102 + 贝伐珠单抗
+  actions:
+    - **必须减量**: TAS-102 20mg/m²
+    - 考虑临床试验 (PARP抑制剂)
+    - 避免使用呋喹替尼/瑞戈非尼</p></div></div>
+
+<hr />
+<h2>8. 分子复查建议 (Re-biopsy / Liquid Biopsy)</h2>
+<p><strong>Timing</strong>: 疾病进展 (PD) 时。<br />
+<strong>Method</strong>: <strong>液体活检 (ctDNA)</strong>。<br />
+- 理由: 患者肺部多发转移，组织活检可能有风险；ctDNA 可全面反映异质性。<br />
+<strong>Panel</strong>: 广谱 NGS Panel (包含 KRAS, EGFR, MET, BRAF, PIK3CA)。<br />
+<strong>Target</strong>:<br />
+- <strong>获得性耐药突变</strong>: 如 KRAS Y96D/C, G12D/V (对 G12C 抑制剂耐药)。<br />
+- <strong>旁路激活</strong>: 如 MET 扩增 (可能需加用 MET 抑制剂)。</p>
+<hr />
+<h2>9. 临床试验推荐 (Clinical Trials)</h2>
+<p><strong>筛选原则</strong>: 必须考虑 <strong>eGFR ~40 mL/min</strong> 的限制。排除含呋喹替尼的试验。</p>
+<h3>推荐试验列表</h3>
+<h4>试验 1: <a href="https://clinicaltrials.gov/study/NCT06293014" class="reference" target="_blank">[NCT06293014]</a> - TAS-102 + Bevacizumab in mCRC</h4>
+<ul>
+<li><strong>NCT 编号</strong>: <a href="https://clinicaltrials.gov/study/NCT06293014">NCT06293014</a></li>
+<li><strong>试验名称</strong>: TAS-102 联合贝伐珠单抗治疗难治性结直肠癌</li>
+<li><strong>试验分期</strong>: Phase II</li>
+<li><strong>研究药物</strong>: <strong>TAS-102 + Bevacizumab</strong></li>
+<li><strong>研究中心</strong>: 郑州 (河南肿瘤医院) 等</li>
+<li><strong>匹配原因</strong>: 患者未用过 TAS-102，且该药允许肾损患者减量入组（需确认具体入组阈值）。</li>
+<li><strong>入组关键条件</strong>: 既往标准治疗失败；器官功能允许（通常 CrCl ≥ 30）。</li>
+</ul>
+<h4>试验 2: <a href="https://clinicaltrials.gov/study/NCT06764680" class="reference" target="_blank">[NCT06764680]</a> - TAS-102 + Sintilimab</h4>
+<ul>
+<li><strong>NCT 编号</strong>: <a href="https://clinicaltrials.gov/study/NCT06764680">NCT06764680</a></li>
+<li><strong>试验名称</strong>: 口服化疗联合免疫治疗晚期结直肠癌</li>
+<li><strong>试验分期</strong>: Phase II</li>
+<li><strong>研究药物</strong>: <strong>TAS-102 + 信迪利单抗</strong></li>
+<li><strong>研究中心</strong>: 广州 (中山大学肿瘤防治中心)</li>
+<li><strong>匹配原因</strong>: 结合了 TAS-102 的化疗作用和 TMB-High 的免疫潜在获益。</li>
+<li><strong>注意</strong>: 需确认是否接受既往 PD-1 治疗过的患者。</li>
+</ul>
+<h4>试验 3: <a href="https://clinicaltrials.gov/study/NCT05489211" class="reference" target="_blank">[NCT05489211]</a> - TROPION-PanTumor03</h4>
+<ul>
+<li><strong>NCT 编号</strong>: <a href="https://clinicaltrials.gov/study/NCT05489211">NCT05489211</a></li>
+<li><strong>试验名称</strong>: Dato-DXd (Trop-2 ADC) 泛瘤种篮子试验</li>
+<li><strong>试验分期</strong>: Phase II</li>
+<li><strong>研究药物</strong>: <strong>Datopotamab Deruxtecan (Dato-DXd)</strong></li>
+<li><strong>研究中心</strong>: 广州、重庆、杭州</li>
+<li><strong>匹配原因</strong>: ADC 药物在多线耐药 CRC 中显示潜力。</li>
+<li><strong>风险</strong>: 需严格确认肾功能要求（通常要求 CrCl ≥ 30 或 60）。</li>
+</ul>
+<h4>试验 4: <a href="https://clinicaltrials.gov/study/NCT05815290" class="reference" target="_blank">[NCT05815290]</a> - Cadonilimab in CRC</h4>
+<ul>
+<li><strong>NCT 编号</strong>: <a href="https://clinicaltrials.gov/study/NCT05815290">NCT05815290</a></li>
+<li><strong>试验名称</strong>: 卡度尼利单抗 (PD-1/CTLA-4) 治疗晚期结直肠癌</li>
+<li><strong>试验分期</strong>: Phase II</li>
+<li><strong>研究药物</strong>: <strong>Cadonilimab</strong></li>
+<li><strong>研究中心</strong>: 北京 (医科院肿瘤医院)</li>
+<li><strong>匹配原因</strong>: 双免疫治疗可能克服 MSS/TMB-High 患者对单药 PD-1 的耐药。卡度尼利单抗无明显肾毒性。</li>
+</ul>
+<h4>试验 5: <a href="https://clinicaltrials.gov/study/NCT04793958" class="reference" target="_blank">[NCT04793958]</a> - CodeBreaK 300 (参考)</h4>
+<ul>
+<li><strong>NCT 编号</strong>: <a href="https://clinicaltrials.gov/study/NCT04793958">NCT04793958</a></li>
+<li><strong>试验名称</strong>: Sotorasib + Panitumumab vs Standard of Care</li>
+<li><strong>状态</strong>: Active (可能已停止招募，作为当前治疗的证据参考)</li>
+<li><strong>研究药物</strong>: Sotorasib + Panitumumab</li>
+</ul>
+<h3>试验选择注意事项</h3>
+<ul>
+<li><strong>排除条件</strong>: 严禁参加含 <strong>呋喹替尼 (Fruquintinib)</strong> 的试验（如 NCT06168786），因既往严重肾毒性。</li>
+<li><strong>优先考虑</strong>: 允许 CrCl 30-50 mL/min 的试验（通常为 TAS-102 相关或免疫类）。</li>
+</ul>
+<hr />
+<h2>10. 局部治疗建议 (Local Therapy)</h2>
+<p><strong>Indications</strong>:<br />
+- 目前双肺多发转移，且处于进展期，暂不适合根治性局部治疗。<br />
+- <strong>SBRT (立体定向放疗)</strong>: 若当前靶向治疗有效，且后续出现 <strong>寡进展 (Oligoprogression)</strong>（如仅 1-2 个肺结节增大），可考虑 SBRT 控制耐药病灶，延长药物使用时间。</p>
+<hr />
+<h2>11. 核心建议汇总 (Core Recommendations)</h2>
+<h3>Recommended Treatment Plan</h3>
+<ol>
+<li>
+<p><strong>Immediate (Current)</strong>: <strong>氟泽雷赛 (600mg BID) + 西妥昔单抗 (500mg/m² Q2W)</strong> - <strong><span class="evidence-tag evidence-a">Evidence A</span></strong></p>
+<ul>
+<li><strong>Rationale</strong>: 针对 KRAS G12C 的最佳循证方案。</li>
+<li><strong>Safety</strong>: 密切监测肾功能，预防皮疹，监测镁离子。</li>
+</ul>
+</li>
+<li>
+<p><strong>Next Line (Upon Progression)</strong>: <strong>TAS-102 (20mg/m² BID) + 贝伐珠单抗</strong> - <strong><span class="evidence-tag evidence-a">Evidence A</span></strong></p>
+<ul>
+<li><strong>Critical</strong>: 必须按肾功能减量（标准剂量的 60%）。</li>
+</ul>
+</li>
+<li>
+<p><strong>Alternative</strong>: <strong>PARP 抑制剂 (奥拉帕利)</strong> - <strong><span class="evidence-tag evidence-c">Evidence C</span></strong></p>
+<ul>
+<li>基于 ATM 胚系突变，可尝试超适应症使用或入组篮子试验。</li>
+</ul>
+</li>
+</ol>
+<h3>Not Recommended (Critical!)</h3>
+<p><strong>DO NOT USE</strong>:<br />
+1.  <strong>呋喹替尼 / 瑞戈非尼</strong>: <strong>[Evidence: Patient History]</strong> - 既往导致严重急性肾损伤 (AKI)，再次使用风险极高。<br />
+2.  <strong>西妥昔单抗单药</strong>: <strong><span class="evidence-tag evidence-a">Evidence A</span></strong> - KRAS G12C 突变原发耐药，无效。<br />
+3.  <strong>顺铂</strong>: <strong>[Evidence: FDA Label]</strong> - 肾功能不全禁忌。</p>
+<hr />
+<h2>12. 参考文献 (References)</h2>
+<ol>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/37870968/">PMID: 37870968 - CodeBreaK 300 Trial</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/37133585/">PMID: 37133585 - SUNLIGHT Trial (TAS-102+Bev)</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/38052910/">PMID: 38052910 - Divarasib + Cetuximab</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/37852034/">PMID: 37852034 - PARP Inhibitors in ATM mutated cancer</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/37318031/">PMID: 37318031 - TMB in MSS CRC</a></li>
+<li><a href="https://www.accessdata.fda.gov/drugsatfda_docs/label/2023/207981s012lbl.pdf">FDA Label - LONSURF (TAS-102)</a></li>
+<li><a href="https://clinicaltrials.gov/study/NCT06293014">NCT06293014 - TAS-102 Trial</a></li>
+<li><a href="https://www.cbioportal.org/study/summary?id=coadread_tcga">cBioPortal - Colorectal Cancer Data</a></li>
+<li><a href="https://www.nccn.org/guidelines">NCCN Guidelines for Colon Cancer v1.2025</a></li>
+</ol>
+
+      
+      <div class="warning-box">
+        <strong>⚠️ 安全警告</strong>
+        <ul>
+        
+          <li>| **Renal** | **Creatinine** | **146 μmol/L** | 57-97 | **⚠️ Impaired (G2)** |</li>
+        
+          <li>| **Renal** | **eGFR** | **~40 mL/min** | &gt;90 | **⚠️ Moderate Decrease** |</li>
+        
+          <li>| Cardiac | History | Stents | - | ⚠️ Monitor LVEF |</li>
+        
+          <li>| **硝苯地平** | ⚠️ 高风险 | CYP3A4 诱导 (KRAS抑制剂) | 监测血压，可能需换用赖诺普利 |</li>
+        
+          <li>| **阿托伐他汀** | ⚠️ 高风险 | CYP3A4 诱导 | 监测血脂，建议换用瑞舒伐他汀 |</li>
+        
+        </ul>
+      </div>
+      
+
+      
+      <h2>参考文献</h2>
+      <ol>
+      
+        <li>
+          <a href="https://clinicaltrials.gov/study/NCT06293014" class="reference" target="_blank">
+            [NCT: NCT06293014]
+          </a>
+        </li>
+      
+        <li>
+          <a href="https://clinicaltrials.gov/study/NCT06764680" class="reference" target="_blank">
+            [NCT: NCT06764680]
+          </a>
+        </li>
+      
+        <li>
+          <a href="https://clinicaltrials.gov/study/NCT05489211" class="reference" target="_blank">
+            [NCT: NCT05489211]
+          </a>
+        </li>
+      
+        <li>
+          <a href="https://clinicaltrials.gov/study/NCT05815290" class="reference" target="_blank">
+            [NCT: NCT05815290]
+          </a>
+        </li>
+      
+        <li>
+          <a href="https://clinicaltrials.gov/study/NCT04793958" class="reference" target="_blank">
+            [NCT: NCT04793958]
+          </a>
+        </li>
+      
+      </ol>
+      
+    </div>
+
+    <footer>
+      <p><strong>免责声明:</strong> 本报告仅供临床参考。具体治疗决策应由主治医师根据患者实际情况和最新临床证据综合判断。</p>
+      <p>虚拟分子肿瘤委员会会诊报告 | 生成日期: 2026-01-20 19:56:30</p>
+    </footer>
+
+  </div>
+</body>
+</html>

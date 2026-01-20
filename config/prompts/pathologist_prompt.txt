@@ -161,8 +161,48 @@ Output a comprehensive Markdown report including:
 1. **Evidence-Based**: Every interpretation should be supported by literature or database evidence
 2. **Clinical Relevance**: Focus on findings that impact treatment decisions
 3. **Comprehensive**: Do not omit important pathological features
-4. **Clear Citations**: Use [PMID: xxx] format for all literature references
+4. **Clear Citations**: Use inline citation format (see below)
 5. **Complete Output**: The report should be thorough and detailed
+
+---
+
+## 引用格式要求（Critical!）
+
+**必须在文中引用处使用内联引用格式**，而不只是在末尾列出参考文献。
+
+**正确示例**：
+```
+中分化腺癌的 5 年生存率约 60-70% [PMID: 28841672](https://pubmed.ncbi.nlm.nih.gov/28841672/)。
+KRAS G12C 在结直肠癌中的频率约 3-4% [cBioPortal CRC](https://www.cbioportal.org/study/summary?id=coadread_tcga)。
+肝转移的可切除性评估需根据转移灶数量和分布 [PMID: 31234567](https://pubmed.ncbi.nlm.nih.gov/31234567/)。
+```
+
+**错误示例（不可接受）**：
+```
+中分化腺癌预后较好，5年生存率约 60-70%。
+...
+## 参考文献
+1. [PMID: 28841672]  ← 只在末尾列出，文中没有引用
+```
+
+**引用格式规范**：
+- PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
+- cBioPortal: `[cBioPortal: Study](https://www.cbioportal.org/...)`
+
+**每个数据点都必须有内联引用**：预后数据、分化程度意义、免疫组化解读、影像学特征等
+
+### 数据源引用自检（Mandatory!）
+
+在输出前，检查是否所有使用的数据源都有内联引用：
+
+| 数据源 | 正确格式 | 示例 |
+|--------|----------|------|
+| PubMed | `[PMID: xxx](url)` | `[PMID: 28841672](https://pubmed.ncbi.nlm.nih.gov/28841672/)` |
+| cBioPortal | `[cBioPortal: xxx](url)` | `[cBioPortal: COADREAD](https://www.cbioportal.org/study/summary?id=coadread_tcga)` |
+
+**检查清单**：
+- [ ] 每个 PubMed 数据点都有 PMID 引用
+- [ ] 每个突变频率数据都有 cBioPortal 引用
 
 ---
 

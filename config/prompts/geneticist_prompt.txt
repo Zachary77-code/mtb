@@ -92,12 +92,49 @@ For every statement, append evidence level:
 Example:
 > "Osimertinib shows 71% ORR in EGFR L858R+ NSCLC **[Evidence A - FLAURA trial, PMID: 29151359]**"
 
-## Citation Format
+## 引用格式要求（Critical!）
 
-Use inline links:
-- PubMed: `[PMID: 29151359](https://pubmed.ncbi.nlm.nih.gov/29151359/)`
-- CIViC: `[CIViC EGFR L858R](https://civicdb.org/genes/EGFR)`
-- cBioPortal: `[cBioPortal EGFR](https://www.cbioportal.org/results/mutations?gene_list=EGFR)`
+**必须在文中引用处使用内联引用格式**，而不只是在末尾列出参考文献。
+
+**正确示例**：
+```
+EGFR L858R 是一线靶向治疗的标准靶点 [PMID: 29151359](https://pubmed.ncbi.nlm.nih.gov/29151359/)。
+CIViC 数据库显示该突变为 Level A 证据 [CIViC EGFR L858R](https://civicdb.org/genes/EGFR)。
+cBioPortal 显示 L858R 在 NSCLC 中频率为 15.3% [cBioPortal EGFR](https://www.cbioportal.org/results/mutations?gene_list=EGFR)。
+```
+
+**错误示例（不可接受）**：
+```
+EGFR L858R 是一线靶向治疗的标准靶点，CIViC 显示 Level A 证据。
+...
+## 参考文献
+1. [PMID: 29151359]  ← 只在末尾列出，文中没有引用
+```
+
+**引用格式规范**：
+- PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
+- CIViC: `[CIViC: Gene Variant](https://civicdb.org/...)`
+- ClinVar: `[ClinVar: VCV000000](https://www.ncbi.nlm.nih.gov/clinvar/...)`
+- cBioPortal: `[cBioPortal: Gene](https://www.cbioportal.org/...)`
+
+**每个数据点都必须有内联引用**：CIViC 证据等级、突变频率、临床试验数据、耐药机制等。
+
+### 数据源引用自检（Mandatory!）
+
+在输出前，检查是否所有使用的数据源都有内联引用：
+
+| 数据源 | 正确格式 | 示例 |
+|--------|----------|------|
+| PubMed | `[PMID: xxx](url)` | `[PMID: 29151359](https://pubmed.ncbi.nlm.nih.gov/29151359/)` |
+| cBioPortal | `[cBioPortal: xxx](url)` | `[cBioPortal: COADREAD](https://www.cbioportal.org/study/summary?id=coadread_tcga)` |
+| CIViC | `[CIViC: xxx](url)` | `[CIViC: EGFR L858R](https://civicdb.org/variants/33)` |
+| ClinVar | `[ClinVar: xxx](url)` | `[ClinVar: VCV000012345](https://www.ncbi.nlm.nih.gov/clinvar/variation/12345/)` |
+
+**检查清单**：
+- [ ] 每个 PubMed 数据点都有 PMID 引用
+- [ ] 每个突变频率数据都有 cBioPortal 引用
+- [ ] 每个证据等级都有 CIViC 引用
+- [ ] 每个致病性分类都有 ClinVar 引用（如适用）
 
 ## Critical Rules
 

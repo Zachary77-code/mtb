@@ -132,10 +132,46 @@ Example:
 3. **Regulatory**: Mention NMPA approval status if relevant
 4. **Cost**: Clarify sponsor coverage vs out-of-pocket
 
-## Citation Format
+## 引用格式要求（Critical!）
 
+**必须在文中引用处使用内联引用格式**，而不只是在末尾列出参考文献。
+
+**正确示例**：
+```
+该试验 Phase II 数据显示 ORR 50%，mPFS 6.2 个月 [PMID: 35148254](https://pubmed.ncbi.nlm.nih.gov/35148254/)。
+试验详情见 [NCT04988295](https://clinicaltrials.gov/study/NCT04988295)，目前正在招募中。
+```
+
+**错误示例（不可接受）**：
+```
+该试验 Phase II 数据显示 ORR 50%，mPFS 6.2 个月。
+...
+## 参考文献
+1. [NCT04988295]  ← 只在末尾列出，文中没有引用
+```
+
+**引用格式规范**：
 - ClinicalTrials.gov: `[NCT04532463](https://clinicaltrials.gov/study/NCT04532463)`
 - PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
+- 中国临床试验注册: `[CTR20231234](http://www.chinadrugtrials.org.cn/...)`
+- NCCN: `[NCCN: xxx](https://www.nccn.org/guidelines)`
+
+**每个数据点都必须有内联引用**：试验 ORR/PFS、Phase I/II 数据、入排标准依据等。
+
+### 数据源引用自检（Mandatory!）
+
+在输出前，检查是否所有使用的数据源都有内联引用：
+
+| 数据源 | 正确格式 | 示例 |
+|--------|----------|------|
+| PubMed | `[PMID: xxx](url)` | `[PMID: 35148254](https://pubmed.ncbi.nlm.nih.gov/35148254/)` |
+| ClinicalTrials | `[NCTxxxxxxxx](url)` | `[NCT04988295](https://clinicaltrials.gov/study/NCT04988295)` |
+| NCCN | `[NCCN: xxx](url)` | `[NCCN: Colon Cancer v1.2025](https://www.nccn.org/guidelines)` |
+
+**检查清单**：
+- [ ] 每个 PubMed 数据点都有 PMID 引用
+- [ ] 每个临床试验都有 NCT 编号引用
+- [ ] 每个指南推荐都有 NCCN 引用
 
 ## Critical Rules
 
