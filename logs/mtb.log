@@ -3877,3 +3877,102 @@ During task with name 'geneticist' and id 'b53271e7-002f-7126-f92b-077f6a5310c5'
 2026-01-20 15:17:53 | INFO     | src.graph.nodes:webpage_generator_node:442 | [HTML] 报告已保存: D:\MTB\reports\20260120_151139_unknown\6_final_report.html
 2026-01-20 15:17:53 | INFO     | __main__:main:81 | 报告生成成功: D:\MTB\reports\20260120_151139_unknown\6_final_report.html
 2026-01-20 15:17:53 | INFO     | __main__:main:82 | 执行时间: 373.53秒
+2026-01-20 16:07:57 | INFO     | __main__:main:35 | ============================================================
+2026-01-20 16:07:57 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-20 16:07:57 | INFO     | __main__:main:37 | ============================================================
+2026-01-20 16:07:57 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-20 16:07:57 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/test_report.pdf
+2026-01-20 16:07:57 | INFO     | __main__:main:52 | 病例文本长度: 1243 字符
+2026-01-20 16:07:57 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-20 16:07:57 | INFO     | src.graph.mtb_subgraph:create_mtb_subgraph:83 | [MTB_SUBGRAPH] 子图构建完成
+2026-01-20 16:07:57 | INFO     | src.graph.nodes:pdf_parser_node:83 | [PDF_PARSER] 开始解析 PDF 文本...
+2026-01-20 16:07:57 | INFO     | src.graph.nodes:pdf_parser_node:86 | [PDF_PARSER] 原始文本长度: 1243 字符
+2026-01-20 16:07:57 | INFO     | src.graph.nodes:_create_run_folder:35 | [RUN_FOLDER] 创建报告文件夹: D:\MTB\reports\20260120_160757_unknown
+2026-01-20 16:07:57 | INFO     | src.graph.mtb_subgraph:fan_out_to_specialists:34 | [MTB_SUBGRAPH] Fan-out: 分发到并行专家节点...
+2026-01-20 16:07:57 | INFO     | src.graph.nodes:pathologist_node:133 | [PATHOLOGIST] 开始病理学分析...
+2026-01-20 16:07:57 | INFO     | src.graph.nodes:geneticist_node:172 | [GENETICIST] 开始分子分析...
+2026-01-20 16:07:57 | INFO     | src.graph.nodes:recruiter_node:211 | [RECRUITER] 开始搜索临床试验...
+2026-01-20 16:07:57 | INFO     | src.agents.base_agent:invoke:214 | [Geneticist] 开始处理...
+2026-01-20 16:07:57 | INFO     | src.agents.base_agent:invoke:214 | [Pathologist] 开始处理...
+2026-01-20 16:07:57 | INFO     | src.agents.base_agent:invoke:214 | [Recruiter] 开始处理...
+2026-01-20 16:08:39 | INFO     | src.agents.base_agent:invoke:247 | [Geneticist] 检测到工具调用: 6 个
+2026-01-20 16:08:39 | INFO     | src.agents.base_agent:_handle_tool_calls:288 | [Geneticist] 工具调用轮次 1/5，调用数: 6
+2026-01-20 16:08:40 | INFO     | src.agents.base_agent:invoke:247 | [Pathologist] 检测到工具调用: 6 个
+2026-01-20 16:08:40 | INFO     | src.agents.base_agent:_handle_tool_calls:288 | [Pathologist] 工具调用轮次 1/5，调用数: 6
+2026-01-20 16:08:40 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_civic] API 调用成功
+2026-01-20 16:08:41 | ERROR    | src.tools.api_clients.ncbi_client:_fetch_clinvar_details:272 | [NCBI] ClinVar 详情获取失败: 429 Client Error: Too Many Requests for url: https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=clinvar&id=4681183%2C4618818%2C4618782%2C4618773%2C4618765%2C4618744%2C4618684%2C4618677%2C4618675%2C4618668%2C4618634%2C4618626%2C4618595%2C4618588%2C4618561%2C4618545%2C4618517%2C4618489%2C4618481%2C4618475&rettype=vcv&retmode=xml
+2026-01-20 16:08:41 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinvar] API 调用成功
+2026-01-20 16:08:42 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 16:08:43 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 16:08:43 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 16:08:44 | INFO     | src.tools.api_clients.ncbi_client:search_pubmed:85 | [NCBI] PubMed 无结果: Ki-67 5% colorectal cancer prognosis contradiction
+2026-01-20 16:08:44 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 16:08:44 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_cbioportal] API 调用成功
+2026-01-20 16:08:46 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 16:08:47 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_cbioportal] API 调用成功
+2026-01-20 16:08:47 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 16:08:48 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 16:08:48 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_cbioportal] API 调用成功
+2026-01-20 16:08:53 | INFO     | src.agents.base_agent:invoke:247 | [Recruiter] 检测到工具调用: 4 个
+2026-01-20 16:08:53 | INFO     | src.agents.base_agent:_handle_tool_calls:288 | [Recruiter] 工具调用轮次 1/5，调用数: 4
+2026-01-20 16:08:54 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 16:08:54 | INFO     | src.tools.api_clients.clinicaltrials_client:search_trials:85 | [CT.gov] 无匹配试验: Solid Tumor ATM
+2026-01-20 16:08:54 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 16:08:54 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 16:08:55 | INFO     | src.tools.rag.nccn_rag:initialize:37 | [NCCN-RAG] 初始化中...
+2026-01-20 16:08:55 | INFO     | src.tools.rag.vector_store:initialize:71 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-20 16:08:55 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化 DashScope Embedding: text-embedding-v4
+2026-01-20 16:08:56 | INFO     | src.tools.rag.vector_store:initialize:94 | [VectorStore] 初始化完成，现有文档数: 32622
+2026-01-20 16:08:56 | INFO     | src.tools.rag.nccn_rag:initialize:46 | [NCCN-RAG] 初始化完成
+2026-01-20 16:08:58 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_nccn] API 调用成功
+2026-01-20 16:09:43 | INFO     | src.agents.base_agent:_handle_tool_calls:358 | [Recruiter] 模型请求继续调用工具，进入下一轮
+2026-01-20 16:09:43 | INFO     | src.agents.base_agent:_handle_tool_calls:288 | [Recruiter] 工具调用轮次 2/5，调用数: 4
+2026-01-20 16:09:43 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 16:09:43 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 16:09:44 | INFO     | src.tools.api_clients.clinicaltrials_client:search_trials:85 | [CT.gov] 无匹配试验: Solid Tumor TMB
+2026-01-20 16:09:44 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 16:09:46 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 16:09:54 | INFO     | src.agents.base_agent:_handle_tool_calls:365 | [Pathologist] 工具调用完成，最终输出长度: 3686 字符
+2026-01-20 16:09:54 | INFO     | src.graph.nodes:pathologist_node:146 | [PATHOLOGIST] 完成，报告长度: 3686 字符，引用数: 0
+2026-01-20 16:09:54 | INFO     | src.graph.nodes:_save_markdown_report:66 | [SAVE_MD] 已保存: D:\MTB\reports\20260120_160757_unknown\1_pathologist_report.md
+2026-01-20 16:09:57 | INFO     | src.agents.base_agent:_handle_tool_calls:365 | [Geneticist] 工具调用完成，最终输出长度: 3653 字符
+2026-01-20 16:09:57 | INFO     | src.graph.nodes:geneticist_node:185 | [GENETICIST] 完成，报告长度: 3653 字符，引用数: 3
+2026-01-20 16:09:57 | INFO     | src.graph.nodes:_save_markdown_report:66 | [SAVE_MD] 已保存: D:\MTB\reports\20260120_160757_unknown\2_geneticist_report.md
+2026-01-20 16:11:18 | INFO     | src.agents.base_agent:_handle_tool_calls:365 | [Recruiter] 工具调用完成，最终输出长度: 3427 字符
+2026-01-20 16:11:18 | INFO     | src.graph.nodes:recruiter_node:224 | [RECRUITER] 完成，报告长度: 3427 字符，试验数: 5
+2026-01-20 16:11:18 | INFO     | src.graph.nodes:_save_markdown_report:66 | [SAVE_MD] 已保存: D:\MTB\reports\20260120_160757_unknown\3_recruiter_report.md
+2026-01-20 16:11:18 | INFO     | src.graph.nodes:oncologist_node:252 | [ONCOLOGIST] 开始制定治疗方案...
+2026-01-20 16:11:18 | INFO     | src.agents.base_agent:invoke:214 | [Oncologist] 开始处理...
+2026-01-20 16:11:56 | INFO     | src.agents.base_agent:invoke:247 | [Oncologist] 检测到工具调用: 8 个
+2026-01-20 16:11:56 | INFO     | src.agents.base_agent:_handle_tool_calls:288 | [Oncologist] 工具调用轮次 1/5，调用数: 8
+2026-01-20 16:11:59 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_nccn] API 调用成功
+2026-01-20 16:12:00 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_fda_labels] API 调用成功
+2026-01-20 16:12:00 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_fda_labels] API 调用成功
+2026-01-20 16:12:01 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_fda_labels] API 调用成功
+2026-01-20 16:12:01 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_fda_labels] API 调用成功
+2026-01-20 16:12:04 | ERROR    | src.tools.api_clients.rxnorm_client:get_drug_interactions:201 | [RxNorm] 查询相互作用失败: 404 Client Error: Not Found for url: https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=2550714
+2026-01-20 16:12:05 | ERROR    | src.tools.api_clients.rxnorm_client:check_interaction:259 | [RxNorm] 检查相互作用失败: 404 Client Error: Not Found for url: https://rxnav.nlm.nih.gov/REST/interaction/list.json?rxcuis=2550714%2B83367%2B7417%2B1488564%2B16681
+2026-01-20 16:12:07 | INFO     | src.tools.guideline_tools:_call_real_api:261 | [RxNormTool] RxNorm 无数据，使用 FDA 说明书补充
+2026-01-20 16:12:07 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_rxnorm] API 调用成功
+2026-01-20 16:12:09 | INFO     | src.tools.api_clients.ncbi_client:search_pubmed:85 | [NCBI] PubMed 无结果: Fulzerasib IBI351 renal impairment safety
+2026-01-20 16:12:09 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 16:12:10 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 16:12:56 | INFO     | src.agents.base_agent:_handle_tool_calls:365 | [Oncologist] 工具调用完成，最终输出长度: 3692 字符
+2026-01-20 16:12:56 | INFO     | src.graph.nodes:oncologist_node:280 | [ONCOLOGIST] 完成，方案长度: 3692 字符，安全警告: 5
+2026-01-20 16:12:56 | INFO     | src.graph.nodes:_save_markdown_report:66 | [SAVE_MD] 已保存: D:\MTB\reports\20260120_160757_unknown\4_oncologist_report.md
+2026-01-20 16:12:56 | WARNING  | src.graph.nodes:oncologist_node:291 | [ONCOLOGIST] 安全警告: ['## 4. 不建议的治疗 (Negative List)', '1.  **❌ 呋喹替尼 / 瑞戈非尼**:', '2.  **❌ 免疫单药 (PD-1/PD-L1)**:', '3.  **❌ 顺铂 (Cisplatin)**:', '*   **原因**: 强肾毒性，绝对禁忌用于 eGFR < 60 的患者。']
+2026-01-20 16:12:56 | INFO     | src.graph.nodes:chair_node:318 | [CHAIR] 开始汇总整合所有报告...
+2026-01-20 16:12:56 | INFO     | src.graph.nodes:chair_node:330 | [CHAIR] 输入总量: 15701 字符
+2026-01-20 16:12:56 | INFO     | src.agents.base_agent:invoke:214 | [Chair] 开始处理...
+2026-01-20 16:14:11 | INFO     | src.agents.base_agent:invoke:252 | [Chair] 完成，输出长度: 11132 字符
+2026-01-20 16:14:11 | INFO     | src.graph.nodes:chair_node:355 | [CHAIR] 完成，综合报告长度: 11132 字符，引用数: 0
+2026-01-20 16:14:11 | INFO     | src.graph.nodes:_save_markdown_report:66 | [SAVE_MD] 已保存: D:\MTB\reports\20260120_160757_unknown\5_chair_final_report.md
+2026-01-20 16:14:11 | INFO     | src.graph.nodes:format_verification_node:381 | [VERIFY] 开始格式验证...
+2026-01-20 16:14:11 | INFO     | src.validators.format_checker:validate:67 | [FORMAT] 全部 12 个模块验证通过
+2026-01-20 16:14:11 | INFO     | src.graph.nodes:format_verification_node:400 | [VERIFY] 格式验证通过，包含全部 12 个必选模块
+2026-01-20 16:14:11 | INFO     | src.graph.edges:should_retry_chair:26 | [EDGE] 条件判断: compliant=True, iteration=1/2
+2026-01-20 16:14:11 | INFO     | src.graph.edges:should_retry_chair:30 | [EDGE] 决策: proceed (验证通过)
+2026-01-20 16:14:11 | INFO     | src.graph.nodes:webpage_generator_node:421 | [HTML] 开始生成 HTML 报告...
+2026-01-20 16:14:11 | INFO     | src.graph.nodes:webpage_generator_node:442 | [HTML] 报告已保存: D:\MTB\reports\20260120_160757_unknown\6_final_report.html
+2026-01-20 16:14:11 | INFO     | __main__:main:81 | 报告生成成功: D:\MTB\reports\20260120_160757_unknown\6_final_report.html
+2026-01-20 16:14:11 | INFO     | __main__:main:82 | 执行时间: 374.48秒

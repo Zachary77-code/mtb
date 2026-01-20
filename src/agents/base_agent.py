@@ -442,6 +442,45 @@ class BaseAgent:
 
         return "\n".join(lines)
 
+    def _process_inline_references(self, content: str) -> str:
+        """
+        后处理内容，将 [PMID: xxxxx](url) 和 [NCTxxxxxxxx](url) 格式
+        转换为内联引用格式 [[n]](#ref-xxx)，并注册到 ReferenceManager
+
+        Args:
+            content: LLM 生成的原始内容
+
+        Returns:
+            处理后的内容，引用已转换为内联链接格式
+        """
+        if not content:
+            return content
+
+        # Pattern 1: [PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)
+        pmid_pattern = r'\[PMID:\s*(\d+)\]\((https?://[^\)]+)\)'
+
+        def replace_pmid(match):
+            pmid = match.group(1)
+            url = match.group(2)
+            return self.reference_manager.add_reference("PMID", pmid, url)
+
+        content = re.sub(pmid_pattern, replace_pmid, content)
+
+        # Pattern 2: [NCT12345678](https://clinicaltrials.gov/...)
+        nct_pattern = r'\[(NCT\d+)\]\((https?://[^\)]+)\)'
+
+        def replace_nct(match):
+            nct_id = match.group(1)
+            url = match.group(2)
+            return self.reference_manager.add_reference("NCT", nct_id, url)
+
+        content = re.sub(nct_pattern, replace_nct, content)
+
+        # Pattern 3: [[ref:ID|Title|URL|Note]] (Chair 的 tooltip 格式)
+        # 保留原样，不转换（HTML 渲染器会处理）
+
+        return content
+
     def generate_full_report(self, main_content: str, title: str = None) -> str:
         """
         生成完整的 Markdown 报告，包含主内容、工具调用详情和引用
@@ -463,14 +502,17 @@ class BaseAgent:
         # 主内容
         sections.append("## Analysis Output")
         sections.append("")
-        sections.append(main_content)
+
+        # 后处理：转换引用格式并注册到 ReferenceManager
+        processed_content = self._process_inline_references(main_content)
+        sections.append(processed_content)
 
         # 工具调用详情
         tool_report = self.get_tool_call_report()
         if tool_report:
             sections.append(tool_report)
 
-        # 引用章节
+        # 引用章节（带锚点）
         ref_section = self.reference_manager.generate_reference_section()
         if ref_section:
             sections.append(ref_section)
