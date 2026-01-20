@@ -94,7 +94,7 @@ class ClinicalTrialsTool(BaseTool):
             locations = trial.get("locations", [])
             eligibility = trial.get("eligibility_criteria", "")
 
-            output.append(f"### {i}. {nct_id} - {title[:80]}{'...' if len(title) > 80 else ''}\n")
+            output.append(f"### {i}. {nct_id} - {title}\n")
             output.append(f"**Phase**: {phase}")
             output.append(f"**状态**: {status}")
             output.append(f"**入组人数**: {enrollment} patients")
@@ -105,10 +105,9 @@ class ClinicalTrialsTool(BaseTool):
                 drug_list = [f"{intr.get('name', '')} ({intr.get('type', '')})" for intr in interventions[:3]]
                 output.append(f"**药物**: {', '.join(drug_list)}")
 
-            # 入选标准 (截取)
+            # 入选标准
             if eligibility:
-                eligibility_preview = eligibility[:400] + "..." if len(eligibility) > 400 else eligibility
-                output.append(f"\n**关键入组标准**:\n{eligibility_preview}")
+                output.append(f"\n**关键入组标准**:\n{eligibility}")
 
             # 中国中心
             if locations:

@@ -18,9 +18,20 @@ You **MUST** use these tools:
 - `search_rxnorm`: Query drug metabolism, CYP interactions, renal/hepatic adjustments
 - `search_pubmed`: Find safety data for dose modifications
 
+## Input
+
+You receive the following COMPLETE inputs (all untruncated):
+- **Raw PDF Text**: Full patient medical record
+- **Pathologist Report**: Complete pathology & imaging analysis
+- **Geneticist Report**: Complete molecular interpretation
+- **Recruiter Report**: Complete clinical trials matching
+
+**CRITICAL**: All inputs are provided in FULL - do not assume any truncation.
+
 ## Input Review Checklist
 
 Before making recommendations, confirm you have:
+- [ ] Pathologist's key findings (histology, IHC, imaging)
 - [ ] Geneticist's actionable alterations (CIViC evidence levels)
 - [ ] Recruiter's eligible trials
 - [ ] Patient's organ function (eGFR, liver enzymes, ECOG PS, etc.)

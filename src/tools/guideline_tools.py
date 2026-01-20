@@ -130,59 +130,49 @@ class FDALabelTool(BaseTool):
         indications = label.get("indications", "")
         if indications:
             output.append("### 适应症")
-            output.append(indications[:800])
-            if len(indications) > 800:
-                output.append("...(截断)")
+            output.append(indications)
             output.append("")
 
         # 剂量
         dosage = label.get("dosage", "")
         if dosage:
             output.append("### 剂量与用法")
-            output.append(dosage[:800])
-            if len(dosage) > 800:
-                output.append("...(截断)")
+            output.append(dosage)
             output.append("")
 
         # 黑框警告
         boxed = label.get("boxed_warning", "")
         if boxed:
             output.append("### ⚠️ 黑框警告")
-            output.append(boxed[:500])
+            output.append(boxed)
             output.append("")
 
         # 警告
         warnings = label.get("warnings", "")
         if warnings:
             output.append("### 警告与注意事项")
-            output.append(warnings[:600])
-            if len(warnings) > 600:
-                output.append("...(截断)")
+            output.append(warnings)
             output.append("")
 
         # 禁忌症
         contraindications = label.get("contraindications", "")
         if contraindications:
             output.append("### 禁忌症")
-            output.append(contraindications[:400])
+            output.append(contraindications)
             output.append("")
 
         # 药物相互作用
         interactions = label.get("drug_interactions", "")
         if interactions:
             output.append("### 药物相互作用")
-            output.append(interactions[:500])
-            if len(interactions) > 500:
-                output.append("...(截断)")
+            output.append(interactions)
             output.append("")
 
         # 不良反应
         adverse = label.get("adverse_reactions", "")
         if adverse:
             output.append("### 不良反应")
-            output.append(adverse[:500])
-            if len(adverse) > 500:
-                output.append("...(截断)")
+            output.append(adverse)
 
         output.append(f"\n**参考**: https://labels.fda.gov (搜索 {generic_name})")
 
@@ -306,17 +296,13 @@ class RxNormTool(BaseTool):
 
                 output.append(f"**{i}. {drugs}**")
                 output.append(f"- 严重程度: {severity}")
-                output.append(f"- 说明: {description[:200]}{'...' if len(description) > 200 else ''}")
+                output.append(f"- 说明: {description}")
                 output.append("")
         elif fda_interactions:
             # 使用 FDA 说明书数据作为补充
             output.append("### 药物相互作用 (FDA 说明书)\n")
             output.append("*注: RxNorm 无数据，以下信息来自 FDA 药品说明书*\n")
-            # 限制长度并格式化
-            fda_text = fda_interactions[:1500]
-            if len(fda_interactions) > 1500:
-                fda_text += "\n...(更多信息请查阅完整说明书)"
-            output.append(fda_text)
+            output.append(fda_interactions)
             output.append("")
         else:
             output.append("未找到药物相互作用记录。\n")

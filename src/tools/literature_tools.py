@@ -69,9 +69,7 @@ class PubMedTool(BaseTool):
             output.append(f"- **期刊**: {journal} ({year})")
 
             if abstract:
-                # 限制摘要长度
-                abstract_preview = abstract[:300] + "..." if len(abstract) > 300 else abstract
-                output.append(f"- **摘要**: {abstract_preview}")
+                output.append(f"- **摘要**: {abstract}")
 
             output.append(f"- **链接**: https://pubmed.ncbi.nlm.nih.gov/{pmid}/\n")
             output.append("---\n")
