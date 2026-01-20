@@ -16,6 +16,7 @@ from typing import Dict, Any, List
 import yaml
 from jinja2 import Environment, FileSystemLoader
 import markdown
+from loguru import logger
 
 from config.settings import REPORTS_DIR
 
@@ -291,19 +292,6 @@ class HtmlReportGenerator:
                 </ul>
             </div>
             {% endif %}
-
-            {% if references %}
-            <h2>参考文献</h2>
-            <ol>
-            {% for ref in references %}
-                <li>
-                    <a href="{{ ref.url }}" class="reference" target="_blank">
-                        [{{ ref.type }}: {{ ref.id }}]
-                    </a>
-                </li>
-            {% endfor %}
-            </ol>
-            {% endif %}
         </div>
 
         <div class="footer">
@@ -413,24 +401,27 @@ class HtmlReportGenerator:
     def _parse_custom_blocks(self, text: str) -> str:
         """解析自定义块标记为 HTML"""
         # 解析 :::exec-summary 块
+        # Fix: Make trailing newline before ::: optional with \n?
         text = re.sub(
-            r':::exec-summary\s*\n(.*?)\n:::',
+            r':::exec-summary\s*\n(.*?)\n?:::',
             lambda m: self._render_exec_summary(m.group(1)),
             text,
             flags=re.DOTALL
         )
 
         # 解析 :::timeline 块
+        # Fix: Make trailing newline before ::: optional with \n?
         text = re.sub(
-            r':::timeline\s*\n(.*?)\n:::',
+            r':::timeline\s*\n(.*?)\n?:::',
             lambda m: self._render_timeline(m.group(1)),
             text,
             flags=re.DOTALL
         )
 
         # 解析 :::roadmap 块
+        # Fix: Make trailing newline before ::: optional with \n?
         text = re.sub(
-            r':::roadmap\s*\n(.*?)\n:::',
+            r':::roadmap\s*\n(.*?)\n?:::',
             lambda m: self._render_roadmap(m.group(1)),
             text,
             flags=re.DOTALL
@@ -441,9 +432,13 @@ class HtmlReportGenerator:
     def _parse_yaml_content(self, content: str) -> Any:
         """安全解析 YAML 内容"""
         try:
-            return yaml.safe_load(content)
-        except Exception:
-            # 如果 YAML 解析失败，返回空
+            # Strip whitespace and parse
+            cleaned_content = content.strip()
+            result = yaml.safe_load(cleaned_content)
+            return result
+        except Exception as e:
+            # Log the actual error for debugging
+            logger.warning(f"YAML parsing failed: {e}\nContent preview: {content[:200]}")
             return None
 
     def _render_exec_summary(self, content: str) -> str:

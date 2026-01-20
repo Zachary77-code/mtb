@@ -4204,3 +4204,131 @@ During task with name 'geneticist' and id 'b53271e7-002f-7126-f92b-077f6a5310c5'
 2026-01-20 19:56:30 | INFO     | src.graph.nodes:webpage_generator_node:442 | [HTML] 报告已保存: D:\MTB\reports\20260120_194804_unknown\6_final_report.html
 2026-01-20 19:56:30 | INFO     | __main__:main:81 | 报告生成成功: D:\MTB\reports\20260120_194804_unknown\6_final_report.html
 2026-01-20 19:56:30 | INFO     | __main__:main:82 | 执行时间: 505.67秒
+2026-01-20 20:21:34 | INFO     | __main__:main:35 | ============================================================
+2026-01-20 20:21:34 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-20 20:21:34 | INFO     | __main__:main:37 | ============================================================
+2026-01-20 20:21:34 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-20 20:21:34 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/test_report.pdf
+2026-01-20 20:21:34 | INFO     | __main__:main:52 | 病例文本长度: 1243 字符
+2026-01-20 20:21:34 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-20 20:21:34 | INFO     | src.graph.mtb_subgraph:create_mtb_subgraph:83 | [MTB_SUBGRAPH] 子图构建完成
+2026-01-20 20:21:34 | INFO     | src.graph.nodes:pdf_parser_node:83 | [PDF_PARSER] 开始解析 PDF 文本...
+2026-01-20 20:21:34 | INFO     | src.graph.nodes:pdf_parser_node:86 | [PDF_PARSER] 原始文本长度: 1243 字符
+2026-01-20 20:21:34 | INFO     | src.graph.nodes:_create_run_folder:35 | [RUN_FOLDER] 创建报告文件夹: D:\MTB\reports\20260120_202134_unknown
+2026-01-20 20:21:34 | INFO     | src.graph.mtb_subgraph:fan_out_to_specialists:34 | [MTB_SUBGRAPH] Fan-out: 分发到并行专家节点...
+2026-01-20 20:21:34 | INFO     | src.graph.nodes:pathologist_node:133 | [PATHOLOGIST] 开始病理学分析...
+2026-01-20 20:21:34 | INFO     | src.graph.nodes:geneticist_node:172 | [GENETICIST] 开始分子分析...
+2026-01-20 20:21:34 | INFO     | src.graph.nodes:recruiter_node:211 | [RECRUITER] 开始搜索临床试验...
+2026-01-20 20:21:34 | INFO     | src.agents.base_agent:invoke:214 | [Pathologist] 开始处理...
+2026-01-20 20:21:34 | INFO     | src.agents.base_agent:invoke:214 | [Geneticist] 开始处理...
+2026-01-20 20:21:34 | INFO     | src.agents.base_agent:invoke:214 | [Recruiter] 开始处理...
+2026-01-20 20:22:07 | INFO     | src.agents.base_agent:invoke:247 | [Pathologist] 检测到工具调用: 5 个
+2026-01-20 20:22:07 | INFO     | src.agents.base_agent:_handle_tool_calls:288 | [Pathologist] 工具调用轮次 1/5，调用数: 5
+2026-01-20 20:22:09 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 20:22:11 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 20:22:12 | INFO     | src.agents.base_agent:invoke:247 | [Recruiter] 检测到工具调用: 4 个
+2026-01-20 20:22:12 | INFO     | src.agents.base_agent:_handle_tool_calls:288 | [Recruiter] 工具调用轮次 1/5，调用数: 4
+2026-01-20 20:22:13 | INFO     | src.tools.api_clients.clinicaltrials_client:search_trials:85 | [CT.gov] 无匹配试验: Colorectal Cancer KRAS G12C
+2026-01-20 20:22:13 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 20:22:13 | INFO     | src.tools.api_clients.clinicaltrials_client:search_trials:85 | [CT.gov] 无匹配试验: Solid Tumor ATM
+2026-01-20 20:22:13 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 20:22:13 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_cbioportal] API 调用成功
+2026-01-20 20:22:14 | INFO     | src.tools.rag.nccn_rag:initialize:37 | [NCCN-RAG] 初始化中...
+2026-01-20 20:22:14 | INFO     | src.tools.rag.vector_store:initialize:71 | [VectorStore] 初始化 ChromaDB: D:\MTB\data\nccn_vectors
+2026-01-20 20:22:14 | INFO     | src.tools.rag.vector_store:initialize:87 | [VectorStore] 初始化 DashScope Embedding: text-embedding-v4
+2026-01-20 20:22:14 | INFO     | src.agents.base_agent:invoke:247 | [Geneticist] 检测到工具调用: 5 个
+2026-01-20 20:22:14 | INFO     | src.agents.base_agent:_handle_tool_calls:288 | [Geneticist] 工具调用轮次 1/5，调用数: 5
+2026-01-20 20:22:14 | INFO     | src.tools.rag.vector_store:initialize:94 | [VectorStore] 初始化完成，现有文档数: 32622
+2026-01-20 20:22:14 | INFO     | src.tools.rag.nccn_rag:initialize:46 | [NCCN-RAG] 初始化完成
+2026-01-20 20:22:14 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 20:22:15 | INFO     | src.tools.api_clients.ncbi_client:search_pubmed:85 | [NCBI] PubMed 无结果: TMB-high MSS colorectal cancer POLE ATM
+2026-01-20 20:22:15 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 20:22:15 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_civic] API 调用成功
+2026-01-20 20:22:17 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_nccn] API 调用成功
+2026-01-20 20:22:18 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_cbioportal] API 调用成功
+2026-01-20 20:22:19 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 20:22:19 | INFO     | src.tools.api_clients.ncbi_client:search_pubmed:85 | [NCBI] PubMed 无结果: KRAS G12C colorectal cancer fulzerasib cetuximab IBI351
+2026-01-20 20:22:19 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 20:22:20 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 20:22:21 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 20:22:36 | INFO     | src.agents.base_agent:_handle_tool_calls:358 | [Geneticist] 模型请求继续调用工具，进入下一轮
+2026-01-20 20:22:36 | INFO     | src.agents.base_agent:_handle_tool_calls:288 | [Geneticist] 工具调用轮次 2/5，调用数: 4
+2026-01-20 20:22:38 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 20:22:38 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 20:22:39 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 20:22:40 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_civic] API 调用成功
+2026-01-20 20:23:06 | INFO     | src.agents.base_agent:_handle_tool_calls:365 | [Pathologist] 工具调用完成，最终输出长度: 4684 字符
+2026-01-20 20:23:06 | INFO     | src.graph.nodes:pathologist_node:146 | [PATHOLOGIST] 完成，报告长度: 4684 字符，引用数: 8
+2026-01-20 20:23:06 | INFO     | src.graph.nodes:_save_markdown_report:66 | [SAVE_MD] 已保存: D:\MTB\reports\20260120_202134_unknown\1_pathologist_report.md
+2026-01-20 20:23:06 | INFO     | src.agents.base_agent:_handle_tool_calls:358 | [Recruiter] 模型请求继续调用工具，进入下一轮
+2026-01-20 20:23:06 | INFO     | src.agents.base_agent:_handle_tool_calls:288 | [Recruiter] 工具调用轮次 2/5，调用数: 3
+2026-01-20 20:23:06 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 20:23:07 | INFO     | src.tools.api_clients.clinicaltrials_client:search_trials:85 | [CT.gov] 无匹配试验: Solid Tumor TMB
+2026-01-20 20:23:07 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 20:23:07 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 20:23:25 | INFO     | src.agents.base_agent:_handle_tool_calls:365 | [Geneticist] 工具调用完成，最终输出长度: 3703 字符
+2026-01-20 20:23:25 | INFO     | src.graph.nodes:geneticist_node:185 | [GENETICIST] 完成，报告长度: 3703 字符，引用数: 2
+2026-01-20 20:23:25 | INFO     | src.graph.nodes:_save_markdown_report:66 | [SAVE_MD] 已保存: D:\MTB\reports\20260120_202134_unknown\2_geneticist_report.md
+2026-01-20 20:23:49 | INFO     | src.agents.base_agent:_handle_tool_calls:358 | [Recruiter] 模型请求继续调用工具，进入下一轮
+2026-01-20 20:23:49 | INFO     | src.agents.base_agent:_handle_tool_calls:288 | [Recruiter] 工具调用轮次 3/5，调用数: 4
+2026-01-20 20:23:50 | INFO     | src.tools.api_clients.clinicaltrials_client:search_trials:85 | [CT.gov] 无匹配试验: Solid Tumor ATM
+2026-01-20 20:23:50 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 20:23:50 | INFO     | src.tools.api_clients.clinicaltrials_client:search_trials:85 | [CT.gov] 无匹配试验: Colorectal Cancer KRAS G12C
+2026-01-20 20:23:50 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 20:23:50 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 20:23:51 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-20 20:24:46 | INFO     | src.agents.base_agent:_handle_tool_calls:365 | [Recruiter] 工具调用完成，最终输出长度: 4367 字符
+2026-01-20 20:24:46 | INFO     | src.graph.nodes:recruiter_node:224 | [RECRUITER] 完成，报告长度: 4367 字符，试验数: 4
+2026-01-20 20:24:46 | INFO     | src.graph.nodes:_save_markdown_report:66 | [SAVE_MD] 已保存: D:\MTB\reports\20260120_202134_unknown\3_recruiter_report.md
+2026-01-20 20:24:46 | INFO     | src.graph.nodes:oncologist_node:252 | [ONCOLOGIST] 开始制定治疗方案...
+2026-01-20 20:24:46 | INFO     | src.agents.base_agent:invoke:214 | [Oncologist] 开始处理...
+2026-01-20 20:25:14 | INFO     | src.agents.base_agent:invoke:247 | [Oncologist] 检测到工具调用: 8 个
+2026-01-20 20:25:14 | INFO     | src.agents.base_agent:_handle_tool_calls:288 | [Oncologist] 工具调用轮次 1/5，调用数: 8
+2026-01-20 20:25:16 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_nccn] API 调用成功
+2026-01-20 20:25:18 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_fda_labels] API 调用成功
+2026-01-20 20:25:18 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_fda_labels] API 调用成功
+2026-01-20 20:25:18 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_fda_labels] API 调用成功
+2026-01-20 20:25:19 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_fda_labels] API 调用成功
+2026-01-20 20:25:21 | ERROR    | src.tools.api_clients.rxnorm_client:get_drug_interactions:201 | [RxNorm] 查询相互作用失败: 404 Client Error: Not Found for url: https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=2550714
+2026-01-20 20:25:23 | ERROR    | src.tools.api_clients.rxnorm_client:check_interaction:259 | [RxNorm] 检查相互作用失败: 404 Client Error: Not Found for url: https://rxnav.nlm.nih.gov/REST/interaction/list.json?rxcuis=2550714%2B83367%2B7417%2B1488564%2B16681
+2026-01-20 20:25:25 | INFO     | src.tools.guideline_tools:_call_real_api:261 | [RxNormTool] RxNorm 无数据，使用 FDA 说明书补充
+2026-01-20 20:25:25 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_rxnorm] API 调用成功
+2026-01-20 20:25:26 | INFO     | src.tools.api_clients.ncbi_client:search_pubmed:85 | [NCBI] PubMed 无结果: Fulzerasib IBI351 colorectal cancer renal safety
+2026-01-20 20:25:26 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 20:25:27 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-20 20:26:18 | INFO     | src.agents.base_agent:_handle_tool_calls:365 | [Oncologist] 工具调用完成，最终输出长度: 4896 字符
+2026-01-20 20:26:18 | INFO     | src.graph.nodes:oncologist_node:280 | [ONCOLOGIST] 完成，方案长度: 4896 字符，安全警告: 10
+2026-01-20 20:26:18 | INFO     | src.graph.nodes:_save_markdown_report:66 | [SAVE_MD] 已保存: D:\MTB\reports\20260120_202134_unknown\4_oncologist_report.md
+2026-01-20 20:26:18 | WARNING  | src.graph.nodes:oncologist_node:291 | [ONCOLOGIST] 安全警告: ['*   **⚠️ 关键安全管理 (肾功能优先)**:', '*   **避免脱水**: 确保每日饮水量，预防腹泻导致的血容量不足。', '| **他汀类 (阿托伐他汀)** | **⚠️ 肌肉毒性风险**<br>KRAS G12C 抑制剂 (如 Sotorasib) 可能是 CYP3A4 诱导剂，而 Adagrasib 是抑制剂。氟泽雷赛 (IBI351) 若为 CYP3A4 抑制剂，会显著增加阿托伐他汀血药浓度，导致横纹肌溶解风险。 | 建议暂时停用阿托伐他汀，或换用不经 CYP3A4 代谢的 **瑞舒伐他汀** (Rosuvastatin) 并从低剂量开始。 |', '| **降压药 (硝苯地平)** | **⚠️ 血压波动**<br>硝苯地平是 CYP3A4 底物。若氟泽雷赛影响 CYP3A4，可能导致低血压或血压控制不佳。 | 每日监测血压。若出现低血压，需调整降压药剂量。 |', '| **SGLT2 (达格列净)** | **⚠️ 肾功能/脱水**<br>达格列净具有利尿作用，可能加重腹泻引起的脱水，进而恶化肾功能。 | 若出现腹泻 (Grade ≥1)，立即暂停达格列净，直至腹泻缓解且水合状态恢复。 |', '| **PPI (质子泵抑制剂)** | **❌ 吸收受阻**<br>KRAS G12C 抑制剂通常依赖酸性环境吸收。 | 询问患者是否服用奥美拉唑等胃药。若必须服用，应间隔 4-10 小时 [FDA: Sotorasib Label](https://labels.fda.gov)。 |', '1.  **❌ 瑞戈非尼 (Regorafenib) / 再次使用呋喹替尼**:', '2.  **❌ 奥沙利铂/伊立替康再挑战**:', '3.  **❌ 单药免疫治疗**:', '*   **手段**: 胸部/腹部 **增强 MRI** (避免 CT 造影剂) + 癌胚抗原 (CEA)。']
+2026-01-20 20:26:18 | INFO     | src.graph.nodes:chair_node:318 | [CHAIR] 开始汇总整合所有报告...
+2026-01-20 20:26:18 | INFO     | src.graph.nodes:chair_node:343 | [CHAIR] 输入总量: 18893 字符, 上游引用: 14 条
+2026-01-20 20:26:18 | INFO     | src.agents.base_agent:invoke:214 | [Chair] 开始处理...
+2026-01-20 20:27:35 | INFO     | src.agents.base_agent:invoke:252 | [Chair] 完成，输出长度: 11417 字符
+2026-01-20 20:27:35 | INFO     | src.graph.nodes:chair_node:370 | [CHAIR] 完成，综合报告长度: 11417 字符，引用数: 10
+2026-01-20 20:27:35 | INFO     | src.graph.nodes:_save_markdown_report:66 | [SAVE_MD] 已保存: D:\MTB\reports\20260120_202134_unknown\5_chair_final_report.md
+2026-01-20 20:27:35 | INFO     | src.graph.nodes:format_verification_node:396 | [VERIFY] 开始格式验证...
+2026-01-20 20:27:35 | INFO     | src.validators.format_checker:validate:67 | [FORMAT] 全部 12 个模块验证通过
+2026-01-20 20:27:35 | INFO     | src.graph.nodes:format_verification_node:415 | [VERIFY] 格式验证通过，包含全部 12 个必选模块
+2026-01-20 20:27:35 | INFO     | src.graph.edges:should_retry_chair:26 | [EDGE] 条件判断: compliant=True, iteration=1/2
+2026-01-20 20:27:35 | INFO     | src.graph.edges:should_retry_chair:30 | [EDGE] 决策: proceed (验证通过)
+2026-01-20 20:27:35 | INFO     | src.graph.nodes:webpage_generator_node:436 | [HTML] 开始生成 HTML 报告...
+2026-01-20 20:27:35 | WARNING  | src.renderers.html_generator:_parse_yaml_content:441 | YAML parsing failed: sequence entries are not allowed here
+  in "<unicode string>", line 18, column 13:
+      response: -
+                ^
+Content preview: - line: 1线
+  date: 2022.08-2022.12
+  regimen: 奥沙利铂+卡培他滨+贝伐珠单抗
+  response: PR
+  type: neoadjuvant
+  note: 新辅助化疗，共5程
+
+- line: 1线
+  date: 2023.01
+  regimen: 根治性手术
+  response: TRG2
+  type: surgery
+  note:
+2026-01-20 20:27:35 | INFO     | src.graph.nodes:webpage_generator_node:457 | [HTML] 报告已保存: D:\MTB\reports\20260120_202134_unknown\6_final_report.html
+2026-01-20 20:27:35 | INFO     | __main__:main:81 | 报告生成成功: D:\MTB\reports\20260120_202134_unknown\6_final_report.html
+2026-01-20 20:27:35 | INFO     | __main__:main:82 | 执行时间: 360.51秒

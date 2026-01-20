@@ -511,19 +511,6 @@
         </ul>
       </div>
       {% endif %}
-
-      {% if references %}
-      <h2>参考文献</h2>
-      <ol>
-      {% for ref in references %}
-        <li>
-          <a href="{{ ref.url }}" class="reference" target="_blank">
-            [{{ ref.type }}: {{ ref.id }}]
-          </a>
-        </li>
-      {% endfor %}
-      </ol>
-      {% endif %}
     </div>
 
     <footer>

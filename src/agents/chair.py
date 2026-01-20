@@ -38,7 +38,8 @@ class ChairAgent(BaseAgent):
         geneticist_report: str,
         recruiter_report: str,
         oncologist_plan: str,
-        missing_sections: List[str] = None
+        missing_sections: List[str] = None,
+        upstream_references: List[Dict[str, str]] = None
     ) -> Dict[str, Any]:
         """
         基于完整报告生成最终 MTB 报告
@@ -52,6 +53,7 @@ class ChairAgent(BaseAgent):
             recruiter_report: 临床试验专员报告（完整）
             oncologist_plan: 肿瘤学家方案（完整）
             missing_sections: 上一次验证失败时缺失的模块
+            upstream_references: 上游报告的引用列表（需保留）
 
         Returns:
             包含综合报告和引用的字典
@@ -64,6 +66,17 @@ class ChairAgent(BaseAgent):
 {chr(10).join([f'- {s}' for s in missing_sections])}
 """
 
+        # 构建上游引用列表提示
+        ref_list_note = ""
+        if upstream_references:
+            ref_list_note = "\n**上游报告引用列表 (务必在报告中引用这些来源)**:\n"
+            for ref in upstream_references:
+                ref_type = ref.get('type', 'Unknown')
+                ref_id = ref.get('id', '')
+                ref_url = ref.get('url', '')
+                ref_list_note += f"- [{ref_type}: {ref_id}]({ref_url})\n"
+            ref_list_note += "\n"
+
         task_prompt = f"""
 请作为 MTB 主席，汇总整合以下专家报告生成最终 MTB 报告。
 
@@ -73,8 +86,9 @@ class ChairAgent(BaseAgent):
 - 保留完整的治疗史记录
 - 保留所有分子特征和证据等级
 - 输出应包含完整的信息
+- **保留上游报告中的所有引用**（见下方引用列表）
 
-{regenerate_note}
+{regenerate_note}{ref_list_note}
 
 ---
 
@@ -127,8 +141,17 @@ class ChairAgent(BaseAgent):
 
         result = self.invoke(task_prompt)
 
-        # 合并所有引用
-        all_references = result["references"]
+        # 合并所有引用（Chair 生成的 + 上游报告的）
+        all_references = result["references"] or []
+
+        # 合并上游引用，去重
+        if upstream_references:
+            seen_ids = {ref.get("id") for ref in all_references if ref.get("id")}
+            for ref in upstream_references:
+                ref_id = ref.get("id")
+                if ref_id and ref_id not in seen_ids:
+                    all_references.append(ref)
+                    seen_ids.add(ref_id)
 
         # 生成完整报告（含工具调用详情和引用）
         full_report = self.generate_full_report(

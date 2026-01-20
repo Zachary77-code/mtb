@@ -324,10 +324,23 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
     recruiter_report = state.get("recruiter_report", "")
     oncologist_plan = state.get("oncologist_plan", "")
 
+    # 收集上游报告的引用
+    upstream_references = []
+    upstream_references.extend(state.get("pathologist_references", []))
+    upstream_references.extend(state.get("geneticist_references", []))
+    # recruiter_trials 结构不同，提取 NCT IDs
+    for trial in state.get("recruiter_trials", []):
+        if trial.get("nct_id"):
+            upstream_references.append({
+                "type": "NCT",
+                "id": trial["nct_id"],
+                "url": f"https://clinicaltrials.gov/study/{trial['nct_id']}"
+            })
+
     # 计算总输入量
     total_input = (len(raw_pdf_text) + len(pathologist_report) +
                    len(geneticist_report) + len(recruiter_report) + len(oncologist_plan))
-    logger.info(f"[CHAIR] 输入总量: {total_input} 字符")
+    logger.info(f"[CHAIR] 输入总量: {total_input} 字符, 上游引用: {len(upstream_references)} 条")
 
     input_summary = f"""**迭代次数**: {iteration + 1}
 **缺失模块**: {missing if missing else '无'}
@@ -337,7 +350,8 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
 - 病理学分析报告: {len(pathologist_report)} 字符
 - 分子分析报告: {len(geneticist_report)} 字符
 - 临床试验推荐: {len(recruiter_report)} 字符
-- 治疗方案: {len(oncologist_plan)} 字符"""
+- 治疗方案: {len(oncologist_plan)} 字符
+- 上游引用数: {len(upstream_references)} 条"""
     _print_section("[CHAIR] 输入", input_summary)
 
     agent = ChairAgent()
@@ -347,7 +361,8 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
         geneticist_report=geneticist_report,
         recruiter_report=recruiter_report,
         oncologist_plan=oncologist_plan,
-        missing_sections=missing
+        missing_sections=missing,
+        upstream_references=upstream_references
     )
 
     synthesis_len = len(result["synthesis"]) if result["synthesis"] else 0

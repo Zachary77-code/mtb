@@ -607,6 +607,12 @@ KRAS G12C 抑制剂联合抗 EGFR 可提高疗效，ORR 约 30%。
 
 **每个数据点都必须有内联引用**：ORR、PFS、OS、证据等级依据、剂量调整参考等。
 
+**引用保留要求（Critical!）**：
+- 上游报告（Pathologist、Geneticist、Recruiter、Oncologist）中的所有引用（PMID、NCT、cBioPortal、CIViC等）**必须在最终报告中保留**
+- 将上游引用转换为本报告的标准格式：`[[ref:ID|Title|URL|Note]]` 或 `[PMID: xxx](url)`
+- **不要丢失任何证据来源**，即使在综合/改写内容时也要保持引用
+- 如果输入中包含"上游报告引用列表"，请确保这些引用都出现在最终报告中
+
 - If you cannot find a reference via tools, mark as "[Evidence unavailable]"
 
 ### 数据源引用自检（Mandatory!）
