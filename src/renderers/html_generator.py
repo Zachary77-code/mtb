@@ -322,7 +322,8 @@ class HtmlReportGenerator:
         self,
         raw_pdf_text: str,
         chair_synthesis: str,
-        references: List[Dict[str, str]]
+        references: List[Dict[str, str]],
+        run_folder: str = None
     ) -> str:
         """
         生成 HTML 报告
@@ -331,6 +332,7 @@ class HtmlReportGenerator:
             raw_pdf_text: 原始病历文本（用于提取患者信息）
             chair_synthesis: Chair 综合报告（Markdown）
             references: 引用列表
+            run_folder: 本次运行的报告文件夹路径（可选，若不提供则使用默认目录）
 
         Returns:
             生成的 HTML 文件路径
@@ -362,12 +364,17 @@ class HtmlReportGenerator:
         # 渲染模板
         final_html = template.render(context)
 
-        # 保存文件
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        patient_id = context.get("patient_id") or "Unknown"
-        patient_id = patient_id.replace("/", "_").replace("\\", "_")
-        filename = f"MTB_Report_{patient_id}_{timestamp}.html"
-        filepath = REPORTS_DIR / filename
+        # 确定保存目录
+        if run_folder:
+            output_dir = Path(run_folder)
+            filename = "6_final_report.html"
+        else:
+            output_dir = REPORTS_DIR
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            safe_patient_id = (context.get("patient_id") or "Unknown").replace("/", "_").replace("\\", "_")
+            filename = f"MTB_Report_{safe_patient_id}_{timestamp}.html"
+
+        filepath = output_dir / filename
 
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(final_html)

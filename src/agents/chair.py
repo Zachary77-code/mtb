@@ -130,9 +130,16 @@ class ChairAgent(BaseAgent):
         # 合并所有引用
         all_references = result["references"]
 
+        # 生成完整报告（含工具调用详情和引用）
+        full_report = self.generate_full_report(
+            main_content=result["output"],
+            title="MTB Chair Final Synthesis Report"
+        )
+
         return {
             "synthesis": result["output"],
-            "references": all_references
+            "references": all_references,
+            "full_report_md": full_report
         }
 
 

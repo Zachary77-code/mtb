@@ -70,9 +70,17 @@ class PathologistAgent(BaseAgent):
 请确保报告完整详尽，不要省略任何重要信息。
 """
         result = self.invoke(task_prompt)
+
+        # 生成完整报告（含工具调用详情和引用）
+        full_report = self.generate_full_report(
+            main_content=result["output"],
+            title="Pathologist Analysis Report"
+        )
+
         return {
             "report": result["output"],
-            "references": result["references"]
+            "references": result["references"],
+            "full_report_md": full_report
         }
 
 

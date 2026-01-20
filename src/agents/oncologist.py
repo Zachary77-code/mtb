@@ -109,9 +109,16 @@ class OncologistAgent(BaseAgent):
         # 提取安全警告
         warnings = self._extract_safety_warnings(result["output"])
 
+        # 生成完整报告（含工具调用详情和引用）
+        full_report = self.generate_full_report(
+            main_content=result["output"],
+            title="Oncologist Treatment Plan"
+        )
+
         return {
             "plan": result["output"],
-            "warnings": warnings
+            "warnings": warnings,
+            "full_report_md": full_report
         }
 
     def _extract_safety_warnings(self, report: str) -> List[str]:

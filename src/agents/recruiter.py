@@ -84,9 +84,16 @@ class RecruiterAgent(BaseAgent):
         # 提取试验列表
         trials = self._extract_trials(result["output"])
 
+        # 生成完整报告（含工具调用详情和引用）
+        full_report = self.generate_full_report(
+            main_content=result["output"],
+            title="Clinical Trial Recruiter Report"
+        )
+
         return {
             "report": result["output"],
-            "trials": trials
+            "trials": trials,
+            "full_report_md": full_report
         }
 
     def _extract_trials(self, report: str) -> List[Dict[str, Any]]:

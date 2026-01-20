@@ -4,7 +4,10 @@ Agent 基类（OpenRouter API + LangGraph）
 使用 requests 调用 OpenRouter API 实现 LLM 调用。
 """
 import json
+import re
 import requests
+from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 
@@ -19,6 +22,84 @@ from config.settings import (
     GLOBAL_PRINCIPLES_FILE
 )
 from src.utils.logger import mtb_logger as logger
+
+
+@dataclass
+class ToolCallRecord:
+    """记录单次工具调用的详细信息"""
+    tool_name: str
+    parameters: Dict[str, Any]
+    reasoning: str  # LLM 调用工具前的推理/说明
+    result: str
+    timestamp: str = field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+
+class ReferenceManager:
+    """管理引用：支持内联链接和末尾汇总（带跳转锚点）"""
+
+    def __init__(self):
+        self.references: List[Dict[str, Any]] = []
+        self.ref_map: Dict[str, int] = {}  # key -> index
+
+    def add_reference(self, ref_type: str, ref_id: str, url: str, title: str = "") -> str:
+        """
+        添加引用并返回内联 markdown 链接
+
+        Args:
+            ref_type: 引用类型 (PMID, NCT, CIViC, cBioPortal 等)
+            ref_id: 引用 ID
+            url: 引用 URL
+            title: 引用标题（可选）
+
+        Returns:
+            内联 markdown 链接，如 [[1]](#ref-pmid-12345678)
+        """
+        key = f"{ref_type}-{ref_id}".lower()
+        if key not in self.ref_map:
+            self.ref_map[key] = len(self.references) + 1
+            self.references.append({
+                "index": self.ref_map[key],
+                "type": ref_type,
+                "id": ref_id,
+                "url": url,
+                "title": title,
+                "anchor": f"ref-{key}"
+            })
+        idx = self.ref_map[key]
+        anchor = f"ref-{key}"
+        return f"[[{idx}]](#{anchor})"
+
+    def get_all_references(self) -> List[Dict[str, Any]]:
+        """获取所有引用"""
+        return self.references
+
+    def generate_reference_section(self) -> str:
+        """
+        生成末尾引用汇总章节（带锚点）
+
+        Returns:
+            Markdown 格式的引用章节
+        """
+        if not self.references:
+            return ""
+
+        lines = ["", "---", "", "## References", ""]
+        for ref in self.references:
+            anchor = ref["anchor"]
+            idx = ref["index"]
+            ref_type = ref["type"]
+            ref_id = ref["id"]
+            url = ref["url"]
+            title = ref.get("title", "")
+
+            # 创建锚点目标
+            if title:
+                lines.append(f'<a id="{anchor}"></a>**[{idx}]** [{ref_type}: {ref_id}]({url}) - {title}')
+            else:
+                lines.append(f'<a id="{anchor}"></a>**[{idx}]** [{ref_type}: {ref_id}]({url})')
+            lines.append("")
+
+        return "\n".join(lines)
 
 
 class BaseAgent:
@@ -57,6 +138,12 @@ class BaseAgent:
 
         # 工具注册表（name -> tool instance）
         self.tool_registry = {tool.name: tool for tool in self.tools}
+
+        # 工具调用历史记录（每次 invoke 重置）
+        self.tool_call_history: List[ToolCallRecord] = []
+
+        # 引用管理器（每次 invoke 重置）
+        self.reference_manager = ReferenceManager()
 
     def _build_system_prompt(self, prompt_file: str) -> str:
         """构建完整的系统提示词"""
@@ -126,6 +213,10 @@ class BaseAgent:
         """
         logger.info(f"[{self.role}] 开始处理...")
         logger.debug(f"[{self.role}] 输入: {user_message[:100]}...")
+
+        # 重置工具调用历史和引用管理器
+        self.tool_call_history = []
+        self.reference_manager = ReferenceManager()
 
         # 准备消息
         messages = [
@@ -213,6 +304,9 @@ class BaseAgent:
             ]
         })
 
+        # 获取 LLM 的推理内容（工具调用前的说明）
+        reasoning_content = assistant_message.get("content") or ""
+
         # 执行每个工具调用
         for tool_call in tool_calls:
             tool_name = tool_call.get("function", {}).get("name")
@@ -229,10 +323,18 @@ class BaseAgent:
             if tool_name in self.tool_registry:
                 tool = self.tool_registry[tool_name]
                 tool_result = tool.invoke(**tool_args)
-                logger.debug(f"[{self.role}] 工具 {tool_name} 返回: {tool_result[:100]}...")
+                logger.debug(f"[{self.role}] 工具 {tool_name} 返回: {tool_result[:100] if tool_result else 'None'}...")
             else:
                 tool_result = f"错误：未找到工具 '{tool_name}'"
                 logger.warning(f"[{self.role}] 未找到工具: {tool_name}")
+
+            # 记录工具调用历史（完整信息，不截断）
+            self.tool_call_history.append(ToolCallRecord(
+                tool_name=tool_name,
+                parameters=tool_args,
+                reasoning=reasoning_content,
+                result=tool_result or ""
+            ))
 
             # 添加工具结果
             messages.append({
@@ -303,6 +405,77 @@ class BaseAgent:
             })
 
         return references
+
+    def get_tool_call_report(self) -> str:
+        """
+        生成工具调用历史的 Markdown 报告
+
+        Returns:
+            格式化的工具调用历史，包含每次调用的推理、参数和完整结果
+        """
+        if not self.tool_call_history:
+            return ""
+
+        lines = ["", "---", "", "## Tool Call Details", ""]
+
+        for i, record in enumerate(self.tool_call_history, 1):
+            lines.append(f"### Tool Call {i}: `{record.tool_name}`")
+            lines.append(f"**Timestamp:** {record.timestamp}")
+            lines.append("")
+
+            if record.reasoning:
+                lines.append("**Reasoning:**")
+                lines.append(f"> {record.reasoning}")
+                lines.append("")
+
+            lines.append("**Parameters:**")
+            lines.append("```json")
+            lines.append(json.dumps(record.parameters, ensure_ascii=False, indent=2))
+            lines.append("```")
+            lines.append("")
+
+            lines.append("**Result:**")
+            lines.append("```")
+            lines.append(record.result)
+            lines.append("```")
+            lines.append("")
+
+        return "\n".join(lines)
+
+    def generate_full_report(self, main_content: str, title: str = None) -> str:
+        """
+        生成完整的 Markdown 报告，包含主内容、工具调用详情和引用
+
+        Args:
+            main_content: 主要分析内容
+            title: 报告标题（可选）
+
+        Returns:
+            完整的 Markdown 报告
+        """
+        sections = []
+
+        # 标题
+        if title:
+            sections.append(f"# {title}")
+            sections.append("")
+
+        # 主内容
+        sections.append("## Analysis Output")
+        sections.append("")
+        sections.append(main_content)
+
+        # 工具调用详情
+        tool_report = self.get_tool_call_report()
+        if tool_report:
+            sections.append(tool_report)
+
+        # 引用章节
+        ref_section = self.reference_manager.generate_reference_section()
+        if ref_section:
+            sections.append(ref_section)
+
+        return "\n".join(sections)
 
 
 if __name__ == "__main__":

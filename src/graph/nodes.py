@@ -1,8 +1,12 @@
 """
 LangGraph 节点函数
 """
+import re
+from datetime import datetime
+from pathlib import Path
 from typing import Dict, Any
 
+from config.settings import REPORTS_DIR
 from src.models.state import MtbState
 from src.agents.pathologist import PathologistAgent
 from src.agents.geneticist import GeneticistAgent
@@ -12,12 +16,63 @@ from src.agents.chair import ChairAgent
 from src.utils.logger import mtb_logger as logger
 
 
+def _create_run_folder(patient_id: str = "unknown") -> Path:
+    """
+    创建本次运行的报告文件夹
+
+    Args:
+        patient_id: 患者 ID（用于文件夹命名）
+
+    Returns:
+        文件夹路径
+    """
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # 清理患者 ID 中的特殊字符
+    safe_patient_id = re.sub(r'[^\w\-]', '_', patient_id)[:50]
+    folder_name = f"{timestamp}_{safe_patient_id}"
+    run_folder = REPORTS_DIR / folder_name
+    run_folder.mkdir(parents=True, exist_ok=True)
+    logger.info(f"[RUN_FOLDER] 创建报告文件夹: {run_folder}")
+    return run_folder
+
+
+def _extract_patient_id(text: str) -> str:
+    """从病历文本中提取患者 ID"""
+    # 尝试匹配常见的患者 ID 格式
+    patterns = [
+        r'患者ID[：:]\s*(\S+)',
+        r'病案号[：:]\s*(\S+)',
+        r'住院号[：:]\s*(\S+)',
+        r'门诊号[：:]\s*(\S+)',
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, text[:2000])
+        if match:
+            return match.group(1)
+    return "unknown"
+
+
+def _save_markdown_report(run_folder: Path, filename: str, content: str):
+    """
+    保存 Markdown 报告到文件
+
+    Args:
+        run_folder: 报告文件夹路径
+        filename: 文件名
+        content: Markdown 内容
+    """
+    filepath = run_folder / filename
+    filepath.write_text(content, encoding="utf-8")
+    logger.info(f"[SAVE_MD] 已保存: {filepath}")
+
+
 def pdf_parser_node(state: MtbState) -> Dict[str, Any]:
     """
     PDF 解析节点
 
     将输入文本直接传递为 raw_pdf_text，供后续并行节点使用。
     不进行结构化处理，每个专家节点自行处理所需的结构化信息。
+    同时创建本次运行的报告文件夹。
 
     Args:
         state: 当前状态
@@ -30,8 +85,13 @@ def pdf_parser_node(state: MtbState) -> Dict[str, Any]:
     input_text = state["input_text"]
     logger.info(f"[PDF_PARSER] 原始文本长度: {len(input_text)} 字符")
 
+    # 提取患者 ID 并创建运行文件夹
+    patient_id = _extract_patient_id(input_text)
+    run_folder = _create_run_folder(patient_id)
+
     return {
-        "raw_pdf_text": input_text
+        "raw_pdf_text": input_text,
+        "run_folder": str(run_folder)
     }
 
 
@@ -85,6 +145,11 @@ def pathologist_node(state: MtbState) -> Dict[str, Any]:
     ref_count = len(result["references"]) if result["references"] else 0
     logger.info(f"[PATHOLOGIST] 完成，报告长度: {report_len} 字符，引用数: {ref_count}")
 
+    # 保存完整 Markdown 报告
+    run_folder = state.get("run_folder")
+    if run_folder and result.get("full_report_md"):
+        _save_markdown_report(Path(run_folder), "1_pathologist_report.md", result["full_report_md"])
+
     # 打印输出
     _print_section("[PATHOLOGIST] 输出 - 病理学分析报告", result["report"] or "无报告")
 
@@ -119,6 +184,11 @@ def geneticist_node(state: MtbState) -> Dict[str, Any]:
     ref_count = len(result["references"]) if result["references"] else 0
     logger.info(f"[GENETICIST] 完成，报告长度: {report_len} 字符，引用数: {ref_count}")
 
+    # 保存完整 Markdown 报告
+    run_folder = state.get("run_folder")
+    if run_folder and result.get("full_report_md"):
+        _save_markdown_report(Path(run_folder), "2_geneticist_report.md", result["full_report_md"])
+
     # 打印输出
     _print_section("[GENETICIST] 输出 - 分子分析报告", result["report"] or "无报告")
 
@@ -152,6 +222,11 @@ def recruiter_node(state: MtbState) -> Dict[str, Any]:
     report_len = len(result["report"]) if result["report"] else 0
     trial_count = len(result["trials"]) if result["trials"] else 0
     logger.info(f"[RECRUITER] 完成，报告长度: {report_len} 字符，试验数: {trial_count}")
+
+    # 保存完整 Markdown 报告
+    run_folder = state.get("run_folder")
+    if run_folder and result.get("full_report_md"):
+        _save_markdown_report(Path(run_folder), "3_recruiter_report.md", result["full_report_md"])
 
     # 打印输出
     _print_section("[RECRUITER] 输出 - 临床试验推荐", result["report"] or "无报告")
@@ -203,6 +278,11 @@ def oncologist_node(state: MtbState) -> Dict[str, Any]:
     plan_len = len(result["plan"]) if result["plan"] else 0
     warning_count = len(result["warnings"]) if result["warnings"] else 0
     logger.info(f"[ONCOLOGIST] 完成，方案长度: {plan_len} 字符，安全警告: {warning_count}")
+
+    # 保存完整 Markdown 报告
+    run_folder = state.get("run_folder")
+    if run_folder and result.get("full_report_md"):
+        _save_markdown_report(Path(run_folder), "4_oncologist_report.md", result["full_report_md"])
 
     # 打印输出
     _print_section("[ONCOLOGIST] 输出 - 治疗方案", result["plan"] or "无方案")
@@ -274,6 +354,11 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
     ref_count = len(result["references"]) if result["references"] else 0
     logger.info(f"[CHAIR] 完成，综合报告长度: {synthesis_len} 字符，引用数: {ref_count}")
 
+    # 保存完整 Markdown 报告
+    run_folder = state.get("run_folder")
+    if run_folder and result.get("full_report_md"):
+        _save_markdown_report(Path(run_folder), "5_chair_final_report.md", result["full_report_md"])
+
     # 打印输出
     _print_section("[CHAIR] 输出 - 最终综合报告", result["synthesis"] or "无报告")
 
@@ -341,12 +426,15 @@ def webpage_generator_node(state: MtbState) -> Dict[str, Any]:
     output_path = generator.generate(
         raw_pdf_text=state.get("raw_pdf_text", ""),
         chair_synthesis=state.get("chair_synthesis", ""),
-        references=state.get("chair_final_references", [])
+        references=state.get("chair_final_references", []),
+        run_folder=state.get("run_folder")  # 传递运行文件夹路径
     )
 
     # 打印生成结果
+    run_folder = state.get("run_folder", "")
     result_summary = f"""HTML 报告已生成！
-路径: {output_path}
+报告文件夹: {run_folder}
+HTML 路径: {output_path}
 综合报告长度: {len(state.get('chair_synthesis', ''))} 字符
 引用数: {len(state.get('chair_final_references', []))}"""
     _print_section("[HTML] 生成完成", result_summary, max_len=500)

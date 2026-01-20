@@ -46,6 +46,7 @@ class MtbState(TypedDict):
     validation_iteration: NotRequired[int]  # 验证重试次数（防止无限循环）
 
     # ==================== 阶段 4: 输出 ====================
+    run_folder: NotRequired[str]  # 本次运行的报告文件夹路径
     final_html: NotRequired[str]  # 生成的 HTML 内容
     output_path: NotRequired[str]  # HTML 文件保存路径
 
