@@ -50,6 +50,18 @@ AGENT_TEMPERATURE = float(os.getenv("AGENT_TEMPERATURE", "0.2"))
 AGENT_TIMEOUT = int(os.getenv("AGENT_TIMEOUT", "120"))
 MAX_RETRY_ITERATIONS = int(os.getenv("MAX_RETRY_ITERATIONS", "2"))
 
+# ==================== DeepEvidence 模型配置 ====================
+# Subgraph 内 Agent 使用 flash 模型（Pathologist, Geneticist, Recruiter, Oncologist）
+SUBGRAPH_MODEL = os.getenv("SUBGRAPH_MODEL", "google/gemini-3-flash-preview")
+# 编排 Agent 使用 pro 模型（PlanAgent, ChairAgent）
+ORCHESTRATOR_MODEL = os.getenv("ORCHESTRATOR_MODEL", "google/gemini-3-pro-preview")
+
+# ==================== DeepEvidence 收敛配置 ====================
+MAX_PHASE1_ITERATIONS = int(os.getenv("MAX_PHASE1_ITERATIONS", "7"))  # 并行分析阶段最大迭代
+MAX_PHASE2_ITERATIONS = int(os.getenv("MAX_PHASE2_ITERATIONS", "7"))  # Oncologist 阶段最大迭代
+MIN_EVIDENCE_NODES = int(os.getenv("MIN_EVIDENCE_NODES", "10"))       # 最小证据节点数
+QUESTION_COVERAGE_THRESHOLD = float(os.getenv("QUESTION_COVERAGE_THRESHOLD", "0.8"))  # 问题覆盖率阈值
+
 # ==================== 12 个必选模块 ====================
 REQUIRED_SECTIONS = [
     "执行摘要",
@@ -75,6 +87,7 @@ GENETICIST_PROMPT_FILE = "geneticist_prompt.txt"
 RECRUITER_PROMPT_FILE = "recruiter_prompt.txt"
 ONCOLOGIST_PROMPT_FILE = "oncologist_prompt.txt"
 CHAIR_PROMPT_FILE = "chair_prompt.txt"
+PLAN_AGENT_PROMPT_FILE = "plan_agent_prompt.txt"  # PlanAgent 提示词
 
 
 def validate_config() -> bool:

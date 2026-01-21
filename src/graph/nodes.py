@@ -13,6 +13,8 @@ from src.agents.geneticist import GeneticistAgent
 from src.agents.recruiter import RecruiterAgent
 from src.agents.oncologist import OncologistAgent
 from src.agents.chair import ChairAgent
+from src.agents.plan_agent import PlanAgent
+from src.models.evidence_graph import create_evidence_graph
 from src.utils.logger import mtb_logger as logger
 
 
@@ -92,6 +94,55 @@ def pdf_parser_node(state: MtbState) -> Dict[str, Any]:
     return {
         "raw_pdf_text": input_text,
         "run_folder": str(run_folder)
+    }
+
+
+def plan_agent_node(state: MtbState) -> Dict[str, Any]:
+    """
+    研究计划生成节点
+
+    分析病例，生成结构化的研究计划，指导后续 BFRS/DFRS 研究循环。
+
+    Args:
+        state: 当前状态
+
+    Returns:
+        更新的状态字段（包含 research_plan 和初始化的 evidence_graph）
+    """
+    logger.info("[PLAN_AGENT] 开始生成研究计划...")
+
+    raw_pdf_text = state.get("raw_pdf_text", "")
+
+    # 打印输入摘要
+    input_summary = f"原始病历文本长度: {len(raw_pdf_text)} 字符"
+    _print_section("[PLAN_AGENT] 输入", input_summary)
+
+    # 调用 PlanAgent
+    agent = PlanAgent()
+    research_plan = agent.analyze_case(raw_pdf_text)
+
+    # 初始化 Evidence Graph
+    evidence_graph = create_evidence_graph()
+
+    # 打印输出摘要
+    q_count = len(research_plan.get("questions", []))
+    d_count = len(research_plan.get("directions", []))
+    output_summary = f"""研究计划生成完成:
+- 病例摘要: {research_plan.get('case_summary', '')[:100]}...
+- 研究问题数: {q_count}
+- 研究方向数: {d_count}
+- 关键实体: {research_plan.get('key_entities', {})}"""
+    _print_section("[PLAN_AGENT] 输出", output_summary)
+
+    logger.info(f"[PLAN_AGENT] 完成，问题数: {q_count}, 方向数: {d_count}")
+
+    return {
+        "research_plan": research_plan,
+        "evidence_graph": evidence_graph.to_dict(),
+        "research_mode": "breadth_first",  # 初始模式
+        "phase1_iteration": 0,
+        "phase2_iteration": 0,
+        "research_converged": False
     }
 
 

@@ -1,46 +1,52 @@
 """
 LangGraph 主工作流定义
 
-新架构：
-1. PDF 解析节点（提取原始文本，不结构化）
-2. MTB 子图（并行执行 + 汇总）
-   - 并行：pathologist, geneticist, recruiter
-   - 顺序：oncologist → chair
-3. 格式验证（失败时回到 chair 重试）
-4. HTML 生成
+DeepEvidence 架构：
+1. PDF 解析节点（提取原始文本）
+2. PlanAgent 节点（生成研究计划）
+3. Research Subgraph（两阶段 BFRS/DFRS 循环）
+   - Phase 1: Pathologist + Geneticist + Recruiter 并行循环
+   - Phase 2: Oncologist 独立循环
+4. Chair 节点（综合报告生成）
+5. 格式验证（失败时回到 chair 重试）
+6. HTML 生成
 """
 from langgraph.graph import StateGraph, END
 
 from src.models.state import MtbState
 from src.graph.nodes import (
     pdf_parser_node,
+    plan_agent_node,
     format_verification_node,
     webpage_generator_node,
     chair_node
 )
-from src.graph.mtb_subgraph import create_mtb_subgraph
+from src.graph.research_subgraph import create_research_subgraph
 from src.graph.edges import should_retry_chair
 
 
 def create_mtb_workflow():
     """
-    创建 MTB 工作流
+    创建 MTB 工作流（DeepEvidence 架构）
 
     工作流拓扑:
     [开始]
       ↓
     [PDF Parser] - 提取原始文本
       ↓
-    [MTB Subgraph] ─────────────────────────────────┐
-      │  ┌─────────────┐  ┌─────────────┐  ┌──────────┐
-      │  │ pathologist │  │ geneticist  │  │ recruiter│  (并行)
-      │  └──────┬──────┘  └──────┬──────┘  └────┬─────┘
-      │         └─────────────────┼──────────────┘
-      │                           ↓
-      │                    [oncologist]
-      │                           ↓
-      │                      [chair]
-      └─────────────────────────────────────────────┘
+    [Plan Agent] - 生成研究计划 (gemini-3-pro)
+      ↓
+    [Research Subgraph] ────────────────────────────────────┐
+      │  ┌─────────────────────────────────────────────┐   │
+      │  │ Phase 1: 并行 BFRS/DFRS 循环               │   │
+      │  │  [pathologist] [geneticist] [recruiter]     │   │
+      │  │         ↓ (收敛)                            │   │
+      │  │ Phase 2: Oncologist BFRS/DFRS 循环         │   │
+      │  │  [oncologist]                               │   │
+      │  └─────────────────────────────────────────────┘   │
+      └────────────────────────────────────────────────────┘
+                              ↓
+                         [Chair] - 综合报告 (gemini-3-pro)
                               ↓
                     [Format Verification]
                       ├─ 通过 → [HTML Generator] → [结束]
@@ -54,20 +60,26 @@ def create_mtb_workflow():
 
     # ==================== 添加节点 ====================
 
-    # 阶段 1: PDF 解析（提取原始文本，不结构化）
+    # 阶段 1: PDF 解析（提取原始文本）
     workflow.add_node("pdf_parser", pdf_parser_node)
 
-    # 阶段 2: MTB 分析（并行子图）
-    mtb_subgraph = create_mtb_subgraph()
-    workflow.add_node("mtb_analysis", mtb_subgraph)
+    # 阶段 2: 研究计划生成（PlanAgent）
+    workflow.add_node("plan_agent", plan_agent_node)
 
-    # 阶段 3: 格式验证
+    # 阶段 3: 研究子图（两阶段 BFRS/DFRS 循环）
+    research_subgraph = create_research_subgraph()
+    workflow.add_node("research_analysis", research_subgraph)
+
+    # 阶段 4: Chair 综合报告
+    workflow.add_node("chair", chair_node)
+
+    # 阶段 5: 格式验证
     workflow.add_node("verify_format", format_verification_node)
 
-    # 阶段 3.5: Chair 重试节点（验证失败时使用）
+    # 阶段 5.5: Chair 重试节点（验证失败时使用）
     workflow.add_node("chair_retry", chair_node)
 
-    # 阶段 4: HTML 生成
+    # 阶段 6: HTML 生成
     workflow.add_node("generate_html", webpage_generator_node)
 
     # ==================== 设置边 ====================
@@ -75,11 +87,17 @@ def create_mtb_workflow():
     # 入口点
     workflow.set_entry_point("pdf_parser")
 
-    # PDF 解析 → MTB 子图
-    workflow.add_edge("pdf_parser", "mtb_analysis")
+    # PDF 解析 → Plan Agent
+    workflow.add_edge("pdf_parser", "plan_agent")
 
-    # MTB 子图 → 格式验证
-    workflow.add_edge("mtb_analysis", "verify_format")
+    # Plan Agent → 研究子图
+    workflow.add_edge("plan_agent", "research_analysis")
+
+    # 研究子图 → Chair
+    workflow.add_edge("research_analysis", "chair")
+
+    # Chair → 格式验证
+    workflow.add_edge("chair", "verify_format")
 
     # 条件边: 验证结果决定下一步
     workflow.add_conditional_edges(
@@ -134,7 +152,8 @@ def run_mtb_workflow(input_text: str) -> MtbState:
 
 if __name__ == "__main__":
     print("MTB 工作流模块加载成功")
-    print("新架构: PDF Parser → [Pathologist|Geneticist|Recruiter] → Oncologist → Chair → Verify → HTML")
+    print("DeepEvidence 架构: PDF Parser → Plan Agent → Research Subgraph → Chair → Verify → HTML")
+    print("  Research Subgraph: Phase1[P|G|R 循环] → Phase2[Oncologist 循环]")
 
     # 测试工作流创建
     try:

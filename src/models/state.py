@@ -54,6 +54,25 @@ class MtbState(TypedDict):
     workflow_errors: NotRequired[List[str]]  # 工作流错误列表
     execution_time: NotRequired[float]  # 执行时间（秒）
 
+    # ==================== DeepEvidence 研究循环 ====================
+    # 研究计划（PlanAgent 生成）
+    research_plan: NotRequired[Dict[str, Any]]  # ResearchPlan 序列化
+    research_mode: NotRequired[str]  # "breadth_first" | "depth_first"
+
+    # 全局证据图
+    evidence_graph: NotRequired[Dict[str, Any]]  # EvidenceGraph 序列化
+
+    # Phase 1 迭代控制（Pathologist + Geneticist + Recruiter）
+    phase1_iteration: NotRequired[int]  # 当前迭代轮次
+    phase1_new_findings: NotRequired[int]  # 本轮新发现数量
+
+    # Phase 2 迭代控制（Oncologist）
+    phase2_iteration: NotRequired[int]  # 当前迭代轮次
+    phase2_new_findings: NotRequired[int]  # 本轮新发现数量
+
+    # 收敛标志
+    research_converged: NotRequired[bool]  # 研究是否已收敛
+
 
 # ==================== 辅助函数 ====================
 def create_initial_state(input_text: str) -> MtbState:
@@ -73,6 +92,15 @@ def create_initial_state(input_text: str) -> MtbState:
         "pathologist_references": [],  # 病理引用
         "validation_iteration": 0,
         "workflow_errors": [],
+        # DeepEvidence 研究循环初始化
+        "research_plan": {},
+        "research_mode": "breadth_first",
+        "evidence_graph": {"nodes": {}, "edges": {}},
+        "phase1_iteration": 0,
+        "phase1_new_findings": 0,
+        "phase2_iteration": 0,
+        "phase2_new_findings": 0,
+        "research_converged": False,
     }
 
 

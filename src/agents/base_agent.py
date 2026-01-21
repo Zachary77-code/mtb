@@ -19,7 +19,9 @@ from config.settings import (
     AGENT_TIMEOUT,
     PROMPTS_DIR,
     load_prompt,
-    GLOBAL_PRINCIPLES_FILE
+    GLOBAL_PRINCIPLES_FILE,
+    SUBGRAPH_MODEL,
+    ORCHESTRATOR_MODEL
 )
 from src.utils.logger import mtb_logger as logger
 
@@ -115,7 +117,8 @@ class BaseAgent:
         role: str,
         prompt_file: str,
         tools: Optional[List[Any]] = None,
-        temperature: Optional[float] = None
+        temperature: Optional[float] = None,
+        model: Optional[str] = None
     ):
         """
         初始化 Agent
@@ -125,9 +128,10 @@ class BaseAgent:
             prompt_file: 角色特定提示词文件名
             tools: 可用工具列表（BaseTool 实例）
             temperature: LLM 温度参数（可选，默认使用全局配置）
+            model: LLM 模型名称（可选，默认使用 OPENROUTER_MODEL）
         """
         self.role = role
-        self.model = OPENROUTER_MODEL
+        self.model = model or OPENROUTER_MODEL
         self.api_url = OPENROUTER_BASE_URL
         self.api_key = OPENROUTER_API_KEY
         self.temperature = temperature or AGENT_TEMPERATURE
