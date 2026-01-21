@@ -30,13 +30,27 @@ pytest tests/
 ### Workflow Pipeline (LangGraph StateGraph)
 
 ```
-PDF Input → Pathologist → Geneticist → Recruiter → Oncologist → Chair → Format Verification → HTML Report
-                                                                              ↓ (if validation fails)
-                                                                         Chair (retry, max 2x)
+PDF Input → PDF Parser
+                ↓
+    ┌───────────┼───────────┐
+    ↓           ↓           ↓
+Pathologist  Geneticist  Recruiter   ← Run in PARALLEL (subgraph)
+    └───────────┼───────────┘
+                ↓ (fan-in, all complete)
+           Oncologist
+                ↓
+             Chair  ← Receives upstream_references
+                ↓
+       Format Verification
+         ↓           ↓
+      [Pass]      [Fail → Chair Retry, max 2x]
+         ↓
+    HTML Report
 ```
 
 - **State**: `MtbState` TypedDict in [src/models/state.py](src/models/state.py) - all data flows through this state object
 - **Graph**: [src/graph/state_graph.py](src/graph/state_graph.py) - workflow definition with `StateGraph`
+- **Subgraph**: [src/graph/mtb_subgraph.py](src/graph/mtb_subgraph.py) - parallel execution of 3 analysis agents
 - **Nodes**: [src/graph/nodes.py](src/graph/nodes.py) - each node calls an agent and updates state
 - **Edges**: [src/graph/edges.py](src/graph/edges.py) - conditional logic for retry decisions
 
@@ -46,13 +60,19 @@ Agents inherit from `BaseAgent` in [src/agents/base_agent.py](src/agents/base_ag
 - Direct OpenRouter API calls via `requests` (not OpenAI SDK)
 - System prompt = global_principles.txt + role-specific prompt
 - Support for multi-turn tool calling (up to 5 iterations)
+- Reference management with `ReferenceManager` class
 
 Five specialist agents in `src/agents/`:
-1. **Pathologist** - parses raw case text into structured `CaseData`
-2. **Geneticist** - analyzes molecular profile, queries CIViC/ClinVar/cBioPortal
-3. **Recruiter** - matches clinical trials via ClinicalTrials.gov API
-4. **Oncologist** - creates treatment plans, checks drug interactions
-5. **Chair** - synthesizes all reports into final 12-module report
+
+| Agent | Role | Tools | Temp |
+|-------|------|-------|------|
+| **Pathologist** | Pathology/imaging analysis | PubMed, cBioPortal | 0.3 |
+| **Geneticist** | Molecular profile analysis | CIViC, ClinVar, cBioPortal, PubMed | 0.2 |
+| **Recruiter** | Clinical trial matching | ClinicalTrials.gov, NCCN, PubMed | 0.2 |
+| **Oncologist** | Treatment planning, safety | NCCN, FDA Label, RxNorm, PubMed | 0.2 |
+| **Chair** | Final synthesis (12 modules) | NCCN, FDA Label, PubMed | 0.3 |
+
+**Reference Preservation**: Chair receives `upstream_references` from Pathologist, Geneticist, and Recruiter, then merges and deduplicates all citations in the final report.
 
 ### External API Tools
 
@@ -100,7 +120,7 @@ Reports must contain **12 mandatory modules** (defined in `config/settings.py:RE
 Environment variables (`.env`):
 ```
 OPENROUTER_API_KEY=<required>
-OPENROUTER_MODEL=google/gemini-3-pro-preview  # default
+OPENROUTER_MODEL=google/gemini-2.5-pro-preview  # default
 DASHSCOPE_API_KEY=<for embeddings>
 NCBI_API_KEY=<optional, increases rate limits>
 ```
@@ -125,4 +145,6 @@ Citation format: `[PMID: 12345678](url)` or `[NCT04123456](url)`
 1. **State updates**: Nodes return `Dict[str, Any]` that gets merged into `MtbState`
 2. **Tool invocation**: Agents can call tools during generation; results feed back into conversation
 3. **Retry logic**: If format validation fails, workflow loops back to Chair node (max 2 times)
-4. **Logging**: All logs go to `logs/mtb.log` via Loguru
+4. **Reference flow**: Upstream agents generate `*_references` arrays; Chair merges all into `chair_final_references`
+5. **Logging**: All logs go to `logs/mtb.log` via Loguru
+6. **Report saving**: Each agent saves `{n}_{agent}_report.md` to the run folder

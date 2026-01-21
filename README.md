@@ -9,20 +9,35 @@ MTB 系统通过 5 个专业 AI Agent 协作，处理患者病历 PDF 文件，�
 ### 工作流程
 
 ```
-PDF 输入 → Pathologist → Geneticist → Recruiter → Oncologist → Chair → 格式验证 → HTML 报告
-                                                                          ↓ (验证失败)
-                                                                      Chair (重试, 最多2次)
+PDF 输入 → PDF 解析
+                ↓
+    ┌───────────┼───────────┐
+    ↓           ↓           ↓
+Pathologist  Geneticist  Recruiter   ← 并行执行
+    └───────────┼───────────┘
+                ↓ (汇聚)
+           Oncologist
+                ↓
+             Chair  ← 接收上游引用
+                ↓
+           格式验证
+         ↓         ↓
+      [通过]    [失败 → 重试, 最多2次]
+         ↓
+      HTML 报告
 ```
 
 ### Agent 角色
 
-| Agent | 职责 | 工具 |
-|-------|------|------|
-| **Pathologist** | 解析病历，提取结构化数据 | - |
-| **Geneticist** | 分子特征分析 | CIViC, ClinVar, cBioPortal, PubMed |
-| **Recruiter** | 临床试验匹配 | ClinicalTrials.gov |
-| **Oncologist** | 治疗方案制定 | FDA Label, RxNorm, NCCN RAG |
-| **Chair** | 汇总整合，生成最终报告 | PubMed, NCCN, FDA |
+| Agent | 职责 | 工具 | 温度 |
+|-------|------|------|------|
+| **Pathologist** | 病理/影像分析 | PubMed, cBioPortal | 0.3 |
+| **Geneticist** | 分子特征分析 | CIViC, ClinVar, cBioPortal, PubMed | 0.2 |
+| **Recruiter** | 临床试验匹配 | ClinicalTrials.gov, NCCN, PubMed | 0.2 |
+| **Oncologist** | 治疗方案制定 | NCCN, FDA Label, RxNorm, PubMed | 0.2 |
+| **Chair** | 汇总整合，生成报告 | NCCN, FDA Label, PubMed | 0.3 |
+
+**引用保留机制**: Chair 接收来自 Pathologist、Geneticist、Recruiter 的上游引用，合并去重后生成最终参考文献。
 
 ## 安装
 
