@@ -1,48 +1,44 @@
-# MTB 多智能体工作流系统
+# MTB - 虚拟分子肿瘤委员会 (Virtual Molecular Tumor Board)
 
-自动化分子肿瘤委员会（MTB）系统，基于 LangGraph 1.0.6 和 OpenAI GPT-5.2 构建。
+基于 LangGraph 的多智能体系统，用于生成结构化的肿瘤委员会会诊报告。
 
-## 系统架构
+## 项目概述
 
-本系统通过 4 个专业 Agent 协作处理非结构化病历，生成符合临床标准的 HTML 报告：
+MTB 系统通过 5 个专业 AI Agent 协作，处理患者病历 PDF 文件，生成包含 12 个标准模块的临床报告。
+
+### 工作流程
 
 ```
-病历文本 → Pathologist → Geneticist → Recruiter → Oncologist → Chair → HTML 报告
+PDF 输入 → Pathologist → Geneticist → Recruiter → Oncologist → Chair → 格式验证 → HTML 报告
+                                                                          ↓ (验证失败)
+                                                                      Chair (重试, 最多2次)
 ```
 
-### 核心特性
+### Agent 角色
 
-- **LangGraph 状态机工作流**：顺序执行 + 条件回退
-- **4 个专业 Agent**：
-  - Pathologist（病理医生）：病例解析
-  - Geneticist（遗传学家）：变异分析
-  - Recruiter（试验专员）：临床试验匹配
-  - Oncologist（肿瘤学家）：治疗方案制定
-  - Chair（MTB 主席）：综合决策
-- **12 模块强制格式验证**
-- **蓝白配色 HTML 报告**（带交互式引用）
-- **MCP 工具占位符**（模拟真实数据库）
+| Agent | 职责 | 工具 |
+|-------|------|------|
+| **Pathologist** | 解析病历，提取结构化数据 | - |
+| **Geneticist** | 分子特征分析 | CIViC, ClinVar, cBioPortal, PubMed |
+| **Recruiter** | 临床试验匹配 | ClinicalTrials.gov |
+| **Oncologist** | 治疗方案制定 | FDA Label, RxNorm, NCCN RAG |
+| **Chair** | 汇总整合，生成最终报告 | PubMed, NCCN, FDA |
 
-## 技术栈
+## 安装
 
-- **框架**：LangGraph 1.0.6（纯 LangGraph，不使用 LangChain）
-- **LLM**：OpenAI GPT-5.2
-- **数据验证**：Pydantic 2.9.2
-- **模板引擎**：Jinja2 3.1.4
-- **日志**：Loguru 0.7.2
-
-## 安装步骤
-
-### 1. 克隆或下载项目
+### 1. 克隆仓库
 
 ```bash
-cd d:\MTB
+git clone https://github.com/Zachary77-code/mtb_basic.git
+cd mtb_basic
 ```
 
-### 2. 创建虚拟环境（推荐）
+### 2. 创建虚拟环境
 
 ```bash
 python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# 或
 venv\Scripts\activate  # Windows
 ```
 
@@ -54,164 +50,155 @@ pip install -r requirements.txt
 
 ### 4. 配置环境变量
 
-复制 `.env.example` 为 `.env` 并填写您的 OpenAI API Key：
+创建 `.env` 文件：
+
+```env
+# 必需
+OPENROUTER_API_KEY=your_openrouter_api_key
+
+# 可选 (提高 API 速率限制)
+NCBI_API_KEY=your_ncbi_api_key
+
+# 可选 (用于 NCCN RAG 嵌入)
+DASHSCOPE_API_KEY=your_dashscope_api_key
+
+# 模型配置 (可选)
+OPENROUTER_MODEL=google/gemini-2.5-pro-preview
+```
+
+### 5. 初始化 NCCN 向量数据库 (可选)
+
+如需使用 NCCN 指南 RAG 功能：
 
 ```bash
-copy .env.example .env
-```
-
-编辑 `.env` 文件：
-
-```
-OPENAI_API_KEY=your-api-key-here
-OPENAI_MODEL=gpt-5.2
+python scripts/build_nccn_vectors.py
 ```
 
 ## 使用方法
 
-### 基本用法
+### 运行完整工作流
 
 ```bash
-python main.py <病例文件路径>
+python main.py <病历PDF文件路径>
+
+# 示例
+python main.py tests/fixtures/test_report.pdf
 ```
 
-示例：
+### 测试外部 API 工具
 
 ```bash
-python main.py tests/fixtures/sample_case.txt
+python tests/test_all_tools.py
 ```
 
-### 输入格式
+### 验证配置
 
-输入文件应为包含患者完整病历的文本文件，包括：
-
-- 肿瘤类型和分期
-- 分子检测结果（基因变异、TMB、MSI 等）
-- 既往治疗史
-- 器官功能指标（肾功能、肝功能、ECOG PS 等）
-
-示例：
-
-```
-患者男性，65岁，诊断为非小细胞肺癌（腺癌）。
-分期：IV期，多发骨转移和肝转移。
-分子检测：EGFR外显子21 L858R突变，TMB 5.2 mut/Mb，MSS。
-既往治疗：一线吉非替尼12个月，最佳疗效PR，现疾病进展。
-ECOG PS 1分，肾功能正常（CrCl 85 mL/min），ALT 45 U/L，AST 38 U/L。
+```bash
+python config/settings.py
 ```
 
-### 输出
+### 运行测试
 
-系统将生成 HTML 报告并保存到 `reports/` 文件夹，文件名格式：
-
-```
-MTB_Report_<患者ID>_<时间戳>.html
+```bash
+pytest tests/
 ```
 
 ## 项目结构
 
 ```
-d:\MTB\
-├── config/                         # 配置文件
-│   ├── settings.py                 # 全局配置
-│   └── prompts/                    # 提示词库
+MTB/
+├── main.py                 # 入口文件
+├── config/
+│   ├── settings.py         # 配置参数
+│   └── prompts/            # Agent 提示词
 │       ├── global_principles.txt
 │       ├── pathologist_prompt.txt
 │       ├── geneticist_prompt.txt
 │       ├── recruiter_prompt.txt
 │       ├── oncologist_prompt.txt
 │       └── chair_prompt.txt
-│
-├── src/                            # 核心源代码
-│   ├── models/                     # 数据模型
-│   ├── tools/                      # 工具库（占位符）
-│   ├── agents/                     # Agent 实现
-│   ├── graph/                      # LangGraph 工作流
-│   ├── validators/                 # 格式验证
-│   ├── renderers/                  # HTML 渲染
-│   └── utils/                      # 工具函数
-│
-├── main.py                         # 主入口
-├── requirements.txt                # 依赖清单
-├── .env                            # 环境变量
-└── reports/                        # 输出目录
+├── src/
+│   ├── agents/             # Agent 实现
+│   │   ├── base_agent.py
+│   │   ├── pathologist.py
+│   │   ├── geneticist.py
+│   │   ├── recruiter.py
+│   │   ├── oncologist.py
+│   │   └── chair.py
+│   ├── graph/              # LangGraph 工作流
+│   │   ├── state_graph.py
+│   │   ├── nodes.py
+│   │   └── edges.py
+│   ├── models/             # 数据模型
+│   │   └── state.py
+│   ├── tools/              # 外部 API 工具
+│   │   ├── variant_tools.py    # CIViC, ClinVar, cBioPortal
+│   │   ├── literature_tools.py # PubMed
+│   │   ├── trial_tools.py      # ClinicalTrials.gov
+│   │   └── guideline_tools.py  # FDA, RxNorm, NCCN RAG
+│   ├── renderers/          # 报告渲染
+│   │   └── html_generator.py
+│   └── validators/         # 格式验证
+│       └── format_checker.py
+├── data/
+│   └── nccn_vectors/       # ChromaDB 向量数据库 (本地生成, 不上传)
+├── reports/                # 生成的报告 (运行时)
+├── logs/                   # 日志文件
+└── tests/
+    └── fixtures/           # 测试数据
 ```
 
-## 报告格式
+## 报告模块
 
-生成的 HTML 报告包含以下 12 个必选模块：
+生成的报告包含以下 **12 个必需模块**：
 
-1. 执行摘要 (Executive Summary)
-2. 患者概况 (Patient Profile)
-3. 分子特征 (Molecular Profile)
-4. 治疗史回顾 (Treatment History)
-5. 药物/方案对比 (Regimen Comparison)
-6. 器官功能与剂量 (Organ Function & Dosing)
-7. 治疗路线图 (Treatment Roadmap)
-8. 分子复查建议 (Re-biopsy/Liquid Biopsy)
-9. 临床试验推荐 (Clinical Trials)
-10. 局部治疗建议 (Local Therapy)
-11. 核心建议汇总 (Core Recommendations)
-12. 参考文献 (References)
+1. **执行摘要** (Executive Summary)
+2. **患者概况** (Patient Profile)
+3. **分子特征** (Molecular Profile)
+4. **治疗史回顾** (Treatment History)
+5. **药物/方案对比** (Regimen Comparison)
+6. **器官功能与剂量** (Organ Function & Dosing)
+7. **治疗路线图** (Treatment Roadmap)
+8. **分子复查建议** (Re-biopsy/Liquid Biopsy)
+9. **临床试验推荐** (Clinical Trials)
+10. **局部治疗建议** (Local Therapy)
+11. **核心建议汇总** (Core Recommendations)
+12. **参考文献** (References)
 
-## GLOBAL OUTPUT PRINCIPLES
+## 证据等级
 
-所有 Agent 遵循以下原则：
+| 等级 | 描述 |
+|------|------|
+| **A** | Phase III 随机对照试验 |
+| **B** | Phase I-II 临床试验 |
+| **C** | 回顾性研究 |
+| **D** | 临床前研究 |
 
-1. **Case-First Extraction** - 先重构病例概况
-2. **Evidence Grading** - 每条建议标注证据等级（A/B/C/D）
-3. **Negative Recommendation Rule** - 必须包含"不建议"章节
-4. **Safety-First Rule** - 器官功能优先
-5. **China-Specific Realism** - 优先中国可及药物/试验
+## 引用格式
 
-## 开发说明
+- PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
+- 临床试验: `[NCT12345678](https://clinicaltrials.gov/study/NCT12345678)`
+- NCCN: `[NCCN: Guidelines](https://www.nccn.org/guidelines)`
 
-### 架构特点
+## 配置参数
 
-本系统**完全不使用 LangChain**，仅依赖：
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `AGENT_TEMPERATURE` | 0.2 | LLM 生成温度 |
+| `AGENT_TIMEOUT` | 120 | API 调用超时 (秒) |
+| `MAX_RETRY_ITERATIONS` | 2 | 格式验证失败最大重试次数 |
 
-- **LangGraph 1.0.6**：状态图工作流
-- **OpenAI Python SDK**：直接调用 GPT-5.2 API
-- **Pydantic**：数据验证
+## 技术栈
 
-### Agent 实现方式
-
-Agent 不是传统的 LangChain AgentExecutor，而是：
-
-```python
-def agent_node(state: MtbState) -> MtbState:
-    # 直接调用 OpenAI API
-    client = OpenAI()
-    response = client.chat.completions.create(
-        model="gpt-5.2",
-        messages=[...],
-        tools=[...]  # OpenAI function calling
-    )
-    state["output_field"] = response.choices[0].message.content
-    return state
-```
-
-## 故障排查
-
-### 常见问题
-
-1. **模块导入错误**：确保已激活虚拟环境并安装所有依赖
-2. **API Key 错误**：检查 `.env` 文件中的 `OPENAI_API_KEY`
-3. **中文乱码**：确保输入文件保存为 UTF-8 编码
-4. **报告生成失败**：检查 `reports/` 文件夹权限
-
-### 日志
-
-系统日志保存在 `logs/mtb.log`，包含详细的执行过程信息。
+- **LangGraph 1.0.6** - 工作流编排 (不使用 LangChain)
+- **OpenRouter API** - LLM 调用
+- **ChromaDB** - 向量数据库 (NCCN RAG)
+- **Jinja2** - HTML 模板渲染
 
 ## 许可证
 
-本项目仅供学术研究和医疗教育使用。
+MIT License
 
-## 联系方式
+## 免责声明
 
-如有问题，请提交 Issue 或联系项目维护者。
-
----
-
-**⚠️ 免责声明**：本系统生成的报告仅供参考，不能替代专业医疗建议。所有临床决策应由具有资质的医疗专业人员做出。
+本系统生成的报告仅供临床参考。所有治疗决策应由具有资质的医疗专业人员根据患者实际情况做出。
