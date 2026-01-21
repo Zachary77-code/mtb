@@ -19,7 +19,7 @@ from src.models.research_plan import (
     DirectionStatus,
     load_research_plan
 )
-from src.utils.logger import mtb_logger as logger
+from src.utils.logger import mtb_logger as logger, log_separator
 
 if TYPE_CHECKING:
     from src.agents.base_agent import BaseAgent
@@ -72,7 +72,12 @@ class ResearchMixin:
             raise TypeError("ResearchMixin requires host class to inherit from BaseAgent")
 
         agent_role = getattr(self, 'role', 'Unknown')
-        logger.info(f"[{agent_role}] 研究迭代 {iteration}/{max_iterations}, 模式: {mode.value}")
+
+        # 增强日志输出
+        log_separator(agent_role)
+        logger.info(f"[{agent_role}] 研究迭代 {iteration + 1}/{max_iterations}")
+        logger.info(f"[{agent_role}] 模式: {mode.value}")
+        logger.info(f"[{agent_role}] 分配方向: {len(directions)} 个")
 
         # 加载证据图
         graph = load_evidence_graph(evidence_graph)
@@ -102,7 +107,19 @@ class ResearchMixin:
         # 更新方向状态
         direction_updates = parsed.get("direction_updates", {})
 
-        logger.info(f"[{agent_role}] 迭代完成, 新证据: {len(new_evidence_ids)}, 方向更新: {len(direction_updates)}")
+        # 增强结果日志
+        logger.info(f"[{agent_role}] 迭代完成:")
+        logger.info(f"[{agent_role}]   发现数: {len(parsed.get('findings', []))}")
+        logger.info(f"[{agent_role}]   新证据: {len(new_evidence_ids)}")
+        if direction_updates:
+            logger.info(f"[{agent_role}]   方向更新: {direction_updates}")
+        needs_deep = parsed.get('needs_deep_research', [])
+        if needs_deep:
+            logger.info(f"[{agent_role}]   需深入研究: {len(needs_deep)} 项")
+        summary = parsed.get('summary', '')
+        if summary:
+            summary_short = summary[:100] + "..." if len(summary) > 100 else summary
+            logger.info(f"[{agent_role}]   摘要: {summary_short}")
 
         return {
             "evidence_graph": graph.to_dict(),

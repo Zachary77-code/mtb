@@ -4332,3 +4332,174 @@ Content preview: - line: 1线
 2026-01-20 20:27:35 | INFO     | src.graph.nodes:webpage_generator_node:457 | [HTML] 报告已保存: D:\MTB\reports\20260120_202134_unknown\6_final_report.html
 2026-01-20 20:27:35 | INFO     | __main__:main:81 | 报告生成成功: D:\MTB\reports\20260120_202134_unknown\6_final_report.html
 2026-01-20 20:27:35 | INFO     | __main__:main:82 | 执行时间: 360.51秒
+2026-01-21 21:27:31 | INFO     | __main__:main:35 | ============================================================
+2026-01-21 21:27:31 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-21 21:27:31 | INFO     | __main__:main:37 | ============================================================
+2026-01-21 21:27:31 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-21 21:27:31 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/test_report.pdf
+2026-01-21 21:27:31 | INFO     | __main__:main:52 | 病例文本长度: 1243 字符
+2026-01-21 21:27:31 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-21 21:27:31 | INFO     | src.graph.research_subgraph:create_research_subgraph:600 | [RESEARCH_SUBGRAPH] 子图构建完成
+2026-01-21 21:27:31 | INFO     | src.graph.nodes:pdf_parser_node:85 | [PDF_PARSER] 开始解析 PDF 文本...
+2026-01-21 21:27:31 | INFO     | src.graph.nodes:pdf_parser_node:88 | [PDF_PARSER] 原始文本长度: 1243 字符
+2026-01-21 21:27:31 | INFO     | src.graph.nodes:_create_run_folder:37 | [RUN_FOLDER] 创建报告文件夹: D:\MTB\reports\20260121_212731_unknown
+2026-01-21 21:27:31 | INFO     | src.graph.nodes:plan_agent_node:112 | [PLAN_AGENT] 开始生成研究计划...
+2026-01-21 21:27:31 | INFO     | src.agents.plan_agent:analyze_case:55 | [PlanAgent] 开始分析病例...
+2026-01-21 21:27:31 | INFO     | src.agents.base_agent:invoke:218 | [PlanAgent] 开始处理...
+2026-01-21 21:28:11 | INFO     | src.agents.base_agent:invoke:256 | [PlanAgent] 完成，输出长度: 5145 字符
+2026-01-21 21:28:11 | INFO     | src.agents.plan_agent:analyze_case:67 | [PlanAgent] 研究计划生成完成: {'total_questions': 4, 'total_directions': 5, 'coverage': 0.0, 'directions_by_status': {'pending': 5}, 'directions_by_agent': {'Geneticist': 1, 'Oncologist': 2, 'Recruiter': 1, 'Pathologist': 1}, 'pending_count': 5, 'depth_required_count': 0}
+2026-01-21 21:28:11 | INFO     | src.graph.nodes:plan_agent_node:137 | [PLAN_AGENT] 完成，问题数: 4, 方向数: 5
+2026-01-21 21:28:11 | INFO     | src.utils.logger:log_separator:138 | [PHASE1] ════════════════════════════════════════
+2026-01-21 21:28:11 | INFO     | src.graph.research_subgraph:phase1_router:89 | [PHASE1] 迭代 1/7
+2026-01-21 21:28:11 | INFO     | src.graph.research_subgraph:phase1_router:90 | [PHASE1] 研究模式: breadth_first
+2026-01-21 21:28:11 | INFO     | src.graph.research_subgraph:phase1_router:91 | [PHASE1] 分发到: Pathologist, Geneticist, Recruiter
+2026-01-21 21:28:11 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:126 | [PHASE1_PATHOLOGIST] ───────────────────────────────────────
+2026-01-21 21:28:11 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:126 | [PHASE1_GENETICIST] ───────────────────────────────────────
+2026-01-21 21:28:11 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:148 | [PHASE1_PATHOLOGIST] 分配方向: 1 个
+2026-01-21 21:28:11 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:126 | [PHASE1_RECRUITER] ───────────────────────────────────────
+2026-01-21 21:28:11 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:148 | [PHASE1_GENETICIST] 分配方向: 1 个
+2026-01-21 21:28:11 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:151 | [PHASE1_PATHOLOGIST]   ○ 免疫组化与基因检测结果的一致性复核 (优先级: 4)
+2026-01-21 21:28:11 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:148 | [PHASE1_RECRUITER] 分配方向: 1 个
+2026-01-21 21:28:11 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:151 | [PHASE1_GENETICIST]   ○ TMB与MSS数据矛盾性分析 (优先级: 1)
+2026-01-21 21:28:11 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:151 | [PHASE1_RECRUITER]   ○ ATM突变相关临床试验匹配 (优先级: 3)
+2026-01-21 21:28:11 | INFO     | src.utils.logger:log_separator:138 | [Pathologist] ════════════════════════════════════════
+2026-01-21 21:28:11 | INFO     | src.agents.research_mixin:research_iterate:78 | [Pathologist] 研究迭代 1/7
+2026-01-21 21:28:11 | INFO     | src.utils.logger:log_separator:138 | [Geneticist] ════════════════════════════════════════
+2026-01-21 21:28:11 | INFO     | src.utils.logger:log_separator:138 | [Recruiter] ════════════════════════════════════════
+2026-01-21 21:28:11 | INFO     | src.agents.research_mixin:research_iterate:79 | [Pathologist] 模式: breadth_first
+2026-01-21 21:28:11 | INFO     | src.agents.research_mixin:research_iterate:78 | [Geneticist] 研究迭代 1/7
+2026-01-21 21:28:11 | INFO     | src.agents.research_mixin:research_iterate:78 | [Recruiter] 研究迭代 1/7
+2026-01-21 21:28:11 | INFO     | src.agents.research_mixin:research_iterate:80 | [Pathologist] 分配方向: 1 个
+2026-01-21 21:28:11 | INFO     | src.agents.research_mixin:research_iterate:79 | [Geneticist] 模式: breadth_first
+2026-01-21 21:28:11 | INFO     | src.agents.research_mixin:research_iterate:79 | [Recruiter] 模式: breadth_first
+2026-01-21 21:28:11 | INFO     | src.agents.base_agent:invoke:218 | [Pathologist] 开始处理...
+2026-01-21 21:28:11 | INFO     | src.agents.research_mixin:research_iterate:80 | [Geneticist] 分配方向: 1 个
+2026-01-21 21:28:11 | INFO     | src.agents.research_mixin:research_iterate:80 | [Recruiter] 分配方向: 1 个
+2026-01-21 21:28:11 | INFO     | src.agents.base_agent:invoke:218 | [Geneticist] 开始处理...
+2026-01-21 21:28:11 | INFO     | src.agents.base_agent:invoke:218 | [Recruiter] 开始处理...
+2026-01-21 21:28:14 | INFO     | src.agents.base_agent:invoke:251 | [Pathologist] 检测到工具调用: 3 个
+2026-01-21 21:28:14 | INFO     | src.agents.base_agent:_handle_tool_calls:292 | [Pathologist] 工具调用轮次 1/5，调用数: 3
+2026-01-21 21:28:14 | INFO     | src.agents.base_agent:_handle_tool_calls:326 | [Pathologist] 工具调用: search_pubmed
+2026-01-21 21:28:14 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Pathologist]   参数: {"query": "PD-L1 CPS 3 colorectal cancer immunotherapy response MSS"}
+2026-01-21 21:28:14 | INFO     | src.agents.base_agent:invoke:251 | [Geneticist] 检测到工具调用: 3 个
+2026-01-21 21:28:14 | INFO     | src.agents.base_agent:_handle_tool_calls:292 | [Geneticist] 工具调用轮次 1/5，调用数: 3
+2026-01-21 21:28:14 | INFO     | src.agents.base_agent:_handle_tool_calls:326 | [Geneticist] 工具调用: search_pubmed
+2026-01-21 21:28:14 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Geneticist]   参数: {"query": "\"TMB-high\" AND \"MSS\" AND \"colorectal cancer\" AND \"POLE\" mutation"}
+2026-01-21 21:28:14 | INFO     | src.agents.base_agent:invoke:251 | [Recruiter] 检测到工具调用: 3 个
+2026-01-21 21:28:14 | INFO     | src.agents.base_agent:_handle_tool_calls:292 | [Recruiter] 工具调用轮次 1/5，调用数: 3
+2026-01-21 21:28:14 | INFO     | src.agents.base_agent:_handle_tool_calls:326 | [Recruiter] 工具调用: search_clinical_trials
+2026-01-21 21:28:14 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Recruiter]   参数: {"max_results": 5, "intervention": "PARP inhibitor", "cancer_type": "Solid Tumor"}
+2026-01-21 21:28:15 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-21 21:28:15 | INFO     | src.utils.logger:log_tool_call:124 | [Recruiter] ✓ search_clinical_trials: {"max_results": 5, "intervention": "PARP inhibitor", "cancer...
+2026-01-21 21:28:15 | INFO     | src.utils.logger:log_tool_call:126 | [Recruiter]   返回 7463 字符
+2026-01-21 21:28:15 | INFO     | src.agents.base_agent:_handle_tool_calls:326 | [Recruiter] 工具调用: search_clinical_trials
+2026-01-21 21:28:15 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Recruiter]   参数: {"cancer_type": "Solid Tumor", "biomarker": "ATM mutation", "max_results": 5}
+2026-01-21 21:28:15 | INFO     | src.tools.api_clients.clinicaltrials_client:search_trials:85 | [CT.gov] 无匹配试验: Solid Tumor ATM mutation
+2026-01-21 21:28:15 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-21 21:28:15 | INFO     | src.utils.logger:log_tool_call:124 | [Recruiter] ✓ search_clinical_trials: {"cancer_type": "Solid Tumor", "biomarker": "ATM mutation", ...
+2026-01-21 21:28:15 | INFO     | src.utils.logger:log_tool_call:126 | [Recruiter]   返回 222 字符
+2026-01-21 21:28:15 | INFO     | src.agents.base_agent:_handle_tool_calls:326 | [Recruiter] 工具调用: search_pubmed
+2026-01-21 21:28:15 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Recruiter]   参数: {"query": "ATM mutation colorectal cancer PARP inhibitor clinical trial China"}
+2026-01-21 21:28:15 | INFO     | src.tools.api_clients.ncbi_client:search_pubmed:85 | [NCBI] PubMed 无结果: "TMB-high" AND "MSS" AND "colorectal cancer" AND "POLE" mutation
+2026-01-21 21:28:15 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-21 21:28:15 | INFO     | src.utils.logger:log_tool_call:124 | [Geneticist] ✓ search_pubmed: {"query": "\"TMB-high\" AND \"MSS\" AND \"colorectal cancer\...
+2026-01-21 21:28:15 | INFO     | src.utils.logger:log_tool_call:126 | [Geneticist]   返回 102 字符
+2026-01-21 21:28:15 | INFO     | src.agents.base_agent:_handle_tool_calls:326 | [Geneticist] 工具调用: search_cbioportal
+2026-01-21 21:28:15 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Geneticist]   参数: {"cancer_type": "Colorectal Cancer", "gene": "POLE"}
+2026-01-21 21:28:16 | INFO     | src.tools.api_clients.ncbi_client:search_pubmed:85 | [NCBI] PubMed 无结果: PD-L1 CPS 3 colorectal cancer immunotherapy response MSS
+2026-01-21 21:28:16 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-21 21:28:16 | INFO     | src.utils.logger:log_tool_call:124 | [Pathologist] ✓ search_pubmed: {"query": "PD-L1 CPS 3 colorectal cancer immunotherapy respo...
+2026-01-21 21:28:16 | INFO     | src.utils.logger:log_tool_call:126 | [Pathologist]   返回 94 字符
+2026-01-21 21:28:16 | INFO     | src.agents.base_agent:_handle_tool_calls:326 | [Pathologist] 工具调用: search_pubmed
+2026-01-21 21:28:16 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Pathologist]   参数: {"query": "TMB-H MSS colorectal cancer immunotherapy efficacy"}
+2026-01-21 21:28:16 | ERROR    | src.tools.api_clients.ncbi_client:fetch_abstracts:127 | [NCBI] 获取摘要失败: 429 Client Error: Too Many Requests for url: https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=35433988&rettype=xml&retmode=xml
+2026-01-21 21:28:16 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-21 21:28:16 | INFO     | src.utils.logger:log_tool_call:124 | [Pathologist] ✓ search_pubmed: {"query": "TMB-H MSS colorectal cancer immunotherapy efficac...
+2026-01-21 21:28:16 | INFO     | src.utils.logger:log_tool_call:126 | [Pathologist]   返回 88 字符
+2026-01-21 21:28:16 | INFO     | src.agents.base_agent:_handle_tool_calls:326 | [Pathologist] 工具调用: search_cbioportal
+2026-01-21 21:28:16 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Pathologist]   参数: {"gene": "ATM", "cancer_type": "colorectal adenocarcinoma"}
+2026-01-21 21:28:17 | INFO     | src.tools.api_clients.ncbi_client:search_pubmed:85 | [NCBI] PubMed 无结果: ATM mutation colorectal cancer PARP inhibitor clinical trial China
+2026-01-21 21:28:17 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-21 21:28:17 | INFO     | src.utils.logger:log_tool_call:124 | [Recruiter] ✓ search_pubmed: {"query": "ATM mutation colorectal cancer PARP inhibitor cli...
+2026-01-21 21:28:17 | INFO     | src.utils.logger:log_tool_call:126 | [Recruiter]   返回 104 字符
+2026-01-21 21:28:18 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_cbioportal] API 调用成功
+2026-01-21 21:28:18 | INFO     | src.utils.logger:log_tool_call:124 | [Geneticist] ✓ search_cbioportal: {"cancer_type": "Colorectal Cancer", "gene": "POLE"}
+2026-01-21 21:28:18 | INFO     | src.utils.logger:log_tool_call:126 | [Geneticist]   返回 318 字符
+2026-01-21 21:28:18 | INFO     | src.agents.base_agent:_handle_tool_calls:326 | [Geneticist] 工具调用: search_civic
+2026-01-21 21:28:18 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Geneticist]   参数: {"gene": "POLE"}
+2026-01-21 21:28:19 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_cbioportal] API 调用成功
+2026-01-21 21:28:19 | INFO     | src.utils.logger:log_tool_call:124 | [Pathologist] ✓ search_cbioportal: {"gene": "ATM", "cancer_type": "colorectal adenocarcinoma"}
+2026-01-21 21:28:19 | INFO     | src.utils.logger:log_tool_call:126 | [Pathologist]   返回 333 字符
+2026-01-21 21:28:20 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_civic] API 调用成功
+2026-01-21 21:28:20 | INFO     | src.utils.logger:log_tool_call:124 | [Geneticist] ✓ search_civic: {"gene": "POLE"}
+2026-01-21 21:28:20 | INFO     | src.utils.logger:log_tool_call:126 | [Geneticist]   返回 440 字符
+2026-01-21 21:28:24 | INFO     | src.agents.base_agent:_handle_tool_calls:374 | [Recruiter] 工具调用完成，最终输出长度: 1914 字符
+2026-01-21 21:28:24 | INFO     | src.agents.research_mixin:research_iterate:111 | [Recruiter] 迭代完成:
+2026-01-21 21:28:24 | INFO     | src.agents.research_mixin:research_iterate:112 | [Recruiter]   发现数: 3
+2026-01-21 21:28:24 | INFO     | src.agents.research_mixin:research_iterate:113 | [Recruiter]   新证据: 3
+2026-01-21 21:28:24 | INFO     | src.agents.research_mixin:research_iterate:115 | [Recruiter]   方向更新: {'D4': 'pending'}
+2026-01-21 21:28:24 | INFO     | src.agents.research_mixin:research_iterate:118 | [Recruiter]   需深入研究: 2 项
+2026-01-21 21:28:24 | INFO     | src.agents.research_mixin:research_iterate:122 | [Recruiter]   摘要: 本轮研究重点针对患者携带的 ATM 胚系突变（HRR 通路关键基因）进行了中国境内临床试验的初步匹配。虽然未发现专门针对 ATM 突变的结直肠癌特定试验，但已筛选出多项针对“同源重组修复缺陷（HRD）...
+2026-01-21 21:28:24 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:167 | [PHASE1_RECRUITER] 完成:
+2026-01-21 21:28:24 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:168 | [PHASE1_RECRUITER]   新证据: 3
+2026-01-21 21:28:24 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:170 | [PHASE1_RECRUITER]   方向更新: {'D4': 'pending'}
+2026-01-21 21:28:24 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:172 | [PHASE1_RECRUITER]   需深入研究: 2 项
+2026-01-21 21:28:28 | INFO     | src.agents.base_agent:_handle_tool_calls:374 | [Geneticist] 工具调用完成，最终输出长度: 1907 字符
+2026-01-21 21:28:28 | INFO     | src.agents.research_mixin:research_iterate:111 | [Geneticist] 迭代完成:
+2026-01-21 21:28:28 | INFO     | src.agents.research_mixin:research_iterate:112 | [Geneticist]   发现数: 2
+2026-01-21 21:28:28 | INFO     | src.agents.research_mixin:research_iterate:113 | [Geneticist]   新证据: 2
+2026-01-21 21:28:28 | INFO     | src.agents.research_mixin:research_iterate:115 | [Geneticist]   方向更新: {'D1': 'pending'}
+2026-01-21 21:28:28 | INFO     | src.agents.research_mixin:research_iterate:118 | [Geneticist]   需深入研究: 2 项
+2026-01-21 21:28:28 | INFO     | src.agents.research_mixin:research_iterate:122 | [Geneticist]   摘要: 本轮研究重点分析了结直肠癌中高肿瘤突变负荷（TMB-H, 79 mut/Mb）与微卫星稳定（MSS）共存的分子机制。初步证据指向 DNA 聚合酶 ε（POLE）或 δ1（POLD1）基因的校正结构域突...
+2026-01-21 21:28:28 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:167 | [PHASE1_GENETICIST] 完成:
+2026-01-21 21:28:28 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:168 | [PHASE1_GENETICIST]   新证据: 2
+2026-01-21 21:28:28 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:170 | [PHASE1_GENETICIST]   方向更新: {'D1': 'pending'}
+2026-01-21 21:28:28 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:172 | [PHASE1_GENETICIST]   需深入研究: 2 项
+2026-01-21 21:28:36 | INFO     | src.agents.base_agent:_handle_tool_calls:374 | [Pathologist] 工具调用完成，最终输出长度: 2083 字符
+2026-01-21 21:28:36 | INFO     | src.agents.research_mixin:research_iterate:111 | [Pathologist] 迭代完成:
+2026-01-21 21:28:36 | INFO     | src.agents.research_mixin:research_iterate:112 | [Pathologist]   发现数: 3
+2026-01-21 21:28:36 | INFO     | src.agents.research_mixin:research_iterate:113 | [Pathologist]   新证据: 3
+2026-01-21 21:28:36 | INFO     | src.agents.research_mixin:research_iterate:115 | [Pathologist]   方向更新: {'D5': 'pending'}
+2026-01-21 21:28:36 | INFO     | src.agents.research_mixin:research_iterate:118 | [Pathologist]   需深入研究: 2 项
+2026-01-21 21:28:36 | INFO     | src.agents.research_mixin:research_iterate:122 | [Pathologist]   摘要: 本轮研究重点复核了患者免疫组化（IHC）与基因检测结果的一致性，特别是高肿瘤突变负荷（TMB-H）与微卫星稳定（MSS）共存的特殊现象，并探讨了PD-L1表达及ATM胚系突变的病理学意义。
+2026-01-21 21:28:36 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:167 | [PHASE1_PATHOLOGIST] 完成:
+2026-01-21 21:28:36 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:168 | [PHASE1_PATHOLOGIST]   新证据: 3
+2026-01-21 21:28:36 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:170 | [PHASE1_PATHOLOGIST]   方向更新: {'D5': 'pending'}
+2026-01-21 21:28:36 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:172 | [PHASE1_PATHOLOGIST]   需深入研究: 2 项
+2026-01-21 21:28:36 | ERROR    | __main__:main:111 | 工作流执行失败: At key 'evidence_graph': Can receive only one value per step. Use an Annotated key to handle multiple values.
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/INVALID_CONCURRENT_GRAPH_UPDATE
+Traceback (most recent call last):
+
+  File "D:\MTB\main.py", line 153, in <module>
+    main(case_path)
+
+> File "D:\MTB\main.py", line 74, in main
+    final_state = run_mtb_workflow(input_text)
+
+  File "D:\MTB\src\graph\state_graph.py", line 145, in run_mtb_workflow
+    final_state = workflow.invoke(initial_state)
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 3071, in invoke
+    for chunk in self.stream(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 2646, in stream
+    for _ in runner.tick(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_runner.py", line 167, in tick
+    run_with_retry(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_retry.py", line 42, in run_with_retry
+    return task.proc.invoke(task.input, config)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\_internal\_runnable.py", line 656, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 3071, in invoke
+    for chunk in self.stream(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 2656, in stream
+    loop.after_tick()
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_loop.py", line 542, in after_tick
+    self.updated_channels = apply_writes(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_algo.py", line 296, in apply_writes
+    if channels[chan].update(vals) and next_version is not None:
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\channels\last_value.py", line 64, in update
+    raise InvalidUpdateError(msg)
+
+langgraph.errors.InvalidUpdateError: At key 'evidence_graph': Can receive only one value per step. Use an Annotated key to handle multiple values.
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/INVALID_CONCURRENT_GRAPH_UPDATE
+During task with name 'research_analysis' and id '5598302e-0216-8ad2-4bf2-8fbaec30b7b5'

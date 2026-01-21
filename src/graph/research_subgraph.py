@@ -24,7 +24,12 @@ from src.agents.geneticist import GeneticistAgent
 from src.agents.recruiter import RecruiterAgent
 from src.agents.oncologist import OncologistAgent
 from src.agents.research_mixin import ResearchMixin
-from src.utils.logger import mtb_logger as logger
+from src.utils.logger import (
+    mtb_logger as logger,
+    log_separator,
+    log_evidence_stats,
+    log_convergence_status
+)
 from config.settings import (
     MAX_PHASE1_ITERATIONS,
     MAX_PHASE2_ITERATIONS,
@@ -71,8 +76,6 @@ def phase1_router(state: MtbState) -> List[Send]:
 
     根据研究计划将方向分配给各个 Agent。
     """
-    logger.info("[PHASE1] 路由分发到并行 Agent...")
-
     iteration = state.get("phase1_iteration", 0)
     plan = load_research_plan(state.get("research_plan", {}))
     graph = load_evidence_graph(state.get("evidence_graph", {}))
@@ -81,7 +84,15 @@ def phase1_router(state: MtbState) -> List[Send]:
     gaps = graph.get_gaps_requiring_depth() if graph else []
     mode = determine_research_mode(iteration, plan, gaps) if plan else ResearchMode.BREADTH_FIRST
 
-    logger.info(f"[PHASE1] 迭代 {iteration + 1}/{MAX_PHASE1_ITERATIONS}, 模式: {mode.value}")
+    # 增强日志输出
+    log_separator("PHASE1")
+    logger.info(f"[PHASE1] 迭代 {iteration + 1}/{MAX_PHASE1_ITERATIONS}")
+    logger.info(f"[PHASE1] 研究模式: {mode.value}")
+    logger.info(f"[PHASE1] 分发到: Pathologist, Geneticist, Recruiter")
+
+    # 显示当前证据图状态
+    if graph and len(graph) > 0:
+        log_evidence_stats(state.get("evidence_graph", {}))
 
     # 更新状态中的模式
     updated_state = dict(state)
@@ -111,7 +122,8 @@ def phase1_recruiter_node(state: MtbState) -> Dict[str, Any]:
 
 def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict[str, Any]:
     """执行 Phase 1 Agent 的研究迭代"""
-    logger.info(f"[PHASE1_{agent_name.upper()}] 开始研究迭代...")
+    tag = f"PHASE1_{agent_name.upper()}"
+    logger.info(f"[{tag}] ───────────────────────────────────────")
 
     # 获取状态
     iteration = state.get("phase1_iteration", 0)
@@ -129,8 +141,14 @@ def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict
                 directions.append(d.to_dict())
 
     if not directions:
-        logger.info(f"[PHASE1_{agent_name.upper()}] 无分配方向，跳过")
+        logger.info(f"[{tag}] 无分配方向，跳过")
         return {}
+
+    # 显示分配的方向
+    logger.info(f"[{tag}] 分配方向: {len(directions)} 个")
+    for d in directions:
+        status_icon = "✓" if d.get("status") == "completed" else "○"
+        logger.info(f"[{tag}]   {status_icon} {d.get('topic', '未命名')} (优先级: {d.get('priority', '-')})")
 
     # 创建 Agent 并执行研究
     agent = agent_class()
@@ -143,7 +161,15 @@ def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict
         case_context=raw_pdf_text[:3000]
     )
 
-    logger.info(f"[PHASE1_{agent_name.upper()}] 完成, 新证据: {len(result.get('new_evidence_ids', []))}")
+    # 显示执行结果
+    new_evidence_ids = result.get('new_evidence_ids', [])
+    direction_updates = result.get('direction_updates', {})
+    logger.info(f"[{tag}] 完成:")
+    logger.info(f"[{tag}]   新证据: {len(new_evidence_ids)}")
+    if direction_updates:
+        logger.info(f"[{tag}]   方向更新: {direction_updates}")
+    if result.get('needs_deep_research'):
+        logger.info(f"[{tag}]   需深入研究: {len(result.get('needs_deep_research', []))} 项")
 
     return {
         "evidence_graph": result.get("evidence_graph", evidence_graph),
@@ -157,18 +183,29 @@ def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
 
     计算新发现数量，更新迭代计数。
     """
-    logger.info("[PHASE1] 聚合并行结果...")
+    log_separator("PHASE1")
+    logger.info("[PHASE1] 聚合并行结果:")
 
-    # 计算新发现总数
+    # 计算各 Agent 的新发现
+    agent_results = {
+        "Pathologist": state.get("pathologist_research_result", {}),
+        "Geneticist": state.get("geneticist_research_result", {}),
+        "Recruiter": state.get("recruiter_research_result", {})
+    }
+
     new_findings = 0
-    for key in ["pathologist_research_result", "geneticist_research_result", "recruiter_research_result"]:
-        result = state.get(key, {})
-        new_findings += len(result.get("new_evidence_ids", []))
+    for agent_name, result in agent_results.items():
+        count = len(result.get("new_evidence_ids", []))
+        new_findings += count
+        logger.info(f"[PHASE1]   {agent_name}: {count} 条新证据")
+
+    logger.info(f"[PHASE1]   本轮总计: {new_findings}")
+
+    # 显示证据图统计
+    log_evidence_stats(state.get("evidence_graph", {}))
 
     # 更新迭代计数
     current_iteration = state.get("phase1_iteration", 0)
-
-    logger.info(f"[PHASE1] 聚合完成, 本轮新发现: {new_findings}")
 
     return {
         "phase1_iteration": current_iteration + 1,
@@ -189,36 +226,53 @@ def phase1_convergence_check(state: MtbState) -> Literal["continue", "converged"
     iteration = state.get("phase1_iteration", 0)
     new_findings = state.get("phase1_new_findings", 0)
 
-    # 条件 1: 迭代上限
-    if iteration >= MAX_PHASE1_ITERATIONS:
-        logger.info(f"[PHASE1_CONVERGENCE] 达到迭代上限 ({MAX_PHASE1_ITERATIONS}), 收敛")
-        return "converged"
-
-    # 条件 2: 研究方向完成
+    # 收集检查信息
     plan = load_research_plan(state.get("research_plan", {}))
+    graph = load_evidence_graph(state.get("evidence_graph", {}))
+
+    # 计算待完成方向数
+    pending_count = 0
     if plan:
         phase1_agents = ["Pathologist", "Geneticist", "Recruiter"]
         phase1_directions = [d for d in plan.directions if d.target_agent in phase1_agents]
         pending = [d for d in phase1_directions if d.status == DirectionStatus.PENDING]
-        if not pending:
-            logger.info("[PHASE1_CONVERGENCE] 所有方向完成, 收敛")
-            return "converged"
+        pending_count = len(pending)
+
+    # 计算问题覆盖率
+    coverage = plan.calculate_coverage() if plan else 0.0
+    evidence_count = len(graph) if graph else 0
+
+    # 条件 1: 迭代上限
+    if iteration >= MAX_PHASE1_ITERATIONS:
+        log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
+                               pending_count, evidence_count, new_findings, coverage, "converged")
+        logger.info("[PHASE1_CONVERGENCE]   原因: 达到迭代上限")
+        return "converged"
+
+    # 条件 2: 研究方向完成
+    if plan and pending_count == 0:
+        log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
+                               pending_count, evidence_count, new_findings, coverage, "converged")
+        logger.info("[PHASE1_CONVERGENCE]   原因: 所有方向完成")
+        return "converged"
 
     # 条件 3: 证据充分且无新发现
-    graph = load_evidence_graph(state.get("evidence_graph", {}))
-    if graph and len(graph) >= MIN_EVIDENCE_NODES:
-        if new_findings == 0:
-            logger.info(f"[PHASE1_CONVERGENCE] 证据充分 ({len(graph)}) 且无新发现, 收敛")
-            return "converged"
+    if graph and evidence_count >= MIN_EVIDENCE_NODES and new_findings == 0:
+        log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
+                               pending_count, evidence_count, new_findings, coverage, "converged")
+        logger.info(f"[PHASE1_CONVERGENCE]   原因: 证据充分 ({evidence_count}) 且无新发现")
+        return "converged"
 
     # 条件 4: 问题覆盖率
-    if plan:
-        coverage = plan.calculate_coverage()
-        if coverage >= QUESTION_COVERAGE_THRESHOLD:
-            logger.info(f"[PHASE1_CONVERGENCE] 问题覆盖率达标 ({coverage:.1%}), 收敛")
-            return "converged"
+    if plan and coverage >= QUESTION_COVERAGE_THRESHOLD:
+        log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
+                               pending_count, evidence_count, new_findings, coverage, "converged")
+        logger.info(f"[PHASE1_CONVERGENCE]   原因: 问题覆盖率达标 ({coverage:.1%})")
+        return "converged"
 
-    logger.info(f"[PHASE1_CONVERGENCE] 继续迭代 (iteration={iteration}, new_findings={new_findings})")
+    # 继续迭代
+    log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
+                           pending_count, evidence_count, new_findings, coverage, "continue")
     return "continue"
 
 
@@ -226,8 +280,6 @@ def phase1_convergence_check(state: MtbState) -> Literal["continue", "converged"
 
 def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
     """Phase 2: 肿瘤学家研究节点"""
-    logger.info("[PHASE2_ONCOLOGIST] 开始研究迭代...")
-
     # 获取状态
     iteration = state.get("phase2_iteration", 0)
     plan = load_research_plan(state.get("research_plan", {}))
@@ -237,7 +289,23 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
     gaps = graph.get_gaps_requiring_depth() if graph else []
     mode = determine_research_mode(iteration, plan, gaps) if plan else ResearchMode.BREADTH_FIRST
 
-    logger.info(f"[PHASE2_ONCOLOGIST] 迭代 {iteration + 1}/{MAX_PHASE2_ITERATIONS}, 模式: {mode.value}")
+    # 增强日志输出
+    log_separator("PHASE2")
+    logger.info(f"[PHASE2] Oncologist 迭代 {iteration + 1}/{MAX_PHASE2_ITERATIONS}")
+    logger.info(f"[PHASE2] 研究模式: {mode.value}")
+
+    # 显示上游报告摘要
+    pathologist_report = state.get('pathologist_report', '')
+    geneticist_report = state.get('geneticist_report', '')
+    recruiter_report = state.get('recruiter_report', '')
+    logger.info(f"[PHASE2] 上游报告:")
+    logger.info(f"[PHASE2]   Pathologist: {len(pathologist_report)} 字符")
+    logger.info(f"[PHASE2]   Geneticist: {len(geneticist_report)} 字符")
+    logger.info(f"[PHASE2]   Recruiter: {len(recruiter_report)} 字符")
+
+    # 显示当前证据图状态
+    if graph and len(graph) > 0:
+        log_evidence_stats(state.get("evidence_graph", {}))
 
     # 获取分配给 Oncologist 的方向
     directions = []
@@ -310,33 +378,53 @@ def phase2_convergence_check(state: MtbState) -> Literal["continue", "converged"
     iteration = state.get("phase2_iteration", 0)
     new_findings = state.get("phase2_new_findings", 0)
 
-    # 条件 1: 迭代上限
-    if iteration >= MAX_PHASE2_ITERATIONS:
-        logger.info(f"[PHASE2_CONVERGENCE] 达到迭代上限 ({MAX_PHASE2_ITERATIONS}), 收敛")
-        return "converged"
-
-    # 条件 2: 研究方向完成
+    # 收集检查信息
     plan = load_research_plan(state.get("research_plan", {}))
+    graph = load_evidence_graph(state.get("evidence_graph", {}))
+
+    # 计算待完成方向数
+    pending_count = 0
     if plan:
         onc_directions = [d for d in plan.directions if d.target_agent == "Oncologist"]
         pending = [d for d in onc_directions if d.status == DirectionStatus.PENDING]
-        if not pending and onc_directions:
-            logger.info("[PHASE2_CONVERGENCE] 所有 Oncologist 方向完成, 收敛")
-            return "converged"
+        pending_count = len(pending)
 
-    # 条件 3: 已有治疗方案证据
-    graph = load_evidence_graph(state.get("evidence_graph", {}))
+    evidence_count = len(graph) if graph else 0
+
+    # 计算治疗方案证据数
+    drug_count = 0
+    guideline_count = 0
     if graph:
         from src.models.evidence_graph import EvidenceType
         drug_nodes = graph.get_nodes_by_type(EvidenceType.DRUG)
         guideline_nodes = graph.get_nodes_by_type(EvidenceType.GUIDELINE)
-        if len(drug_nodes) >= 1 or len(guideline_nodes) >= 1:
-            # 额外检查：至少迭代过一次
-            if iteration >= 1:
-                logger.info(f"[PHASE2_CONVERGENCE] 已有治疗方案 (drugs={len(drug_nodes)}, guidelines={len(guideline_nodes)}), 收敛")
-                return "converged"
+        drug_count = len(drug_nodes)
+        guideline_count = len(guideline_nodes)
 
-    logger.info(f"[PHASE2_CONVERGENCE] 继续迭代 (iteration={iteration}, new_findings={new_findings})")
+    # 显示检查状态
+    logger.info("[PHASE2_CONVERGENCE] 检查收敛条件...")
+    logger.info(f"[PHASE2_CONVERGENCE]   迭代: {iteration}/{MAX_PHASE2_ITERATIONS}")
+    logger.info(f"[PHASE2_CONVERGENCE]   待完成方向: {pending_count}")
+    logger.info(f"[PHASE2_CONVERGENCE]   证据节点: {evidence_count}")
+    logger.info(f"[PHASE2_CONVERGENCE]   本轮新发现: {new_findings}")
+    logger.info(f"[PHASE2_CONVERGENCE]   治疗证据: 药物={drug_count}, 指南={guideline_count}")
+
+    # 条件 1: 迭代上限
+    if iteration >= MAX_PHASE2_ITERATIONS:
+        logger.info("[PHASE2_CONVERGENCE] → 收敛 (原因: 达到迭代上限)")
+        return "converged"
+
+    # 条件 2: 研究方向完成
+    if plan and pending_count == 0 and len(onc_directions) > 0:
+        logger.info("[PHASE2_CONVERGENCE] → 收敛 (原因: 所有 Oncologist 方向完成)")
+        return "converged"
+
+    # 条件 3: 已有治疗方案证据
+    if (drug_count >= 1 or guideline_count >= 1) and iteration >= 1:
+        logger.info(f"[PHASE2_CONVERGENCE] → 收敛 (原因: 已有治疗方案)")
+        return "converged"
+
+    logger.info("[PHASE2_CONVERGENCE] → 继续")
     return "continue"
 
 
@@ -348,7 +436,11 @@ def generate_agent_reports(state: MtbState) -> Dict[str, Any]:
 
     这个节点在研究循环结束后，将累积的证据整理成报告格式。
     """
+    log_separator("REPORT_GEN")
     logger.info("[REPORT_GEN] 生成 Agent 报告...")
+
+    # 显示最终证据图统计
+    log_evidence_stats(state.get("evidence_graph", {}))
 
     graph = load_evidence_graph(state.get("evidence_graph", {}))
 

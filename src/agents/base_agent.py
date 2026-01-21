@@ -23,7 +23,7 @@ from config.settings import (
     SUBGRAPH_MODEL,
     ORCHESTRATOR_MODEL
 )
-from src.utils.logger import mtb_logger as logger
+from src.utils.logger import mtb_logger as logger, log_tool_call
 
 
 @dataclass
@@ -321,15 +321,20 @@ class BaseAgent:
             except json.JSONDecodeError:
                 tool_args = {}
 
-            logger.debug(f"[{self.role}] 执行工具: {tool_name}, 参数: {tool_args}")
+            # 显示工具调用信息
+            query_display = json.dumps(tool_args, ensure_ascii=False)
+            logger.info(f"[{self.role}] 工具调用: {tool_name}")
+            logger.info(f"[{self.role}]   参数: {query_display[:100]}{'...' if len(query_display) > 100 else ''}")
 
             # 查找并执行工具
             if tool_name in self.tool_registry:
                 tool = self.tool_registry[tool_name]
                 tool_result = tool.invoke(**tool_args)
-                logger.debug(f"[{self.role}] 工具 {tool_name} 返回: {tool_result[:100] if tool_result else 'None'}...")
+                result_len = len(tool_result) if tool_result else 0
+                log_tool_call(self.role, tool_name, query_display, True, result_len)
             else:
                 tool_result = f"错误：未找到工具 '{tool_name}'"
+                log_tool_call(self.role, tool_name, query_display, False, 0)
                 logger.warning(f"[{self.role}] 未找到工具: {tool_name}")
 
             # 记录工具调用历史（完整信息，不截断）
