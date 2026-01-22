@@ -34,8 +34,10 @@ from config.settings import (
     MAX_PHASE1_ITERATIONS,
     MAX_PHASE2_ITERATIONS,
     MIN_EVIDENCE_NODES,
-    QUESTION_COVERAGE_THRESHOLD
+    QUESTION_COVERAGE_THRESHOLD,
+    COVERAGE_REQUIRED_MODULES
 )
+from src.agents.convergence_judge import ConvergenceJudgeAgent
 
 
 # ==================== 研究增强型 Agent ====================
@@ -66,6 +68,34 @@ class ResearchOncologist(OncologistAgent, ResearchMixin):
     def __init__(self):
         super().__init__()
         self.model = SUBGRAPH_MODEL
+
+
+# ==================== 模块覆盖检查 ====================
+
+def check_module_coverage(state: MtbState) -> tuple[bool, list[str]]:
+    """
+    检查模块覆盖率
+
+    Args:
+        state: MtbState 状态
+
+    Returns:
+        (是否通过, 未覆盖模块列表)
+    """
+    plan = load_research_plan(state.get("research_plan", {}))
+    if not plan:
+        logger.info("[MODULE_COVERAGE] 无研究计划，跳过检查")
+        return True, []
+
+    covered_modules = plan.get_module_coverage()
+    uncovered = [m for m in COVERAGE_REQUIRED_MODULES if m not in covered_modules]
+
+    if uncovered:
+        logger.warning(f"[MODULE_COVERAGE] 未覆盖模块: {uncovered}")
+        return False, uncovered
+
+    logger.info(f"[MODULE_COVERAGE] 所有 {len(COVERAGE_REQUIRED_MODULES)} 个模块已覆盖")
+    return True, []
 
 
 # ==================== Phase 1 节点 ====================
@@ -215,13 +245,16 @@ def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
 
 def phase1_convergence_check(state: MtbState) -> Literal["continue", "converged"]:
     """
-    Phase 1 收敛检查
+    Phase 1 收敛检查 - 三步收敛流程
 
-    返回 "converged" 如果满足以下任一条件：
-    1. 迭代上限
-    2. 研究方向全部完成
-    3. 证据充分且无新发现
-    4. 问题覆盖率达标
+    Step 1: Metric-based Fast Check
+        - 迭代上限 / 方向完成 / 证据饱和 / 问题覆盖率
+    Step 2: Module Coverage Check
+        - 9 个必需模块是否有研究方向覆盖
+    Step 3: ConvergenceJudge Agent
+        - LLM 评估研究质量
+
+    如果达到迭代上限，无论其他条件如何都会收敛（带警告）
     """
     iteration = state.get("phase1_iteration", 0)
     new_findings = state.get("phase1_new_findings", 0)
@@ -242,38 +275,83 @@ def phase1_convergence_check(state: MtbState) -> Literal["continue", "converged"
     coverage = plan.calculate_coverage() if plan else 0.0
     evidence_count = len(graph) if graph else 0
 
-    # 条件 1: 迭代上限
+    # ==================== 迭代上限检查（优先） ====================
     if iteration >= MAX_PHASE1_ITERATIONS:
+        # 检查模块覆盖，记录警告
+        module_passed, uncovered = check_module_coverage(state)
+        if not module_passed:
+            logger.warning(f"[PHASE1_CONVERGENCE] 达到迭代上限，以下模块可能证据不足: {uncovered}")
         log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
                                pending_count, evidence_count, new_findings, coverage, "converged")
         logger.info("[PHASE1_CONVERGENCE]   原因: 达到迭代上限")
         return "converged"
 
-    # 条件 2: 研究方向完成
+    # ==================== Step 1: Metric-based Fast Check ====================
+    logger.info("[PHASE1_CONVERGENCE] Step 1: Metric-based 检查...")
+
+    metrics_passed = False
+    metrics_reason = ""
+
+    # 条件 1: 研究方向完成
     if plan and pending_count == 0:
-        log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
-                               pending_count, evidence_count, new_findings, coverage, "converged")
-        logger.info("[PHASE1_CONVERGENCE]   原因: 所有方向完成")
-        return "converged"
+        metrics_passed = True
+        metrics_reason = "所有方向完成"
 
-    # 条件 3: 证据充分且无新发现
-    if graph and evidence_count >= MIN_EVIDENCE_NODES and new_findings == 0:
-        log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
-                               pending_count, evidence_count, new_findings, coverage, "converged")
-        logger.info(f"[PHASE1_CONVERGENCE]   原因: 证据充分 ({evidence_count}) 且无新发现")
-        return "converged"
+    # 条件 2: 证据充分且无新发现
+    elif graph and evidence_count >= MIN_EVIDENCE_NODES and new_findings == 0:
+        metrics_passed = True
+        metrics_reason = f"证据充分 ({evidence_count}) 且无新发现"
 
-    # 条件 4: 问题覆盖率
-    if plan and coverage >= QUESTION_COVERAGE_THRESHOLD:
-        log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
-                               pending_count, evidence_count, new_findings, coverage, "converged")
-        logger.info(f"[PHASE1_CONVERGENCE]   原因: 问题覆盖率达标 ({coverage:.1%})")
-        return "converged"
+    # 条件 3: 问题覆盖率达标
+    elif plan and coverage >= QUESTION_COVERAGE_THRESHOLD:
+        metrics_passed = True
+        metrics_reason = f"问题覆盖率达标 ({coverage:.1%})"
 
-    # 继续迭代
+    if not metrics_passed:
+        log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
+                               pending_count, evidence_count, new_findings, coverage, "continue")
+        logger.info("[PHASE1_CONVERGENCE]   Step 1 未通过，继续迭代")
+        return "continue"
+
+    logger.info(f"[PHASE1_CONVERGENCE]   Step 1 通过: {metrics_reason}")
+
+    # ==================== Step 2: Module Coverage Check ====================
+    logger.info("[PHASE1_CONVERGENCE] Step 2: Module Coverage 检查...")
+
+    module_passed, uncovered = check_module_coverage(state)
+    if not module_passed:
+        log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
+                               pending_count, evidence_count, new_findings, coverage, "continue")
+        logger.info(f"[PHASE1_CONVERGENCE]   Step 2 未通过: 未覆盖模块 {uncovered}")
+        return "continue"
+
+    logger.info("[PHASE1_CONVERGENCE]   Step 2 通过: 所有模块已覆盖")
+
+    # ==================== Step 3: ConvergenceJudge Agent ====================
+    logger.info("[PHASE1_CONVERGENCE] Step 3: ConvergenceJudge 评估...")
+
+    try:
+        judge = ConvergenceJudgeAgent()
+        decision = judge.evaluate(state)
+
+        if decision == "continue":
+            log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
+                                   pending_count, evidence_count, new_findings, coverage, "continue")
+            logger.info("[PHASE1_CONVERGENCE]   Step 3 判断: 需要继续研究")
+            return "continue"
+
+        logger.info("[PHASE1_CONVERGENCE]   Step 3 判断: 研究充分")
+
+    except Exception as e:
+        logger.error(f"[PHASE1_CONVERGENCE]   Step 3 评估失败: {e}")
+        # 评估失败时，如果 Step 1 和 Step 2 都通过，允许收敛
+        logger.info("[PHASE1_CONVERGENCE]   Step 3 失败，但 Step 1/2 通过，允许收敛")
+
+    # ==================== 三步检查全部通过 ====================
     log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
-                           pending_count, evidence_count, new_findings, coverage, "continue")
-    return "continue"
+                           pending_count, evidence_count, new_findings, coverage, "converged")
+    logger.info(f"[PHASE1_CONVERGENCE] → 收敛 (三步检查通过: {metrics_reason})")
+    return "converged"
 
 
 # ==================== Phase 2 节点 ====================
@@ -368,12 +446,16 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
 
 def phase2_convergence_check(state: MtbState) -> Literal["continue", "converged"]:
     """
-    Phase 2 收敛检查
+    Phase 2 收敛检查 - 三步收敛流程
 
-    返回 "converged" 如果满足以下任一条件：
-    1. 迭代上限
-    2. Oncologist 方向全部完成
-    3. 已有治疗方案
+    Step 1: Metric-based Fast Check
+        - 迭代上限 / 方向完成 / 治疗方案证据
+    Step 2: Module Coverage Check
+        - 9 个必需模块是否有研究方向覆盖
+    Step 3: ConvergenceJudge Agent
+        - LLM 评估研究质量
+
+    如果达到迭代上限，无论其他条件如何都会收敛（带警告）
     """
     iteration = state.get("phase2_iteration", 0)
     new_findings = state.get("phase2_new_findings", 0)
@@ -384,6 +466,7 @@ def phase2_convergence_check(state: MtbState) -> Literal["continue", "converged"
 
     # 计算待完成方向数
     pending_count = 0
+    onc_directions = []
     if plan:
         onc_directions = [d for d in plan.directions if d.target_agent == "Oncologist"]
         pending = [d for d in onc_directions if d.status == DirectionStatus.PENDING]
@@ -409,23 +492,68 @@ def phase2_convergence_check(state: MtbState) -> Literal["continue", "converged"
     logger.info(f"[PHASE2_CONVERGENCE]   本轮新发现: {new_findings}")
     logger.info(f"[PHASE2_CONVERGENCE]   治疗证据: 药物={drug_count}, 指南={guideline_count}")
 
-    # 条件 1: 迭代上限
+    # ==================== 迭代上限检查（优先） ====================
     if iteration >= MAX_PHASE2_ITERATIONS:
+        # 检查模块覆盖，记录警告
+        module_passed, uncovered = check_module_coverage(state)
+        if not module_passed:
+            logger.warning(f"[PHASE2_CONVERGENCE] 达到迭代上限，以下模块可能证据不足: {uncovered}")
         logger.info("[PHASE2_CONVERGENCE] → 收敛 (原因: 达到迭代上限)")
         return "converged"
 
-    # 条件 2: 研究方向完成
+    # ==================== Step 1: Metric-based Fast Check ====================
+    logger.info("[PHASE2_CONVERGENCE] Step 1: Metric-based 检查...")
+
+    metrics_passed = False
+    metrics_reason = ""
+
+    # 条件 1: 研究方向完成
     if plan and pending_count == 0 and len(onc_directions) > 0:
-        logger.info("[PHASE2_CONVERGENCE] → 收敛 (原因: 所有 Oncologist 方向完成)")
-        return "converged"
+        metrics_passed = True
+        metrics_reason = "所有 Oncologist 方向完成"
 
-    # 条件 3: 已有治疗方案证据
-    if (drug_count >= 1 or guideline_count >= 1) and iteration >= 1:
-        logger.info(f"[PHASE2_CONVERGENCE] → 收敛 (原因: 已有治疗方案)")
-        return "converged"
+    # 条件 2: 已有治疗方案证据
+    elif (drug_count >= 1 or guideline_count >= 1) and iteration >= 1:
+        metrics_passed = True
+        metrics_reason = f"已有治疗方案 (药物={drug_count}, 指南={guideline_count})"
 
-    logger.info("[PHASE2_CONVERGENCE] → 继续")
-    return "continue"
+    if not metrics_passed:
+        logger.info("[PHASE2_CONVERGENCE]   Step 1 未通过，继续迭代")
+        return "continue"
+
+    logger.info(f"[PHASE2_CONVERGENCE]   Step 1 通过: {metrics_reason}")
+
+    # ==================== Step 2: Module Coverage Check ====================
+    logger.info("[PHASE2_CONVERGENCE] Step 2: Module Coverage 检查...")
+
+    module_passed, uncovered = check_module_coverage(state)
+    if not module_passed:
+        logger.info(f"[PHASE2_CONVERGENCE]   Step 2 未通过: 未覆盖模块 {uncovered}")
+        return "continue"
+
+    logger.info("[PHASE2_CONVERGENCE]   Step 2 通过: 所有模块已覆盖")
+
+    # ==================== Step 3: ConvergenceJudge Agent ====================
+    logger.info("[PHASE2_CONVERGENCE] Step 3: ConvergenceJudge 评估...")
+
+    try:
+        judge = ConvergenceJudgeAgent()
+        decision = judge.evaluate(state)
+
+        if decision == "continue":
+            logger.info("[PHASE2_CONVERGENCE]   Step 3 判断: 需要继续研究")
+            return "continue"
+
+        logger.info("[PHASE2_CONVERGENCE]   Step 3 判断: 研究充分")
+
+    except Exception as e:
+        logger.error(f"[PHASE2_CONVERGENCE]   Step 3 评估失败: {e}")
+        # 评估失败时，如果 Step 1 和 Step 2 都通过，允许收敛
+        logger.info("[PHASE2_CONVERGENCE]   Step 3 失败，但 Step 1/2 通过，允许收敛")
+
+    # ==================== 三步检查全部通过 ====================
+    logger.info(f"[PHASE2_CONVERGENCE] → 收敛 (三步检查通过: {metrics_reason})")
+    return "converged"
 
 
 # ==================== 报告生成节点 ====================
