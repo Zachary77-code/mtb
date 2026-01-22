@@ -11,6 +11,7 @@ from src.models.evidence_graph import (
     EvidenceGraph,
     EvidenceType,
     EvidenceGrade,
+    CivicEvidenceType,
     load_evidence_graph
 )
 from src.models.research_plan import (
@@ -187,8 +188,9 @@ class ResearchMixin:
         {{
             "direction_id": "D1",
             "content": "发现内容（完整详细，不限长度）",
-            "evidence_type": "molecular|clinical|literature|trial|guideline|drug",
-            "grade": "A|B|C|D",
+            "evidence_type": "molecular|clinical|literature|trial|guideline|drug|pathology|imaging",
+            "grade": "A|B|C|D|E",
+            "civic_type": "predictive|diagnostic|prognostic|predisposing|oncogenic",
             "source_tool": "工具名称",
             "related_questions": ["Q1"]
         }}
@@ -206,6 +208,20 @@ class ResearchMixin:
     "research_complete": false
 }}
 ```
+
+**证据等级说明 (CIViC Evidence Level)**:
+- A: Validated - 已验证，多项独立研究或 meta 分析支持
+- B: Clinical - 临床证据，来自临床试验或大规模临床研究
+- C: Case Study - 病例研究，来自个案报道或小规模病例系列
+- D: Preclinical - 临床前证据，来自细胞系、动物模型等实验
+- E: Inferential - 推断性证据，间接证据或基于生物学原理的推断
+
+**CIViC 证据类型说明**:
+- predictive: 预测性 - 预测对某种治疗的反应
+- diagnostic: 诊断性 - 用于疾病诊断
+- prognostic: 预后性 - 与疾病预后相关
+- predisposing: 易感性 - 与癌症风险相关
+- oncogenic: 致癌性 - 变异的致癌功能
 
 请开始执行广度优先研究。
 """
@@ -271,8 +287,9 @@ class ResearchMixin:
         {{
             "direction_id": "D1",
             "content": "深入发现内容（完整详细，不限长度）",
-            "evidence_type": "molecular|clinical|literature|trial|guideline|drug",
-            "grade": "A|B|C|D",
+            "evidence_type": "molecular|clinical|literature|trial|guideline|drug|pathology|imaging",
+            "grade": "A|B|C|D|E",
+            "civic_type": "predictive|diagnostic|prognostic|predisposing|oncogenic",
             "source_tool": "工具名称",
             "related_questions": ["Q1"],
             "depth_chain": ["引用1", "引用2", "推理步骤"]
@@ -285,6 +302,20 @@ class ResearchMixin:
     "research_complete": true|false
 }}
 ```
+
+**证据等级说明 (CIViC Evidence Level)**:
+- A: Validated - 已验证，多项独立研究或 meta 分析支持
+- B: Clinical - 临床证据，来自临床试验或大规模临床研究
+- C: Case Study - 病例研究，来自个案报道或小规模病例系列
+- D: Preclinical - 临床前证据，来自细胞系、动物模型等实验
+- E: Inferential - 推断性证据，间接证据或基于生物学原理的推断
+
+**CIViC 证据类型说明**:
+- predictive: 预测性 - 预测对某种治疗的反应
+- diagnostic: 诊断性 - 用于疾病诊断
+- prognostic: 预后性 - 与疾病预后相关
+- predisposing: 易感性 - 与癌症风险相关
+- oncogenic: 致癌性 - 变异的致癌功能
 
 请开始执行深度优先研究。
 """
@@ -352,6 +383,15 @@ class ResearchMixin:
                 except ValueError:
                     pass
 
+            # 映射 CIViC 证据类型
+            civic_type_str = finding.get("civic_type")
+            civic_type = None
+            if civic_type_str:
+                try:
+                    civic_type = CivicEvidenceType(civic_type_str)
+                except ValueError:
+                    pass
+
             # 添加节点
             node_id = graph.add_node(
                 evidence_type=evidence_type,
@@ -359,6 +399,7 @@ class ResearchMixin:
                 source_agent=agent_role,
                 source_tool=finding.get("source_tool"),
                 grade=grade,
+                civic_evidence_type=civic_type,
                 related_questions=finding.get("related_questions", []),
                 iteration=iteration,
                 research_mode=mode.value,

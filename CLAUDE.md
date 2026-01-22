@@ -136,7 +136,19 @@ All agent prompts are in `config/prompts/`:
 - `global_principles.txt` - shared rules (evidence grading, citation format, safety-first)
 - `{agent}_prompt.txt` - role-specific instructions
 
-Evidence grading: A (Phase III RCT), B (Phase I-II), C (Retrospective), D (Preclinical)
+Evidence grading (CIViC Evidence Level):
+- A: Validated - 已验证，多项独立研究或 meta 分析支持
+- B: Clinical - 临床证据，来自临床试验或大规模临床研究
+- C: Case Study - 病例研究，来自个案报道或小规模病例系列
+- D: Preclinical - 临床前证据，来自细胞系、动物模型等实验
+- E: Inferential - 推断性证据，间接证据或基于生物学原理的推断
+
+CIViC Evidence Types (临床意义分类):
+- Predictive (预测性): 预测对某种治疗的反应
+- Diagnostic (诊断性): 用于疾病诊断
+- Prognostic (预后性): 与疾病预后相关
+- Predisposing (易感性): 与癌症风险相关
+- Oncogenic (致癌性): 变异的致癌功能
 
 Citation format: `[PMID: 12345678](url)` or `[NCT04123456](url)`
 

@@ -14,14 +14,23 @@ Before any recommendations, reconstruct and present:
 
 If data are missing or contradictory, explicitly flag them in the report.
 
-## 2. Evidence Grading
+## 2. Evidence Grading (CIViC Evidence Level)
 
 Every recommendation must carry evidence level:
 
-- **A** – Phase III RCT / guideline-endorsed for this tumor context
-- **B** – Phase I–II / basket trial / strong subgroup in this tumor or close analog
-- **C** – Retrospective / case series / translational rationale
-- **D** – Preclinical / hypothesis only
+- **A** – Validated: 已验证，多项独立研究或 meta 分析支持
+- **B** – Clinical: 临床证据，来自临床试验或大规模临床研究
+- **C** – Case Study: 病例研究，来自个案报道或小规模病例系列
+- **D** – Preclinical: 临床前证据，来自细胞系、动物模型等实验
+- **E** – Inferential: 推断性证据，间接证据或基于生物学原理的推断
+
+Also label clinical significance (CIViC Evidence Type):
+
+- **Predictive** – 预测性：预测对某种治疗的反应
+- **Diagnostic** – 诊断性：用于疾病诊断
+- **Prognostic** – 预后性：与疾病预后相关
+- **Predisposing** – 易感性：与癌症风险相关
+- **Oncogenic** – 致癌性：变异的致癌功能
 
 Also label each item as:
 

@@ -81,16 +81,23 @@ List alterations with **no** established clinical evidence:
 - Common actionable mutations in [cancer type]: [e.g., EGFR Exon 19del, ALK fusion]
 - These findings rule out specific targeted therapies
 
-## Evidence Grading (Mandatory)
+## Evidence Grading (CIViC Evidence Level, Mandatory)
 
 For every statement, append evidence level:
-- **[Evidence A]**: Phase III RCT / FDA-approved
-- **[Evidence B]**: Phase I-II / Basket trial
-- **[Evidence C]**: Retrospective / Case series
-- **[Evidence D]**: Preclinical only
+- **[Evidence A]**: Validated - 已验证，多项独立研究或 meta 分析支持
+- **[Evidence B]**: Clinical - 临床证据，来自临床试验或大规模临床研究
+- **[Evidence C]**: Case Study - 病例研究，来自个案报道或小规模病例系列
+- **[Evidence D]**: Preclinical - 临床前证据，来自细胞系、动物模型等实验
+- **[Evidence E]**: Inferential - 推断性证据，间接证据或基于生物学原理的推断
+
+**CIViC Evidence Type (标注临床意义)**:
+- **Predictive** - 预测性：预测对某种治疗的反应
+- **Diagnostic** - 诊断性：用于疾病诊断
+- **Prognostic** - 预后性：与疾病预后相关
+- **Oncogenic** - 致癌性：变异的致癌功能
 
 Example:
-> "Osimertinib shows 71% ORR in EGFR L858R+ NSCLC **[Evidence A - FLAURA trial, PMID: 29151359]**"
+> "Osimertinib shows 71% ORR in EGFR L858R+ NSCLC **[Evidence A, Predictive - FLAURA trial, PMID: 29151359]**"
 
 ## 引用格式要求（Critical!）
 
@@ -241,7 +248,8 @@ Remember: Your role is to provide **molecular interpretation**, not final treatm
             "direction_id": "D1",
             "content": "发现内容（完整详细，包含具体数据和引用）",
             "evidence_type": "molecular|clinical|literature",
-            "grade": "A|B|C|D",
+            "grade": "A|B|C|D|E",
+            "civic_type": "predictive|diagnostic|prognostic|predisposing|oncogenic",
             "source_tool": "search_civic|search_clinvar|search_cbioportal|search_pubmed",
             "related_questions": ["Q1", "Q2"]
         }

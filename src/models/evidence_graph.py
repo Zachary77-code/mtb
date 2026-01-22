@@ -24,11 +24,21 @@ class EvidenceType(str, Enum):
 
 
 class EvidenceGrade(str, Enum):
-    """证据等级（参考 CLAUDE.md 中的定义）"""
-    A = "A"  # Phase III RCT
-    B = "B"  # Phase I-II
-    C = "C"  # Retrospective
-    D = "D"  # Preclinical / Expert opinion
+    """证据等级（CIViC Evidence Level）"""
+    A = "A"  # Validated - 已验证，多项独立研究或 meta 分析支持
+    B = "B"  # Clinical - 临床证据，来自临床试验或大规模临床研究
+    C = "C"  # Case Study - 病例研究，来自个案报道或小规模病例系列
+    D = "D"  # Preclinical - 临床前证据，来自细胞系、动物模型等实验
+    E = "E"  # Inferential - 推断性证据，间接证据或基于生物学原理的推断
+
+
+class CivicEvidenceType(str, Enum):
+    """CIViC 证据类型（临床意义分类）"""
+    PREDICTIVE = "predictive"      # 预测性 - 预测对某种治疗的反应
+    DIAGNOSTIC = "diagnostic"      # 诊断性 - 用于疾病诊断
+    PROGNOSTIC = "prognostic"      # 预后性 - 与疾病预后相关
+    PREDISPOSING = "predisposing"  # 易感性 - 与癌症风险相关
+    ONCOGENIC = "oncogenic"        # 致癌性 - 变异的致癌功能
 
 
 class RelationType(str, Enum):
@@ -56,11 +66,12 @@ class EvidenceNode:
     content: Dict[str, Any]        # 完整内容，不限制长度
     source_agent: str              # 来源 Agent
     source_tool: Optional[str]     # 来源工具
-    grade: Optional[EvidenceGrade] # 证据等级
-    related_questions: List[str]   # 关联的研究问题 ID
-    created_at: datetime
-    iteration: int                 # 收集时的迭代轮次
-    research_mode: str             # 收集时的模式 (breadth_first / depth_first)
+    grade: Optional[EvidenceGrade] # 证据等级 (CIViC Evidence Level: A/B/C/D/E)
+    civic_evidence_type: Optional[CivicEvidenceType] = None  # CIViC 证据类型
+    related_questions: List[str] = field(default_factory=list)   # 关联的研究问题 ID
+    created_at: datetime = field(default_factory=datetime.now)
+    iteration: int = 0             # 收集时的迭代轮次
+    research_mode: str = "breadth_first"  # 收集时的模式 (breadth_first / depth_first)
 
     # DFRS 相关
     needs_deep_research: bool = False  # 是否需要深入研究
@@ -78,6 +89,7 @@ class EvidenceNode:
             "source_agent": self.source_agent,
             "source_tool": self.source_tool,
             "grade": self.grade.value if self.grade else None,
+            "civic_evidence_type": self.civic_evidence_type.value if self.civic_evidence_type else None,
             "related_questions": self.related_questions,
             "created_at": self.created_at.isoformat(),
             "iteration": self.iteration,
@@ -97,6 +109,7 @@ class EvidenceNode:
             source_agent=data["source_agent"],
             source_tool=data.get("source_tool"),
             grade=EvidenceGrade(data["grade"]) if data.get("grade") else None,
+            civic_evidence_type=CivicEvidenceType(data["civic_evidence_type"]) if data.get("civic_evidence_type") else None,
             related_questions=data.get("related_questions", []),
             created_at=datetime.fromisoformat(data["created_at"]),
             iteration=data.get("iteration", 0),
@@ -171,6 +184,7 @@ class EvidenceGraph:
         source_agent: str,
         source_tool: Optional[str] = None,
         grade: Optional[EvidenceGrade] = None,
+        civic_evidence_type: Optional[CivicEvidenceType] = None,
         related_questions: Optional[List[str]] = None,
         iteration: int = 0,
         research_mode: str = "breadth_first",
@@ -192,6 +206,7 @@ class EvidenceGraph:
             source_agent=source_agent,
             source_tool=source_tool,
             grade=grade,
+            civic_evidence_type=civic_evidence_type,
             related_questions=related_questions or [],
             created_at=datetime.now(),
             iteration=iteration,
@@ -307,10 +322,10 @@ class EvidenceGraph:
                 "suggestion": "需要深入研究以解决冲突",
             })
 
-        # 2. 检查低等级证据
+        # 2. 检查低等级证据 (CIViC Level C/D/E 需要深入研究)
         low_grade_nodes = [
             n for n in self.nodes.values()
-            if n.grade in [EvidenceGrade.C, EvidenceGrade.D]
+            if n.grade in [EvidenceGrade.C, EvidenceGrade.D, EvidenceGrade.E]
             and n.evidence_type in [EvidenceType.DRUG, EvidenceType.GUIDELINE]
         ]
         for node in low_grade_nodes:

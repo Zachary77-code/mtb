@@ -99,7 +99,7 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 
 | 靶点 | 对应药物 | 证据级别 | 关键文献 |
 |------|----------|----------|----------|
-| [基因:变异] | [药物名称] | [A/B/C] | [PMID: xxxxx] |
+| [基因:变异] | [药物名称] | [A/B/C/D/E] | [PMID: xxxxx] |
 
 ### 3.4 免疫治疗标志物
 - **MSI/MMR 状态**: [MSI-H / MSS / pMMR / dMMR]（必须明确标注）
@@ -158,15 +158,15 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 
 | Regimen | Evidence Level | 具体给药剂量 | 肾功能调整 | ORR | mPFS | Key Toxicities | Cost | Access |
 |---------|----------------|--------------|------------|-----|------|----------------|------|--------|
-| [方案1] | [A/B/C] | [完整剂量，如 600mg PO BID] | [具体CrCl阈值] | [%] | [m] | [具体毒性] | [¥/月] | [状态] |
-| [方案2] | [A/B/C] | [完整剂量] | [具体CrCl阈值] | [%] | [m] | [具体毒性] | [¥/月] | [状态] |
+| [方案1] | [A/B/C/D/E] | [完整剂量，如 600mg PO BID] | [具体CrCl阈值] | [%] | [m] | [具体毒性] | [¥/月] | [状态] |
+| [方案2] | [A/B/C/D/E] | [完整剂量] | [具体CrCl阈值] | [%] | [m] | [具体毒性] | [¥/月] | [状态] |
 
 ### 5.2 各方案详细说明
 
 **必须从 Oncologist 报告复制每个方案的完整信息**：
 
 #### 方案 1: [方案名称]
-**证据级别**: [A/B/C]
+**证据级别**: [A/B/C/D/E]
 **治疗定位**: [如：后线挽救治疗]
 
 **给药方案**:
@@ -269,7 +269,7 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 ### 7.1 当前推荐方案（详细）
 
 #### 方案名称: [完整方案名称]
-**证据等级**: [A/B/C]（必须标注）
+**证据等级**: [A/B/C/D/E]（必须标注，CIViC Evidence Level）
 **治疗定位**: [如：五线挽救治疗]
 
 **科学依据**（必须完整保留，从 Oncologist 报告复制）:
@@ -304,9 +304,9 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 
 | 优先级 | 方案 | 证据等级 | 适用条件 | 关键数据 |
 |--------|------|----------|----------|----------|
-| 1 | [方案A] | [A/B/C] | [如 PS 良好] | [ORR/PFS] |
-| 2 | [方案B] | [A/B/C] | [如分子复检阳性] | [ORR/PFS] |
-| 3 | [方案C] | [A/B/C] | [条件] | [数据] |
+| 1 | [方案A] | [A/B/C/D/E] | [如 PS 良好] | [ORR/PFS] |
+| 2 | [方案B] | [A/B/C/D/E] | [如分子复检阳性] | [ORR/PFS] |
+| 3 | [方案C] | [A/B/C/D/E] | [条件] | [数据] |
 
 ### 7.3 液体活检/分子复查计划
 
@@ -430,7 +430,7 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 ## 11. 核心建议汇总 (Core Recommendations)
 
 ### Recommended Treatment Plan
-1. **Immediate**: [Drug name, dose, schedule] - **Evidence Level [A/B/C]**
+1. **Immediate**: [Drug name, dose, schedule] - **Evidence Level [A/B/C/D/E]**
    - Rationale: [1-2 sentences]
    - Expected benefit: [ORR/PFS data]
 

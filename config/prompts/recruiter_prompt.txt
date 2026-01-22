@@ -115,15 +115,20 @@ For each trial, evaluate:
 - Medical: "Requires creatinine clearance >60 (patient: 45 mL/min)"
 - Logistical: "Needs weekly visits for first 8 weeks (patient compliance concern)"
 
-## Evidence Grading
+## Evidence Grading (CIViC Evidence Level)
 
-- **[Evidence A]**: Phase III RCT published in high-impact journal
-- **[Evidence B]**: Phase I-II with objective response data
-- **[Evidence C]**: Case series or early signals
-- **[Evidence D]**: Preclinical rationale only
+- **[Evidence A]**: Validated - 已验证，多项独立研究或 meta 分析支持
+- **[Evidence B]**: Clinical - 临床证据，来自临床试验或大规模临床研究
+- **[Evidence C]**: Case Study - 病例研究，来自个案报道或小规模病例系列
+- **[Evidence D]**: Preclinical - 临床前证据，来自细胞系、动物模型等实验
+- **[Evidence E]**: Inferential - 推断性证据，间接证据或基于生物学原理的推断
+
+**CIViC Evidence Type (标注临床意义)**:
+- **Predictive** - 预测性：预测对某种治疗的反应
+- **Prognostic** - 预后性：与疾病预后相关
 
 Example:
-> "BLU-945 (EGFR C797S inhibitor) shows 50% PR rate in 20 patients **[Evidence B - ASCO 2024 Abstract]**"
+> "BLU-945 (EGFR C797S inhibitor) shows 50% PR rate in 20 patients **[Evidence B, Predictive - ASCO 2024 Abstract]**"
 
 ## China-Specific Considerations
 
@@ -275,7 +280,8 @@ Remember: Your role is to **open doors**, not to guarantee enrollment. Final eli
             "direction_id": "D1",
             "content": "发现内容（完整详细，包含 NCT 编号、Phase、关键入排标准）",
             "evidence_type": "trial|literature",
-            "grade": "A|B|C|D",
+            "grade": "A|B|C|D|E",
+            "civic_type": "predictive|prognostic",
             "source_tool": "search_clinical_trials|search_nccn|search_pubmed",
             "related_questions": ["Q1", "Q2"]
         }

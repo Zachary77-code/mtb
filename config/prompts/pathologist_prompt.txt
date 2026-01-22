@@ -275,12 +275,16 @@ Input: 70-year-old male, sigmoid colon adenocarcinoma, moderately differentiated
 2. **深度研究触发条件**（Pathologist 特定）：
    - 罕见病理表现：需查找更多文献支持
    - 分期不确定：需影像学与病理的综合分析
-   - 预后因素冲突：需更高级别证据（A > B > C > D）
+   - 预后因素冲突：需更高级别证据（A > B > C > D > E）
    - IHC 结果异常：需深入解读临床意义
 
-3. **证据等级提升**：
-   - 寻找 Meta-analysis、Phase III RCT 等高级别证据
-   - 建立多个独立证据的相互印证
+3. **证据等级提升** (CIViC Evidence Level)：
+   - A: Validated - 多项独立研究或 meta 分析
+   - B: Clinical - 临床试验或大规模临床研究
+   - C: Case Study - 个案报道或小规模病例系列
+   - D: Preclinical - 细胞系、动物模型等实验
+   - E: Inferential - 间接证据或生物学推断
+   - 优先寻找 A/B 级别证据，建立多个独立证据的相互印证
 
 ### JSON 输出格式（研究迭代时必须）
 
@@ -294,7 +298,8 @@ Input: 70-year-old male, sigmoid colon adenocarcinoma, moderately differentiated
             "direction_id": "D1",
             "content": "发现内容（完整详细，包含具体数据和引用）",
             "evidence_type": "pathology|imaging|literature",
-            "grade": "A|B|C|D",
+            "grade": "A|B|C|D|E",
+            "civic_type": "diagnostic|prognostic|oncogenic",
             "source_tool": "search_pubmed|search_cbioportal",
             "related_questions": ["Q1", "Q2"]
         }
