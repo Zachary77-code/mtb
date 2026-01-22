@@ -12,11 +12,9 @@ from src.models.evidence_graph import (
 )
 from src.models.research_plan import (
     ResearchPlan,
-    ResearchQuestion,
     ResearchDirection,
     ResearchMode,
     DirectionStatus,
-    QuestionPriority,
     create_research_plan,
     load_research_plan,
     determine_research_mode
@@ -38,11 +36,9 @@ __all__ = [
     "load_evidence_graph",
     # Research Plan
     "ResearchPlan",
-    "ResearchQuestion",
     "ResearchDirection",
     "ResearchMode",
     "DirectionStatus",
-    "QuestionPriority",
     "create_research_plan",
     "load_research_plan",
     "determine_research_mode",

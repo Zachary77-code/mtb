@@ -34,7 +34,7 @@ from config.settings import (
     MAX_PHASE1_ITERATIONS,
     MAX_PHASE2_ITERATIONS,
     MIN_EVIDENCE_NODES,
-    QUESTION_COVERAGE_THRESHOLD,
+    MIN_EVIDENCE_PER_DIRECTION,
     COVERAGE_REQUIRED_MODULES
 )
 from src.agents.convergence_judge import ConvergenceJudgeAgent
@@ -71,6 +71,39 @@ class ResearchOncologist(OncologistAgent, ResearchMixin):
 
 
 # ==================== 模块覆盖检查 ====================
+
+def check_direction_evidence_sufficiency(state: MtbState, agent_names: list[str] = None) -> tuple[bool, list[str]]:
+    """
+    检查每个研究方向是否有足够证据
+
+    Args:
+        state: MtbState 状态
+        agent_names: 要检查的 Agent 列表，None 表示检查所有
+
+    Returns:
+        (是否通过, 证据不足的方向描述列表)
+    """
+    plan = load_research_plan(state.get("research_plan", {}))
+    if not plan:
+        return True, []
+
+    insufficient = []
+    directions_to_check = plan.directions
+    if agent_names:
+        directions_to_check = [d for d in plan.directions if d.target_agent in agent_names]
+
+    for direction in directions_to_check:
+        evidence_count = len(direction.evidence_ids)
+        if evidence_count < MIN_EVIDENCE_PER_DIRECTION:
+            insufficient.append(f"{direction.id}:{direction.topic[:20]}({evidence_count}/{MIN_EVIDENCE_PER_DIRECTION})")
+
+    if insufficient:
+        logger.warning(f"[DIRECTION_EVIDENCE] 证据不足的方向: {insufficient}")
+        return False, insufficient
+
+    logger.info(f"[DIRECTION_EVIDENCE] 所有方向证据充分 (>= {MIN_EVIDENCE_PER_DIRECTION})")
+    return True, []
+
 
 def check_module_coverage(state: MtbState) -> tuple[bool, list[str]]:
     """
@@ -271,8 +304,8 @@ def phase1_convergence_check(state: MtbState) -> Literal["continue", "converged"
         pending = [d for d in phase1_directions if d.status == DirectionStatus.PENDING]
         pending_count = len(pending)
 
-    # 计算问题覆盖率
-    coverage = plan.calculate_coverage() if plan else 0.0
+    # 计算方向完成率
+    completion_rate = plan.calculate_direction_completion_rate() if plan else 0.0
     evidence_count = len(graph) if graph else 0
 
     # ==================== 迭代上限检查（优先） ====================
@@ -282,7 +315,7 @@ def phase1_convergence_check(state: MtbState) -> Literal["continue", "converged"
         if not module_passed:
             logger.warning(f"[PHASE1_CONVERGENCE] 达到迭代上限，以下模块可能证据不足: {uncovered}")
         log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
-                               pending_count, evidence_count, new_findings, coverage, "converged")
+                               pending_count, evidence_count, new_findings, completion_rate, "converged")
         logger.info("[PHASE1_CONVERGENCE]   原因: 达到迭代上限")
         return "converged"
 
@@ -297,20 +330,19 @@ def phase1_convergence_check(state: MtbState) -> Literal["continue", "converged"
         metrics_passed = True
         metrics_reason = "所有方向完成"
 
-    # 条件 2: 证据充分且无新发现
-    elif graph and evidence_count >= MIN_EVIDENCE_NODES and new_findings == 0:
+    # 条件 2: 每个方向证据充分且无新发现
+    phase1_agents = ["Pathologist", "Geneticist", "Recruiter"]
+    direction_sufficient, insufficient_dirs = check_direction_evidence_sufficiency(state, phase1_agents)
+    if direction_sufficient and new_findings == 0:
         metrics_passed = True
-        metrics_reason = f"证据充分 ({evidence_count}) 且无新发现"
-
-    # 条件 3: 问题覆盖率达标
-    elif plan and coverage >= QUESTION_COVERAGE_THRESHOLD:
-        metrics_passed = True
-        metrics_reason = f"问题覆盖率达标 ({coverage:.1%})"
+        metrics_reason = f"每个方向证据充分 (>= {MIN_EVIDENCE_PER_DIRECTION}) 且无新发现"
 
     if not metrics_passed:
         log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
-                               pending_count, evidence_count, new_findings, coverage, "continue")
+                               pending_count, evidence_count, new_findings, completion_rate, "continue")
         logger.info("[PHASE1_CONVERGENCE]   Step 1 未通过，继续迭代")
+        if insufficient_dirs:
+            logger.info(f"[PHASE1_CONVERGENCE]   证据不足方向: {insufficient_dirs[:3]}")
         return "continue"
 
     logger.info(f"[PHASE1_CONVERGENCE]   Step 1 通过: {metrics_reason}")
@@ -321,7 +353,7 @@ def phase1_convergence_check(state: MtbState) -> Literal["continue", "converged"
     module_passed, uncovered = check_module_coverage(state)
     if not module_passed:
         log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
-                               pending_count, evidence_count, new_findings, coverage, "continue")
+                               pending_count, evidence_count, new_findings, completion_rate, "continue")
         logger.info(f"[PHASE1_CONVERGENCE]   Step 2 未通过: 未覆盖模块 {uncovered}")
         return "continue"
 
@@ -336,7 +368,7 @@ def phase1_convergence_check(state: MtbState) -> Literal["continue", "converged"
 
         if decision == "continue":
             log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
-                                   pending_count, evidence_count, new_findings, coverage, "continue")
+                                   pending_count, evidence_count, new_findings, completion_rate, "continue")
             logger.info("[PHASE1_CONVERGENCE]   Step 3 判断: 需要继续研究")
             return "continue"
 
@@ -349,7 +381,7 @@ def phase1_convergence_check(state: MtbState) -> Literal["continue", "converged"
 
     # ==================== 三步检查全部通过 ====================
     log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
-                           pending_count, evidence_count, new_findings, coverage, "converged")
+                           pending_count, evidence_count, new_findings, completion_rate, "converged")
     logger.info(f"[PHASE1_CONVERGENCE] → 收敛 (三步检查通过: {metrics_reason})")
     return "converged"
 
@@ -734,4 +766,4 @@ if __name__ == "__main__":
     print(f"Phase 1 最大迭代: {MAX_PHASE1_ITERATIONS}")
     print(f"Phase 2 最大迭代: {MAX_PHASE2_ITERATIONS}")
     print(f"最小证据节点: {MIN_EVIDENCE_NODES}")
-    print(f"问题覆盖阈值: {QUESTION_COVERAGE_THRESHOLD}")
+    print(f"每方向最小证据: {MIN_EVIDENCE_PER_DIRECTION}")

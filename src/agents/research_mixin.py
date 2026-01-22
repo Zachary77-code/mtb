@@ -191,8 +191,7 @@ class ResearchMixin:
             "evidence_type": "molecular|clinical|literature|trial|guideline|drug|pathology|imaging",
             "grade": "A|B|C|D|E",
             "civic_type": "predictive|diagnostic|prognostic|predisposing|oncogenic",
-            "source_tool": "工具名称",
-            "related_questions": ["Q1"]
+            "source_tool": "工具名称"
         }}
     ],
     "direction_updates": {{
@@ -291,7 +290,6 @@ class ResearchMixin:
             "grade": "A|B|C|D|E",
             "civic_type": "predictive|diagnostic|prognostic|predisposing|oncogenic",
             "source_tool": "工具名称",
-            "related_questions": ["Q1"],
             "depth_chain": ["引用1", "引用2", "推理步骤"]
         }}
     ],
@@ -400,7 +398,6 @@ class ResearchMixin:
                 source_tool=finding.get("source_tool"),
                 grade=grade,
                 civic_evidence_type=civic_type,
-                related_questions=finding.get("related_questions", []),
                 iteration=iteration,
                 research_mode=mode.value,
                 needs_deep_research=bool(finding.get("needs_deep_research")),

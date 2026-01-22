@@ -83,8 +83,8 @@ class ConvergenceJudgeAgent(BaseAgent):
         # 收集模块覆盖信息
         module_coverage = self._get_module_coverage_info(plan)
 
-        # 收集研究问题状态
-        question_status = self._get_question_status(plan)
+        # 收集研究方向状态
+        direction_status = self._get_direction_status(plan)
 
         # 获取病例背景摘要
         case_summary = state.get("raw_pdf_text", "")[:1500]
@@ -102,8 +102,8 @@ class ConvergenceJudgeAgent(BaseAgent):
 ### 模块覆盖情况
 {module_coverage}
 
-### 研究问题状态
-{question_status}
+### 研究方向状态
+{direction_status}
 
 ### 评估标准
 
@@ -112,8 +112,8 @@ class ConvergenceJudgeAgent(BaseAgent):
 1. **关键变异/靶点**：主要可行动变异是否有 A/B 级证据支持？
 2. **治疗方案**：是否有明确的治疗推荐（至少 1 个方案有 A/B 级证据）？
 3. **证据冲突**：是否存在未解决的重要证据冲突？
-4. **模块覆盖**：9 个需要覆盖的模块是否都有相关研究方向？
-5. **研究空白**：是否有关键问题完全没有证据支持？
+4. **模块覆盖**：8 个需要覆盖的模块是否都有相关研究方向？
+5. **方向证据充分性**：每个研究方向是否有足够的证据支持（至少 20 条）？
 
 ### 输出格式
 
@@ -182,26 +182,35 @@ class ConvergenceJudgeAgent(BaseAgent):
 
         return "\n".join(lines)
 
-    def _get_question_status(self, plan) -> str:
-        """获取研究问题状态"""
+    def _get_direction_status(self, plan) -> str:
+        """获取研究方向状态"""
         if not plan:
             return "无研究计划"
 
+        # 统计方向状态
+        total = len(plan.directions)
+        completed = len([d for d in plan.directions if d.status.value == "completed"])
+        pending = len([d for d in plan.directions if d.status.value == "pending"])
+        in_progress = total - completed - pending
+
         lines = [
-            f"- 总问题数: {len(plan.questions)}",
-            f"- 已覆盖: {len([q for q in plan.questions if q.is_covered])}",
-            f"- 覆盖率: {plan.calculate_coverage():.1%}",
+            f"- 总方向数: {total}",
+            f"- 已完成: {completed}",
+            f"- 进行中: {in_progress}",
+            f"- 待处理: {pending}",
+            f"- 完成率: {plan.calculate_direction_completion_rate():.1%}",
             "",
-            "**问题详情:**"
+            "**方向详情:**"
         ]
 
-        for q in plan.questions[:10]:  # 最多显示 10 个
-            status = "✓" if q.is_covered else "○"
-            evidence_count = len(q.evidence_ids)
-            lines.append(f"  {status} [{q.priority.name}] {q.text[:50]}... (证据: {evidence_count})")
+        for d in plan.directions[:10]:  # 最多显示 10 个
+            status_icon = "✓" if d.status.value == "completed" else "○"
+            evidence_count = len(d.evidence_ids)
+            modules = ", ".join(d.target_modules[:2])
+            lines.append(f"  {status_icon} [P{d.priority}] {d.topic[:40]}... (证据: {evidence_count}, 模块: {modules})")
 
-        if len(plan.questions) > 10:
-            lines.append(f"  ... 还有 {len(plan.questions) - 10} 个问题")
+        if len(plan.directions) > 10:
+            lines.append(f"  ... 还有 {len(plan.directions) - 10} 个方向")
 
         return "\n".join(lines)
 

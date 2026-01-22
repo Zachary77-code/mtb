@@ -59,8 +59,8 @@ ORCHESTRATOR_MODEL = os.getenv("ORCHESTRATOR_MODEL", "google/gemini-3-pro-previe
 # ==================== DeepEvidence 收敛配置 ====================
 MAX_PHASE1_ITERATIONS = int(os.getenv("MAX_PHASE1_ITERATIONS", "7"))  # 并行分析阶段最大迭代
 MAX_PHASE2_ITERATIONS = int(os.getenv("MAX_PHASE2_ITERATIONS", "7"))  # Oncologist 阶段最大迭代
-MIN_EVIDENCE_NODES = int(os.getenv("MIN_EVIDENCE_NODES", "10"))       # 最小证据节点数
-QUESTION_COVERAGE_THRESHOLD = float(os.getenv("QUESTION_COVERAGE_THRESHOLD", "0.8"))  # 问题覆盖率阈值
+MIN_EVIDENCE_NODES = int(os.getenv("MIN_EVIDENCE_NODES", "10"))       # 最小证据节点数（全局）
+MIN_EVIDENCE_PER_DIRECTION = int(os.getenv("MIN_EVIDENCE_PER_DIRECTION", "20"))  # 每个研究方向最小证据数
 
 # ==================== 12 个必选模块 ====================
 REQUIRED_SECTIONS = [

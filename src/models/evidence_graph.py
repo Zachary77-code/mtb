@@ -68,7 +68,6 @@ class EvidenceNode:
     source_tool: Optional[str]     # 来源工具
     grade: Optional[EvidenceGrade] # 证据等级 (CIViC Evidence Level: A/B/C/D/E)
     civic_evidence_type: Optional[CivicEvidenceType] = None  # CIViC 证据类型
-    related_questions: List[str] = field(default_factory=list)   # 关联的研究问题 ID
     created_at: datetime = field(default_factory=datetime.now)
     iteration: int = 0             # 收集时的迭代轮次
     research_mode: str = "breadth_first"  # 收集时的模式 (breadth_first / depth_first)
@@ -90,7 +89,6 @@ class EvidenceNode:
             "source_tool": self.source_tool,
             "grade": self.grade.value if self.grade else None,
             "civic_evidence_type": self.civic_evidence_type.value if self.civic_evidence_type else None,
-            "related_questions": self.related_questions,
             "created_at": self.created_at.isoformat(),
             "iteration": self.iteration,
             "research_mode": self.research_mode,
@@ -110,7 +108,6 @@ class EvidenceNode:
             source_tool=data.get("source_tool"),
             grade=EvidenceGrade(data["grade"]) if data.get("grade") else None,
             civic_evidence_type=CivicEvidenceType(data["civic_evidence_type"]) if data.get("civic_evidence_type") else None,
-            related_questions=data.get("related_questions", []),
             created_at=datetime.fromisoformat(data["created_at"]),
             iteration=data.get("iteration", 0),
             research_mode=data.get("research_mode", "breadth_first"),
@@ -175,7 +172,6 @@ class EvidenceGraph:
         self.nodes: Dict[str, EvidenceNode] = {}
         self.edges: Dict[str, EvidenceEdge] = {}
         self._adjacency: Dict[str, Set[str]] = {}  # 邻接表
-        self._question_index: Dict[str, Set[str]] = {}  # 问题->节点索引
 
     def add_node(
         self,
@@ -185,7 +181,6 @@ class EvidenceGraph:
         source_tool: Optional[str] = None,
         grade: Optional[EvidenceGrade] = None,
         civic_evidence_type: Optional[CivicEvidenceType] = None,
-        related_questions: Optional[List[str]] = None,
         iteration: int = 0,
         research_mode: str = "breadth_first",
         needs_deep_research: bool = False,
@@ -207,7 +202,6 @@ class EvidenceGraph:
             source_tool=source_tool,
             grade=grade,
             civic_evidence_type=civic_evidence_type,
-            related_questions=related_questions or [],
             created_at=datetime.now(),
             iteration=iteration,
             research_mode=research_mode,
@@ -218,12 +212,6 @@ class EvidenceGraph:
 
         self.nodes[node_id] = node
         self._adjacency[node_id] = set()
-
-        # 更新问题索引
-        for q_id in node.related_questions:
-            if q_id not in self._question_index:
-                self._question_index[q_id] = set()
-            self._question_index[q_id].add(node_id)
 
         return node_id
 
@@ -297,11 +285,6 @@ class EvidenceGraph:
                 results.append((node, relation))
 
         return results
-
-    def get_evidence_for_question(self, question_id: str) -> List[EvidenceNode]:
-        """获取与问题相关的证据"""
-        node_ids = self._question_index.get(question_id, set())
-        return [self.nodes[nid] for nid in node_ids if nid in self.nodes]
 
     def identify_gaps(self) -> List[Dict[str, Any]]:
         """
@@ -388,12 +371,6 @@ class EvidenceGraph:
             graph.nodes[nid] = node
             graph._adjacency[nid] = set()
 
-            # 重建问题索引
-            for q_id in node.related_questions:
-                if q_id not in graph._question_index:
-                    graph._question_index[q_id] = set()
-                graph._question_index[q_id].add(nid)
-
         # 恢复边
         for eid, edge_data in data.get("edges", {}).items():
             edge = EvidenceEdge.from_dict(edge_data)
@@ -466,7 +443,6 @@ if __name__ == "__main__":
         source_agent="Geneticist",
         source_tool="search_civic",
         grade=EvidenceGrade.A,
-        related_questions=["Q1", "Q2"],
         iteration=1,
     )
 
@@ -476,7 +452,6 @@ if __name__ == "__main__":
         source_agent="Oncologist",
         source_tool="search_fda_label",
         grade=EvidenceGrade.A,
-        related_questions=["Q1"],
         iteration=1,
     )
 

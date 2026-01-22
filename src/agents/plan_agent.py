@@ -10,11 +10,9 @@ from typing import Dict, List, Any, Optional
 from src.agents.base_agent import BaseAgent, ORCHESTRATOR_MODEL
 from src.models.research_plan import (
     ResearchPlan,
-    ResearchQuestion,
     ResearchDirection,
     ResearchMode,
     DirectionStatus,
-    QuestionPriority,
     create_research_plan
 )
 from src.utils.logger import mtb_logger as logger
@@ -40,9 +38,8 @@ class PlanAgent(BaseAgent):
 
     职责：
     1. 分析病例，提取关键实体（基因、变异、癌种、治疗史）
-    2. 生成研究问题列表
-    3. 为每个 Agent 分配研究方向
-    4. 设置收敛条件
+    2. 为每个 Agent 分配研究方向
+    3. 设置目标模块映射和完成标准
     """
 
     def __init__(self):
@@ -64,6 +61,9 @@ class PlanAgent(BaseAgent):
 
         Returns:
             研究计划字典（可序列化到 State）
+
+        Raises:
+            ValueError: 当解析失败或模块覆盖不完整时
         """
         logger.info(f"[{self.role}] 开始分析病例...")
 
@@ -74,8 +74,8 @@ class PlanAgent(BaseAgent):
         result = self.invoke(task_prompt)
         output = result.get("output", "")
 
-        # 解析 LLM 输出
-        plan = self._parse_plan_output(output, case_text)
+        # 解析 LLM 输出（失败时抛出异常）
+        plan = self._parse_plan_output(output)
 
         logger.info(f"[{self.role}] 研究计划生成完成: {plan.summary()}")
 
@@ -101,15 +101,6 @@ class PlanAgent(BaseAgent):
         "drugs_mentioned": ["提及的药物"],
         "treatment_history": ["治疗史要点"]
     }},
-    "questions": [
-        {{
-            "id": "Q1",
-            "text": "研究问题",
-            "priority": 1,  // 1-4，1最高
-            "target_agents": ["Geneticist", "Oncologist"],
-            "related_entities": ["相关实体"]
-        }}
-    ],
     "directions": [
         {{
             "id": "D1",
@@ -118,8 +109,7 @@ class PlanAgent(BaseAgent):
             "target_modules": ["分子特征"],  // 目标 Chair 模块
             "priority": 1,  // 1-5，1最高
             "queries": ["建议的查询关键词"],
-            "completion_criteria": "完成标准描述",
-            "related_question_ids": ["Q1"]
+            "completion_criteria": "完成标准描述"
         }}
     ]
 }}
@@ -150,49 +140,60 @@ class PlanAgent(BaseAgent):
 - 剂量调整建议
 - 安全性评估
 
+## 必需模块覆盖
+确保研究方向覆盖以下所有模块：
+- 患者概况 (Pathologist)
+- 分子特征 (Geneticist + Pathologist)
+- 方案对比 (Oncologist)
+- 器官功能与剂量 (Oncologist)
+- 治疗路线图 (Oncologist + Geneticist + Recruiter)
+- 分子复查建议 (Geneticist + Oncologist)
+- 临床试验推荐 (Recruiter)
+- 局部治疗建议 (Oncologist + Pathologist)
+
 ## 注意事项
 1. 每个 Agent 分配 2-5 个研究方向
-2. 研究问题应覆盖诊断、治疗、预后等方面
-3. 优先级 1 为最关键问题
-4. 确保 JSON 格式正确，可以被解析
+2. 优先级 1 为最关键方向
+3. 确保 JSON 格式正确，可以被解析
+4. 每个方向必须指定 target_modules
 """
 
-    def _parse_plan_output(self, output: str, original_case: str) -> ResearchPlan:
+    def _parse_plan_output(self, output: str) -> ResearchPlan:
         """
         解析 LLM 输出为 ResearchPlan
 
         Args:
             output: LLM 原始输出
-            original_case: 原始病例文本（用于备用）
 
         Returns:
             ResearchPlan 实例
+
+        Raises:
+            ValueError: 当解析失败或模块覆盖不完整时
         """
         # 尝试提取 JSON
         json_str = self._extract_json(output)
 
-        if json_str:
-            try:
-                data = json.loads(json_str)
-                plan = create_research_plan(
-                    case_summary=data.get("case_summary", ""),
-                    key_entities=data.get("key_entities", {}),
-                    questions=data.get("questions", []),
-                    directions=data.get("directions", [])
-                )
+        if not json_str:
+            raise ValueError(f"[{self.role}] 无法从 LLM 输出中提取 JSON")
 
-                # 验证模块覆盖
-                missing = plan.validate_module_coverage(REQUIRED_MODULE_COVERAGE)
-                if missing:
-                    logger.warning(f"[{self.role}] 模块覆盖不完整，缺失: {missing}")
+        try:
+            data = json.loads(json_str)
+            plan = create_research_plan(
+                case_summary=data.get("case_summary", ""),
+                key_entities=data.get("key_entities", {}),
+                directions=data.get("directions", [])
+            )
 
-                return plan
-            except json.JSONDecodeError as e:
-                logger.warning(f"[{self.role}] JSON 解析失败: {e}")
+            # 验证模块覆盖
+            missing = plan.validate_module_coverage(REQUIRED_MODULE_COVERAGE)
+            if missing:
+                raise ValueError(f"[{self.role}] 模块覆盖不完整，缺失: {missing}")
 
-        # 如果解析失败，创建默认计划
-        logger.warning(f"[{self.role}] 使用默认研究计划")
-        return self._create_default_plan(original_case)
+            return plan
+
+        except json.JSONDecodeError as e:
+            raise ValueError(f"[{self.role}] JSON 解析失败: {e}")
 
     def _extract_json(self, text: str) -> Optional[str]:
         """从文本中提取 JSON 块"""
@@ -209,88 +210,6 @@ class PlanAgent(BaseAgent):
             return brace_match.group(0)
 
         return None
-
-    def _create_default_plan(self, case_text: str) -> ResearchPlan:
-        """创建默认研究计划（当解析失败时）"""
-        return create_research_plan(
-            case_summary=case_text[:200] + "..." if len(case_text) > 200 else case_text,
-            key_entities={
-                "genes": [],
-                "variants": [],
-                "cancer_type": [],
-                "drugs_mentioned": [],
-                "treatment_history": []
-            },
-            questions=[
-                {
-                    "id": "Q1",
-                    "text": "患者的主要分子特征是什么？",
-                    "priority": 1,
-                    "target_agents": ["Geneticist", "Pathologist"],
-                    "related_entities": []
-                },
-                {
-                    "id": "Q2",
-                    "text": "有哪些推荐的治疗方案？",
-                    "priority": 1,
-                    "target_agents": ["Oncologist"],
-                    "related_entities": []
-                },
-                {
-                    "id": "Q3",
-                    "text": "有哪些适用的临床试验？",
-                    "priority": 2,
-                    "target_agents": ["Recruiter"],
-                    "related_entities": []
-                }
-            ],
-            directions=[
-                # 模块2: 患者概况
-                {
-                    "id": "D1",
-                    "topic": "患者基础信息与影像评估",
-                    "target_agent": "Pathologist",
-                    "target_modules": ["患者概况", "局部治疗建议"],
-                    "priority": 2,
-                    "queries": ["pathology findings", "immunohistochemistry", "imaging"],
-                    "completion_criteria": "完成患者基础信息、病理学和影像学评估",
-                    "related_question_ids": ["Q1"]
-                },
-                # 模块3: 分子特征 + 模块8: 分子复查建议
-                {
-                    "id": "D2",
-                    "topic": "分子特征与液体活检计划",
-                    "target_agent": "Geneticist",
-                    "target_modules": ["分子特征", "分子复查建议", "治疗路线图"],
-                    "priority": 1,
-                    "queries": ["gene mutations", "variant pathogenicity", "resistance mutations", "liquid biopsy"],
-                    "completion_criteria": "完成分子特征分析和分子复查计划",
-                    "related_question_ids": ["Q1"]
-                },
-                # 模块9: 临床试验推荐
-                {
-                    "id": "D3",
-                    "topic": "临床试验匹配",
-                    "target_agent": "Recruiter",
-                    "target_modules": ["临床试验推荐", "治疗路线图"],
-                    "priority": 2,
-                    "queries": ["clinical trials"],
-                    "completion_criteria": "找到至少 3 个相关临床试验",
-                    "related_question_ids": ["Q3"]
-                },
-                # 模块5-7, 10: 方案对比、器官功能、治疗路线图、局部治疗
-                {
-                    "id": "D4",
-                    "topic": "治疗方案与安全性评估",
-                    "target_agent": "Oncologist",
-                    "target_modules": ["方案对比", "器官功能与剂量", "治疗路线图", "局部治疗建议", "分子复查建议"],
-                    "priority": 1,
-                    "queries": ["treatment guidelines", "drug therapy", "organ function", "dose adjustment", "local therapy"],
-                    "completion_criteria": "制定完整治疗方案、剂量调整和局部治疗建议",
-                    "related_question_ids": ["Q2"]
-                }
-            ]
-        )
 
 
 if __name__ == "__main__":

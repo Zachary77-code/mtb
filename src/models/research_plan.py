@@ -22,55 +22,6 @@ class DirectionStatus(str, Enum):
     COMPLETED = "completed"       # 已完成
 
 
-class QuestionPriority(int, Enum):
-    """问题优先级"""
-    CRITICAL = 1    # 关键问题
-    HIGH = 2        # 高优先级
-    MEDIUM = 3      # 中优先级
-    LOW = 4         # 低优先级
-
-
-@dataclass
-class ResearchQuestion:
-    """
-    研究问题
-
-    PlanAgent 生成的需要回答的问题。
-    """
-    id: str
-    text: str                          # 问题内容
-    priority: QuestionPriority         # 优先级
-    target_agents: List[str]           # 目标 Agent 列表
-    related_entities: List[str]        # 相关实体（基因、药物等）
-    is_covered: bool = False           # 是否已有证据覆盖
-    evidence_ids: List[str] = field(default_factory=list)  # 关联的证据 ID
-
-    def to_dict(self) -> Dict[str, Any]:
-        """序列化为字典"""
-        return {
-            "id": self.id,
-            "text": self.text,
-            "priority": self.priority.value,
-            "target_agents": self.target_agents,
-            "related_entities": self.related_entities,
-            "is_covered": self.is_covered,
-            "evidence_ids": self.evidence_ids,
-        }
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ResearchQuestion":
-        """从字典反序列化"""
-        return cls(
-            id=data["id"],
-            text=data["text"],
-            priority=QuestionPriority(data["priority"]),
-            target_agents=data.get("target_agents", []),
-            related_entities=data.get("related_entities", []),
-            is_covered=data.get("is_covered", False),
-            evidence_ids=data.get("evidence_ids", []),
-        )
-
-
 @dataclass
 class ResearchDirection:
     """
@@ -86,7 +37,6 @@ class ResearchDirection:
     status: DirectionStatus            # 状态
     completion_criteria: str           # 完成标准描述
     evidence_ids: List[str]            # 已收集的证据 ID
-    related_question_ids: List[str]    # 关联的研究问题 ID
 
     # 目标模块映射（对应 Chair 的 12 模块）
     target_modules: List[str] = field(default_factory=list)  # 目标模块列表
@@ -111,7 +61,6 @@ class ResearchDirection:
             "status": self.status.value,
             "completion_criteria": self.completion_criteria,
             "evidence_ids": self.evidence_ids,
-            "related_question_ids": self.related_question_ids,
             "iterations_spent": self.iterations_spent,
             "last_iteration": self.last_iteration,
             "needs_deep_research": self.needs_deep_research,
@@ -130,7 +79,6 @@ class ResearchDirection:
             status=DirectionStatus(data.get("status", "pending")),
             completion_criteria=data.get("completion_criteria", ""),
             evidence_ids=data.get("evidence_ids", []),
-            related_question_ids=data.get("related_question_ids", []),
             target_modules=data.get("target_modules", []),
             iterations_spent=data.get("iterations_spent", 0),
             last_iteration=data.get("last_iteration", 0),
@@ -164,14 +112,9 @@ class ResearchPlan:
     id: str
     case_summary: str                  # 病例摘要
     key_entities: Dict[str, List[str]] # 关键实体 {基因: [], 变异: [], 药物: []}
-    questions: List[ResearchQuestion]  # 研究问题列表
     directions: List[ResearchDirection] # 研究方向列表
     initial_mode: ResearchMode         # 初始研究模式
     created_at: str                    # 创建时间
-
-    # 收敛条件
-    min_evidence_per_question: int = 1  # 每个问题的最小证据数
-    target_coverage: float = 0.8        # 目标问题覆盖率
 
     def to_dict(self) -> Dict[str, Any]:
         """序列化为字典"""
@@ -179,12 +122,9 @@ class ResearchPlan:
             "id": self.id,
             "case_summary": self.case_summary,
             "key_entities": self.key_entities,
-            "questions": [q.to_dict() for q in self.questions],
             "directions": [d.to_dict() for d in self.directions],
             "initial_mode": self.initial_mode.value,
             "created_at": self.created_at,
-            "min_evidence_per_question": self.min_evidence_per_question,
-            "target_coverage": self.target_coverage,
         }
 
     @classmethod
@@ -194,12 +134,9 @@ class ResearchPlan:
             id=data["id"],
             case_summary=data.get("case_summary", ""),
             key_entities=data.get("key_entities", {}),
-            questions=[ResearchQuestion.from_dict(q) for q in data.get("questions", [])],
             directions=[ResearchDirection.from_dict(d) for d in data.get("directions", [])],
             initial_mode=ResearchMode(data.get("initial_mode", "breadth_first")),
             created_at=data.get("created_at", ""),
-            min_evidence_per_question=data.get("min_evidence_per_question", 1),
-            target_coverage=data.get("target_coverage", 0.8),
         )
 
     def get_directions_for_agent(self, agent_name: str) -> List[ResearchDirection]:
@@ -237,22 +174,12 @@ class ResearchPlan:
         """获取需要深入研究的方向"""
         return [d for d in self.directions if d.needs_deep_research]
 
-    def calculate_coverage(self) -> float:
-        """计算问题覆盖率"""
-        if not self.questions:
+    def calculate_direction_completion_rate(self) -> float:
+        """计算研究方向完成率"""
+        if not self.directions:
             return 1.0
-        covered = len([q for q in self.questions if q.is_covered])
-        return covered / len(self.questions)
-
-    def update_question_coverage(self, question_id: str, evidence_id: str):
-        """更新问题覆盖状态"""
-        for q in self.questions:
-            if q.id == question_id:
-                if evidence_id not in q.evidence_ids:
-                    q.evidence_ids.append(evidence_id)
-                if len(q.evidence_ids) >= self.min_evidence_per_question:
-                    q.is_covered = True
-                break
+        completed = len([d for d in self.directions if d.status == DirectionStatus.COMPLETED])
+        return completed / len(self.directions)
 
     def summary(self) -> Dict[str, Any]:
         """返回计划摘要"""
@@ -268,14 +195,17 @@ class ResearchPlan:
             a = d.target_agent
             agent_counts[a] = agent_counts.get(a, 0) + 1
 
+        # 统计每个方向的证据数
+        evidence_counts = {d.id: len(d.evidence_ids) for d in self.directions}
+
         return {
-            "total_questions": len(self.questions),
             "total_directions": len(self.directions),
-            "coverage": self.calculate_coverage(),
+            "completion_rate": self.calculate_direction_completion_rate(),
             "directions_by_status": status_counts,
             "directions_by_agent": agent_counts,
             "pending_count": len(self.get_pending_directions()),
             "depth_required_count": len(self.get_directions_requiring_depth()),
+            "evidence_per_direction": evidence_counts,
         }
 
 
@@ -284,7 +214,6 @@ class ResearchPlan:
 def create_research_plan(
     case_summary: str,
     key_entities: Dict[str, List[str]],
-    questions: List[Dict[str, Any]],
     directions: List[Dict[str, Any]],
 ) -> ResearchPlan:
     """
@@ -293,7 +222,6 @@ def create_research_plan(
     Args:
         case_summary: 病例摘要
         key_entities: 关键实体
-        questions: 研究问题列表（字典格式）
         directions: 研究方向列表（字典格式）
 
     Returns:
@@ -302,18 +230,6 @@ def create_research_plan(
     from datetime import datetime
 
     plan_id = f"plan_{uuid.uuid4().hex[:8]}"
-
-    # 转换问题
-    parsed_questions = []
-    for i, q in enumerate(questions):
-        q_id = q.get("id", f"Q{i+1}")
-        parsed_questions.append(ResearchQuestion(
-            id=q_id,
-            text=q["text"],
-            priority=QuestionPriority(q.get("priority", 3)),
-            target_agents=q.get("target_agents", []),
-            related_entities=q.get("related_entities", []),
-        ))
 
     # 转换方向
     parsed_directions = []
@@ -328,7 +244,6 @@ def create_research_plan(
             status=DirectionStatus.PENDING,
             completion_criteria=d.get("completion_criteria", "收集到相关证据"),
             evidence_ids=[],
-            related_question_ids=d.get("related_question_ids", []),
             target_modules=d.get("target_modules", []),
         ))
 
@@ -336,7 +251,6 @@ def create_research_plan(
         id=plan_id,
         case_summary=case_summary,
         key_entities=key_entities,
-        questions=parsed_questions,
         directions=parsed_directions,
         initial_mode=ResearchMode.BREADTH_FIRST,
         created_at=datetime.now().isoformat(),
@@ -394,47 +308,24 @@ if __name__ == "__main__":
             "variants": ["L858R"],
             "cancer_type": ["NSCLC"],
         },
-        questions=[
-            {
-                "id": "Q1",
-                "text": "EGFR L858R 对哪些 TKI 敏感？",
-                "priority": 1,
-                "target_agents": ["Geneticist", "Oncologist"],
-                "related_entities": ["EGFR", "L858R"],
-            },
-            {
-                "id": "Q2",
-                "text": "患者是否存在耐药突变？",
-                "priority": 1,
-                "target_agents": ["Geneticist"],
-                "related_entities": ["EGFR", "T790M"],
-            },
-            {
-                "id": "Q3",
-                "text": "有哪些适用的临床试验？",
-                "priority": 2,
-                "target_agents": ["Recruiter"],
-                "related_entities": ["EGFR", "NSCLC"],
-            },
-        ],
         directions=[
             {
                 "id": "D1",
                 "topic": "EGFR L858R 变异证据收集",
                 "target_agent": "Geneticist",
+                "target_modules": ["分子特征", "治疗路线图"],
                 "priority": 1,
                 "queries": ["EGFR L858R sensitivity", "EGFR L858R TKI response"],
                 "completion_criteria": "收集到至少 2 条药敏证据",
-                "related_question_ids": ["Q1"],
             },
             {
                 "id": "D2",
                 "topic": "临床试验匹配",
                 "target_agent": "Recruiter",
+                "target_modules": ["临床试验推荐", "治疗路线图"],
                 "priority": 2,
                 "queries": ["EGFR NSCLC clinical trial"],
                 "completion_criteria": "找到至少 3 个相关临床试验",
-                "related_question_ids": ["Q3"],
             },
         ],
     )
@@ -446,7 +337,6 @@ if __name__ == "__main__":
     # 测试序列化
     data = plan.to_dict()
     loaded = load_research_plan(data)
-    print(f"  序列化后问题数: {len(loaded.questions)}")
     print(f"  序列化后方向数: {len(loaded.directions)}")
 
     # 测试模式决策
