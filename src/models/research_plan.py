@@ -88,6 +88,9 @@ class ResearchDirection:
     evidence_ids: List[str]            # 已收集的证据 ID
     related_question_ids: List[str]    # 关联的研究问题 ID
 
+    # 目标模块映射（对应 Chair 的 12 模块）
+    target_modules: List[str] = field(default_factory=list)  # 目标模块列表
+
     # 迭代追踪
     iterations_spent: int = 0          # 已花费的迭代次数
     last_iteration: int = 0            # 最后处理的迭代轮次
@@ -102,6 +105,7 @@ class ResearchDirection:
             "id": self.id,
             "topic": self.topic,
             "target_agent": self.target_agent,
+            "target_modules": self.target_modules,
             "priority": self.priority,
             "queries": self.queries,
             "status": self.status.value,
@@ -127,6 +131,7 @@ class ResearchDirection:
             completion_criteria=data.get("completion_criteria", ""),
             evidence_ids=data.get("evidence_ids", []),
             related_question_ids=data.get("related_question_ids", []),
+            target_modules=data.get("target_modules", []),
             iterations_spent=data.get("iterations_spent", 0),
             last_iteration=data.get("last_iteration", 0),
             needs_deep_research=data.get("needs_deep_research", False),
@@ -200,6 +205,26 @@ class ResearchPlan:
     def get_directions_for_agent(self, agent_name: str) -> List[ResearchDirection]:
         """获取特定 Agent 的研究方向"""
         return [d for d in self.directions if d.target_agent == agent_name]
+
+    def get_directions_for_module(self, module_name: str) -> List[ResearchDirection]:
+        """获取特定模块的研究方向"""
+        return [d for d in self.directions if module_name in d.target_modules]
+
+    def get_module_coverage(self) -> Dict[str, List[str]]:
+        """获取模块覆盖情况"""
+        coverage = {}
+        for d in self.directions:
+            for module in d.target_modules:
+                if module not in coverage:
+                    coverage[module] = []
+                coverage[module].append(d.id)
+        return coverage
+
+    def validate_module_coverage(self, required_modules: List[str]) -> List[str]:
+        """验证模块覆盖，返回缺失的模块列表"""
+        coverage = self.get_module_coverage()
+        missing = [m for m in required_modules if m not in coverage]
+        return missing
 
     def get_pending_directions(self, agent_name: Optional[str] = None) -> List[ResearchDirection]:
         """获取待处理的研究方向"""
@@ -304,6 +329,7 @@ def create_research_plan(
             completion_criteria=d.get("completion_criteria", "收集到相关证据"),
             evidence_ids=[],
             related_question_ids=d.get("related_question_ids", []),
+            target_modules=d.get("target_modules", []),
         ))
 
     return ResearchPlan(

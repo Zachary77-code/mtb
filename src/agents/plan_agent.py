@@ -21,6 +21,19 @@ from src.utils.logger import mtb_logger as logger
 from config.settings import PLAN_AGENT_PROMPT_FILE
 
 
+# 必须覆盖的 Chair 模块列表
+REQUIRED_MODULE_COVERAGE = [
+    "患者概况",
+    "分子特征",
+    "方案对比",
+    "器官功能与剂量",
+    "治疗路线图",
+    "分子复查建议",
+    "临床试验推荐",
+    "局部治疗建议",
+]
+
+
 class PlanAgent(BaseAgent):
     """
     研究计划 Agent
@@ -102,6 +115,7 @@ class PlanAgent(BaseAgent):
             "id": "D1",
             "topic": "研究方向主题",
             "target_agent": "Geneticist",  // Pathologist/Geneticist/Recruiter/Oncologist
+            "target_modules": ["分子特征"],  // 目标 Chair 模块
             "priority": 1,  // 1-5，1最高
             "queries": ["建议的查询关键词"],
             "completion_criteria": "完成标准描述",
@@ -160,12 +174,19 @@ class PlanAgent(BaseAgent):
         if json_str:
             try:
                 data = json.loads(json_str)
-                return create_research_plan(
+                plan = create_research_plan(
                     case_summary=data.get("case_summary", ""),
                     key_entities=data.get("key_entities", {}),
                     questions=data.get("questions", []),
                     directions=data.get("directions", [])
                 )
+
+                # 验证模块覆盖
+                missing = plan.validate_module_coverage(REQUIRED_MODULE_COVERAGE)
+                if missing:
+                    logger.warning(f"[{self.role}] 模块覆盖不完整，缺失: {missing}")
+
+                return plan
             except json.JSONDecodeError as e:
                 logger.warning(f"[{self.role}] JSON 解析失败: {e}")
 
@@ -224,40 +245,48 @@ class PlanAgent(BaseAgent):
                 }
             ],
             directions=[
+                # 模块2: 患者概况
                 {
                     "id": "D1",
-                    "topic": "病理学分析",
+                    "topic": "患者基础信息与影像评估",
                     "target_agent": "Pathologist",
+                    "target_modules": ["患者概况", "局部治疗建议"],
                     "priority": 2,
-                    "queries": ["pathology findings", "immunohistochemistry"],
-                    "completion_criteria": "完成病理学特征分析",
+                    "queries": ["pathology findings", "immunohistochemistry", "imaging"],
+                    "completion_criteria": "完成患者基础信息、病理学和影像学评估",
                     "related_question_ids": ["Q1"]
                 },
+                # 模块3: 分子特征 + 模块8: 分子复查建议
                 {
                     "id": "D2",
-                    "topic": "分子特征分析",
+                    "topic": "分子特征与液体活检计划",
                     "target_agent": "Geneticist",
+                    "target_modules": ["分子特征", "分子复查建议", "治疗路线图"],
                     "priority": 1,
-                    "queries": ["gene mutations", "variant pathogenicity"],
-                    "completion_criteria": "完成分子特征和药敏分析",
+                    "queries": ["gene mutations", "variant pathogenicity", "resistance mutations", "liquid biopsy"],
+                    "completion_criteria": "完成分子特征分析和分子复查计划",
                     "related_question_ids": ["Q1"]
                 },
+                # 模块9: 临床试验推荐
                 {
                     "id": "D3",
                     "topic": "临床试验匹配",
                     "target_agent": "Recruiter",
+                    "target_modules": ["临床试验推荐", "治疗路线图"],
                     "priority": 2,
                     "queries": ["clinical trials"],
                     "completion_criteria": "找到至少 3 个相关临床试验",
                     "related_question_ids": ["Q3"]
                 },
+                # 模块5-7, 10: 方案对比、器官功能、治疗路线图、局部治疗
                 {
                     "id": "D4",
-                    "topic": "治疗方案制定",
+                    "topic": "治疗方案与安全性评估",
                     "target_agent": "Oncologist",
+                    "target_modules": ["方案对比", "器官功能与剂量", "治疗路线图", "局部治疗建议", "分子复查建议"],
                     "priority": 1,
-                    "queries": ["treatment guidelines", "drug therapy"],
-                    "completion_criteria": "制定一线和后续治疗方案",
+                    "queries": ["treatment guidelines", "drug therapy", "organ function", "dose adjustment", "local therapy"],
+                    "completion_criteria": "制定完整治疗方案、剂量调整和局部治疗建议",
                     "related_question_ids": ["Q2"]
                 }
             ]

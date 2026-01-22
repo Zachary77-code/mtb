@@ -112,3 +112,140 @@
 - "寡转移灶是否适合局部消融/SBRT？"
 - "症状性转移需要何种姑息治疗？"
 - "脑转移/骨转移是否需要局部处理？"
+
+---
+
+## 必需研究方向（确保 Chair 12 模块覆盖）
+
+### 模块-研究方向映射表
+
+Chair 最终报告包含 12 个必需模块，你的研究方向必须覆盖以下模块：
+
+| Chair 模块 | 主要 Agent | 协作 Agent | 必需研究方向 |
+|-----------|-----------|-----------|-------------|
+| 模块2: 患者概况 | Pathologist | - | D_PATIENT_PROFILE |
+| 模块3: 分子特征 | Geneticist | Pathologist (IHC) | D_MOLECULAR_PROFILE |
+| 模块5: 方案对比 | Oncologist | - | D_TREATMENT_OPTIONS |
+| 模块6: 器官功能与剂量 | Oncologist | - | D_ORGAN_FUNCTION |
+| 模块7: 治疗路线图 | Oncologist | Geneticist (耐药), Recruiter (试验) | D_TREATMENT_ROADMAP |
+| 模块8: 分子复查建议 | Geneticist | Oncologist (时机) | D_MOLECULAR_RETEST |
+| 模块9: 临床试验推荐 | Recruiter | - | D_CLINICAL_TRIALS |
+| 模块10: 局部治疗建议 | Oncologist | Pathologist (影像) | D_LOCAL_THERAPY |
+
+**注意**：模块1(执行摘要)、模块4(治疗史)、模块11(核心建议)、模块12(参考文献) 由 Chair 自动综合生成。
+
+### 研究方向输出格式
+
+每个研究方向必须包含 `target_modules` 字段：
+
+```json
+{
+    "id": "D1",
+    "topic": "研究主题",
+    "target_agent": "Agent名称",
+    "target_modules": ["目标模块1", "目标模块2"],
+    "priority": 1,
+    "queries": ["建议查询词"],
+    "completion_criteria": "完成标准",
+    "related_question_ids": ["Q1", "Q2"]
+}
+```
+
+### 必需研究方向模板
+
+#### D_PATIENT_PROFILE（患者概况）
+- **target_agent**: Pathologist
+- **target_modules**: ["患者概况"]
+- **topics**: 年龄、性别、ECOG PS、合并症、既往手术/放疗史
+- **completion_criteria**: 完成基础信息和功能状态评估
+
+#### D_MOLECULAR_PROFILE（分子特征）- 多Agent协作
+主方向：
+- **target_agent**: Geneticist
+- **target_modules**: ["分子特征"]
+- **topics**: 基因变异、CIViC证据等级、突变频率、TMB/MSI
+- **completion_criteria**: 完成所有可行动变异的证据评估
+
+协作方向：
+- **target_agent**: Pathologist
+- **target_modules**: ["分子特征"]
+- **topics**: PD-L1 TPS、MMR/MSI IHC、HER2 IHC
+- **completion_criteria**: 完成免疫组化标记解读
+
+#### D_TREATMENT_OPTIONS（方案对比）
+- **target_agent**: Oncologist
+- **target_modules**: ["方案对比"]
+- **topics**: 一线/后线方案、证据等级、预期疗效
+- **completion_criteria**: 提供至少2个备选方案的对比
+
+#### D_ORGAN_FUNCTION（器官功能与剂量）
+- **target_agent**: Oncologist
+- **target_modules**: ["器官功能与剂量"]
+- **topics**: 肾功能分层(CrCl)、肝功能阈值(ALT/AST)、血液学储备、药物相互作用
+- **completion_criteria**: 完成器官功能评估和剂量调整方案
+
+#### D_TREATMENT_ROADMAP（治疗路线图）- 多Agent协作
+主方向：
+- **target_agent**: Oncologist
+- **target_modules**: ["治疗路线图"]
+- **topics**: 一线→二线→三线序贯方案、停药标准
+- **completion_criteria**: 完成完整治疗路线图
+
+协作方向1：
+- **target_agent**: Geneticist
+- **target_modules**: ["治疗路线图"]
+- **topics**: 耐药机制、耐药后治疗选择(如T790M→奥希替尼)
+- **completion_criteria**: 提供耐药后分子靶向选择
+
+协作方向2：
+- **target_agent**: Recruiter
+- **target_modules**: ["治疗路线图"]
+- **topics**: 后线临床试验选择
+- **completion_criteria**: 识别后线可用试验
+
+#### D_MOLECULAR_RETEST（分子复查建议）- 多Agent协作
+主方向：
+- **target_agent**: Geneticist
+- **target_modules**: ["分子复查建议"]
+- **topics**: 目标耐药突变(T790M/C797S)、ctDNA监测策略
+- **completion_criteria**: 明确监测目标突变列表
+
+协作方向：
+- **target_agent**: Oncologist
+- **target_modules**: ["分子复查建议"]
+- **topics**: 液体活检时机、进展后检测窗口
+- **completion_criteria**: 确定检测时机建议
+
+#### D_CLINICAL_TRIALS（临床试验推荐）
+- **target_agent**: Recruiter
+- **target_modules**: ["临床试验推荐"]
+- **topics**: 生物标志物匹配试验、入排标准评估、中国站点
+- **completion_criteria**: 提供至少3个可行试验推荐
+
+#### D_LOCAL_THERAPY（局部治疗建议）- 多Agent协作
+主方向：
+- **target_agent**: Oncologist
+- **target_modules**: ["局部治疗建议"]
+- **topics**: SBRT适应症、姑息放疗指征、寡进展管理
+- **completion_criteria**: 评估局部治疗可行性
+
+协作方向：
+- **target_agent**: Pathologist
+- **target_modules**: ["局部治疗建议"]
+- **topics**: 寡转移灶影像评估、可测量病灶、脑/骨转移评估
+- **completion_criteria**: 完成转移灶影像学评估
+
+### 模块覆盖验证清单
+
+生成研究计划后，确保以下模块都有至少一个研究方向覆盖：
+
+- [ ] 患者概况 (Pathologist)
+- [ ] 分子特征 (Geneticist + Pathologist)
+- [ ] 方案对比 (Oncologist)
+- [ ] 器官功能与剂量 (Oncologist)
+- [ ] 治疗路线图 (Oncologist + Geneticist + Recruiter)
+- [ ] 分子复查建议 (Geneticist + Oncologist)
+- [ ] 临床试验推荐 (Recruiter)
+- [ ] 局部治疗建议 (Oncologist + Pathologist)
+
+**总计**：应生成约 13 个研究方向（8 个主方向 + 5 个协作方向）

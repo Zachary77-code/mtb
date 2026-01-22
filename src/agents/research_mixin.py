@@ -148,6 +148,7 @@ class ResearchMixin:
             directions_text += f"""
 ### 方向 {i}: {d.get('topic', '未命名')}
 - ID: {d.get('id', '')}
+- 目标模块: {', '.join(d.get('target_modules', []))}
 - 优先级: {d.get('priority', 3)}
 - 建议查询: {', '.join(d.get('queries', []))}
 - 完成标准: {d.get('completion_criteria', '')}
@@ -233,6 +234,7 @@ class ResearchMixin:
 ### 深入研究项 {i}
 - 方向 ID: {item.get('id', '')}
 - 主题: {item.get('topic', '')}
+- 目标模块: {', '.join(item.get('target_modules', []))}
 - 需要深入的原因: {item.get('depth_research_reason', '需要更多证据')}
 - 已有证据 ID: {item.get('evidence_ids', [])}
 """
