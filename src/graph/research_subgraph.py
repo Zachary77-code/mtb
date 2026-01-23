@@ -131,6 +131,42 @@ def check_module_coverage(state: MtbState) -> tuple[bool, list[str]]:
     return True, []
 
 
+def check_agent_module_coverage(state: MtbState, agent_names: list[str]) -> tuple[bool, list[str]]:
+    """
+    检查指定Agent是否覆盖了各自被分配的target_modules
+
+    每个Phase只检查该阶段Agent被分配的模块，而不是全局9个模块。
+
+    Args:
+        state: MtbState 状态
+        agent_names: 要检查的Agent列表
+
+    Returns:
+        (是否通过, 未覆盖模块列表)
+    """
+    plan = load_research_plan(state.get("research_plan", {}))
+    if not plan:
+        logger.info("[AGENT_MODULE_COVERAGE] 无研究计划，跳过检查")
+        return True, []
+
+    uncovered = []
+    for direction in plan.directions:
+        if direction.target_agent not in agent_names:
+            continue
+        # 检查该方向的target_modules是否有证据
+        if len(direction.evidence_ids) == 0:
+            uncovered.extend(direction.target_modules)
+
+    uncovered = list(set(uncovered))  # 去重
+
+    if uncovered:
+        logger.warning(f"[AGENT_MODULE_COVERAGE] Agent {agent_names} 未覆盖模块: {uncovered}")
+        return False, uncovered
+
+    logger.info(f"[AGENT_MODULE_COVERAGE] Agent {agent_names} 所有分配模块已覆盖")
+    return True, []
+
+
 # ==================== Phase 1 节点 ====================
 
 def phase1_router(state: MtbState) -> List[Send]:
@@ -354,17 +390,18 @@ def phase1_convergence_check(state: MtbState) -> Literal["continue", "converged"
 
     logger.info(f"[PHASE1_CONVERGENCE]   Step 1 通过: {metrics_reason}")
 
-    # ==================== Step 2: Module Coverage Check ====================
-    logger.info("[PHASE1_CONVERGENCE] Step 2: Module Coverage 检查...")
+    # ==================== Step 2: Agent Module Coverage Check ====================
+    logger.info("[PHASE1_CONVERGENCE] Step 2: Agent Module Coverage 检查...")
 
-    module_passed, uncovered = check_module_coverage(state)
+    # Phase 1 只检查 Pathologist/Geneticist/Recruiter 各自分配的模块
+    module_passed, uncovered = check_agent_module_coverage(state, phase1_agents)
     if not module_passed:
         log_convergence_status("PHASE1", iteration, MAX_PHASE1_ITERATIONS,
                                pending_count, evidence_count, new_findings, completion_rate, "continue")
-        logger.info(f"[PHASE1_CONVERGENCE]   Step 2 未通过: 未覆盖模块 {uncovered}")
+        logger.info(f"[PHASE1_CONVERGENCE]   Step 2 未通过: Agent未覆盖分配模块 {uncovered}")
         return "continue"
 
-    logger.info("[PHASE1_CONVERGENCE]   Step 2 通过: 所有模块已覆盖")
+    logger.info("[PHASE1_CONVERGENCE]   Step 2 通过: Agent所有分配模块已覆盖")
 
     # ==================== Step 3: ConvergenceJudge Agent ====================
     logger.info("[PHASE1_CONVERGENCE] Step 3: ConvergenceJudge 评估...")
@@ -567,15 +604,16 @@ def phase2_convergence_check(state: MtbState) -> Literal["continue", "converged"
 
     logger.info(f"[PHASE2_CONVERGENCE]   Step 1 通过: {metrics_reason}")
 
-    # ==================== Step 2: Module Coverage Check ====================
-    logger.info("[PHASE2_CONVERGENCE] Step 2: Module Coverage 检查...")
+    # ==================== Step 2: Agent Module Coverage Check ====================
+    logger.info("[PHASE2_CONVERGENCE] Step 2: Agent Module Coverage 检查...")
 
-    module_passed, uncovered = check_module_coverage(state)
+    # Phase 2 只检查 Oncologist 分配的模块
+    module_passed, uncovered = check_agent_module_coverage(state, ["Oncologist"])
     if not module_passed:
-        logger.info(f"[PHASE2_CONVERGENCE]   Step 2 未通过: 未覆盖模块 {uncovered}")
+        logger.info(f"[PHASE2_CONVERGENCE]   Step 2 未通过: Oncologist未覆盖分配模块 {uncovered}")
         return "continue"
 
-    logger.info("[PHASE2_CONVERGENCE]   Step 2 通过: 所有模块已覆盖")
+    logger.info("[PHASE2_CONVERGENCE]   Step 2 通过: Oncologist所有分配模块已覆盖")
 
     # ==================== Step 3: ConvergenceJudge Agent ====================
     logger.info("[PHASE2_CONVERGENCE] Step 3: ConvergenceJudge 评估...")
