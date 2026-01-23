@@ -167,6 +167,164 @@ def check_agent_module_coverage(state: MtbState, agent_names: list[str]) -> tupl
     return True, []
 
 
+# ==================== 迭代报告输出 ====================
+
+def _save_iteration_report(
+    state: MtbState,
+    phase: str,
+    iteration: int,
+    agent_findings: Dict[str, Any],
+    convergence_details: Dict[str, Any],
+    final_decision: str
+):
+    """
+    保存每次迭代的中间报告（包含 ConvergenceJudge 结果）
+
+    Args:
+        state: MtbState 状态
+        phase: 阶段名称 "PHASE1" 或 "PHASE2"
+        iteration: 迭代轮次
+        agent_findings: Agent 发现详情 {Agent名: {count: N, evidence_ids: [...]}}
+        convergence_details: 收敛检查详情
+        final_decision: 最终决策 "continue" 或 "converged"
+    """
+    import os
+
+    run_folder = state.get("run_folder", "")
+    if not run_folder:
+        logger.warning(f"[ITERATION_REPORT] run_folder 未设置，跳过保存")
+        return
+
+    evidence_graph = state.get("evidence_graph", {})
+    graph = load_evidence_graph(evidence_graph)
+
+    # 生成报告内容
+    lines = [
+        f"# {phase} 迭代 {iteration} 报告",
+        "",
+        f"**时间**: {datetime.now().isoformat()}",
+        f"**决策**: {final_decision}",
+        "",
+    ]
+
+    # === 本轮新增证据 ===
+    lines.append("## 本轮新增证据")
+    lines.append("")
+    for agent_name, findings in agent_findings.items():
+        count = findings.get("count", 0)
+        evidence_ids = findings.get("evidence_ids", [])
+        lines.append(f"### {agent_name}: {count} 条")
+        if graph and evidence_ids:
+            for eid in evidence_ids:
+                node = graph.get_node(eid)
+                if node:
+                    grade = f"[{node.grade.value}]" if node.grade else ""
+                    etype = node.evidence_type.value if node.evidence_type else "unknown"
+                    text = node.content.get("text", str(node.content))[:100] if node.content else ""
+                    lines.append(f"- {grade} [{etype}] {text}...")
+        lines.append("")
+
+    # === Evidence Graph 当前状态 ===
+    lines.append("## Evidence Graph 当前状态")
+    lines.append("")
+    if graph:
+        summary = graph.summary()
+        lines.append(f"- **总节点数**: {summary.get('total_nodes', 0)}")
+        lines.append(f"- **类型分布**: {summary.get('by_type', {})}")
+        lines.append(f"- **Agent 分布**: {summary.get('by_agent', {})}")
+        lines.append(f"- **证据等级分布**: {summary.get('by_grade', {})}")
+    else:
+        lines.append("- 证据图为空")
+    lines.append("")
+
+    # === 收敛检查详情 ===
+    lines.append("## 收敛检查 (Convergence Check)")
+    lines.append("")
+
+    # 处理 Phase 1 多 Agent 的情况
+    if phase == "PHASE1" and isinstance(convergence_details, dict):
+        # Phase 1: convergence_details 可能是 {Agent名: {step1..., step2..., step3...}}
+        for agent_name, agent_details in convergence_details.items():
+            if isinstance(agent_details, dict) and "step1_direction_evidence" in agent_details:
+                lines.append(f"### {agent_name} 收敛检查")
+                lines.append("")
+                _append_convergence_steps(lines, agent_details)
+                lines.append("")
+        # 如果是单独的 step1/step2/step3 结构（Phase 2 或 Phase 1 全局）
+        if "step1_metrics" in convergence_details or "step2_module" in convergence_details:
+            _append_convergence_steps(lines, convergence_details)
+    else:
+        # Phase 2 或简单结构
+        _append_convergence_steps(lines, convergence_details)
+
+    # === 最终决策 ===
+    lines.append("## 最终决策")
+    lines.append("")
+    decision_text = "继续下一轮迭代" if final_decision == "continue" else "研究已收敛，进入下一阶段"
+    lines.append(f"**{final_decision.upper()}** - {decision_text}")
+
+    # 保存文件
+    filename = f"{phase.lower()}_iter{iteration}_report.md"
+    filepath = os.path.join(run_folder, filename)
+    try:
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+        logger.info(f"[ITERATION_REPORT] 已保存: {filename}")
+    except Exception as e:
+        logger.error(f"[ITERATION_REPORT] 保存失败: {e}")
+
+
+def _append_convergence_steps(lines: list, details: Dict[str, Any]):
+    """向报告添加收敛检查步骤详情"""
+    # Step 1: Metric-based / Direction Evidence
+    step1 = details.get("step1_metrics", details.get("step1_direction_evidence", {}))
+    if step1:
+        step1_status = "✓ 通过" if step1.get("passed") else "✗ 未通过"
+        lines.append(f"#### Step 1: Metric-based 检查 {step1_status}")
+        if step1.get("reason"):
+            lines.append(f"- 原因: {step1['reason']}")
+        if step1.get("insufficient"):
+            lines.append(f"- 证据不足: {step1['insufficient']}")
+        lines.append("")
+
+    # Step 2: Module Coverage
+    step2 = details.get("step2_module", details.get("step2_module_coverage", {}))
+    if step2:
+        step2_status = "✓ 通过" if step2.get("passed") else "✗ 未通过"
+        lines.append(f"#### Step 2: Module Coverage 检查 {step2_status}")
+        if step2.get("uncovered"):
+            lines.append(f"- 未覆盖模块: {', '.join(step2['uncovered'])}")
+        lines.append("")
+
+    # Step 3: ConvergenceJudge
+    step3 = details.get("step3_judge")
+    if step3:
+        judge_decision = step3.get("decision", "N/A")
+        judge_confidence = step3.get("confidence", 0)
+        judge_reasoning = step3.get("reasoning", "")
+        judge_gaps = step3.get("gaps", [])
+        judge_strengths = step3.get("strengths", [])
+
+        judge_status = "✓ 收敛" if judge_decision == "converged" else "○ 继续"
+        lines.append(f"#### Step 3: ConvergenceJudge Agent {judge_status}")
+        lines.append(f"- **决策**: {judge_decision}")
+        lines.append(f"- **置信度**: {judge_confidence:.2f}" if isinstance(judge_confidence, (int, float)) else f"- **置信度**: {judge_confidence}")
+        lines.append(f"- **理由**: {judge_reasoning}")
+        if judge_gaps:
+            lines.append("- **研究空白 (Gaps)**:")
+            for gap in judge_gaps:
+                lines.append(f"  - {gap}")
+        if judge_strengths:
+            lines.append("- **已覆盖优势 (Strengths)**:")
+            for strength in judge_strengths:
+                lines.append(f"  - {strength}")
+        lines.append("")
+    else:
+        lines.append("#### Step 3: ConvergenceJudge Agent")
+        lines.append("- 未触发（前置检查未通过或达到迭代上限）")
+        lines.append("")
+
+
 def check_single_agent_convergence(state: MtbState, agent_name: str) -> tuple[bool, Dict[str, Any]]:
     """
     检查单个 Agent 是否收敛
@@ -516,6 +674,16 @@ def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
     logger.info(f"[PHASE1] 迭代 {new_iteration} 记录完成")
     logger.info(f"[PHASE1] 整体决策: {phase1_decision}")
 
+    # 保存迭代报告
+    _save_iteration_report(
+        state=state,
+        phase="PHASE1",
+        iteration=new_iteration,
+        agent_findings=agent_findings_detail,
+        convergence_details=convergence_details,
+        final_decision=phase1_decision
+    )
+
     return {
         "phase1_iteration": new_iteration,
         "phase1_new_findings": new_findings,
@@ -660,6 +828,21 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
     history.append(iteration_record)
 
     logger.info(f"[PHASE2] 迭代 {new_iteration} 记录完成，决策: {convergence_result['decision']}")
+
+    # 保存迭代报告
+    _save_iteration_report(
+        state=temp_state,  # 使用更新后的临时 state
+        phase="PHASE2",
+        iteration=new_iteration,
+        agent_findings={
+            "Oncologist": {
+                "count": new_findings,
+                "evidence_ids": new_evidence_ids
+            }
+        },
+        convergence_details=convergence_result["check_details"],
+        final_decision=convergence_result["decision"]
+    )
 
     return_dict = {
         "evidence_graph": updated_evidence_graph,

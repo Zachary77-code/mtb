@@ -119,6 +119,20 @@ class MtbState(TypedDict):
     recruiter_converged: NotRequired[bool]    # Recruiter 是否收敛
     phase1_all_converged: NotRequired[bool]   # Phase 1 所有 Agent 是否都收敛
 
+    # Phase 1 Agent 研究结果（用于迭代间传递，供 aggregator 读取）
+    pathologist_research_result: NotRequired[Dict[str, Any]]
+    geneticist_research_result: NotRequired[Dict[str, Any]]
+    recruiter_research_result: NotRequired[Dict[str, Any]]
+
+    # Phase 2 Agent 研究结果
+    oncologist_research_result: NotRequired[Dict[str, Any]]
+
+    # Phase 1/2 Agent 收敛检查详情（供 aggregator 读取）
+    pathologist_convergence_details: NotRequired[Dict[str, Any]]
+    geneticist_convergence_details: NotRequired[Dict[str, Any]]
+    recruiter_convergence_details: NotRequired[Dict[str, Any]]
+    oncologist_convergence_details: NotRequired[Dict[str, Any]]
+
     # 收敛检查决策（供条件边使用）
     phase1_decision: NotRequired[str]  # "continue" | "converged"
     phase2_decision: NotRequired[str]  # "continue" | "converged"

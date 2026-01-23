@@ -97,7 +97,7 @@ def log_evidence_stats(graph_dict: dict):
 
     for n in nodes.values():
         # 按类型统计
-        t = n.get("type", "unknown")
+        t = n.get("evidence_type", "unknown")
         by_type[t] = by_type.get(t, 0) + 1
         # 按 Agent 统计
         a = n.get("source_agent", "unknown")
@@ -106,6 +106,59 @@ def log_evidence_stats(graph_dict: dict):
     mtb_logger.info(f"[EVIDENCE] 总节点: {len(nodes)} | 类型分布: {by_type}")
     if by_agent:
         mtb_logger.info(f"[EVIDENCE] Agent 分布: {by_agent}")
+
+
+def log_evidence_stats_detailed(graph_dict: dict, title: str = "EVIDENCE"):
+    """
+    显示证据图详细统计（增强版）
+
+    Args:
+        graph_dict: 证据图的字典表示
+        title: 日志标签
+    """
+    if not graph_dict:
+        mtb_logger.info(f"[{title}] 证据图为空")
+        return
+
+    nodes = graph_dict.get("nodes", {})
+    by_type = {}
+    by_agent = {}
+    by_grade = {}
+
+    for n in nodes.values():
+        # 按类型统计
+        t = n.get("evidence_type", "unknown")
+        by_type[t] = by_type.get(t, 0) + 1
+        # 按 Agent 统计
+        a = n.get("source_agent", "unknown")
+        by_agent[a] = by_agent.get(a, 0) + 1
+        # 按证据等级统计
+        g = n.get("grade", "unknown")
+        by_grade[g] = by_grade.get(g, 0) + 1
+
+    mtb_logger.info(f"[{title}] ════════════════════════════════════════")
+    mtb_logger.info(f"[{title}] 总节点: {len(nodes)}")
+    mtb_logger.info(f"[{title}] 类型分布: {by_type}")
+    mtb_logger.info(f"[{title}] Agent 分布: {by_agent}")
+    mtb_logger.info(f"[{title}] 证据等级分布: {by_grade}")
+
+    # 显示最近添加的证据（按迭代轮次排序）
+    recent_nodes = sorted(
+        nodes.values(),
+        key=lambda n: n.get("iteration", 0),
+        reverse=True
+    )[:5]
+
+    if recent_nodes:
+        mtb_logger.info(f"[{title}] 最近添加:")
+        for node in recent_nodes:
+            agent = node.get("source_agent", "unknown")
+            content = node.get("content", {})
+            text = content.get("text", str(content))[:50] if content else ""
+            grade = node.get("grade", "?")
+            mtb_logger.info(f"[{title}]   - [{agent}][{grade}] {text}...")
+
+    mtb_logger.info(f"[{title}] ════════════════════════════════════════")
 
 
 def log_tool_call(agent: str, tool: str, query: str, success: bool, result_len: int = 0):
