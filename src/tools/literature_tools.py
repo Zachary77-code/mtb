@@ -1,40 +1,45 @@
 """
 文献工具
 
-提供 PubMed 文献检索功能
+提供 PubMed 文献检索功能（使用智能三明治架构）
 """
 from typing import Dict, Any, Optional, List
 from src.tools.base_tool import BaseTool
-from src.tools.api_clients.ncbi_client import NCBIClient
-from config.settings import NCBI_API_KEY, NCBI_EMAIL
-from src.utils.logger import mtb_logger as logger
+from src.tools.smart_pubmed import get_smart_pubmed
 
 
 class PubMedTool(BaseTool):
-    """PubMed 文献搜索工具"""
+    """PubMed 文献搜索工具（智能搜索版）"""
 
     def __init__(self):
         super().__init__(
             name="search_pubmed",
-            description="搜索 PubMed 获取相关文献。输入关键词如：'EGFR L858R osimertinib clinical trial'"
+            description="搜索 PubMed 获取相关文献。支持自然语言查询，如：'KRAS G12C colorectal cancer treatment resistance'"
         )
-        self.client = NCBIClient(api_key=NCBI_API_KEY, email=NCBI_EMAIL)
+        self.smart_search = get_smart_pubmed()
 
-    def _call_real_api(self, query: str = "", max_results: int = 5, **kwargs) -> Optional[str]:
+    def _call_real_api(self, query: str = "", max_results: int = 20, **kwargs) -> Optional[str]:
         """
-        调用 NCBI E-utilities 搜索 PubMed
+        Search PubMed using smart sandwich architecture (LLM-API-LLM)
+
+        Flow: LLM query optimization -> API broad search (100) -> LLM filtering (20)
 
         Args:
-            query: 搜索关键词
-            max_results: 最大结果数
+            query: Search keywords (supports natural language)
+            max_results: Maximum results to return (default 20)
 
         Returns:
-            格式化的搜索结果
+            Formatted search results
         """
         if not query:
             return None
 
-        results = self.client.search_pubmed(query, max_results=max_results)
+        # Use smart search (LLM-API-LLM sandwich architecture)
+        # broad_search_count defaults to 100 in SmartPubMedSearch
+        results = self.smart_search.search(
+            query,
+            max_results=max_results
+        )
 
         if not results:
             return f"**PubMed 搜索结果**\n\n**搜索关键词**: {query}\n\n未找到相关文献。"
@@ -42,7 +47,7 @@ class PubMedTool(BaseTool):
         return self._format_results(query, results)
 
     def _format_results(self, query: str, results: List[Dict]) -> str:
-        """格式化搜索结果"""
+        """格式化搜索结果（包含相关性评分）"""
         output = [
             f"**PubMed 搜索结果**\n",
             f"**搜索关键词**: {query}",
@@ -57,6 +62,9 @@ class PubMedTool(BaseTool):
             journal = article.get("journal", "")
             year = article.get("year", "")
             abstract = article.get("abstract", "")
+            relevance_score = article.get("relevance_score")
+            matched_criteria = article.get("matched_criteria", [])
+            key_findings = article.get("key_findings", "")
 
             # 作者格式化
             author_str = ", ".join(authors[:3])
@@ -67,6 +75,14 @@ class PubMedTool(BaseTool):
             output.append(f"- **PMID**: {pmid}")
             output.append(f"- **作者**: {author_str}")
             output.append(f"- **期刊**: {journal} ({year})")
+
+            # 显示相关性评分（如果有）
+            if relevance_score is not None:
+                output.append(f"- **相关性评分**: {relevance_score}/10")
+            if matched_criteria:
+                output.append(f"- **匹配条件**: {', '.join(matched_criteria)}")
+            if key_findings:
+                output.append(f"- **关键发现**: {key_findings}")
 
             if abstract:
                 output.append(f"- **摘要**: {abstract}")

@@ -28,9 +28,9 @@ LOGS_DIR.mkdir(exist_ok=True)
 DATA_DIR.mkdir(exist_ok=True)
 
 # ==================== API 工具配置 ====================
-# NCBI (PubMed + ClinVar) - 可选 API Key 提高限额
-NCBI_API_KEY = os.getenv("NCBI_API_KEY", "")
-NCBI_EMAIL = os.getenv("NCBI_EMAIL", "")
+# NCBI (PubMed + ClinVar) - API Key 提高限额至 10次/秒
+NCBI_API_KEY = os.getenv("NCBI_API_KEY", "cc2f31026e714a0133f5d535437a486b7907")
+NCBI_EMAIL = os.getenv("NCBI_EMAIL", "mtb-workflow@example.com")
 
 # OncoKB Token (如已申请)
 ONCOKB_API_TOKEN = os.getenv("ONCOKB_API_TOKEN", "")

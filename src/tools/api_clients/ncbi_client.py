@@ -309,9 +309,27 @@ class NCBIClient:
         return results
 
 
+# ==================== 全局单例 ====================
+_ncbi_client_instance: NCBIClient = None
+
+
+def get_ncbi_client() -> NCBIClient:
+    """
+    获取全局 NCBIClient 单例
+
+    所有 Agent 共享同一个限速器，避免并行请求超出 NCBI 限制。
+    """
+    global _ncbi_client_instance
+    if _ncbi_client_instance is None:
+        from config.settings import NCBI_API_KEY, NCBI_EMAIL
+        _ncbi_client_instance = NCBIClient(api_key=NCBI_API_KEY, email=NCBI_EMAIL)
+        logger.info(f"[NCBI] 初始化全局单例 (API Key: {'已配置' if NCBI_API_KEY else '未配置'})")
+    return _ncbi_client_instance
+
+
 if __name__ == "__main__":
     # 测试
-    client = NCBIClient()
+    client = get_ncbi_client()
 
     print("=== PubMed 搜索测试 ===")
     results = client.search_pubmed("EGFR L858R osimertinib", max_results=3)

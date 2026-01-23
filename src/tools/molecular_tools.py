@@ -9,9 +9,8 @@
 from typing import Dict, Any, Optional, List
 from src.tools.base_tool import BaseTool
 from src.tools.api_clients.civic_client import CIViCClient
-from src.tools.api_clients.ncbi_client import NCBIClient
+from src.tools.api_clients.ncbi_client import get_ncbi_client
 from src.tools.api_clients.cbioportal_client import cBioPortalClient
-from config.settings import NCBI_API_KEY, NCBI_EMAIL
 from src.utils.logger import mtb_logger as logger
 
 
@@ -143,7 +142,7 @@ class ClinVarTool(BaseTool):
             name="search_clinvar",
             description="查询 ClinVar 数据库获取变异的致病性分类"
         )
-        self.client = NCBIClient(api_key=NCBI_API_KEY, email=NCBI_EMAIL)
+        self.client = get_ncbi_client()  # 使用全局单例
 
     def _call_real_api(
         self,

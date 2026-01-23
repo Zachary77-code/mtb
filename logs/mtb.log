@@ -4503,3 +4503,207 @@ Traceback (most recent call last):
 langgraph.errors.InvalidUpdateError: At key 'evidence_graph': Can receive only one value per step. Use an Annotated key to handle multiple values.
 For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/INVALID_CONCURRENT_GRAPH_UPDATE
 During task with name 'research_analysis' and id '5598302e-0216-8ad2-4bf2-8fbaec30b7b5'
+2026-01-23 13:02:02 | INFO     | __main__:main:35 | ============================================================
+2026-01-23 13:02:02 | INFO     | __main__:main:36 | MTB 多智能体工作流系统启动
+2026-01-23 13:02:02 | INFO     | __main__:main:37 | ============================================================
+2026-01-23 13:02:02 | INFO     | __main__:main:42 | 配置验证通过
+2026-01-23 13:02:02 | INFO     | __main__:main:50 | 读取病例文件: tests/fixtures/test_report.pdf
+2026-01-23 13:02:02 | INFO     | __main__:main:52 | 病例文本长度: 1243 字符
+2026-01-23 13:02:02 | INFO     | __main__:main:71 | 开始执行工作流
+2026-01-23 13:02:02 | INFO     | src.graph.research_subgraph:create_research_subgraph:1186 | [RESEARCH_SUBGRAPH] 子图构建完成
+2026-01-23 13:02:02 | INFO     | src.graph.nodes:pdf_parser_node:85 | [PDF_PARSER] 开始解析 PDF 文本...
+2026-01-23 13:02:02 | INFO     | src.graph.nodes:pdf_parser_node:88 | [PDF_PARSER] 原始文本长度: 1243 字符
+2026-01-23 13:02:02 | INFO     | src.graph.nodes:_create_run_folder:37 | [RUN_FOLDER] 创建报告文件夹: D:\MTB\reports\20260123_130202_unknown
+2026-01-23 13:02:02 | INFO     | src.graph.nodes:plan_agent_node:112 | [PLAN_AGENT] 开始生成研究计划...
+2026-01-23 13:02:02 | INFO     | src.agents.plan_agent:analyze_case:68 | [PlanAgent] 开始分析病例...
+2026-01-23 13:02:02 | INFO     | src.agents.base_agent:invoke:219 | [PlanAgent] 开始处理...
+2026-01-23 13:02:40 | INFO     | src.agents.base_agent:invoke:257 | [PlanAgent] 完成，输出长度: 6341 字符
+2026-01-23 13:02:40 | INFO     | src.agents.plan_agent:analyze_case:80 | [PlanAgent] 研究计划生成完成: {'total_directions': 9, 'completion_rate': 0.0, 'directions_by_status': {'pending': 9}, 'directions_by_agent': {'Pathologist': 2, 'Geneticist': 2, 'Oncologist': 4, 'Recruiter': 1}, 'pending_count': 9, 'depth_required_count': 0, 'evidence_per_direction': {'D1': 0, 'D2': 0, 'D3': 0, 'D4': 0, 'D5': 0, 'D6': 0, 'D7': 0, 'D8': 0, 'D9': 0}}
+2026-01-23 13:02:40 | INFO     | src.graph.nodes:plan_agent_node:137 | [PLAN_AGENT] 完成，问题数: 0, 方向数: 9
+2026-01-23 13:02:40 | INFO     | src.utils.logger:log_separator:138 | [PHASE1] ════════════════════════════════════════
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:phase1_router:293 | [PHASE1] 迭代 1/7
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:phase1_router:296 | [PHASE1] Agent 状态:
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:phase1_router:298 | [PHASE1]   ○ Pathologist
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:phase1_router:298 | [PHASE1]   ○ Geneticist
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:phase1_router:298 | [PHASE1]   ○ Recruiter
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:phase1_router:309 | [PHASE1] 研究模式: breadth_first
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:phase1_router:310 | [PHASE1] 分发到: Pathologist, Geneticist, Recruiter
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:343 | [PHASE1_PATHOLOGIST] ───────────────────────────────────────
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:343 | [PHASE1_GENETICIST] ───────────────────────────────────────
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:343 | [PHASE1_RECRUITER] ───────────────────────────────────────
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:371 | [PHASE1_PATHOLOGIST] 分配方向: 2 个
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:371 | [PHASE1_GENETICIST] 分配方向: 2 个
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:374 | [PHASE1_PATHOLOGIST]   ○ 患者基础概况与合并症风险评估 (优先级: 1)
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:371 | [PHASE1_RECRUITER] 分配方向: 1 个
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:374 | [PHASE1_GENETICIST]   ○ KRAS G12C、ATM及高TMB的分子致病性与证据分析 (优先级: 1)
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:374 | [PHASE1_PATHOLOGIST]   ○ 免疫组化标记解读与肺转移灶影像评估 (优先级: 2)
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:374 | [PHASE1_RECRUITER]   ○ 基于ATM及KRAS特征的临床试验筛选 (优先级: 2)
+2026-01-23 13:02:40 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:374 | [PHASE1_GENETICIST]   ○ KRAS G12C抑制剂耐药机制与复查策略 (优先级: 2)
+2026-01-23 13:02:40 | INFO     | src.utils.logger:log_separator:138 | [Recruiter] ════════════════════════════════════════
+2026-01-23 13:02:40 | INFO     | src.agents.research_mixin:research_iterate:82 | [Recruiter] 研究迭代 1/7
+2026-01-23 13:02:40 | INFO     | src.utils.logger:log_separator:138 | [Pathologist] ════════════════════════════════════════
+2026-01-23 13:02:40 | INFO     | src.utils.logger:log_separator:138 | [Geneticist] ════════════════════════════════════════
+2026-01-23 13:02:40 | INFO     | src.agents.research_mixin:research_iterate:83 | [Recruiter] 模式: breadth_first
+2026-01-23 13:02:40 | INFO     | src.agents.research_mixin:research_iterate:82 | [Pathologist] 研究迭代 1/7
+2026-01-23 13:02:40 | INFO     | src.agents.research_mixin:research_iterate:82 | [Geneticist] 研究迭代 1/7
+2026-01-23 13:02:40 | INFO     | src.agents.research_mixin:research_iterate:84 | [Recruiter] 分配方向: 1 个
+2026-01-23 13:02:40 | INFO     | src.agents.research_mixin:research_iterate:83 | [Pathologist] 模式: breadth_first
+2026-01-23 13:02:40 | INFO     | src.agents.research_mixin:research_iterate:83 | [Geneticist] 模式: breadth_first
+2026-01-23 13:02:40 | INFO     | src.agents.base_agent:invoke:219 | [Recruiter] 开始处理...
+2026-01-23 13:02:40 | INFO     | src.agents.research_mixin:research_iterate:84 | [Geneticist] 分配方向: 2 个
+2026-01-23 13:02:40 | INFO     | src.agents.research_mixin:research_iterate:84 | [Pathologist] 分配方向: 2 个
+2026-01-23 13:02:40 | INFO     | src.agents.base_agent:invoke:219 | [Geneticist] 开始处理...
+2026-01-23 13:02:40 | INFO     | src.agents.base_agent:invoke:219 | [Pathologist] 开始处理...
+2026-01-23 13:02:43 | INFO     | src.agents.base_agent:invoke:252 | [Recruiter] 检测到工具调用: 3 个
+2026-01-23 13:02:43 | INFO     | src.agents.base_agent:_handle_tool_calls:293 | [Recruiter] 工具调用轮次 1/5，调用数: 3
+2026-01-23 13:02:43 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Recruiter] 工具调用: search_clinical_trials
+2026-01-23 13:02:43 | INFO     | src.agents.base_agent:_handle_tool_calls:328 | [Recruiter]   参数: {"max_results": 10, "intervention": "KRAS G12C inhibitor", "cancer_type": "Colorectal Cancer"}
+2026-01-23 13:02:44 | INFO     | src.agents.base_agent:invoke:252 | [Geneticist] 检测到工具调用: 5 个
+2026-01-23 13:02:44 | INFO     | src.agents.base_agent:_handle_tool_calls:293 | [Geneticist] 工具调用轮次 1/5，调用数: 5
+2026-01-23 13:02:44 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Geneticist] 工具调用: search_civic
+2026-01-23 13:02:44 | INFO     | src.agents.base_agent:_handle_tool_calls:328 | [Geneticist]   参数: {"gene": "KRAS", "cancer_type": "CRC", "variant": "G12C"}
+2026-01-23 13:02:44 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-23 13:02:44 | INFO     | src.utils.logger:log_tool_call:124 | [Recruiter] ✓ search_clinical_trials: {"max_results": 10, "intervention": "KRAS G12C inhibitor", "...
+2026-01-23 13:02:44 | INFO     | src.utils.logger:log_tool_call:126 | [Recruiter]   返回 1848 字符
+2026-01-23 13:02:44 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Recruiter] 工具调用: search_clinical_trials
+2026-01-23 13:02:44 | INFO     | src.agents.base_agent:_handle_tool_calls:328 | [Recruiter]   参数: {"max_results": 5, "biomarker": "ATM mutation", "cancer_type": "Solid Tumor", "intervention": "PARP ...
+2026-01-23 13:02:44 | INFO     | src.agents.base_agent:invoke:252 | [Pathologist] 检测到工具调用: 4 个
+2026-01-23 13:02:44 | INFO     | src.agents.base_agent:_handle_tool_calls:293 | [Pathologist] 工具调用轮次 1/5，调用数: 4
+2026-01-23 13:02:44 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Pathologist] 工具调用: search_pubmed
+2026-01-23 13:02:44 | INFO     | src.agents.base_agent:_handle_tool_calls:328 | [Pathologist]   参数: {"query": "colorectal cancer stage IV prognosis elderly ECOG 1 CEA CA199"}
+2026-01-23 13:02:45 | INFO     | src.tools.api_clients.clinicaltrials_client:search_trials:85 | [CT.gov] 无匹配试验: Solid Tumor ATM mutation
+2026-01-23 13:02:45 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_clinical_trials] API 调用成功
+2026-01-23 13:02:45 | INFO     | src.utils.logger:log_tool_call:124 | [Recruiter] ✓ search_clinical_trials: {"max_results": 5, "biomarker": "ATM mutation", "cancer_type...
+2026-01-23 13:02:45 | INFO     | src.utils.logger:log_tool_call:126 | [Recruiter]   返回 233 字符
+2026-01-23 13:02:45 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Recruiter] 工具调用: search_pubmed
+2026-01-23 13:02:45 | INFO     | src.agents.base_agent:_handle_tool_calls:328 | [Recruiter]   参数: {"query": "KRAS G12C inhibitor resistance colorectal cancer clinical trials China"}
+2026-01-23 13:02:45 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_civic] API 调用成功
+2026-01-23 13:02:45 | INFO     | src.utils.logger:log_tool_call:124 | [Geneticist] ✓ search_civic: {"gene": "KRAS", "cancer_type": "CRC", "variant": "G12C"}
+2026-01-23 13:02:45 | INFO     | src.utils.logger:log_tool_call:126 | [Geneticist]   返回 576 字符
+2026-01-23 13:02:45 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Geneticist] 工具调用: search_civic
+2026-01-23 13:02:45 | INFO     | src.agents.base_agent:_handle_tool_calls:328 | [Geneticist]   参数: {"gene": "ATM", "cancer_type": "CRC"}
+2026-01-23 13:02:45 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_civic] API 调用成功
+2026-01-23 13:02:45 | INFO     | src.utils.logger:log_tool_call:124 | [Geneticist] ✓ search_civic: {"gene": "ATM", "cancer_type": "CRC"}
+2026-01-23 13:02:45 | INFO     | src.utils.logger:log_tool_call:126 | [Geneticist]   返回 912 字符
+2026-01-23 13:02:45 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Geneticist] 工具调用: search_cbioportal
+2026-01-23 13:02:45 | INFO     | src.agents.base_agent:_handle_tool_calls:328 | [Geneticist]   参数: {"variant": "G12C", "gene": "KRAS", "cancer_type": "Colorectal Cancer"}
+2026-01-23 13:02:46 | INFO     | src.tools.api_clients.ncbi_client:search_pubmed:85 | [NCBI] PubMed 无结果: colorectal cancer stage IV prognosis elderly ECOG 1 CEA CA199
+2026-01-23 13:02:46 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-23 13:02:46 | INFO     | src.utils.logger:log_tool_call:124 | [Pathologist] ✓ search_pubmed: {"query": "colorectal cancer stage IV prognosis elderly ECOG...
+2026-01-23 13:02:46 | INFO     | src.utils.logger:log_tool_call:126 | [Pathologist]   返回 99 字符
+2026-01-23 13:02:46 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Pathologist] 工具调用: search_pubmed
+2026-01-23 13:02:46 | INFO     | src.agents.base_agent:_handle_tool_calls:328 | [Pathologist]   参数: {"query": "EGFR 2+ IHC colorectal cancer cetuximab response PD-L1 CPS 3 MSS CRC immunotherapy"}
+2026-01-23 13:02:46 | ERROR    | src.tools.api_clients.ncbi_client:search_pubmed:94 | [NCBI] PubMed 搜索失败: 429 Client Error: Too Many Requests for url: https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=EGFR+2%2B+IHC+colorectal+cancer+cetuximab+response+PD-L1+CPS+3+MSS+CRC+immunotherapy&retmax=5&retmode=json&sort=relevance
+2026-01-23 13:02:46 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-23 13:02:46 | INFO     | src.utils.logger:log_tool_call:124 | [Pathologist] ✓ search_pubmed: {"query": "EGFR 2+ IHC colorectal cancer cetuximab response ...
+2026-01-23 13:02:46 | INFO     | src.utils.logger:log_tool_call:126 | [Pathologist]   返回 120 字符
+2026-01-23 13:02:46 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Pathologist] 工具调用: search_pubmed
+2026-01-23 13:02:46 | INFO     | src.agents.base_agent:_handle_tool_calls:328 | [Pathologist]   参数: {"query": "TKI induced renal injury colorectal cancer management creatinine 146"}
+2026-01-23 13:02:47 | ERROR    | src.tools.api_clients.ncbi_client:search_pubmed:94 | [NCBI] PubMed 搜索失败: 429 Client Error: Too Many Requests for url: https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=TKI+induced+renal+injury+colorectal+cancer+management+creatinine+146&retmax=5&retmode=json&sort=relevance
+2026-01-23 13:02:47 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-23 13:02:47 | INFO     | src.utils.logger:log_tool_call:124 | [Pathologist] ✓ search_pubmed: {"query": "TKI induced renal injury colorectal cancer manage...
+2026-01-23 13:02:47 | INFO     | src.utils.logger:log_tool_call:126 | [Pathologist]   返回 106 字符
+2026-01-23 13:02:47 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Pathologist] 工具调用: search_cbioportal
+2026-01-23 13:02:47 | INFO     | src.agents.base_agent:_handle_tool_calls:328 | [Pathologist]   参数: {"variant": "G12C", "gene": "KRAS", "cancer_type": "colorectal adenocarcinoma"}
+2026-01-23 13:02:47 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-23 13:02:47 | INFO     | src.utils.logger:log_tool_call:124 | [Recruiter] ✓ search_pubmed: {"query": "KRAS G12C inhibitor resistance colorectal cancer ...
+2026-01-23 13:02:47 | INFO     | src.utils.logger:log_tool_call:126 | [Recruiter]   返回 2694 字符
+2026-01-23 13:02:48 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_cbioportal] API 调用成功
+2026-01-23 13:02:48 | INFO     | src.utils.logger:log_tool_call:124 | [Geneticist] ✓ search_cbioportal: {"variant": "G12C", "gene": "KRAS", "cancer_type": "Colorect...
+2026-01-23 13:02:48 | INFO     | src.utils.logger:log_tool_call:126 | [Geneticist]   返回 465 字符
+2026-01-23 13:02:48 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Geneticist] 工具调用: search_pubmed
+2026-01-23 13:02:48 | INFO     | src.agents.base_agent:_handle_tool_calls:328 | [Geneticist]   参数: {"query": "TMB 79 mut/Mb MSS colorectal cancer POLE POLD1 mutation"}
+2026-01-23 13:02:49 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_cbioportal] API 调用成功
+2026-01-23 13:02:49 | INFO     | src.utils.logger:log_tool_call:124 | [Pathologist] ✓ search_cbioportal: {"variant": "G12C", "gene": "KRAS", "cancer_type": "colorect...
+2026-01-23 13:02:49 | INFO     | src.utils.logger:log_tool_call:126 | [Pathologist]   返回 473 字符
+2026-01-23 13:02:50 | INFO     | src.tools.api_clients.ncbi_client:search_pubmed:85 | [NCBI] PubMed 无结果: TMB 79 mut/Mb MSS colorectal cancer POLE POLD1 mutation
+2026-01-23 13:02:50 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-23 13:02:50 | INFO     | src.utils.logger:log_tool_call:124 | [Geneticist] ✓ search_pubmed: {"query": "TMB 79 mut/Mb MSS colorectal cancer POLE POLD1 mu...
+2026-01-23 13:02:50 | INFO     | src.utils.logger:log_tool_call:126 | [Geneticist]   返回 93 字符
+2026-01-23 13:02:50 | INFO     | src.agents.base_agent:_handle_tool_calls:327 | [Geneticist] 工具调用: search_pubmed
+2026-01-23 13:02:50 | INFO     | src.agents.base_agent:_handle_tool_calls:328 | [Geneticist]   参数: {"query": "KRAS G12C inhibitor resistance mechanisms colorectal cancer MET amplification"}
+2026-01-23 13:02:51 | INFO     | src.tools.base_tool:invoke:45 | [Tool:search_pubmed] API 调用成功
+2026-01-23 13:02:51 | INFO     | src.utils.logger:log_tool_call:124 | [Geneticist] ✓ search_pubmed: {"query": "KRAS G12C inhibitor resistance mechanisms colorec...
+2026-01-23 13:02:51 | INFO     | src.utils.logger:log_tool_call:126 | [Geneticist]   返回 1325 字符
+2026-01-23 13:02:56 | INFO     | src.agents.base_agent:_handle_tool_calls:375 | [Recruiter] 工具调用完成，最终输出长度: 2190 字符
+2026-01-23 13:02:56 | INFO     | src.agents.research_mixin:research_iterate:117 | [Recruiter] 迭代完成:
+2026-01-23 13:02:56 | INFO     | src.agents.research_mixin:research_iterate:118 | [Recruiter]   发现数: 3
+2026-01-23 13:02:56 | INFO     | src.agents.research_mixin:research_iterate:119 | [Recruiter]   新证据: 3
+2026-01-23 13:02:56 | INFO     | src.agents.research_mixin:research_iterate:121 | [Recruiter]   方向更新: {'D7': 'pending'}
+2026-01-23 13:02:56 | INFO     | src.agents.research_mixin:research_iterate:124 | [Recruiter]   需深入研究: 2 项
+2026-01-23 13:02:56 | INFO     | src.agents.research_mixin:research_iterate:128 | [Recruiter]   摘要: 本轮研究聚焦于 KRAS G12C 突变及 ATM 胚系突变的临床试验筛选。初步检索发现，针对 KRAS G12C 突变的靶向治疗（如 Glecirasib/氟泽雷赛联合西妥昔单抗）已进入临床验证阶段...
+2026-01-23 13:02:56 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:392 | [PHASE1_RECRUITER] 完成:
+2026-01-23 13:02:56 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:393 | [PHASE1_RECRUITER]   新证据: 3
+2026-01-23 13:02:56 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:395 | [PHASE1_RECRUITER]   方向更新: {'D7': 'pending'}
+2026-01-23 13:02:56 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:397 | [PHASE1_RECRUITER]   需深入研究: 2 项
+2026-01-23 13:02:56 | INFO     | src.graph.research_subgraph:check_single_agent_convergence:216 | [Recruiter_CONVERGENCE] Step 1 未通过: 方向证据不足 ['D7(3/20)']
+2026-01-23 13:02:56 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:411 | [PHASE1_RECRUITER] ○ Agent 未收敛，继续下轮迭代
+2026-01-23 13:03:01 | INFO     | src.agents.base_agent:_handle_tool_calls:375 | [Geneticist] 工具调用完成，最终输出长度: 2381 字符
+2026-01-23 13:03:01 | INFO     | src.agents.research_mixin:research_iterate:117 | [Geneticist] 迭代完成:
+2026-01-23 13:03:01 | INFO     | src.agents.research_mixin:research_iterate:118 | [Geneticist]   发现数: 3
+2026-01-23 13:03:01 | INFO     | src.agents.research_mixin:research_iterate:119 | [Geneticist]   新证据: 3
+2026-01-23 13:03:01 | INFO     | src.agents.research_mixin:research_iterate:121 | [Geneticist]   方向更新: {'D2': 'pending', 'D6': 'pending'}
+2026-01-23 13:03:01 | INFO     | src.agents.research_mixin:research_iterate:124 | [Geneticist]   需深入研究: 2 项
+2026-01-23 13:03:01 | INFO     | src.agents.research_mixin:research_iterate:128 | [Geneticist]   摘要: 本轮研究初步分析了 KRAS G12C 在结直肠癌（CRC）中的致病性、耐药机制及 ATM 胚系突变的潜在意义。KRAS G12C 在 CRC 中频率约为 10.7%，是 EGFR 单抗耐药的明确因素...
+2026-01-23 13:03:01 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:392 | [PHASE1_GENETICIST] 完成:
+2026-01-23 13:03:01 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:393 | [PHASE1_GENETICIST]   新证据: 3
+2026-01-23 13:03:01 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:395 | [PHASE1_GENETICIST]   方向更新: {'D2': 'pending', 'D6': 'pending'}
+2026-01-23 13:03:01 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:397 | [PHASE1_GENETICIST]   需深入研究: 2 项
+2026-01-23 13:03:01 | INFO     | src.graph.research_subgraph:check_single_agent_convergence:216 | [Geneticist_CONVERGENCE] Step 1 未通过: 方向证据不足 ['D2(2/20)', 'D6(1/20)']
+2026-01-23 13:03:01 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:411 | [PHASE1_GENETICIST] ○ Agent 未收敛，继续下轮迭代
+2026-01-23 13:03:02 | INFO     | src.agents.base_agent:_handle_tool_calls:375 | [Pathologist] 工具调用完成，最终输出长度: 2460 字符
+2026-01-23 13:03:02 | INFO     | src.agents.research_mixin:research_iterate:117 | [Pathologist] 迭代完成:
+2026-01-23 13:03:02 | INFO     | src.agents.research_mixin:research_iterate:118 | [Pathologist]   发现数: 3
+2026-01-23 13:03:02 | INFO     | src.agents.research_mixin:research_iterate:119 | [Pathologist]   新证据: 3
+2026-01-23 13:03:02 | INFO     | src.agents.research_mixin:research_iterate:121 | [Pathologist]   方向更新: {'D1': 'pending', 'D3': 'pending'}
+2026-01-23 13:03:02 | INFO     | src.agents.research_mixin:research_iterate:124 | [Pathologist]   需深入研究: 2 项
+2026-01-23 13:03:02 | INFO     | src.agents.research_mixin:research_iterate:128 | [Pathologist]   摘要: 本轮研究重点分析了患者的病理特征、分子背景及合并症风险。通过 cBioPortal 数据确认 KRAS G12C 在结直肠腺癌中的发生率约为 10.72%，属于该癌种中较少见但具有特定靶向药物（如氟泽...
+2026-01-23 13:03:02 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:392 | [PHASE1_PATHOLOGIST] 完成:
+2026-01-23 13:03:02 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:393 | [PHASE1_PATHOLOGIST]   新证据: 3
+2026-01-23 13:03:02 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:395 | [PHASE1_PATHOLOGIST]   方向更新: {'D1': 'pending', 'D3': 'pending'}
+2026-01-23 13:03:02 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:397 | [PHASE1_PATHOLOGIST]   需深入研究: 2 项
+2026-01-23 13:03:02 | INFO     | src.graph.research_subgraph:check_single_agent_convergence:216 | [Pathologist_CONVERGENCE] Step 1 未通过: 方向证据不足 ['D1(1/20)', 'D3(2/20)']
+2026-01-23 13:03:02 | INFO     | src.graph.research_subgraph:_execute_phase1_agent:411 | [PHASE1_PATHOLOGIST] ○ Agent 未收敛，继续下轮迭代
+2026-01-23 13:03:02 | ERROR    | __main__:main:111 | 工作流执行失败: At key 'evidence_graph': Can receive only one value per step. Use an Annotated key to handle multiple values.
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/INVALID_CONCURRENT_GRAPH_UPDATE
+Traceback (most recent call last):
+
+  File "D:\MTB\main.py", line 153, in <module>
+    main(case_path)
+
+> File "D:\MTB\main.py", line 74, in main
+    final_state = run_mtb_workflow(input_text)
+
+  File "D:\MTB\src\graph\state_graph.py", line 145, in run_mtb_workflow
+    final_state = workflow.invoke(initial_state)
+
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 3071, in invoke
+    for chunk in self.stream(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 2646, in stream
+    for _ in runner.tick(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_runner.py", line 167, in tick
+    run_with_retry(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_retry.py", line 42, in run_with_retry
+    return task.proc.invoke(task.input, config)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\_internal\_runnable.py", line 656, in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 3071, in invoke
+    for chunk in self.stream(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\main.py", line 2656, in stream
+    loop.after_tick()
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_loop.py", line 542, in after_tick
+    self.updated_channels = apply_writes(
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\pregel\_algo.py", line 296, in apply_writes
+    if channels[chan].update(vals) and next_version is not None:
+  File "C:\Users\Windows11\AppData\Local\Programs\Python\Python313\Lib\site-packages\langgraph\channels\last_value.py", line 64, in update
+    raise InvalidUpdateError(msg)
+
+langgraph.errors.InvalidUpdateError: At key 'evidence_graph': Can receive only one value per step. Use an Annotated key to handle multiple values.
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/INVALID_CONCURRENT_GRAPH_UPDATE
+During task with name 'research_analysis' and id 'e9856f92-0ed7-5a06-c0b8-e8da1fa9bb6f'
+2026-01-23 19:40:52 | INFO     | src.tools.api_clients.ncbi_client:get_ncbi_client:326 | [NCBI] 初始化全局单例 (API Key: 已配置)
+2026-01-23 19:40:52 | INFO     | src.tools.smart_pubmed:get_smart_pubmed:246 | [SmartPubMed] 初始化智能搜索单例
+2026-01-23 19:40:52 | INFO     | src.tools.smart_pubmed:search:202 | [SmartPubMed] 开始搜索: KRAS G12C colorectal cancer cetuximab response...
+2026-01-23 19:40:55 | INFO     | src.tools.smart_pubmed:_optimize_query:115 | [SmartPubMed] 查询优化: 'KRAS G12C colorectal cancer cetuximab re...' -> '("Colorectal Neoplasms"[MeSH] OR "Colorectal Cancer") AND ("...'
+2026-01-23 19:40:57 | INFO     | src.tools.smart_pubmed:search:227 | [SmartPubMed] API 返回 15 篇文献
+2026-01-23 19:41:37 | INFO     | src.tools.smart_pubmed:_filter_results:180 | [SmartPubMed] 筛选完成: 15 -> 14 篇
