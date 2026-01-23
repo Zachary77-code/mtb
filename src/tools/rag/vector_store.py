@@ -175,7 +175,7 @@ class NCCNVectorStore:
     def search(
         self,
         query: str,
-        top_k: int = 5,
+        top_k: int = 30,
         filter_metadata: Dict[str, Any] = None
     ) -> List[Dict[str, Any]]:
         """
@@ -230,7 +230,7 @@ class NCCNVectorStore:
         self,
         query: str,
         cancer_type: str,
-        top_k: int = 5
+        top_k: int = 30
     ) -> List[Dict[str, Any]]:
         """
         按癌症类型搜索

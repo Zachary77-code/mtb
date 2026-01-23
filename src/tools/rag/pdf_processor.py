@@ -34,14 +34,35 @@ class NCCNPdfProcessor:
         if not self.pdf_dir.exists():
             logger.warning(f"[PDF] 目录不存在: {self.pdf_dir}")
 
-    def list_pdfs(self) -> List[Path]:
-        """列出所有 PDF 文件"""
+    def list_pdfs(self, filter_types: List[str] = None) -> List[Path]:
+        """
+        列出 PDF 文件
+
+        Args:
+            filter_types: 癌症类型过滤列表（文件名关键词），为空则返回所有
+
+        Returns:
+            PDF 文件路径列表
+        """
         if not self.pdf_dir.exists():
             return []
 
-        pdfs = list(self.pdf_dir.glob("*.pdf"))
-        logger.info(f"[PDF] 找到 {len(pdfs)} 个 PDF 文件")
-        return pdfs
+        all_pdfs = list(self.pdf_dir.glob("*.pdf"))
+
+        # 如果有过滤条件，只保留匹配的文件
+        if filter_types:
+            filtered_pdfs = []
+            for pdf in all_pdfs:
+                filename = pdf.name
+                for cancer_type in filter_types:
+                    if cancer_type in filename:
+                        filtered_pdfs.append(pdf)
+                        break
+            logger.info(f"[PDF] 找到 {len(all_pdfs)} 个 PDF，过滤后保留 {len(filtered_pdfs)} 个")
+            return filtered_pdfs
+
+        logger.info(f"[PDF] 找到 {len(all_pdfs)} 个 PDF 文件")
+        return all_pdfs
 
     def extract_text(self, pdf_path: Path) -> str:
         """
@@ -174,6 +195,7 @@ class NCCNPdfProcessor:
             "乳腺癌": "Breast Cancer",
             "结直肠癌": "Colorectal Cancer",
             "结肠癌": "Colon Cancer",
+            "小肠腺癌": "Small Intestine Adenocarcinoma",
             "胃癌": "Gastric Cancer",
             "肝癌": "Liver Cancer",
             "胰腺癌": "Pancreatic Cancer",
@@ -244,7 +266,8 @@ class NCCNPdfProcessor:
     def process_all_pdfs(
         self,
         chunk_size: int = 1000,
-        chunk_overlap: int = 200
+        chunk_overlap: int = 200,
+        filter_types: List[str] = None
     ) -> List[Dict[str, Any]]:
         """
         处理目录中所有 PDF 文件
@@ -252,13 +275,19 @@ class NCCNPdfProcessor:
         Args:
             chunk_size: 块大小
             chunk_overlap: 重叠大小
+            filter_types: 癌症类型过滤（为空则使用配置文件中的设置）
 
         Returns:
             所有文档块列表
         """
-        pdfs = self.list_pdfs()
+        # 如果未指定过滤条件，使用配置文件中的设置
+        if filter_types is None:
+            from config.settings import NCCN_INDEX_CANCER_TYPES
+            filter_types = NCCN_INDEX_CANCER_TYPES if NCCN_INDEX_CANCER_TYPES else None
+
+        pdfs = self.list_pdfs(filter_types=filter_types)
         if not pdfs:
-            logger.warning(f"[PDF] 目录中没有 PDF 文件: {self.pdf_dir}")
+            logger.warning(f"[PDF] 目录中没有匹配的 PDF 文件: {self.pdf_dir}")
             return []
 
         all_documents = []

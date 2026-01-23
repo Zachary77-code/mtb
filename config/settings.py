@@ -37,13 +37,22 @@ ONCOKB_API_TOKEN = os.getenv("ONCOKB_API_TOKEN", "")
 
 # ==================== RAG 配置 ====================
 NCCN_PDF_DIR = BASE_DIR / os.getenv("NCCN_PDF_DIR", "NCCN_English")
-NCCN_VECTOR_DIR = DATA_DIR / "nccn_vectors"
+# 索引存储在用户目录，避免被 git clean 删除
+NCCN_VECTOR_DIR = Path(os.getenv("NCCN_VECTOR_DIR", str(Path.home() / ".mtb" / "nccn_vectors")))
 
 # ==================== DashScope Embedding 配置 ====================
 DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY", "")
 DASHSCOPE_BASE_URL = os.getenv("DASHSCOPE_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-v4")
-EMBEDDING_DIMENSIONS = int(os.getenv("EMBEDDING_DIMENSIONS", "256"))
+EMBEDDING_DIMENSIONS = int(os.getenv("EMBEDDING_DIMENSIONS", "1024"))
+
+# 需要索引的癌症类型（文件名关键词，为空则索引所有）
+NCCN_INDEX_CANCER_TYPES = [
+    "结肠癌",
+    "小肠腺癌",
+    "非小细胞肺癌",
+    "小细胞肺癌",
+]
 
 # ==================== Agent 配置 ====================
 AGENT_TEMPERATURE = float(os.getenv("AGENT_TEMPERATURE", "0.2"))

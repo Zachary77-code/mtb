@@ -78,7 +78,7 @@ class NCCNRag:
         self,
         question: str,
         cancer_type: str = None,
-        top_k: int = 5
+        top_k: int = 30
     ) -> str:
         """
         查询 NCCN 指南
@@ -141,12 +141,8 @@ class NCCNRag:
                 output_parts.append(f"**癌症类型**: {cancer_type}\n")
             output_parts.append(f"**相关度**: {score:.2%}\n\n")
 
-            # 限制文本长度
-            text_preview = text[:800] if len(text) > 800 else text
-            output_parts.append(f"{text_preview}\n")
-
-            if len(text) > 800:
-                output_parts.append(f"... (共 {len(text)} 字符)\n")
+            # 输出完整文本
+            output_parts.append(f"{text}\n")
 
             output_parts.append("\n---\n")
 
