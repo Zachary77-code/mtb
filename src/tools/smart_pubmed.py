@@ -10,6 +10,7 @@ import json
 import re
 import requests
 from typing import Dict, List, Any, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from src.tools.api_clients.ncbi_client import get_ncbi_client
 from src.utils.logger import mtb_logger as logger
 from config.settings import (
@@ -63,6 +64,26 @@ Evaluate relevance considering:
 
 Return ONLY valid JSON (no markdown, no explanation):
 {{"is_relevant": true/false, "relevance_score": 0-10, "matched_criteria": ["list"], "key_findings": "brief summary"}}"""
+
+    BATCH_RELEVANCE_FILTER_PROMPT = """You are a Clinical Literature Reviewer.
+
+Task: Evaluate if EACH abstract matches the user's specific search criteria.
+
+User's Original Query: {original_query}
+
+Articles to evaluate (JSON array):
+{articles_json}
+
+For EACH article, evaluate:
+- Does it discuss the specific disease/cancer type?
+- Does it mention the gene/biomarker of interest?
+- Does it discuss relevant treatments or clinical outcomes?
+- Does it match any specific numeric criteria from the original query?
+
+Return ONLY a valid JSON array (no markdown, no explanation):
+[{{"pmid": "...", "is_relevant": true/false, "relevance_score": 0-10, "matched_criteria": ["..."], "key_findings": "..."}}]
+
+IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same order."""
 
     def __init__(self):
         self.ncbi_client = get_ncbi_client()
@@ -124,56 +145,109 @@ Return ONLY valid JSON (no markdown, no explanation):
         cleaned = ' '.join(cleaned.split())
         return cleaned
 
+    def _filter_batch(self, original_query: str, batch: List[Dict], batch_idx: int) -> List[Dict]:
+        """
+        评估一批文章的相关性（单次 LLM 调用评估多篇）
+
+        Args:
+            original_query: 用户原始查询
+            batch: 文章列表（最多 20 篇）
+            batch_idx: 批次索引（用于日志）
+
+        Returns:
+            相关文章列表（带相关性评分）
+        """
+        # 过滤无摘要的文章，构建精简的文章 JSON
+        articles_for_eval = []
+        pmid_to_article = {}
+        for article in batch:
+            pmid = article.get("pmid", "")
+            abstract = article.get("abstract", "")
+            if not abstract:
+                continue
+            pmid_to_article[pmid] = article
+            articles_for_eval.append({
+                "pmid": pmid,
+                "title": article.get("title", ""),
+                "abstract": abstract
+            })
+
+        if not articles_for_eval:
+            return []
+
+        # 构建批量评估 prompt
+        prompt = self.BATCH_RELEVANCE_FILTER_PROMPT.format(
+            original_query=original_query,
+            articles_json=json.dumps(articles_for_eval, ensure_ascii=False)
+        )
+
+        # 调用 LLM（增加 max_tokens 以容纳批量输出）
+        response = self._call_llm(prompt, max_tokens=2000)
+
+        # 解析返回的 JSON 数组
+        filtered = []
+        try:
+            evaluations = json.loads(response)
+            if not isinstance(evaluations, list):
+                evaluations = [evaluations]
+
+            for eval_result in evaluations:
+                pmid = str(eval_result.get("pmid", ""))
+                is_relevant = eval_result.get("is_relevant", False)
+                score = eval_result.get("relevance_score", 0)
+
+                if pmid in pmid_to_article and is_relevant and score >= 5:
+                    article = pmid_to_article[pmid]
+                    article["relevance_score"] = score
+                    article["matched_criteria"] = eval_result.get("matched_criteria", [])
+                    article["key_findings"] = eval_result.get("key_findings", "")
+                    filtered.append(article)
+
+            logger.debug(f"[SmartPubMed] 批次 {batch_idx}: {len(articles_for_eval)} -> {len(filtered)} 篇相关")
+
+        except json.JSONDecodeError as e:
+            logger.warning(f"[SmartPubMed] 批次 {batch_idx} JSON 解析失败: {e}")
+            # 回退：尝试提取 is_relevant: true 的 PMID
+            for pmid, article in pmid_to_article.items():
+                if f'"{pmid}"' in response and '"is_relevant": true' in response.lower():
+                    article["relevance_score"] = 5
+                    filtered.append(article)
+
+        return filtered
+
     def _filter_results(self, original_query: str, results: List[Dict]) -> List[Dict]:
         """
-        Step 3: LLM 筛选结果
+        Step 3: LLM 筛选结果（并行 + 批量策略）
 
-        阅读每篇摘要，评估与原始查询的相关性，
-        找回被 API 忽略的细节条件（如 2+, CPS 3）。
+        策略:
+        - 将文章分批，每批 20 篇
+        - 使用 ThreadPoolExecutor 并行执行多个批次
+        - 合并结果并按相关性排序
         """
         if not results:
             return []
 
+        BATCH_SIZE = 20
+        MAX_WORKERS = 5
+
+        # 分批
+        batches = [results[i:i + BATCH_SIZE] for i in range(0, len(results), BATCH_SIZE)]
+        logger.info(f"[SmartPubMed] 开始筛选: {len(results)} 篇分为 {len(batches)} 批 (并行={MAX_WORKERS})")
+
+        # 并行执行
         filtered = []
-        for article in results:
-            pmid = article.get("pmid", "")
-            title = article.get("title", "")
-            abstract = article.get("abstract", "")
-
-            # 跳过无摘要的文章
-            if not abstract:
-                continue
-
-            prompt = self.RELEVANCE_FILTER_PROMPT.format(
-                original_query=original_query,
-                pmid=pmid,
-                title=title,
-                abstract=abstract[:1500]  # 限制长度避免超时
-            )
-
-            response = self._call_llm(prompt, max_tokens=200)
-
-            try:
-                # 尝试解析 JSON
-                result = json.loads(response)
-                is_relevant = result.get("is_relevant", False)
-                score = result.get("relevance_score", 0)
-
-                if is_relevant and score >= 5:
-                    article["relevance_score"] = score
-                    article["matched_criteria"] = result.get("matched_criteria", [])
-                    article["key_findings"] = result.get("key_findings", "")
-                    filtered.append(article)
-                    logger.debug(f"[SmartPubMed] PMID {pmid}: 相关 (score={score})")
-                else:
-                    logger.debug(f"[SmartPubMed] PMID {pmid}: 不相关 (score={score})")
-
-            except json.JSONDecodeError:
-                # JSON 解析失败，检查是否有明显的相关标记
-                if '"is_relevant": true' in response.lower() or '"is_relevant":true' in response.lower():
-                    article["relevance_score"] = 5
-                    filtered.append(article)
-                    logger.debug(f"[SmartPubMed] PMID {pmid}: 相关 (JSON解析失败但匹配)")
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = {
+                executor.submit(self._filter_batch, original_query, batch, idx): idx
+                for idx, batch in enumerate(batches)
+            }
+            for future in as_completed(futures):
+                batch_idx = futures[future]
+                try:
+                    batch_results = future.result()
+                    filtered.extend(batch_results)
+                except Exception as e:
+                    logger.error(f"[SmartPubMed] 批次 {batch_idx} 执行失败: {e}")
 
         # 按相关性排序
         filtered.sort(key=lambda x: x.get("relevance_score", 0), reverse=True)

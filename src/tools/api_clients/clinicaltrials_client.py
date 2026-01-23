@@ -159,9 +159,9 @@ class ClinicalTrialsClient:
                 "completion_date": completion_date,
                 "conditions": conditions,
                 "interventions": interventions,
-                "locations": locations[:5],  # 限制地点数
+                "locations": locations,  # 返回完整地点列表
                 "sponsor": lead_sponsor,
-                "eligibility_criteria": eligibility_criteria[:1000],  # 限制长度
+                "eligibility_criteria": eligibility_criteria,  # 返回完整入选标准
                 "url": f"https://clinicaltrials.gov/study/{nct_id}"
             })
 

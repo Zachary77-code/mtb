@@ -179,10 +179,10 @@ class NCBIClient:
                 results.append({
                     "pmid": pmid,
                     "title": title,
-                    "authors": authors[:3],  # 只取前3作者
+                    "authors": authors,  # 返回完整作者列表
                     "journal": journal,
                     "year": year,
-                    "abstract": abstract[:500] if abstract else ""  # 限制摘要长度
+                    "abstract": abstract  # 返回完整摘要
                 })
 
         except ET.ParseError as e:

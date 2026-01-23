@@ -78,11 +78,10 @@ class FDAClient:
         brand_names = openfda.get("brand_name", [])
 
         # 各部分内容 (FDA API 返回数组)
-        def get_section(key: str, max_len: int = 2000) -> str:
+        def get_section(key: str) -> str:
             content = label.get(key, [])
             if isinstance(content, list) and content:
-                text = content[0]
-                return text[:max_len] if len(text) > max_len else text
+                return content[0]
             return ""
 
         return {

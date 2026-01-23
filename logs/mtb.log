@@ -4707,3 +4707,29 @@ During task with name 'research_analysis' and id 'e9856f92-0ed7-5a06-c0b8-e8da1f
 2026-01-23 19:40:55 | INFO     | src.tools.smart_pubmed:_optimize_query:115 | [SmartPubMed] 查询优化: 'KRAS G12C colorectal cancer cetuximab re...' -> '("Colorectal Neoplasms"[MeSH] OR "Colorectal Cancer") AND ("...'
 2026-01-23 19:40:57 | INFO     | src.tools.smart_pubmed:search:227 | [SmartPubMed] API 返回 15 篇文献
 2026-01-23 19:41:37 | INFO     | src.tools.smart_pubmed:_filter_results:180 | [SmartPubMed] 筛选完成: 15 -> 14 篇
+2026-01-23 19:48:46 | INFO     | src.tools.api_clients.ncbi_client:get_ncbi_client:326 | [NCBI] 初始化全局单例 (API Key: 已配置)
+2026-01-23 19:48:46 | INFO     | src.tools.smart_pubmed:get_smart_pubmed:246 | [SmartPubMed] 初始化智能搜索单例
+2026-01-23 19:48:46 | INFO     | src.tools.smart_pubmed:search:202 | [SmartPubMed] 开始搜索: KRAS G12C colorectal cancer cetuximab response...
+2026-01-23 19:48:55 | INFO     | src.tools.smart_pubmed:_optimize_query:115 | [SmartPubMed] 查询优化: 'KRAS G12C colorectal cancer cetuximab re...' -> '("Colorectal Neoplasms"[MeSH] OR "Colorectal Cancer" OR "mCR...'
+2026-01-23 19:49:00 | INFO     | src.tools.smart_pubmed:search:227 | [SmartPubMed] API 返回 100 篇文献
+2026-01-23 20:02:08 | INFO     | src.tools.api_clients.ncbi_client:get_ncbi_client:326 | [NCBI] 初始化全局单例 (API Key: 已配置)
+2026-01-23 20:02:08 | INFO     | src.tools.smart_pubmed:get_smart_pubmed:320 | [SmartPubMed] 初始化智能搜索单例
+2026-01-23 20:02:08 | INFO     | src.tools.smart_pubmed:search:276 | [SmartPubMed] 开始搜索: KRAS G12C colorectal cancer cetuximab response...
+2026-01-23 20:02:11 | INFO     | src.tools.smart_pubmed:_optimize_query:136 | [SmartPubMed] 查询优化: 'KRAS G12C colorectal cancer cetuximab re...' -> '("Colorectal Neoplasms"[MeSH] OR "Colorectal Cancer" OR "mCR...'
+2026-01-23 20:02:17 | INFO     | src.tools.smart_pubmed:search:301 | [SmartPubMed] API 返回 100 篇文献
+2026-01-23 20:02:17 | INFO     | src.tools.smart_pubmed:_filter_results:235 | [SmartPubMed] 开始筛选: 100 篇分为 5 批 (并行=5)
+2026-01-23 20:02:45 | INFO     | src.tools.smart_pubmed:_filter_results:254 | [SmartPubMed] 筛选完成: 100 -> 45 篇
+2026-01-23 20:03:09 | INFO     | src.tools.api_clients.ncbi_client:get_ncbi_client:326 | [NCBI] 初始化全局单例 (API Key: 已配置)
+2026-01-23 20:03:09 | INFO     | src.tools.smart_pubmed:get_smart_pubmed:320 | [SmartPubMed] 初始化智能搜索单例
+2026-01-23 20:03:09 | INFO     | src.tools.smart_pubmed:search:276 | [SmartPubMed] 开始搜索: KRAS G12C colorectal cancer...
+2026-01-23 20:03:12 | INFO     | src.tools.smart_pubmed:_optimize_query:136 | [SmartPubMed] 查询优化: 'KRAS G12C colorectal cancer...' -> '("Proto-Oncogene Proteins p21(ras)"[MeSH Terms] OR "KRAS" OR...'
+2026-01-23 20:03:15 | INFO     | src.tools.smart_pubmed:search:301 | [SmartPubMed] API 返回 100 篇文献
+2026-01-23 20:03:15 | INFO     | src.tools.smart_pubmed:_filter_results:235 | [SmartPubMed] 开始筛选: 100 篇分为 5 批 (并行=5)
+2026-01-23 20:03:33 | INFO     | src.tools.smart_pubmed:_filter_results:254 | [SmartPubMed] 筛选完成: 100 -> 42 篇
+2026-01-23 20:09:42 | INFO     | src.tools.api_clients.ncbi_client:get_ncbi_client:326 | [NCBI] 初始化全局单例 (API Key: 已配置)
+2026-01-23 20:09:42 | INFO     | src.tools.smart_pubmed:get_smart_pubmed:320 | [SmartPubMed] 初始化智能搜索单例
+2026-01-23 20:09:42 | INFO     | src.tools.smart_pubmed:search:276 | [SmartPubMed] 开始搜索: KRAS G12C colorectal cancer cetuximab response...
+2026-01-23 20:09:45 | INFO     | src.tools.smart_pubmed:_optimize_query:136 | [SmartPubMed] 查询优化: 'KRAS G12C colorectal cancer cetuximab re...' -> '("Colorectal Neoplasms"[MeSH] OR "Colorectal Cancer" OR "mCR...'
+2026-01-23 20:09:48 | INFO     | src.tools.smart_pubmed:search:301 | [SmartPubMed] API 返回 100 篇文献
+2026-01-23 20:09:48 | INFO     | src.tools.smart_pubmed:_filter_results:235 | [SmartPubMed] 开始筛选: 100 篇分为 5 批 (并行=5)
+2026-01-23 20:10:04 | INFO     | src.tools.smart_pubmed:_filter_results:254 | [SmartPubMed] 筛选完成: 100 -> 61 篇

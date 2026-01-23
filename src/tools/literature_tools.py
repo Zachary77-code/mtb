@@ -66,10 +66,8 @@ class PubMedTool(BaseTool):
             matched_criteria = article.get("matched_criteria", [])
             key_findings = article.get("key_findings", "")
 
-            # 作者格式化
-            author_str = ", ".join(authors[:3])
-            if len(authors) > 3:
-                author_str += ", et al."
+            # 作者格式化 (显示所有作者)
+            author_str = ", ".join(authors)
 
             output.append(f"### {i}. {title}\n")
             output.append(f"- **PMID**: {pmid}")

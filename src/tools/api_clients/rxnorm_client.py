@@ -190,12 +190,12 @@ class RxNormClient:
 
                         interactions.append({
                             "drugs": drugs_involved,
-                            "description": description[:500],
+                            "description": description,
                             "severity": severity
                         })
 
             logger.debug(f"[RxNorm] 找到 {len(interactions)} 个相互作用")
-            return interactions[:10]  # 限制数量
+            return interactions
 
         except Exception as e:
             logger.error(f"[RxNorm] 查询相互作用失败: {e}")
@@ -249,7 +249,7 @@ class RxNormClient:
 
                         interactions.append({
                             "drugs": drugs_involved,
-                            "description": description[:500],
+                            "description": description,
                             "severity": severity
                         })
 

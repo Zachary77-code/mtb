@@ -87,7 +87,7 @@ class CIViCClient:
             "id": gene.get("id"),
             "name": gene.get("name"),
             "entrez_id": gene.get("entrezId"),
-            "description": (gene.get("description") or "")[:500]
+            "description": gene.get("description") or ""
         }
 
     def search_variant(self, gene: str, variant: str) -> Optional[Dict]:
@@ -188,7 +188,7 @@ class CIViCClient:
         return {
             "id": mp.get("id"),
             "name": mp.get("name"),
-            "description": (mp.get("description") or "")[:500],
+            "description": mp.get("description") or "",
             "variants": [
                 {
                     "id": v.get("id"),
