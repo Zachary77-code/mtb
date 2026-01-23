@@ -425,6 +425,12 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
     if run_folder and result.get("full_report_md"):
         _save_markdown_report(Path(run_folder), "5_chair_final_report.md", result["full_report_md"])
 
+    # 保存研究进度报告
+    research_progress = state.get("research_progress_report")
+    if run_folder and research_progress:
+        _save_markdown_report(Path(run_folder), "0_research_progress.md", research_progress)
+        logger.info("[CHAIR] 已保存研究进度报告")
+
     # 打印输出
     _print_section("[CHAIR] 输出 - 最终综合报告", result["synthesis"] or "无报告")
 

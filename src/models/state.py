@@ -73,6 +73,30 @@ class MtbState(TypedDict):
     # 收敛标志
     research_converged: NotRequired[bool]  # 研究是否已收敛
 
+    # 迭代历史记录（用于追溯研究进度）
+    iteration_history: NotRequired[List[Dict[str, Any]]]
+    # 结构: [
+    #   {
+    #     "phase": "PHASE1" | "PHASE2",
+    #     "iteration": 1,
+    #     "timestamp": "2024-01-23T10:30:00",
+    #     "agent_findings": {
+    #       "Pathologist": {"count": 5, "evidence_ids": [...]},
+    #       ...
+    #     },
+    #     "total_new_findings": 12,
+    #     "convergence_check": {
+    #       "step1_metrics": {"passed": bool, "reason": str},
+    #       "step2_module": {"passed": bool, "uncovered": []},
+    #       "step3_judge": {"decision": str, "confidence": float, "reasoning": str, "gaps": [], "strengths": []}
+    #     },
+    #     "final_decision": "continue" | "converged"
+    #   }
+    # ]
+
+    # 研究进度报告（Markdown 格式）
+    research_progress_report: NotRequired[str]
+
 
 # ==================== 辅助函数 ====================
 def create_initial_state(input_text: str) -> MtbState:
@@ -101,6 +125,7 @@ def create_initial_state(input_text: str) -> MtbState:
         "phase2_iteration": 0,
         "phase2_new_findings": 0,
         "research_converged": False,
+        "iteration_history": [],  # 迭代历史记录
     }
 
 

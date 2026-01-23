@@ -8,7 +8,7 @@ Convergence Judge Agent - 收敛判断 Agent
 """
 import json
 import re
-from typing import Dict, Any, Literal, Optional
+from typing import Dict, Any
 
 from src.agents.base_agent import BaseAgent, CONVERGENCE_JUDGE_MODEL
 from src.models.evidence_graph import load_evidence_graph, EvidenceGrade
@@ -40,7 +40,7 @@ class ConvergenceJudgeAgent(BaseAgent):
             model=CONVERGENCE_JUDGE_MODEL  # 使用 flash 模型
         )
 
-    def evaluate(self, state: Dict[str, Any]) -> Literal["converged", "continue"]:
+    def evaluate(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
         评估研究是否收敛
 
@@ -48,7 +48,14 @@ class ConvergenceJudgeAgent(BaseAgent):
             state: MtbState 状态字典
 
         Returns:
-            "converged" 或 "continue"
+            完整评估结果字典:
+            {
+                "decision": "converged" | "continue",
+                "confidence": 0.0-1.0,
+                "reasoning": str,
+                "gaps": List[str],
+                "strengths": List[str]
+            }
         """
         logger.info(f"[{self.role}] 开始收敛评估...")
 
@@ -60,16 +67,22 @@ class ConvergenceJudgeAgent(BaseAgent):
             result = self.invoke(prompt)
             output = result.get("output", "")
 
-            # 解析决策
-            decision = self._parse_decision(output)
-            logger.info(f"[{self.role}] 评估完成: {decision}")
+            # 解析完整决策结果
+            eval_result = self._parse_decision(output)
+            logger.info(f"[{self.role}] 评估完成: {eval_result['decision']} (置信度: {eval_result['confidence']})")
 
-            return decision
+            return eval_result
 
         except Exception as e:
             logger.error(f"[{self.role}] 评估失败: {e}")
             # 出错时保守处理，继续研究
-            return "continue"
+            return {
+                "decision": "continue",
+                "confidence": 0.0,
+                "reasoning": f"评估过程出错: {str(e)}",
+                "gaps": ["评估失败，需要重试"],
+                "strengths": []
+            }
 
     def _build_evaluation_prompt(self, state: Dict[str, Any]) -> str:
         """构建评估提示"""
@@ -214,35 +227,74 @@ class ConvergenceJudgeAgent(BaseAgent):
 
         return "\n".join(lines)
 
-    def _parse_decision(self, output: str) -> Literal["converged", "continue"]:
-        """解析 LLM 输出的决策"""
+    def _parse_decision(self, output: str) -> Dict[str, Any]:
+        """
+        解析 LLM 输出的完整决策结果
+
+        Returns:
+            {
+                "decision": "converged" | "continue",
+                "confidence": float,
+                "reasoning": str,
+                "gaps": List[str],
+                "strengths": List[str]
+            }
+        """
+        default_result = {
+            "decision": "continue",
+            "confidence": 0.0,
+            "reasoning": "无法解析决策",
+            "gaps": [],
+            "strengths": []
+        }
+
         # 尝试解析 JSON
         json_match = re.search(r'```json\s*([\s\S]*?)\s*```', output)
         if json_match:
             try:
                 data = json.loads(json_match.group(1).strip())
-                decision = data.get("decision", "").lower()
+                decision = data.get("decision", "continue").lower()
+                confidence = float(data.get("confidence", 0.5))
                 reasoning = data.get("reasoning", "")
+                gaps = data.get("gaps", [])
+                strengths = data.get("strengths", [])
+
+                # 确保 decision 是有效值
+                if decision not in ("converged", "continue"):
+                    decision = "continue"
+
+                result = {
+                    "decision": decision,
+                    "confidence": confidence,
+                    "reasoning": reasoning,
+                    "gaps": gaps if isinstance(gaps, list) else [],
+                    "strengths": strengths if isinstance(strengths, list) else []
+                }
 
                 if decision == "converged":
                     logger.info(f"[{self.role}] 判断收敛: {reasoning[:100]}")
-                    return "converged"
                 else:
-                    gaps = data.get("gaps", [])
-                    logger.info(f"[{self.role}] 判断需继续: {gaps[:3]}")
-                    return "continue"
+                    logger.info(f"[{self.role}] 判断需继续: {gaps[:3] if gaps else '无具体空白'}")
 
-            except json.JSONDecodeError:
-                pass
+                return result
+
+            except (json.JSONDecodeError, ValueError) as e:
+                logger.warning(f"[{self.role}] JSON 解析失败: {e}")
 
         # 备用：检查关键词
         output_lower = output.lower()
         if "converged" in output_lower and "continue" not in output_lower:
-            return "converged"
+            return {
+                "decision": "converged",
+                "confidence": 0.5,
+                "reasoning": "基于关键词匹配判断收敛",
+                "gaps": [],
+                "strengths": []
+            }
 
         # 默认保守处理
         logger.warning(f"[{self.role}] 无法解析决策，默认继续研究")
-        return "continue"
+        return default_result
 
 
 if __name__ == "__main__":
