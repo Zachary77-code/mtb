@@ -73,6 +73,16 @@ class MtbState(TypedDict):
     # 收敛标志
     research_converged: NotRequired[bool]  # 研究是否已收敛
 
+    # Phase 1 Agent 收敛状态（分别判断）
+    pathologist_converged: NotRequired[bool]  # Pathologist 是否收敛
+    geneticist_converged: NotRequired[bool]   # Geneticist 是否收敛
+    recruiter_converged: NotRequired[bool]    # Recruiter 是否收敛
+    phase1_all_converged: NotRequired[bool]   # Phase 1 所有 Agent 是否都收敛
+
+    # 收敛检查决策（供条件边使用）
+    phase1_decision: NotRequired[str]  # "continue" | "converged"
+    phase2_decision: NotRequired[str]  # "continue" | "converged"
+
     # 迭代历史记录（用于追溯研究进度）
     iteration_history: NotRequired[List[Dict[str, Any]]]
     # 结构: [
@@ -126,6 +136,13 @@ def create_initial_state(input_text: str) -> MtbState:
         "phase2_new_findings": 0,
         "research_converged": False,
         "iteration_history": [],  # 迭代历史记录
+        # Phase 1 Agent 收敛状态初始化
+        "pathologist_converged": False,
+        "geneticist_converged": False,
+        "recruiter_converged": False,
+        "phase1_all_converged": False,
+        "phase1_decision": "continue",
+        "phase2_decision": "continue",
     }
 
 
