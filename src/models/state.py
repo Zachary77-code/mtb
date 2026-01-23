@@ -1,8 +1,46 @@
 """
 LangGraph 状态定义
 """
-from typing import TypedDict, Dict, List, Any
+from typing import TypedDict, Dict, List, Any, Annotated
 from typing_extensions import NotRequired
+
+
+# ==================== 并发更新合并函数 ====================
+
+def merge_evidence_graphs(left: Dict[str, Any], right: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    合并两个证据图（用于并行 Agent 更新）
+
+    LangGraph 在并行节点返回相同 key 时调用此函数合并结果。
+    """
+    if not left:
+        return right
+    if not right:
+        return left
+    return {
+        "nodes": {**left.get("nodes", {}), **right.get("nodes", {})},
+        "edges": {**left.get("edges", {}), **right.get("edges", {})}
+    }
+
+
+def merge_research_plans(left: Dict[str, Any], right: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    合并两个研究计划（用于并行 Agent 更新方向状态）
+
+    方向按 ID 合并，right 覆盖 left 中的同 ID 方向。
+    """
+    if not left:
+        return right
+    if not right:
+        return left
+
+    merged = dict(left)
+    if "directions" in right:
+        left_dirs = {d["id"]: d for d in left.get("directions", [])}
+        for d in right.get("directions", []):
+            left_dirs[d["id"]] = d
+        merged["directions"] = list(left_dirs.values())
+    return merged
 
 
 class MtbState(TypedDict):
@@ -56,11 +94,13 @@ class MtbState(TypedDict):
 
     # ==================== DeepEvidence 研究循环 ====================
     # 研究计划（PlanAgent 生成）
-    research_plan: NotRequired[Dict[str, Any]]  # ResearchPlan 序列化
+    # 使用 Annotated + reducer 支持并行 Agent 更新
+    research_plan: NotRequired[Annotated[Dict[str, Any], merge_research_plans]]
     research_mode: NotRequired[str]  # "breadth_first" | "depth_first"
 
     # 全局证据图
-    evidence_graph: NotRequired[Dict[str, Any]]  # EvidenceGraph 序列化
+    # 使用 Annotated + reducer 支持并行 Agent 更新
+    evidence_graph: NotRequired[Annotated[Dict[str, Any], merge_evidence_graphs]]
 
     # Phase 1 迭代控制（Pathologist + Geneticist + Recruiter）
     phase1_iteration: NotRequired[int]  # 当前迭代轮次
