@@ -4,7 +4,7 @@ Research Mixin - BFRS/DFRS 研究能力
 为现有 Agent 提供 BFRS（广度优先研究）和 DFRS（深度优先研究）能力。
 """
 import json
-from typing import Dict, List, Any, Optional, TYPE_CHECKING
+from typing import Dict, List, Any, Optional, Tuple, TYPE_CHECKING
 from dataclasses import dataclass
 
 from src.models.evidence_graph import (
@@ -15,6 +15,7 @@ from src.models.evidence_graph import (
     load_evidence_graph
 )
 from src.models.research_plan import (
+    ResearchPlan,
     ResearchDirection,
     ResearchMode,
     DirectionStatus,
@@ -52,7 +53,8 @@ class ResearchMixin:
         evidence_graph: Dict[str, Any],
         iteration: int,
         max_iterations: int,
-        case_context: str
+        case_context: str,
+        research_plan: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         执行一轮研究迭代
@@ -64,6 +66,7 @@ class ResearchMixin:
             iteration: 当前迭代轮次
             max_iterations: 最大迭代次数
             case_context: 病例上下文
+            research_plan: 研究计划（序列化格式）
 
         Returns:
             研究结果字典
@@ -80,8 +83,9 @@ class ResearchMixin:
         logger.info(f"[{agent_role}] 模式: {mode.value}")
         logger.info(f"[{agent_role}] 分配方向: {len(directions)} 个")
 
-        # 加载证据图
+        # 加载证据图和研究计划
         graph = load_evidence_graph(evidence_graph)
+        plan = load_research_plan(research_plan) if research_plan else None
 
         # 构建研究提示
         if mode == ResearchMode.BREADTH_FIRST:
@@ -96,13 +100,14 @@ class ResearchMixin:
         # 解析研究结果
         parsed = self._parse_research_output(output, mode)
 
-        # 更新证据图
-        new_evidence_ids = self._update_evidence_graph(
+        # 更新证据图和研究计划（双向关联）
+        new_evidence_ids, updated_plan = self._update_evidence_graph(
             graph=graph,
             findings=parsed.get("findings", []),
             agent_role=agent_role,
             iteration=iteration,
-            mode=mode
+            mode=mode,
+            plan=plan
         )
 
         # 更新方向状态
@@ -124,6 +129,7 @@ class ResearchMixin:
 
         return {
             "evidence_graph": graph.to_dict(),
+            "research_plan": updated_plan.to_dict() if updated_plan else None,
             "new_evidence_ids": new_evidence_ids,
             "direction_updates": direction_updates,
             "research_complete": parsed.get("research_complete", False),
@@ -354,13 +360,14 @@ class ResearchMixin:
         findings: List[Dict[str, Any]],
         agent_role: str,
         iteration: int,
-        mode: ResearchMode
-    ) -> List[str]:
+        mode: ResearchMode,
+        plan: Optional[ResearchPlan] = None
+    ) -> Tuple[List[str], Optional[ResearchPlan]]:
         """
-        更新证据图
+        更新证据图并同步更新研究计划中的方向证据关联
 
         Returns:
-            新增的证据 ID 列表
+            (新增的证据 ID 列表, 更新后的研究计划)
         """
         new_ids = []
 
@@ -409,7 +416,14 @@ class ResearchMixin:
             )
             new_ids.append(node_id)
 
-        return new_ids
+            # 更新 direction 的 evidence_ids（双向关联）
+            direction_id = finding.get("direction_id")
+            if direction_id and plan:
+                direction = plan.get_direction_by_id(direction_id)
+                if direction:
+                    direction.add_evidence(node_id)
+
+        return new_ids, plan
 
 
 # ==================== 增强版 Agent 创建工厂 ====================

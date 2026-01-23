@@ -21,7 +21,8 @@ from config.settings import (
     load_prompt,
     GLOBAL_PRINCIPLES_FILE,
     SUBGRAPH_MODEL,
-    ORCHESTRATOR_MODEL
+    ORCHESTRATOR_MODEL,
+    CONVERGENCE_JUDGE_MODEL
 )
 from src.utils.logger import mtb_logger as logger, log_tool_call
 

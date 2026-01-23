@@ -147,6 +147,13 @@ class ResearchPlan:
         """获取特定模块的研究方向"""
         return [d for d in self.directions if module_name in d.target_modules]
 
+    def get_direction_by_id(self, direction_id: str) -> Optional[ResearchDirection]:
+        """根据 ID 获取研究方向"""
+        for d in self.directions:
+            if d.id == direction_id:
+                return d
+        return None
+
     def get_module_coverage(self) -> Dict[str, List[str]]:
         """获取模块覆盖情况"""
         coverage = {}

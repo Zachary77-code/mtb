@@ -10,7 +10,7 @@ import json
 import re
 from typing import Dict, Any, Literal, Optional
 
-from src.agents.base_agent import BaseAgent, SUBGRAPH_MODEL
+from src.agents.base_agent import BaseAgent, CONVERGENCE_JUDGE_MODEL
 from src.models.evidence_graph import load_evidence_graph, EvidenceGrade
 from src.models.research_plan import load_research_plan
 from config.settings import (
@@ -37,7 +37,7 @@ class ConvergenceJudgeAgent(BaseAgent):
             prompt_file=CONVERGENCE_JUDGE_PROMPT_FILE,
             tools=[],  # 无工具调用，纯评估
             temperature=0.1,  # 低温度，保证一致性
-            model=SUBGRAPH_MODEL  # 使用 flash 模型
+            model=CONVERGENCE_JUDGE_MODEL  # 使用 flash 模型
         )
 
     def evaluate(self, state: Dict[str, Any]) -> Literal["converged", "continue"]:
@@ -247,4 +247,4 @@ class ConvergenceJudgeAgent(BaseAgent):
 
 if __name__ == "__main__":
     print("ConvergenceJudgeAgent 模块加载成功")
-    print(f"使用模型: {SUBGRAPH_MODEL}")
+    print(f"使用模型: {CONVERGENCE_JUDGE_MODEL}")

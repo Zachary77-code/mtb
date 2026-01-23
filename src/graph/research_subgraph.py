@@ -215,13 +215,15 @@ def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict
 
     # 创建 Agent 并执行研究
     agent = agent_class()
+    research_plan_dict = state.get("research_plan", {})
     result = agent.research_iterate(
         mode=mode,
         directions=directions,
         evidence_graph=evidence_graph,
         iteration=iteration,
         max_iterations=MAX_PHASE1_ITERATIONS,
-        case_context=raw_pdf_text[:3000]
+        case_context=raw_pdf_text[:3000],
+        research_plan=research_plan_dict
     )
 
     # 显示执行结果
@@ -234,10 +236,15 @@ def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict
     if result.get('needs_deep_research'):
         logger.info(f"[{tag}]   需深入研究: {len(result.get('needs_deep_research', []))} 项")
 
-    return {
+    # 返回更新后的证据图和研究计划
+    return_dict = {
         "evidence_graph": result.get("evidence_graph", evidence_graph),
         f"{agent_name.lower()}_research_result": result,
     }
+    # 如果有更新的研究计划，也返回
+    if result.get("research_plan"):
+        return_dict["research_plan"] = result.get("research_plan")
+    return return_dict
 
 
 def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
@@ -460,7 +467,8 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
         evidence_graph=state.get("evidence_graph", {}),
         iteration=iteration,
         max_iterations=MAX_PHASE2_ITERATIONS,
-        case_context=context
+        case_context=context,
+        research_plan=state.get("research_plan", {})
     )
 
     # 更新迭代计数
@@ -468,12 +476,16 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
 
     logger.info(f"[PHASE2_ONCOLOGIST] 完成, 新证据: {new_findings}")
 
-    return {
+    return_dict = {
         "evidence_graph": result.get("evidence_graph", state.get("evidence_graph", {})),
         "oncologist_research_result": result,
         "phase2_iteration": iteration + 1,
         "phase2_new_findings": new_findings,
     }
+    # 如果有更新的研究计划，也返回
+    if result.get("research_plan"):
+        return_dict["research_plan"] = result.get("research_plan")
+    return return_dict
 
 
 def phase2_convergence_check(state: MtbState) -> Literal["continue", "converged"]:

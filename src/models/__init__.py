@@ -8,7 +8,11 @@ from src.models.evidence_graph import (
     EvidenceGrade,
     RelationType,
     create_evidence_graph,
-    load_evidence_graph
+    load_evidence_graph,
+    # 新增 (参考 DeepEvidence 论文)
+    ContextType,
+    EvidenceContext,
+    CivicEvidenceType,
 )
 from src.models.research_plan import (
     ResearchPlan,
@@ -34,6 +38,10 @@ __all__ = [
     "RelationType",
     "create_evidence_graph",
     "load_evidence_graph",
+    # 新增 (参考 DeepEvidence 论文)
+    "ContextType",
+    "EvidenceContext",
+    "CivicEvidenceType",
     # Research Plan
     "ResearchPlan",
     "ResearchDirection",

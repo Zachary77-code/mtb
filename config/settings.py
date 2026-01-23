@@ -55,6 +55,8 @@ MAX_RETRY_ITERATIONS = int(os.getenv("MAX_RETRY_ITERATIONS", "2"))
 SUBGRAPH_MODEL = os.getenv("SUBGRAPH_MODEL", "google/gemini-3-flash-preview")
 # 编排 Agent 使用 pro 模型（PlanAgent, ChairAgent）
 ORCHESTRATOR_MODEL = os.getenv("ORCHESTRATOR_MODEL", "google/gemini-3-pro-preview")
+# 收敛判断 Agent 使用 pro 模型（ConvergenceJudgeAgent）
+CONVERGENCE_JUDGE_MODEL = os.getenv("CONVERGENCE_JUDGE_MODEL", "google/gemini-3-pro-preview")
 
 # ==================== DeepEvidence 收敛配置 ====================
 MAX_PHASE1_ITERATIONS = int(os.getenv("MAX_PHASE1_ITERATIONS", "7"))  # 并行分析阶段最大迭代
