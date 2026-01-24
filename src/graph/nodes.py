@@ -14,7 +14,7 @@ from src.agents.recruiter import RecruiterAgent
 from src.agents.oncologist import OncologistAgent
 from src.agents.chair import ChairAgent
 from src.agents.plan_agent import PlanAgent
-from src.models.evidence_graph import create_evidence_graph
+from src.models.evidence_graph import create_evidence_graph, load_evidence_graph
 from src.utils.logger import mtb_logger as logger
 
 
@@ -376,8 +376,10 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
     oncologist_plan = state.get("oncologist_plan", "")
 
     # 获取证据图（包含所有 Agent 收集的结构化证据）
-    evidence_graph = state.get("evidence_graph")
-    evidence_count = len(evidence_graph.get("entities", {})) if evidence_graph else 0
+    # state 中存储的是 dict 格式，需要转换为 EvidenceGraph 对象
+    evidence_graph_dict = state.get("evidence_graph")
+    evidence_graph = load_evidence_graph(evidence_graph_dict) if evidence_graph_dict else None
+    evidence_count = len(evidence_graph.entities) if evidence_graph else 0
 
     # 计算总输入量
     total_input = (len(raw_pdf_text) + len(pathologist_report) +
