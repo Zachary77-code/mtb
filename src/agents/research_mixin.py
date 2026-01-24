@@ -448,6 +448,31 @@ class ResearchMixin:
             # 确定该证据的研究模式（优先从 finding 获取，否则用默认 mode）
             finding_mode = finding.get("research_mode", mode.value if mode else "breadth_first")
 
+            # 提取来源 URL（不同工具返回不同字段名）
+            source_url = (
+                finding.get("civic_url") or          # CIViC
+                finding.get("url") or                # ClinicalTrials, ClinVar
+                finding.get("cbioportal_url") or     # cBioPortal
+                finding.get("source_url") or         # 通用字段
+                None
+            )
+            # 如果有 PMID 但没有 URL，构造 PubMed URL
+            pmid = finding.get("pmid")
+            if not source_url and pmid:
+                source_url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+
+            # 提取 provenance（来源追踪标识）
+            provenance = finding.get("provenance")
+            if not provenance:
+                if pmid:
+                    provenance = f"PMID:{pmid}"
+                elif finding.get("nct_id"):
+                    provenance = f"NCT:{finding.get('nct_id')}"
+                elif finding.get("civic_id"):
+                    provenance = f"CIViC:{finding.get('civic_id')}"
+                elif finding.get("clinvar_id"):
+                    provenance = f"ClinVar:{finding.get('clinvar_id')}"
+
             # 添加节点
             node_id = graph.add_node(
                 evidence_type=evidence_type,
@@ -460,6 +485,8 @@ class ResearchMixin:
                 research_mode=finding_mode,
                 needs_deep_research=bool(finding.get("needs_deep_research")),
                 depth_research_reason=finding.get("depth_research_reason"),
+                provenance=provenance,
+                source_url=source_url,
                 metadata={
                     "direction_id": finding.get("direction_id"),
                     "depth_chain": finding.get("depth_chain", [])

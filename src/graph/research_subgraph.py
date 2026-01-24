@@ -1402,28 +1402,15 @@ def generate_agent_reports(state: MtbState) -> Dict[str, Any]:
 
     oncologist_warnings = []
 
-    # 提取引用
-    def extract_references(evidence_list):
-        refs = []
-        for ev in evidence_list:
-            if ev.source_tool:
-                refs.append({
-                    "type": ev.evidence_type.value,
-                    "id": ev.id,
-                    "source": ev.source_tool
-                })
-        return refs
-
     # 生成研究进度报告
     progress_report = generate_progress_report(iteration_history)
 
-    logger.info(f"[REPORT_GEN] 引用提取完成: P={len(pathologist_evidence)}, G={len(geneticist_evidence)}, R={len(recruiter_evidence)}, O={len(oncologist_evidence)}")
+    logger.info(f"[REPORT_GEN] 证据统计: P={len(pathologist_evidence)}, G={len(geneticist_evidence)}, R={len(recruiter_evidence)}, O={len(oncologist_evidence)}")
 
     # 注意：不覆写 pathologist_report, geneticist_report, recruiter_report, oncologist_plan
     # 这些报告已由 generate_phase1_reports() 和 generate_phase2_reports() 生成
+    # 引用信息现在通过 evidence_graph 直接传递给 Chair，不再需要单独提取
     return {
-        "pathologist_references": extract_references(pathologist_evidence),
-        "geneticist_references": extract_references(geneticist_evidence),
         "recruiter_trials": recruiter_trials,
         "oncologist_safety_warnings": oncologist_warnings,
         "research_converged": True,

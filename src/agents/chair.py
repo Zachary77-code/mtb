@@ -1,11 +1,13 @@
 """
 Chair Agent（MTB 主席）
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+from collections import Counter
 
 from src.agents.base_agent import BaseAgent
 from src.tools.guideline_tools import NCCNTool, FDALabelTool
 from src.tools.literature_tools import PubMedTool
+from src.models.evidence_graph import EvidenceGraph
 from config.settings import CHAIR_PROMPT_FILE, REQUIRED_SECTIONS
 
 
@@ -31,6 +33,62 @@ class ChairAgent(BaseAgent):
             temperature=0.3  # 稍高温度以增加综合能力
         )
 
+    def _format_evidence_for_chair(self, evidence_graph: Optional[EvidenceGraph]) -> str:
+        """
+        将证据图格式化为 Chair 可用的文本
+
+        生成：
+        1. 证据统计摘要（按类型/Agent/等级分布）
+        2. 完整引用列表（包含 URL、provenance、等级）
+
+        Args:
+            evidence_graph: 证据图对象
+
+        Returns:
+            格式化的证据图文本
+        """
+        if not evidence_graph or not evidence_graph.nodes:
+            return ""
+
+        nodes = list(evidence_graph.nodes.values())
+
+        # 统计
+        type_counts = Counter(n.evidence_type.value for n in nodes)
+        agent_counts = Counter(n.source_agent for n in nodes)
+        grade_counts = Counter(n.grade.value if n.grade else "Unknown" for n in nodes)
+
+        # 构建统计摘要
+        stats = f"""
+## 证据图统计
+- **总证据数**: {len(nodes)}
+- **按类型**: {', '.join(f'{k}({v})' for k, v in type_counts.most_common())}
+- **按Agent**: {', '.join(f'{k}({v})' for k, v in agent_counts.most_common())}
+- **按等级**: {', '.join(f'{k}({v})' for k, v in sorted(grade_counts.items()))}
+"""
+
+        # 构建引用列表（只包含有 URL 或 provenance 的证据）
+        refs_with_url = [n for n in nodes if n.source_url or n.provenance]
+
+        if refs_with_url:
+            ref_lines = ["\n## 完整引用列表（务必在报告中引用这些来源）\n"]
+            ref_lines.append("| 类型 | 等级 | 来源Agent | 工具 | Provenance | URL |")
+            ref_lines.append("|------|------|-----------|------|------------|-----|")
+
+            for n in refs_with_url:
+                ev_type = n.evidence_type.value
+                grade = n.grade.value if n.grade else "-"
+                agent = n.source_agent
+                tool = n.source_tool or "-"
+                prov = n.provenance or "-"
+                url = n.source_url or "-"
+                # 截断 URL 以便显示
+                url_display = url[:50] + "..." if len(url) > 50 else url
+                ref_lines.append(f"| {ev_type} | {grade} | {agent} | {tool} | {prov} | {url_display} |")
+
+            stats += "\n".join(ref_lines)
+
+        return stats
+
     def synthesize(
         self,
         raw_pdf_text: str,
@@ -39,7 +97,7 @@ class ChairAgent(BaseAgent):
         recruiter_report: str,
         oncologist_plan: str,
         missing_sections: List[str] = None,
-        upstream_references: List[Dict[str, str]] = None
+        evidence_graph: Optional[EvidenceGraph] = None
     ) -> Dict[str, Any]:
         """
         基于完整报告生成最终 MTB 报告
@@ -53,7 +111,7 @@ class ChairAgent(BaseAgent):
             recruiter_report: 临床试验专员报告（完整）
             oncologist_plan: 肿瘤学家方案（完整）
             missing_sections: 上一次验证失败时缺失的模块
-            upstream_references: 上游报告的引用列表（需保留）
+            evidence_graph: 证据图（包含所有 Agent 收集的结构化证据）
 
         Returns:
             包含综合报告和引用的字典
@@ -66,16 +124,8 @@ class ChairAgent(BaseAgent):
 {chr(10).join([f'- {s}' for s in missing_sections])}
 """
 
-        # 构建上游引用列表提示
-        ref_list_note = ""
-        if upstream_references:
-            ref_list_note = "\n**上游报告引用列表 (务必在报告中引用这些来源)**:\n"
-            for ref in upstream_references:
-                ref_type = ref.get('type', 'Unknown')
-                ref_id = ref.get('id', '')
-                ref_url = ref.get('url', '')
-                ref_list_note += f"- [{ref_type}: {ref_id}]({ref_url})\n"
-            ref_list_note += "\n"
+        # 格式化证据图信息
+        evidence_info = self._format_evidence_for_chair(evidence_graph)
 
         task_prompt = f"""
 请作为 MTB 主席，汇总整合以下专家报告生成最终 MTB 报告。
@@ -86,9 +136,9 @@ class ChairAgent(BaseAgent):
 - 保留完整的治疗史记录
 - 保留所有分子特征和证据等级
 - 输出应包含完整的信息
-- **保留上游报告中的所有引用**（见下方引用列表）
+- **使用证据图中的引用**（见下方证据图统计和引用列表）
 
-{regenerate_note}{ref_list_note}
+{regenerate_note}{evidence_info}
 
 ---
 
@@ -141,17 +191,23 @@ class ChairAgent(BaseAgent):
 
         result = self.invoke(task_prompt)
 
-        # 合并所有引用（Chair 生成的 + 上游报告的）
+        # 合并所有引用（Chair 生成的 + 证据图中的）
         all_references = result["references"] or []
 
-        # 合并上游引用，去重
-        if upstream_references:
+        # 从证据图中提取引用，合并去重
+        if evidence_graph and evidence_graph.nodes:
             seen_ids = {ref.get("id") for ref in all_references if ref.get("id")}
-            for ref in upstream_references:
-                ref_id = ref.get("id")
-                if ref_id and ref_id not in seen_ids:
-                    all_references.append(ref)
-                    seen_ids.add(ref_id)
+            for node in evidence_graph.nodes.values():
+                if node.provenance and node.provenance not in seen_ids:
+                    ref_entry = {
+                        "type": node.evidence_type.value,
+                        "id": node.provenance,
+                        "url": node.source_url or "",
+                        "grade": node.grade.value if node.grade else None,
+                        "source_agent": node.source_agent
+                    }
+                    all_references.append(ref_entry)
+                    seen_ids.add(node.provenance)
 
         # 生成完整报告（含工具调用详情和引用）
         full_report = self.generate_full_report(

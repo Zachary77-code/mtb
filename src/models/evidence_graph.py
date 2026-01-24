@@ -202,6 +202,9 @@ class EvidenceNode:
     # ========== 保留字段 ==========
     metadata: Dict[str, Any] = field(default_factory=dict)
 
+    # ========== 来源链接 ==========
+    source_url: Optional[str] = None  # 来源 URL（PubMed、CIViC、ClinicalTrials 等）
+
     def to_dict(self) -> Dict[str, Any]:
         """序列化为字典"""
         return {
@@ -223,6 +226,7 @@ class EvidenceNode:
             "provenance": self.provenance,
             "numeric_result": self.numeric_result,
             "metadata": self.metadata,
+            "source_url": self.source_url,
         }
 
     @classmethod
@@ -247,6 +251,7 @@ class EvidenceNode:
             provenance=data.get("provenance"),
             numeric_result=data.get("numeric_result"),
             metadata=data.get("metadata", {}),
+            source_url=data.get("source_url"),
         )
 
     def generate_observation(self, max_words: int = 50) -> str:
@@ -376,6 +381,7 @@ class EvidenceGraph:
         provenance: Optional[str] = None,
         numeric_result: Optional[Dict[str, Any]] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        source_url: Optional[str] = None,
     ) -> str:
         """
         添加证据节点
@@ -396,6 +402,7 @@ class EvidenceGraph:
             provenance: 来源追踪 (PMID 或 KG@version)
             numeric_result: 量化结果
             metadata: 额外元数据
+            source_url: 来源 URL（PubMed、CIViC、ClinicalTrials 等）
 
         Returns:
             节点 ID
@@ -420,6 +427,7 @@ class EvidenceGraph:
             provenance=provenance,
             numeric_result=numeric_result,
             metadata=metadata or {},
+            source_url=source_url,
         )
 
         self.nodes[node_id] = node
