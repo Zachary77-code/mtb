@@ -5,7 +5,7 @@ Research Subgraph - 两阶段研究循环子图
 - Phase 1: Pathologist + Geneticist + Recruiter 并行 BFRS/DFRS 循环
 - Phase 2: Oncologist 独立 BFRS/DFRS 循环
 """
-from typing import List, Literal, Dict, Any
+from typing import List, Literal, Dict, Any, Optional
 from datetime import datetime
 from langgraph.graph import StateGraph, END
 from langgraph.types import Send
@@ -345,14 +345,16 @@ def _save_detailed_iteration_report(
     phase: str,
     iteration: int,
     eval_result: Dict[str, Any],
-    agent_names: List[str]
+    agent_names: List[str],
+    pre_eval_plan: Optional[Dict[str, Any]] = None
 ):
     """
     保存 PlanAgent 评估后的详细迭代报告
 
     报告包含：
-    1. PlanAgent 决策和理由
-    2. 各研究方向的完成度和证据质量
+    0. 本轮迭代执行详情（迭代前状态 + 本轮执行结果）
+    1. 下一轮各方向研究模式
+    2. PlanAgent 决策和理由
     3. 本轮新增证据的完整明细（不截断）
     4. Evidence Graph 完整统计
 
@@ -362,6 +364,7 @@ def _save_detailed_iteration_report(
         iteration: 迭代轮次
         eval_result: PlanAgent 评估结果
         agent_names: 参与的 Agent 列表
+        pre_eval_plan: 评估前的研究计划（用于对比变化）
     """
     import os
 
@@ -378,10 +381,59 @@ def _save_detailed_iteration_report(
         "",
         f"**时间**: {datetime.now().isoformat()}",
         f"**PlanAgent 决策**: {eval_result.get('decision', 'unknown')}",
+        f"**下一轮模式**: {eval_result.get('research_mode', 'N/A')}",
         "",
     ]
 
-    # === 0. 下一轮各方向研究模式 (新增) ===
+    # === 本轮迭代执行详情 ===
+    if pre_eval_plan:
+        pre_plan = load_research_plan(pre_eval_plan)
+        post_plan = load_research_plan(eval_result.get("research_plan", {}))
+
+        if pre_plan:
+            lines.append("## 本轮迭代执行详情")
+            lines.append("")
+
+            # 表格：迭代前状态
+            lines.append("### 迭代前各方向状态")
+            lines.append("| 方向 ID | 主题 | Agent | 模式 | 证据数 | 状态 |")
+            lines.append("|---------|------|-------|------|--------|------|")
+            for d in pre_plan.directions:
+                if d.target_agent in agent_names:
+                    mode_disp = {"breadth_first": "BFRS", "depth_first": "DFRS", "skip": "Skip"}.get(
+                        d.preferred_mode, d.preferred_mode
+                    )
+                    topic_short = d.topic[:20] + "..." if len(d.topic) > 20 else d.topic
+                    lines.append(f"| {d.id} | {topic_short} | {d.target_agent} | {mode_disp} | {len(d.evidence_ids)} | {d.status.value} |")
+            lines.append("")
+
+            # 表格：本轮执行结果
+            lines.append("### 本轮执行结果")
+            lines.append("| Agent | 方向 | 新增证据 | 状态变化 |")
+            lines.append("|-------|------|----------|----------|")
+
+            for agent_name in agent_names:
+                result_key = f"{agent_name.lower()}_research_result"
+                agent_result = state.get(result_key, {})
+                new_ids = agent_result.get("new_evidence_ids", [])
+
+                # 找该 agent 的方向
+                for pre_d in pre_plan.directions:
+                    if pre_d.target_agent == agent_name:
+                        post_d = post_plan.get_direction_by_id(pre_d.id) if post_plan else None
+                        # 计算新增证据数
+                        if post_d:
+                            new_count = len(post_d.evidence_ids) - len(pre_d.evidence_ids)
+                        else:
+                            new_count = len(new_ids)
+                        pre_status = pre_d.status.value
+                        post_status = post_d.status.value if post_d else pre_status
+                        status_change = f"{pre_status} → {post_status}" if pre_status != post_status else pre_status
+                        topic_short = pre_d.topic[:15] + "..." if len(pre_d.topic) > 15 else pre_d.topic
+                        lines.append(f"| {agent_name} | {topic_short} | +{new_count} | {status_change} |")
+            lines.append("")
+
+    # === 0. 下一轮各方向研究模式 ===
     research_plan = eval_result.get("research_plan", state.get("research_plan", {}))
     plan = load_research_plan(research_plan)
     if plan and plan.directions:
@@ -1007,6 +1059,9 @@ def plan_agent_evaluate_phase1(state: MtbState) -> Dict[str, Any]:
 
     iteration = state.get("phase1_iteration", 0)
 
+    # 保存评估前的 plan 用于报告对比
+    pre_eval_plan = state.get("research_plan", {})
+
     # 检查迭代上限
     if iteration >= MAX_PHASE1_ITERATIONS:
         logger.warning(f"[PHASE1_PLAN_EVAL] 达到迭代上限 ({MAX_PHASE1_ITERATIONS})，强制收敛")
@@ -1024,7 +1079,8 @@ def plan_agent_evaluate_phase1(state: MtbState) -> Dict[str, Any]:
             phase="PHASE1",
             iteration=iteration,
             eval_result=forced_eval_result,
-            agent_names=["Pathologist", "Geneticist", "Recruiter"]
+            agent_names=["Pathologist", "Geneticist", "Recruiter"],
+            pre_eval_plan=pre_eval_plan
         )
         return {
             "phase1_decision": "converged",
@@ -1056,7 +1112,8 @@ def plan_agent_evaluate_phase1(state: MtbState) -> Dict[str, Any]:
             phase="PHASE1",
             iteration=iteration,
             eval_result=eval_result,
-            agent_names=["Pathologist", "Geneticist", "Recruiter"]
+            agent_names=["Pathologist", "Geneticist", "Recruiter"],
+            pre_eval_plan=pre_eval_plan
         )
 
         # 根据决策更新 Agent 收敛状态
@@ -1097,7 +1154,8 @@ def plan_agent_evaluate_phase1(state: MtbState) -> Dict[str, Any]:
             phase="PHASE1",
             iteration=iteration,
             eval_result=error_eval_result,
-            agent_names=["Pathologist", "Geneticist", "Recruiter"]
+            agent_names=["Pathologist", "Geneticist", "Recruiter"],
+            pre_eval_plan=pre_eval_plan
         )
         return {
             "phase1_decision": "continue",
@@ -1261,6 +1319,9 @@ def plan_agent_evaluate_phase2(state: MtbState) -> Dict[str, Any]:
 
     iteration = state.get("phase2_iteration", 0)
 
+    # 保存评估前的 plan 用于报告对比
+    pre_eval_plan = state.get("research_plan", {})
+
     # 检查迭代上限
     if iteration >= MAX_PHASE2_ITERATIONS:
         logger.warning(f"[PHASE2_PLAN_EVAL] 达到迭代上限 ({MAX_PHASE2_ITERATIONS})，强制收敛")
@@ -1278,7 +1339,8 @@ def plan_agent_evaluate_phase2(state: MtbState) -> Dict[str, Any]:
             phase="PHASE2",
             iteration=iteration,
             eval_result=forced_eval_result,
-            agent_names=["Oncologist"]
+            agent_names=["Oncologist"],
+            pre_eval_plan=pre_eval_plan
         )
         return {
             "phase2_decision": "converged",
@@ -1306,7 +1368,8 @@ def plan_agent_evaluate_phase2(state: MtbState) -> Dict[str, Any]:
             phase="PHASE2",
             iteration=iteration,
             eval_result=eval_result,
-            agent_names=["Oncologist"]
+            agent_names=["Oncologist"],
+            pre_eval_plan=pre_eval_plan
         )
 
         return {
@@ -1340,7 +1403,8 @@ def plan_agent_evaluate_phase2(state: MtbState) -> Dict[str, Any]:
             phase="PHASE2",
             iteration=iteration,
             eval_result=error_eval_result,
-            agent_names=["Oncologist"]
+            agent_names=["Oncologist"],
+            pre_eval_plan=pre_eval_plan
         )
         return {
             "phase2_decision": "continue",
