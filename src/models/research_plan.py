@@ -49,6 +49,10 @@ class ResearchDirection:
     needs_deep_research: bool = False  # 是否需要深入研究
     deep_research_findings: List[str] = field(default_factory=list)  # 深入研究的发现
 
+    # 每个方向独立的研究模式 (新增)
+    preferred_mode: str = "breadth_first"  # "breadth_first" | "depth_first" | "skip"
+    mode_reason: str = ""              # 模式选择理由
+
     def to_dict(self) -> Dict[str, Any]:
         """序列化为字典"""
         return {
@@ -65,6 +69,8 @@ class ResearchDirection:
             "last_iteration": self.last_iteration,
             "needs_deep_research": self.needs_deep_research,
             "deep_research_findings": self.deep_research_findings,
+            "preferred_mode": self.preferred_mode,
+            "mode_reason": self.mode_reason,
         }
 
     @classmethod
@@ -84,6 +90,8 @@ class ResearchDirection:
             last_iteration=data.get("last_iteration", 0),
             needs_deep_research=data.get("needs_deep_research", False),
             deep_research_findings=data.get("deep_research_findings", []),
+            preferred_mode=data.get("preferred_mode", "breadth_first"),
+            mode_reason=data.get("mode_reason", ""),
         )
 
     def mark_completed(self):

@@ -60,7 +60,8 @@ class ResearchMixin:
         执行一轮研究迭代
 
         Args:
-            mode: 研究模式 (breadth_first / depth_first)
+            mode: 研究模式 (breadth_first / depth_first) - 仅作为默认值，
+                  实际使用每个方向的 preferred_mode
             directions: 分配给此 Agent 的研究方向
             evidence_graph: 当前证据图（序列化格式）
             iteration: 当前迭代轮次
@@ -80,62 +81,109 @@ class ResearchMixin:
         # 增强日志输出
         log_separator(agent_role)
         logger.info(f"[{agent_role}] 研究迭代 {iteration + 1}/{max_iterations}")
-        logger.info(f"[{agent_role}] 模式: {mode.value}")
-        logger.info(f"[{agent_role}] 分配方向: {len(directions)} 个")
 
         # 加载证据图和研究计划
         graph = load_evidence_graph(evidence_graph)
         plan = load_research_plan(research_plan) if research_plan else None
 
-        # 构建研究提示
-        if mode == ResearchMode.BREADTH_FIRST:
-            prompt = self._build_bfrs_prompt(directions, graph, iteration, max_iterations, case_context)
-        else:
-            prompt = self._build_dfrs_prompt(directions, graph, iteration, max_iterations, case_context)
+        # 按 preferred_mode 分组方向 (新逻辑)
+        bfrs_directions = []
+        dfrs_directions = []
+        skip_directions = []
 
-        # 调用 Agent
-        result = self.invoke(prompt)  # type: ignore
-        output = result.get("output", "")
+        for d in directions:
+            preferred_mode = d.get("preferred_mode", mode.value if mode else "breadth_first")
+            if preferred_mode == "skip":
+                skip_directions.append(d)
+            elif preferred_mode == "depth_first":
+                dfrs_directions.append(d)
+            else:  # 默认 breadth_first
+                bfrs_directions.append(d)
 
-        # 解析研究结果
-        parsed = self._parse_research_output(output, mode)
+        logger.info(f"[{agent_role}] 方向分组: BFRS={len(bfrs_directions)}, DFRS={len(dfrs_directions)}, Skip={len(skip_directions)}")
+
+        # 如果所有方向都 skip，直接返回
+        if not bfrs_directions and not dfrs_directions:
+            logger.info(f"[{agent_role}] 所有方向已完成，跳过本轮迭代")
+            return {
+                "evidence_graph": graph.to_dict(),
+                "research_plan": plan.to_dict() if plan else None,
+                "new_evidence_ids": [],
+                "direction_updates": {},
+                "research_complete": True,
+                "needs_deep_research": [],
+                "summary": "所有分配方向已完成，无需继续研究",
+                "raw_output": ""
+            }
+
+        # 收集所有结果
+        all_findings = []
+        all_direction_updates = {}
+        all_needs_deep = []
+        all_summaries = []
+        all_outputs = []
+
+        # 处理 BFRS 方向
+        if bfrs_directions:
+            logger.info(f"[{agent_role}] 执行 BFRS 广度研究: {len(bfrs_directions)} 个方向")
+            prompt = self._build_bfrs_prompt(bfrs_directions, graph, iteration, max_iterations, case_context)
+            result = self.invoke(prompt)  # type: ignore
+            output = result.get("output", "")
+            all_outputs.append(output)
+            parsed = self._parse_research_output(output, ResearchMode.BREADTH_FIRST)
+            all_findings.extend(parsed.get("findings", []))
+            all_direction_updates.update(parsed.get("direction_updates", {}))
+            all_needs_deep.extend(parsed.get("needs_deep_research", []))
+            if parsed.get("summary"):
+                all_summaries.append(f"[BFRS] {parsed['summary']}")
+
+        # 处理 DFRS 方向
+        if dfrs_directions:
+            logger.info(f"[{agent_role}] 执行 DFRS 深度研究: {len(dfrs_directions)} 个方向")
+            prompt = self._build_dfrs_prompt(dfrs_directions, graph, iteration, max_iterations, case_context)
+            result = self.invoke(prompt)  # type: ignore
+            output = result.get("output", "")
+            all_outputs.append(output)
+            parsed = self._parse_research_output(output, ResearchMode.DEPTH_FIRST)
+            all_findings.extend(parsed.get("findings", []))
+            all_direction_updates.update(parsed.get("direction_updates", {}))
+            all_needs_deep.extend(parsed.get("needs_deep_research", []))
+            if parsed.get("summary"):
+                all_summaries.append(f"[DFRS] {parsed['summary']}")
 
         # 更新证据图和研究计划（双向关联）
+        # 使用默认 mode 来标记证据来源模式
         new_evidence_ids, updated_plan = self._update_evidence_graph(
             graph=graph,
-            findings=parsed.get("findings", []),
+            findings=all_findings,
             agent_role=agent_role,
             iteration=iteration,
             mode=mode,
             plan=plan
         )
 
-        # 更新方向状态
-        direction_updates = parsed.get("direction_updates", {})
-
         # 增强结果日志
         logger.info(f"[{agent_role}] 迭代完成:")
-        logger.info(f"[{agent_role}]   发现数: {len(parsed.get('findings', []))}")
+        logger.info(f"[{agent_role}]   发现数: {len(all_findings)}")
         logger.info(f"[{agent_role}]   新证据: {len(new_evidence_ids)}")
-        if direction_updates:
-            logger.info(f"[{agent_role}]   方向更新: {direction_updates}")
-        needs_deep = parsed.get('needs_deep_research', [])
-        if needs_deep:
-            logger.info(f"[{agent_role}]   需深入研究: {len(needs_deep)} 项")
-        summary = parsed.get('summary', '')
-        if summary:
-            summary_short = summary[:100] + "..." if len(summary) > 100 else summary
+        if all_direction_updates:
+            logger.info(f"[{agent_role}]   方向更新: {all_direction_updates}")
+        if all_needs_deep:
+            logger.info(f"[{agent_role}]   需深入研究: {len(all_needs_deep)} 项")
+        combined_summary = " | ".join(all_summaries) if all_summaries else ""
+        if combined_summary:
+            summary_short = combined_summary[:100] + "..." if len(combined_summary) > 100 else combined_summary
             logger.info(f"[{agent_role}]   摘要: {summary_short}")
 
         return {
             "evidence_graph": graph.to_dict(),
             "research_plan": updated_plan.to_dict() if updated_plan else None,
             "new_evidence_ids": new_evidence_ids,
-            "direction_updates": direction_updates,
-            "research_complete": parsed.get("research_complete", False),
-            "needs_deep_research": parsed.get("needs_deep_research", []),
-            "summary": parsed.get("summary", ""),
-            "raw_output": output
+            "direction_updates": all_direction_updates,
+            "research_complete": len(bfrs_directions) == 0 and len(dfrs_directions) == 0,
+            "needs_deep_research": all_needs_deep,
+            "summary": combined_summary,
+            "raw_output": "\n---\n".join(all_outputs)
         }
 
     def _build_bfrs_prompt(
@@ -397,6 +445,9 @@ class ResearchMixin:
                 except ValueError:
                     pass
 
+            # 确定该证据的研究模式（优先从 finding 获取，否则用默认 mode）
+            finding_mode = finding.get("research_mode", mode.value if mode else "breadth_first")
+
             # 添加节点
             node_id = graph.add_node(
                 evidence_type=evidence_type,
@@ -406,7 +457,7 @@ class ResearchMixin:
                 grade=grade,
                 civic_evidence_type=civic_type,
                 iteration=iteration,
-                research_mode=mode.value,
+                research_mode=finding_mode,
                 needs_deep_research=bool(finding.get("needs_deep_research")),
                 depth_research_reason=finding.get("depth_research_reason"),
                 metadata={

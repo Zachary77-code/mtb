@@ -442,11 +442,28 @@ class PlanAgent(BaseAgent):
             "id": "D1",
             "status": "completed",
             "priority": 1,
-            "completeness": 85
+            "completeness": 85,
+            "preferred_mode": "skip",
+            "mode_reason": "完成度85%，有高质量证据，无需继续研究"
+        }},
+        {{
+            "id": "D2",
+            "status": "pending",
+            "priority": 2,
+            "completeness": 30,
+            "preferred_mode": "breadth_first",
+            "mode_reason": "完成度30%，需要广度收集更多初步证据"
+        }},
+        {{
+            "id": "D3",
+            "status": "in_progress",
+            "priority": 1,
+            "completeness": 60,
+            "preferred_mode": "depth_first",
+            "mode_reason": "完成度60%但只有D/E级证据，需深入找高质量证据"
         }}
     ],
     "new_directions": [],
-    "research_mode": "breadth_first",
     "decision": "continue",
     "reasoning": "决策理由...",
     "quality_assessment": {{
@@ -458,6 +475,11 @@ class PlanAgent(BaseAgent):
     "next_priorities": ["优先事项1"]
 }}
 ```
+
+**preferred_mode 选择指南**:
+- "skip": 完成度 >= 80% 且有 A/B 级证据，无需继续研究
+- "breadth_first": 完成度 < 60%，需要广度收集更多初步证据
+- "depth_first": 完成度 60-80% 或只有 D/E 级证据，需深入找高质量证据
 """
 
     def _format_direction_stats(self, stats: Dict[str, Dict[str, Any]]) -> str:
@@ -493,7 +515,7 @@ class PlanAgent(BaseAgent):
         try:
             data = json.loads(json_str)
 
-            # 更新研究计划
+            # 更新研究计划（包括每个方向的 preferred_mode）
             updated_plan = self._apply_direction_updates(plan, data.get("updated_directions", []))
 
             # 添加新方向（如果有）
@@ -504,7 +526,6 @@ class PlanAgent(BaseAgent):
 
             return {
                 "research_plan": updated_plan.to_dict(),
-                "research_mode": data.get("research_mode", "breadth_first"),
                 "decision": data.get("decision", "continue"),
                 "reasoning": data.get("reasoning", ""),
                 "quality_assessment": data.get("quality_assessment", {}),
@@ -537,6 +558,14 @@ class PlanAgent(BaseAgent):
                 if "priority" in update:
                     direction.priority = update["priority"]
 
+                # 更新研究模式 (新增)
+                if "preferred_mode" in update:
+                    direction.preferred_mode = update["preferred_mode"]
+
+                # 更新模式选择理由 (新增)
+                if "mode_reason" in update:
+                    direction.mode_reason = update["mode_reason"]
+
         return plan
 
     def _create_default_evaluation(
@@ -557,15 +586,37 @@ class PlanAgent(BaseAgent):
             for s in direction_stats.values()
         )
 
-        # 更新方向状态
+        # 更新方向状态，并为每个方向设置独立的研究模式 (新增)
         updated_directions = []
         for d_id, s in direction_stats.items():
-            status = "completed" if s["completeness"] >= CONVERGENCE_COMPLETENESS_THRESHOLD else "in_progress"
+            completeness = s["completeness"]
+            has_high_quality = s["has_high_quality"]
+            low_quality_only = s["low_quality_only"]
+
+            # 确定状态
+            status = "completed" if completeness >= CONVERGENCE_COMPLETENESS_THRESHOLD else "in_progress"
+
+            # 确定每个方向的研究模式 (新增逻辑)
+            if completeness >= CONVERGENCE_COMPLETENESS_THRESHOLD and has_high_quality:
+                preferred_mode = "skip"
+                mode_reason = f"完成度{completeness:.0f}%，有高质量证据，无需继续研究"
+            elif completeness < CONTINUE_COMPLETENESS_THRESHOLD:
+                preferred_mode = "breadth_first"
+                mode_reason = f"完成度{completeness:.0f}%，需要广度收集更多初步证据"
+            elif low_quality_only:
+                preferred_mode = "depth_first"
+                mode_reason = f"完成度{completeness:.0f}%但只有D/E级证据，需深入找高质量证据"
+            else:
+                preferred_mode = "depth_first"
+                mode_reason = f"完成度{completeness:.0f}%，需深入完善证据"
+
             updated_directions.append({
                 "id": d_id,
                 "status": status,
                 "priority": s["priority"],
-                "completeness": s["completeness"]
+                "completeness": completeness,
+                "preferred_mode": preferred_mode,
+                "mode_reason": mode_reason,
             })
 
         # 应用更新
@@ -581,7 +632,6 @@ class PlanAgent(BaseAgent):
 
         return {
             "research_plan": updated_plan.to_dict(),
-            "research_mode": "depth_first" if has_low_quality_only else "breadth_first",
             "decision": decision,
             "reasoning": reasoning,
             "quality_assessment": {

@@ -14,8 +14,7 @@ from src.models.state import MtbState
 from src.models.evidence_graph import load_evidence_graph
 from src.models.research_plan import (
     load_research_plan,
-    ResearchMode,
-    determine_research_mode
+    ResearchMode
 )
 from src.agents.base_agent import SUBGRAPH_MODEL
 from src.agents.pathologist import PathologistAgent
@@ -379,9 +378,24 @@ def _save_detailed_iteration_report(
         "",
         f"**时间**: {datetime.now().isoformat()}",
         f"**PlanAgent 决策**: {eval_result.get('decision', 'unknown')}",
-        f"**下一轮模式**: {eval_result.get('research_mode', 'breadth_first')}",
         "",
     ]
+
+    # === 0. 下一轮各方向研究模式 (新增) ===
+    research_plan = eval_result.get("research_plan", state.get("research_plan", {}))
+    plan = load_research_plan(research_plan)
+    if plan and plan.directions:
+        lines.append("## 0. 下一轮各方向研究模式")
+        lines.append("")
+        lines.append("| 方向 ID | 主题 | Agent | 模式 | 理由 |")
+        lines.append("|---------|------|-------|------|------|")
+        for d in plan.directions:
+            if d.target_agent in agent_names:
+                mode_display = {"breadth_first": "BFRS", "depth_first": "DFRS", "skip": "Skip"}.get(d.preferred_mode, d.preferred_mode)
+                topic_short = d.topic[:25] + "..." if len(d.topic) > 25 else d.topic
+                reason_short = d.mode_reason[:40] + "..." if len(d.mode_reason) > 40 else d.mode_reason
+                lines.append(f"| {d.id} | {topic_short} | {d.target_agent} | {mode_display} | {reason_short} |")
+        lines.append("")
 
     # === 1. PlanAgent 评估结果 ===
     lines.append("## 1. PlanAgent 评估结果")
@@ -773,6 +787,7 @@ def phase1_router(state: MtbState) -> List[Send]:
     Phase 1 路由：只分发未收敛的 Agent
 
     检查各 Agent 收敛状态，只分发未收敛的 Agent 继续研究。
+    研究模式由每个方向的 preferred_mode 决定，不再使用全局模式。
     """
     iteration = state.get("phase1_iteration", 0)
     plan = load_research_plan(state.get("research_plan", {}))
@@ -814,23 +829,21 @@ def phase1_router(state: MtbState) -> List[Send]:
         logger.info("[PHASE1] 所有 Agent 已收敛，跳过迭代")
         return []
 
-    # 确定研究模式
-    gaps = graph.get_gaps_requiring_depth() if graph else []
-    mode = determine_research_mode(iteration, plan, gaps) if plan else ResearchMode.BREADTH_FIRST
+    # 显示每个方向的研究模式（新逻辑）
+    if plan:
+        mode_summary = {"breadth_first": 0, "depth_first": 0, "skip": 0}
+        for d in plan.directions:
+            mode_summary[d.preferred_mode] = mode_summary.get(d.preferred_mode, 0) + 1
+        logger.info(f"[PHASE1] 方向模式分布: BFRS={mode_summary['breadth_first']}, DFRS={mode_summary['depth_first']}, Skip={mode_summary['skip']}")
 
-    logger.info(f"[PHASE1] 研究模式: {mode.value}")
     logger.info(f"[PHASE1] 分发到: {', '.join([a.capitalize() for a in agents_to_run])}")
 
     # 显示当前证据图状态
     if graph and len(graph) > 0:
         log_evidence_stats(state.get("evidence_graph", {}))
 
-    # 更新状态中的模式
-    updated_state = dict(state)
-    updated_state["research_mode"] = mode.value
-
-    # 只分发未收敛的 Agent
-    sends = [Send(f"phase1_{agent}", updated_state) for agent in agents_to_run]
+    # 只分发未收敛的 Agent（不再设置全局 research_mode）
+    sends = [Send(f"phase1_{agent}", state) for agent in agents_to_run]
     return sends
 
 
@@ -862,13 +875,11 @@ def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict
 
     # 获取状态
     iteration = state.get("phase1_iteration", 0)
-    mode_str = state.get("research_mode", "breadth_first")
-    mode = ResearchMode(mode_str)
     plan = load_research_plan(state.get("research_plan", {}))
     evidence_graph = state.get("evidence_graph", {})
     raw_pdf_text = state.get("raw_pdf_text", "")
 
-    # 获取分配给此 Agent 的方向
+    # 获取分配给此 Agent 的方向（包含各自的 preferred_mode）
     directions = []
     if plan:
         for d in plan.directions:
@@ -879,17 +890,19 @@ def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict
         logger.info(f"[{tag}] 无分配方向，视为收敛")
         return {converged_key: True}
 
-    # 显示分配的方向
+    # 显示分配的方向及其模式（新逻辑）
     logger.info(f"[{tag}] 分配方向: {len(directions)} 个")
     for d in directions:
         status_icon = "✓" if d.get("status") == "completed" else "○"
-        logger.info(f"[{tag}]   {status_icon} {d.get('topic', '未命名')} (优先级: {d.get('priority', '-')})")
+        mode_icon = {"breadth_first": "B", "depth_first": "D", "skip": "S"}.get(d.get("preferred_mode", "B"), "?")
+        logger.info(f"[{tag}]   {status_icon} [{mode_icon}] {d.get('topic', '未命名')[:30]} (P{d.get('priority', '-')})")
 
     # 创建 Agent 并执行研究
+    # 传入默认 mode，实际使用每个方向的 preferred_mode
     agent = agent_class()
     research_plan_dict = state.get("research_plan", {})
     result = agent.research_iterate(
-        mode=mode,
+        mode=ResearchMode.BREADTH_FIRST,  # 默认值，实际由 direction.preferred_mode 决定
         directions=directions,
         evidence_graph=evidence_graph,
         iteration=iteration,
@@ -1118,14 +1131,17 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
     plan = load_research_plan(state.get("research_plan", {}))
     graph = load_evidence_graph(state.get("evidence_graph", {}))
 
-    # 确定研究模式
-    gaps = graph.get_gaps_requiring_depth() if graph else []
-    mode = determine_research_mode(iteration, plan, gaps) if plan else ResearchMode.BREADTH_FIRST
-
     # 增强日志输出
     log_separator("PHASE2")
     logger.info(f"[PHASE2] Oncologist 迭代 {iteration + 1}/{MAX_PHASE2_ITERATIONS}")
-    logger.info(f"[PHASE2] 研究模式: {mode.value}")
+
+    # 显示 Oncologist 方向的模式分布（新逻辑）
+    if plan:
+        onc_directions = [d for d in plan.directions if d.target_agent == "Oncologist"]
+        mode_summary = {"breadth_first": 0, "depth_first": 0, "skip": 0}
+        for d in onc_directions:
+            mode_summary[d.preferred_mode] = mode_summary.get(d.preferred_mode, 0) + 1
+        logger.info(f"[PHASE2] Oncologist 方向模式: BFRS={mode_summary['breadth_first']}, DFRS={mode_summary['depth_first']}, Skip={mode_summary['skip']}")
 
     # 显示上游报告摘要
     pathologist_report = state.get('pathologist_report', '')
@@ -1178,7 +1194,7 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
 """
 
     result = agent.research_iterate(
-        mode=mode,
+        mode=ResearchMode.BREADTH_FIRST,  # 默认值，实际由 direction.preferred_mode 决定
         directions=directions,
         evidence_graph=state.get("evidence_graph", {}),
         iteration=iteration,
