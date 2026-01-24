@@ -226,10 +226,6 @@ class EntityExtractor:
         """构建用户提示"""
         finding_str = json.dumps(finding, indent=2, ensure_ascii=False, default=str)
 
-        # 截断过长的内容
-        if len(finding_str) > 3000:
-            finding_str = finding_str[:3000] + "\n... (truncated)"
-
         return f"""## 来源工具
 {source_tool}
 
@@ -276,8 +272,7 @@ class EntityExtractor:
                         {"role": "system", "content": self.SYSTEM_PROMPT},
                         {"role": "user", "content": user_prompt}
                     ],
-                    "temperature": 0.2,
-                    "max_tokens": 2000
+                    "temperature": 0.2
                 },
                 timeout=60
             )
