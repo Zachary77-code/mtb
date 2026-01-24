@@ -41,7 +41,7 @@ PDF Input → PDF Parser → PlanAgent (生成研究计划+初始化EvidenceGrap
               │ │        ↓ (并行 BFRS/DFRS)          │ │
               │ │      Phase1 Aggregator            │ │
               │ │        ↓                          │ │
-              │ │  Convergence Check (3步)          │ │
+              │ │  PlanAgent.evaluate_and_update()  │ │
               │ │    continue ↺    ↓ converged      │ │
               │ └───────────────────┘               │
               │                     ↓               │
@@ -49,7 +49,7 @@ PDF Input → PDF Parser → PlanAgent (生成研究计划+初始化EvidenceGrap
               │ │    (最多 MAX_PHASE2_ITERATIONS=7) │ │
               │ │         Oncologist               │ │
               │ │        ↓ (独立 BFRS/DFRS)         │ │
-              │ │  Convergence Check (3步)          │ │
+              │ │  PlanAgent.evaluate_and_update()  │ │
               │ │    continue ↺    ↓ converged      │ │
               │ └───────────────────┘               │
               │                     ↓               │
@@ -80,7 +80,7 @@ Agents inherit from `BaseAgent` in [src/agents/base_agent.py](src/agents/base_ag
 - Reference management with `ReferenceManager` class
 - **ResearchMixin** ([src/agents/research_mixin.py](src/agents/research_mixin.py)) adds BFRS/DFRS research capabilities
 
-Seven agents in `src/agents/`:
+Six agents in `src/agents/`:
 
 | Agent | Role | Tools | Temp |
 |-------|------|-------|------|
@@ -89,8 +89,7 @@ Seven agents in `src/agents/`:
 | **Recruiter** | Clinical trial matching | ClinicalTrials.gov, NCCN, PubMed | 0.2 |
 | **Oncologist** | Treatment planning, safety | NCCN, FDA Label, RxNorm, PubMed | 0.2 |
 | **Chair** | Final synthesis (12 modules) | NCCN, FDA Label, PubMed | 0.3 |
-| **PlanAgent** | Research plan generation | - | 0.2 |
-| **ConvergenceJudge** | Convergence evaluation | - | 0.2 |
+| **PlanAgent** | Research plan generation + convergence evaluation | - | 0.3 |
 
 **Research-Enhanced Agents**: In the Research Subgraph, agents are enhanced with `ResearchMixin`:
 - `ResearchPathologist`, `ResearchGeneticist`, `ResearchRecruiter`, `ResearchOncologist`
@@ -122,12 +121,11 @@ Tools in `src/tools/` follow the `BaseTool` pattern (OpenAI function calling for
 - **BFRS (Breadth-First Research)**: 广度优先，每方向1-2次工具调用，收集广泛初步证据
 - **DFRS (Depth-First Research)**: 深度优先，针对高优先级发现进行3-5次连续工具调用
 
-**三步收敛检查**:
-1. **Metric-based Fast Check**: 方向完成 + 证据充分 (≥ `MIN_EVIDENCE_PER_DIRECTION`)
-2. **Agent Module Coverage Check**: 各Agent覆盖了分配给自己的`target_modules`
-   - Phase 1: 检查 Pathologist/Geneticist/Recruiter 各自分配的模块
-   - Phase 2: 检查 Oncologist 分配的模块
-3. **ConvergenceJudge Agent**: LLM评估研究质量
+**收敛检查**: `PlanAgent.evaluate_and_update()`
+- 统一由 PlanAgent 进行收敛判断（ConvergenceJudge 已废弃）
+- 计算各方向的证据质量统计（数量、等级分布、加权得分）
+- 调用 LLM 评估研究质量，判断是否收敛
+- 动态更新研究计划：调整优先级、设置各个direction的 preferred_mode (breadth_first/depth_first/skip)
 
 **研究迭代输出** (每次 `research_iterate()` 返回):
 ```python

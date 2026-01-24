@@ -73,9 +73,9 @@ class ChairAgent(BaseAgent):
         drug_map = evidence_graph.get_drug_sensitivity_map()
         if drug_map:
             stats += "\n## 关键药物敏感性关系\n"
-            for variant_id, relations in list(drug_map.items())[:10]:
+            for variant_id, relations in drug_map.items():
                 stats += f"\n### {variant_id}\n"
-                for rel in relations[:5]:
+                for rel in relations:
                     predicate = rel.get("predicate", "?")
                     drug_entity = rel.get("drug")
                     drug_name = drug_entity.name if drug_entity else "?"
@@ -87,7 +87,7 @@ class ChairAgent(BaseAgent):
         drug_entities = evidence_graph.get_entities_by_type(EntityType.DRUG)
         if drug_entities:
             stats += "\n## 治疗证据摘要\n"
-            for drug in list(drug_entities)[:10]:
+            for drug in drug_entities:
                 observations = evidence_graph.get_treatment_evidence(drug.canonical_id)
                 if observations:
                     grades = [o.evidence_grade for o in observations if o.evidence_grade]
@@ -101,7 +101,7 @@ class ChairAgent(BaseAgent):
                             if target and target.entity_type == EntityType.DISEASE:
                                 disease_names.append(target.name)
                     if disease_names:
-                        stats += f"- **{drug.name}** {grade_str}: 治疗 {', '.join(disease_names[:3])}\n"
+                        stats += f"- **{drug.name}** {grade_str}: 治疗 {', '.join(disease_names)}\n"
                     else:
                         stats += f"- **{drug.name}** {grade_str}: {len(observations)} 条观察\n"
 
@@ -112,12 +112,10 @@ class ChairAgent(BaseAgent):
             ref_lines.append("| Provenance | URL |")
             ref_lines.append("|------------|-----|")
 
-            for prov_info in provenances[:50]:  # 限制显示前50个
+            for prov_info in provenances:
                 prov = prov_info.get("provenance", "-")
                 url = prov_info.get("source_url", "-") or "-"
-                # 截断 URL 以便显示
-                url_display = url[:60] + "..." if url and len(url) > 60 else url
-                ref_lines.append(f"| {prov} | {url_display} |")
+                ref_lines.append(f"| {prov} | {url} |")
 
             stats += "\n".join(ref_lines)
 
@@ -209,14 +207,14 @@ class ChairAgent(BaseAgent):
 2. 第4模块"治疗史回顾"必须使用:::timeline格式展示**所有治疗记录**（不要合并或省略）
 3. 第9模块"临床试验推荐"必须保留临床试验专员报告中的**所有试验**（至少Top 5）
 4. **禁止压缩、合并、简化**任何治疗记录或试验信息
-5. 每条建议都需要证据等级标注 [Evidence A/B/C/D]
+5. 每条建议都需要证据等级标注 [Evidence A/B/C/D/E]
 6. 必须包含"不建议"章节
 7. 仲裁原则：当安全性与疗效冲突时，以安全性为准
 8. 所有引用使用 [PMID: xxx] 或 [NCT xxx] 格式
 9. 整合病理学分析报告中的关键发现（病理类型、IHC解读等）
 
 **信息完整性要求**:
-- Gemini 支持 8000-12000 字符输出
+- Gemini 支持 66K Tokens输出
 - 请充分利用输出长度，确保报告完整详尽
 - 宁可信息冗余，不可遗漏关键内容
 

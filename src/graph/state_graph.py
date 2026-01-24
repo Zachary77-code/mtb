@@ -40,9 +40,13 @@ def create_mtb_workflow():
       │  ┌─────────────────────────────────────────────┐   │
       │  │ Phase 1: 并行 BFRS/DFRS 循环               │   │
       │  │  [pathologist] [geneticist] [recruiter]     │   │
-      │  │         ↓ (收敛)                            │   │
+      │  │         ↓                                   │   │
+      │  │  [PlanAgent.evaluate_and_update()] ↺/↓     │   │
+      │  │                                             │   │
       │  │ Phase 2: Oncologist BFRS/DFRS 循环         │   │
       │  │  [oncologist]                               │   │
+      │  │         ↓                                   │   │
+      │  │  [PlanAgent.evaluate_and_update()] ↺/↓     │   │
       │  └─────────────────────────────────────────────┘   │
       └────────────────────────────────────────────────────┘
                               ↓
