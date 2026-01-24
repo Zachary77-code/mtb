@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Optional
 from src.agents.base_agent import BaseAgent
 from src.tools.guideline_tools import NCCNTool, FDALabelTool
 from src.tools.literature_tools import PubMedTool
-from src.models.evidence_graph import EvidenceGraph
+from src.models.evidence_graph import EvidenceGraph, EntityType, Predicate
 from config.settings import CHAIR_PROMPT_FILE, REQUIRED_SECTIONS
 
 
@@ -73,25 +73,37 @@ class ChairAgent(BaseAgent):
         drug_map = evidence_graph.get_drug_sensitivity_map()
         if drug_map:
             stats += "\n## 关键药物敏感性关系\n"
-            for drug, relations in list(drug_map.items())[:10]:
-                stats += f"\n### {drug}\n"
+            for variant_id, relations in list(drug_map.items())[:10]:
+                stats += f"\n### {variant_id}\n"
                 for rel in relations[:5]:
                     predicate = rel.get("predicate", "?")
-                    variant = rel.get("variant", "?")
-                    confidence = rel.get("confidence", 0.0)
-                    stats += f"- {variant} → {predicate} (置信度: {confidence:.2f})\n"
+                    drug_entity = rel.get("drug")
+                    drug_name = drug_entity.name if drug_entity else "?"
+                    grade = rel.get("grade")
+                    grade_str = grade.value if grade else "?"
+                    stats += f"- {drug_name} → {predicate} (等级: {grade_str})\n"
 
         # 关键治疗证据
-        treatment_evidence = evidence_graph.get_treatment_evidence()
-        if treatment_evidence:
+        drug_entities = evidence_graph.get_entities_by_type(EntityType.DRUG)
+        if drug_entities:
             stats += "\n## 治疗证据摘要\n"
-            for drug_id, evidence in list(treatment_evidence.items())[:10]:
-                drug_entity = evidence_graph.get_entity(drug_id)
-                drug_name = drug_entity.name if drug_entity else drug_id
-                diseases = evidence.get("diseases", [])
-                best_grade = evidence.get("best_grade")
-                grade_str = f"[{best_grade.value}]" if best_grade else ""
-                stats += f"- **{drug_name}** {grade_str}: 治疗 {', '.join(diseases[:3])}\n"
+            for drug in list(drug_entities)[:10]:
+                observations = evidence_graph.get_treatment_evidence(drug.canonical_id)
+                if observations:
+                    grades = [o.evidence_grade for o in observations if o.evidence_grade]
+                    best_grade = min(grades, default=None) if grades else None
+                    grade_str = f"[{best_grade.value}]" if best_grade else ""
+                    # 从相关边获取疾病信息
+                    disease_names = []
+                    for edge in evidence_graph.get_entity_edges(drug.canonical_id, direction="both"):
+                        if edge.predicate == Predicate.TREATS:
+                            target = evidence_graph.get_entity(edge.target_id)
+                            if target and target.entity_type == EntityType.DISEASE:
+                                disease_names.append(target.name)
+                    if disease_names:
+                        stats += f"- **{drug.name}** {grade_str}: 治疗 {', '.join(disease_names[:3])}\n"
+                    else:
+                        stats += f"- **{drug.name}** {grade_str}: {len(observations)} 条观察\n"
 
         # 构建引用列表
         provenances = evidence_graph.get_all_provenances()

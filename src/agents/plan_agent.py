@@ -383,7 +383,7 @@ class PlanAgent(BaseAgent):
         ]
 
         # 检测证据冲突
-        conflicts = graph.identify_gaps() if graph else []
+        conflicts = graph.get_conflicts() if graph else []
         conflict_descriptions = [c.get("description", "") for c in conflicts if c.get("type") == "evidence_conflict"]
 
         # Phase 1 检查的 Agent
