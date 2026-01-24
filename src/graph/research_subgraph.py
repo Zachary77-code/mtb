@@ -4,7 +4,6 @@ Research Subgraph - 两阶段研究循环子图
 实现 DeepEvidence 风格的研究循环：
 - Phase 1: Pathologist + Geneticist + Recruiter 并行 BFRS/DFRS 循环
 - Phase 2: Oncologist 独立 BFRS/DFRS 循环
-- 动态收敛检查
 """
 from typing import List, Literal, Dict, Any
 from datetime import datetime
@@ -553,6 +552,220 @@ def _save_detailed_iteration_report(
         logger.error(f"[DETAILED_REPORT] 保存失败: {e}")
 
 
+# ==================== Phase 1 报告生成辅助函数 ====================
+
+def _format_evidence_for_report(evidence_list: List[Any]) -> str:
+    """
+    将证据列表格式化为报告生成用的摘要
+
+    Args:
+        evidence_list: EvidenceNode 列表
+
+    Returns:
+        格式化的证据摘要文本
+    """
+    if not evidence_list:
+        return "暂无相关证据。"
+
+    lines = []
+
+    # 按证据等级排序（A 优先）
+    grade_order = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
+    sorted_evidence = sorted(
+        evidence_list,
+        key=lambda n: grade_order.get(n.grade.value if n.grade else "E", 5)
+    )
+
+    for i, node in enumerate(sorted_evidence, 1):
+        grade_str = f"[{node.grade.value}]" if node.grade else "[N/A]"
+        civic_str = f" ({node.civic_evidence_type.value})" if node.civic_evidence_type else ""
+
+        lines.append(f"### 证据 {i} {grade_str}{civic_str}")
+
+        if node.observation:
+            lines.append(f"**观察**: {node.observation}")
+
+        if node.content:
+            content_text = node.content.get("text", "") if isinstance(node.content, dict) else str(node.content)
+            if content_text:
+                # 保留完整内容，不截断
+                lines.append(f"**内容**: {content_text}")
+
+        if node.provenance:
+            lines.append(f"**来源**: {node.provenance}")
+
+        if node.source_tool:
+            lines.append(f"**工具**: {node.source_tool}")
+
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
+    """
+    Phase 1 收敛后，各专家基于 evidence_graph 生成领域综合报告
+
+    这些报告将传递给 Phase 2 Oncologist，让 Oncologist 能够看到
+    各专家的综合分析结论，而不只是原始证据。
+    """
+    log_separator("PHASE1_REPORTS")
+    logger.info("[PHASE1_REPORTS] 生成 Phase 1 专家报告...")
+
+    evidence_graph = state.get("evidence_graph", {})
+    raw_pdf_text = state.get("raw_pdf_text", "")
+
+    graph = load_evidence_graph(evidence_graph)
+    if not graph:
+        logger.warning("[PHASE1_REPORTS] 证据图为空，跳过报告生成")
+        return {}
+
+    reports = {}
+
+    # 为每个 Phase 1 Agent 生成报告
+    agent_configs = [
+        ("Pathologist", ResearchPathologist, "pathologist_report"),
+        ("Geneticist", ResearchGeneticist, "geneticist_report"),
+        ("Recruiter", ResearchRecruiter, "recruiter_report"),
+    ]
+
+    for agent_name, agent_class, report_key in agent_configs:
+        logger.info(f"[PHASE1_REPORTS] 生成 {agent_name} 报告...")
+
+        # 提取该 Agent 收集的证据
+        agent_evidence = graph.get_nodes_by_agent(agent_name)
+        evidence_count = len(agent_evidence) if agent_evidence else 0
+        logger.info(f"[PHASE1_REPORTS]   {agent_name} 证据数: {evidence_count}")
+
+        if not agent_evidence:
+            reports[report_key] = f"## {agent_name} 报告\n\n暂无相关发现。"
+            continue
+
+        # 构建证据摘要
+        evidence_summary = _format_evidence_for_report(agent_evidence)
+
+        # 构建报告生成 prompt
+        report_prompt = f"""基于以下病例信息和已收集的研究证据，生成你的专业领域综合报告。
+
+## 病例背景
+{raw_pdf_text}
+
+## 已收集的研究证据（共 {evidence_count} 条）
+{evidence_summary}
+
+## 输出要求
+请生成一份完整的 Markdown 格式的领域分析报告。注意：
+1. 整合所有证据，给出综合分析结论
+2. 保留所有引用（PMID、NCT 等）
+3. 明确标注证据等级 [Evidence A/B/C/D/E]
+4. 重点突出对治疗决策有指导意义的发现
+"""
+
+        try:
+            # 实例化 Agent 并调用
+            agent = agent_class()
+            response = agent.invoke(report_prompt)
+
+            if response and response.get("output"):
+                report = response["output"]
+                reports[report_key] = report
+                logger.info(f"[PHASE1_REPORTS]   {agent_name} 报告生成成功: {len(report)} 字符")
+            else:
+                reports[report_key] = f"## {agent_name} 报告\n\n报告生成失败。"
+                logger.warning(f"[PHASE1_REPORTS]   {agent_name} 报告生成失败")
+
+        except Exception as e:
+            logger.error(f"[PHASE1_REPORTS]   {agent_name} 报告生成异常: {e}")
+            reports[report_key] = f"## {agent_name} 报告\n\n报告生成异常: {str(e)}"
+
+    logger.info(f"[PHASE1_REPORTS] 报告生成完成")
+    return reports
+
+
+# ==================== Phase 2 报告生成辅助函数 ====================
+
+def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
+    """
+    Phase 2 收敛后，Oncologist 基于 evidence_graph 生成领域综合报告
+
+    这个报告将与 Phase 1 专家报告一起传递给 Chair，让 Chair 能够看到
+    所有专家的综合分析结论。
+    """
+    log_separator("PHASE2_REPORTS")
+    logger.info("[PHASE2_REPORTS] 生成 Phase 2 专家报告...")
+
+    evidence_graph = state.get("evidence_graph", {})
+    raw_pdf_text = state.get("raw_pdf_text", "")
+
+    graph = load_evidence_graph(evidence_graph)
+    if not graph:
+        logger.warning("[PHASE2_REPORTS] 证据图为空，跳过报告生成")
+        return {}
+
+    # 提取 Oncologist 收集的证据
+    oncologist_evidence = graph.get_nodes_by_agent("Oncologist")
+    evidence_count = len(oncologist_evidence) if oncologist_evidence else 0
+    logger.info(f"[PHASE2_REPORTS] Oncologist 证据数: {evidence_count}")
+
+    if not oncologist_evidence:
+        logger.warning("[PHASE2_REPORTS] Oncologist 无证据，生成默认报告")
+        return {"oncologist_plan": "## 治疗方案分析\n\n暂无相关发现。"}
+
+    # 构建证据摘要（完整，不截断）
+    evidence_summary = _format_evidence_for_report(oncologist_evidence)
+
+    # 获取上游报告作为参考
+    pathologist_report = state.get('pathologist_report', '')
+    geneticist_report = state.get('geneticist_report', '')
+    recruiter_report = state.get('recruiter_report', '')
+
+    # 构建报告生成 prompt
+    report_prompt = f"""基于以下病例信息、上游专家报告和已收集的研究证据，生成你的肿瘤学专业领域综合报告。
+
+## 病例背景
+{raw_pdf_text}
+
+## 上游专家报告
+
+### 病理学分析报告
+{pathologist_report if pathologist_report else "暂无"}
+
+### 分子分析报告
+{geneticist_report if geneticist_report else "暂无"}
+
+### 临床试验推荐报告
+{recruiter_report if recruiter_report else "暂无"}
+
+## 你收集的研究证据（共 {evidence_count} 条）
+{evidence_summary}
+
+## 输出要求
+请生成一份完整的 Markdown 格式的肿瘤学治疗方案分析报告。注意：
+1. 整合所有证据和上游报告信息，给出综合治疗建议
+2. 保留所有引用（PMID、NCT 等）
+3. 明确标注证据等级 [Evidence A/B/C/D/E]
+4. 重点突出治疗方案选择、用药建议、安全性考量
+5. 包含治疗路线图和分子复查建议
+"""
+
+    try:
+        # 实例化 Oncologist Agent 并调用
+        agent = ResearchOncologist()
+        response = agent.invoke(report_prompt)
+
+        if response and response.get("output"):
+            report = response["output"]
+            logger.info(f"[PHASE2_REPORTS] Oncologist 报告生成成功: {len(report)} 字符")
+            return {"oncologist_plan": report}
+        else:
+            logger.warning("[PHASE2_REPORTS] Oncologist 报告生成失败")
+            return {"oncologist_plan": "## 治疗方案分析\n\n报告生成失败。"}
+
+    except Exception as e:
+        logger.error(f"[PHASE2_REPORTS] Oncologist 报告生成异常: {e}")
+        return {"oncologist_plan": f"## 治疗方案分析\n\n报告生成异常: {str(e)}"}
+
+
 # ==================== Phase 1 节点 ====================
 
 def phase1_router(state: MtbState) -> List[Send]:
@@ -681,7 +894,7 @@ def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict
         evidence_graph=evidence_graph,
         iteration=iteration,
         max_iterations=MAX_PHASE1_ITERATIONS,
-        case_context=raw_pdf_text[:3000],
+        case_context=raw_pdf_text,
         research_plan=research_plan_dict
     )
 
@@ -952,16 +1165,16 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
 
     # 构建上下文（包含之前的专家报告摘要）
     context = f"""病例背景:
-{raw_pdf_text[:2000]}
+{raw_pdf_text}
 
 病理学分析摘要:
-{state.get('pathologist_report', '')[:1000]}
+{state.get('pathologist_report', '')}
 
 分子分析摘要:
-{state.get('geneticist_report', '')[:1000]}
+{state.get('geneticist_report', '')}
 
 临床试验摘要:
-{state.get('recruiter_report', '')[:1000]}
+{state.get('recruiter_report', '')}
 """
 
     result = agent.research_iterate(
@@ -1140,13 +1353,16 @@ def phase2_convergence_check(state: MtbState) -> Literal["continue", "converged"
 
 def generate_agent_reports(state: MtbState) -> Dict[str, Any]:
     """
-    根据研究结果生成各 Agent 的报告
+    提取引用和辅助信息（不覆写综合报告）
 
-    这个节点在研究循环结束后，将累积的证据整理成报告格式。
-    包含迭代历史和收敛检查详情。
+    综合报告由以下函数生成：
+    - Phase 1 报告: generate_phase1_reports() → pathologist_report, geneticist_report, recruiter_report
+    - Phase 2 报告: generate_phase2_reports() → oncologist_plan
+
+    本函数仅提取引用、试验信息、安全警告，以及生成研究进度报告。
     """
     log_separator("REPORT_GEN")
-    logger.info("[REPORT_GEN] 生成 Agent 报告...")
+    logger.info("[REPORT_GEN] 提取引用和辅助信息...")
 
     # 显示最终证据图统计
     log_evidence_stats(state.get("evidence_graph", {}))
@@ -1159,63 +1375,6 @@ def generate_agent_reports(state: MtbState) -> Dict[str, Any]:
     geneticist_evidence = graph.get_nodes_by_agent("Geneticist") if graph else []
     recruiter_evidence = graph.get_nodes_by_agent("Recruiter") if graph else []
     oncologist_evidence = graph.get_nodes_by_agent("Oncologist") if graph else []
-
-    # 生成带迭代历史的报告
-    def format_evidence_report_with_history(evidence_list, title, agent_name):
-        lines = [f"## {title}", ""]
-
-        # 添加研究进度摘要
-        agent_iterations = [r for r in iteration_history
-                          if agent_name in r.get("agent_findings", {})]
-
-        if agent_iterations:
-            total_evidence = sum(r["agent_findings"][agent_name]["count"]
-                               for r in agent_iterations)
-            lines.append(f"**研究轮次**: {len(agent_iterations)} 轮")
-            lines.append(f"**证据总数**: {total_evidence} 条")
-            lines.append("")
-
-            # 每轮详情
-            lines.append("### 迭代历史")
-            for r in agent_iterations:
-                findings = r["agent_findings"][agent_name]
-                conv = r.get("convergence_check", {})
-                decision = r.get("final_decision", "unknown")
-
-                lines.append(f"- **第 {r['iteration']} 轮** ({r.get('timestamp', 'N/A')[:10]})")
-                lines.append(f"  - 新增证据: {findings['count']} 条")
-                lines.append(f"  - 决策: {decision}")
-
-                # 显示 Judge 判断详情
-                step3 = conv.get("step3_judge")
-                if step3:
-                    lines.append(f"  - Judge 置信度: {step3.get('confidence', 'N/A')}")
-                    if step3.get("reasoning"):
-                        lines.append(f"  - 理由: {step3['reasoning'][:100]}...")
-                    if step3.get("gaps") and decision == "continue":
-                        gaps_str = ", ".join(step3["gaps"][:3])
-                        lines.append(f"  - 研究空白: {gaps_str}")
-            lines.append("")
-
-        # 证据内容
-        lines.append("### 证据详情")
-        if not evidence_list:
-            lines.append("暂无相关发现。")
-        else:
-            for i, ev in enumerate(evidence_list, 1):
-                content = ev.content.get("text", str(ev.content))
-                grade = f" (证据等级: {ev.grade.value})" if ev.grade else ""
-                iteration_info = f" [迭代 {ev.iteration}]" if hasattr(ev, 'iteration') and ev.iteration else ""
-                lines.append(f"#### 发现 {i}{grade}{iteration_info}")
-                lines.append(content)
-                lines.append("")
-
-        return "\n".join(lines)
-
-    pathologist_report = format_evidence_report_with_history(pathologist_evidence, "病理学分析", "Pathologist")
-    geneticist_report = format_evidence_report_with_history(geneticist_evidence, "分子分析", "Geneticist")
-    recruiter_report = format_evidence_report_with_history(recruiter_evidence, "临床试验", "Recruiter")
-    oncologist_plan = format_evidence_report_with_history(oncologist_evidence, "治疗方案", "Oncologist")
 
     # 提取试验信息
     recruiter_trials = []
@@ -1242,16 +1401,14 @@ def generate_agent_reports(state: MtbState) -> Dict[str, Any]:
     # 生成研究进度报告
     progress_report = generate_progress_report(iteration_history)
 
-    logger.info(f"[REPORT_GEN] 报告生成完成: P={len(pathologist_evidence)}, G={len(geneticist_evidence)}, R={len(recruiter_evidence)}, O={len(oncologist_evidence)}")
+    logger.info(f"[REPORT_GEN] 引用提取完成: P={len(pathologist_evidence)}, G={len(geneticist_evidence)}, R={len(recruiter_evidence)}, O={len(oncologist_evidence)}")
 
+    # 注意：不覆写 pathologist_report, geneticist_report, recruiter_report, oncologist_plan
+    # 这些报告已由 generate_phase1_reports() 和 generate_phase2_reports() 生成
     return {
-        "pathologist_report": pathologist_report,
         "pathologist_references": extract_references(pathologist_evidence),
-        "geneticist_report": geneticist_report,
         "geneticist_references": extract_references(geneticist_evidence),
-        "recruiter_report": recruiter_report,
         "recruiter_trials": recruiter_trials,
-        "oncologist_plan": oncologist_plan,
         "oncologist_safety_warnings": oncologist_warnings,
         "research_converged": True,
         "research_progress_report": progress_report,
@@ -1422,9 +1579,11 @@ def create_research_subgraph() -> StateGraph:
     │           ↓ continue         ↓ converged  │
     └───────────┘                  │            │
                                    ↓
+                     [generate_phase1_reports]  ← 生成 P/G/R 综合报告
+                                   ↓
     ┌──────────────────────────────────────────┐
     │ Phase 2 Loop                              │
-    │       [oncologist]                        │
+    │       [oncologist]  ← 接收专家报告        │
     │           ↓                               │
     │    [plan_agent_eval]                      │
     │           ↓                               │
@@ -1432,7 +1591,9 @@ def create_research_subgraph() -> StateGraph:
     │       ↓ continue  ↓ converged             │
     └───────┘           │                       │
                         ↓
-               [generate_reports]
+               [generate_phase2_reports]  ← 生成 Oncologist 综合报告
+                        ↓
+               [generate_reports]  ← 提取引用和辅助信息
                         ↓
                       [END]
     """
@@ -1446,11 +1607,17 @@ def create_research_subgraph() -> StateGraph:
     workflow.add_node("phase1_aggregator", phase1_aggregator)
     workflow.add_node("phase1_plan_eval", plan_agent_evaluate_phase1)  # PlanAgent 评估
 
+    # ==================== Phase 1 报告生成节点（新增）====================
+    workflow.add_node("generate_phase1_reports", generate_phase1_reports)
+
     # ==================== Phase 2 节点 ====================
     workflow.add_node("phase2_oncologist", phase2_oncologist_node)
     workflow.add_node("phase2_plan_eval", plan_agent_evaluate_phase2)  # PlanAgent 评估
 
-    # ==================== 报告生成节点 ====================
+    # ==================== Phase 2 报告生成节点 ====================
+    workflow.add_node("generate_phase2_reports", generate_phase2_reports)
+
+    # ==================== 辅助信息提取节点 ====================
     workflow.add_node("generate_reports", generate_agent_reports)
 
     # ==================== 边定义 ====================
@@ -1476,9 +1643,12 @@ def create_research_subgraph() -> StateGraph:
         phase1_convergence_check,
         {
             "continue": "phase1_router",  # 继续循环
-            "converged": "phase2_oncologist"  # 进入 Phase 2
+            "converged": "generate_phase1_reports"  # 生成专家报告
         }
     )
+
+    # Phase 1 专家报告 → Phase 2 Oncologist
+    workflow.add_edge("generate_phase1_reports", "phase2_oncologist")
 
     # Phase 1 路由 → 并行节点（循环时使用）
     workflow.add_conditional_edges(
@@ -1496,11 +1666,14 @@ def create_research_subgraph() -> StateGraph:
         phase2_convergence_check,
         {
             "continue": "phase2_oncologist",  # 继续循环
-            "converged": "generate_reports"  # 生成报告
+            "converged": "generate_phase2_reports"  # 生成 Oncologist 综合报告
         }
     )
 
-    # 报告生成 → 结束
+    # Phase 2 报告 → 辅助信息提取
+    workflow.add_edge("generate_phase2_reports", "generate_reports")
+
+    # 辅助信息提取 → 结束
     workflow.add_edge("generate_reports", END)
 
     logger.info("[RESEARCH_SUBGRAPH] 子图构建完成 (PlanAgent 统一收敛判断)")
