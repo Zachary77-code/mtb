@@ -435,27 +435,21 @@ def _save_detailed_iteration_report(
             lines.append("|-------|------|---------|------------|----------|")
 
             for agent_name in agent_names:
-                result_key = f"{agent_name.lower()}_research_result"
-                agent_result = state.get(result_key, {})
-                # 使用 agent_result 中的 new_evidence_ids 来计算新增 entity 数
-                new_ids = agent_result.get("new_evidence_ids", [])
-                agent_new_entity_count = len(new_ids)
-                # 计算新增 observation 数
-                agent_new_obs_count = sum(
-                    len(graph.get_entity(eid).observations)
-                    for eid in new_ids
-                    if graph and graph.get_entity(eid)
-                )
-
                 # 找该 agent 的方向
                 agent_directions = [d for d in pre_plan.directions if d.target_agent == agent_name]
-                num_directions = len(agent_directions) if agent_directions else 1
 
                 for pre_d in agent_directions:
                     post_d = post_plan.get_direction_by_id(pre_d.id) if post_plan else None
-                    # 平均分配到各方向
-                    new_obs = agent_new_obs_count // num_directions
-                    new_entity = agent_new_entity_count // num_directions
+                    # 按 direction.evidence_ids 差集精确计算新增数量
+                    pre_ids = set(pre_d.evidence_ids)
+                    post_ids = set(post_d.evidence_ids) if post_d else pre_ids
+                    new_ids = post_ids - pre_ids
+                    new_entity = len(new_ids)
+                    new_obs = sum(
+                        len(graph.get_entity(eid).observations)
+                        for eid in new_ids
+                        if graph and graph.get_entity(eid)
+                    )
                     pre_status = pre_d.status.value
                     post_status = post_d.status.value if post_d else pre_status
                     status_change = f"{pre_status} → {post_status}" if pre_status != post_status else pre_status
@@ -840,12 +834,23 @@ def phase2_plan_init(state: MtbState) -> Dict[str, Any]:
 
         # 统计新方向
         plan = load_research_plan(new_plan)
+        if plan:
+            # 移除旧的 Oncologist 方向 (D5/D6/D9 等)，只保留新生成的 P2_* 方向
+            # 这避免了主题重叠导致的证据关联混乱
+            old_oncologist_count = len([d for d in plan.directions if d.target_agent == "Oncologist" and not d.id.startswith("P2_")])
+            plan.directions = [
+                d for d in plan.directions
+                if d.target_agent != "Oncologist" or d.id.startswith("P2_")
+            ]
+            if old_oncologist_count > 0:
+                logger.info(f"[PHASE2_PLAN_INIT] 移除 {old_oncologist_count} 个旧的 Oncologist 方向 (已被 P2_* 方向覆盖)")
+
         oncologist_directions = [d for d in plan.directions if d.target_agent == "Oncologist"]
         logger.info(f"[PHASE2_PLAN_INIT] 生成 {len(oncologist_directions)} 个 Oncologist 方向:")
         for d in oncologist_directions:
             logger.info(f"[PHASE2_PLAN_INIT]   - {d.id}: {d.topic}")
 
-        return {"research_plan": new_plan}
+        return {"research_plan": plan.to_dict() if plan else new_plan}
 
     except Exception as e:
         logger.error(f"[PHASE2_PLAN_INIT] Phase 2 方向生成失败: {e}")
