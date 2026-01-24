@@ -127,15 +127,30 @@ class MtbState(TypedDict):
     # Phase 2 Agent 研究结果
     oncologist_research_result: NotRequired[Dict[str, Any]]
 
-    # Phase 1/2 Agent 收敛检查详情（供 aggregator 读取）
+    # Phase 1/2 Agent 收敛检查详情（已废弃，由 PlanAgent 统一处理）
     pathologist_convergence_details: NotRequired[Dict[str, Any]]
     geneticist_convergence_details: NotRequired[Dict[str, Any]]
     recruiter_convergence_details: NotRequired[Dict[str, Any]]
     oncologist_convergence_details: NotRequired[Dict[str, Any]]
 
-    # 收敛检查决策（供条件边使用）
+    # 收敛检查决策（供条件边使用，由 PlanAgent 设置）
     phase1_decision: NotRequired[str]  # "continue" | "converged"
     phase2_decision: NotRequired[str]  # "continue" | "converged"
+
+    # PlanAgent 评估结果（每轮迭代更新）
+    plan_agent_evaluation: NotRequired[Dict[str, Any]]
+    # 结构: {
+    #     "phase": "phase1" | "phase2",
+    #     "iteration": int,
+    #     "reasoning": str,              # 决策理由
+    #     "quality_assessment": {        # 证据质量评估
+    #         "high_quality_coverage": ["模块1"],  # 有 A/B 级证据的模块
+    #         "low_quality_only": ["模块2"],       # 只有 D/E 级证据的模块
+    #         "conflicts": []                      # 证据冲突
+    #     },
+    #     "gaps": List[str],             # 待填补空白
+    #     "next_priorities": List[str]   # 下一轮优先事项
+    # }
 
     # 迭代历史记录（用于追溯研究进度）
     iteration_history: NotRequired[List[Dict[str, Any]]]
@@ -149,11 +164,7 @@ class MtbState(TypedDict):
     #       ...
     #     },
     #     "total_new_findings": 12,
-    #     "convergence_check": {
-    #       "step1_metrics": {"passed": bool, "reason": str},
-    #       "step2_module": {"passed": bool, "uncovered": []},
-    #       "step3_judge": {"decision": str, "confidence": float, "reasoning": str, "gaps": [], "strengths": []}
-    #     },
+    #     "convergence_check": {...},  # PlanAgent 评估结果
     #     "final_decision": "continue" | "converged"
     #   }
     # ]

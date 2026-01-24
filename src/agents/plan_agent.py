@@ -7,16 +7,34 @@ PlanAgent - 研究计划生成 Agent
 import json
 from typing import Dict, List, Any, Optional
 
-from src.agents.base_agent import BaseAgent, ORCHESTRATOR_MODEL
+from src.agents.base_agent import BaseAgent, ORCHESTRATOR_MODEL, SUBGRAPH_MODEL
 from src.models.research_plan import (
     ResearchPlan,
     ResearchDirection,
     ResearchMode,
     DirectionStatus,
-    create_research_plan
+    create_research_plan,
+    load_research_plan
 )
+from src.models.evidence_graph import load_evidence_graph, EvidenceGrade
 from src.utils.logger import mtb_logger as logger
 from config.settings import PLAN_AGENT_PROMPT_FILE
+
+# 证据等级权重（用于计算方向完成度）
+GRADE_WEIGHTS = {
+    "A": 5.0,   # Validated - 一条 A 级 ≈ 5 条 E 级
+    "B": 3.0,   # Clinical
+    "C": 2.0,   # Case Study
+    "D": 1.5,   # Preclinical
+    "E": 1.0,   # Inferential
+}
+
+# 方向完成度目标得分（相当于 2 条 A 级 或 10 条 E 级）
+TARGET_COMPLETENESS_SCORE = 10.0
+
+# 收敛阈值
+CONVERGENCE_COMPLETENESS_THRESHOLD = 80  # 完成度 >= 80% 视为完成
+CONTINUE_COMPLETENESS_THRESHOLD = 60     # 完成度 < 60% 需要继续收集
 
 
 # 必须覆盖的 Chair 模块列表
@@ -210,6 +228,380 @@ class PlanAgent(BaseAgent):
             return brace_match.group(0)
 
         return None
+
+    # ==================== 迭代评估方法 ====================
+
+    def evaluate_and_update(
+        self,
+        state: Dict[str, Any],
+        phase: str,
+        iteration: int,
+    ) -> Dict[str, Any]:
+        """
+        评估当前研究进度，更新研究计划，并判断是否收敛
+
+        Args:
+            state: 当前工作流状态
+            phase: 当前阶段 ("phase1" | "phase2")
+            iteration: 当前迭代轮次
+
+        Returns:
+            {
+                "research_plan": Dict,      # 更新后的研究计划
+                "research_mode": str,       # 下一轮模式
+                "decision": str,            # "continue" | "converged"
+                "reasoning": str,           # 决策理由
+                "quality_assessment": Dict, # 证据质量评估
+                "gaps": List[str],          # 待填补空白
+                "next_priorities": List[str] # 下一轮优先事项
+            }
+        """
+        logger.info(f"[{self.role}] 开始评估 {phase} 迭代 {iteration}...")
+
+        # 加载当前状态
+        plan = load_research_plan(state.get("research_plan", {}))
+        graph = load_evidence_graph(state.get("evidence_graph", {}))
+
+        if not plan:
+            raise ValueError(f"[{self.role}] 无法加载研究计划")
+
+        # 计算各方向的证据质量统计
+        direction_stats = self._calculate_direction_stats(plan, graph)
+
+        # 构建评估提示
+        eval_prompt = self._build_evaluation_prompt(
+            state, phase, iteration, plan, graph, direction_stats
+        )
+
+        # 调用 LLM 进行评估
+        result = self.invoke(eval_prompt)
+        output = result.get("output", "")
+
+        # 解析评估结果
+        eval_result = self._parse_evaluation_output(output, plan, direction_stats)
+
+        logger.info(f"[{self.role}] 评估完成: decision={eval_result['decision']}, "
+                   f"reasoning={eval_result['reasoning'][:100]}...")
+
+        return eval_result
+
+    def _calculate_direction_stats(
+        self,
+        plan: ResearchPlan,
+        graph
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        计算各研究方向的证据质量统计
+
+        Returns:
+            {
+                "D1": {
+                    "evidence_count": 5,
+                    "grade_distribution": {"A": 1, "B": 2, "C": 1, "D": 0, "E": 1},
+                    "weighted_score": 12.0,
+                    "completeness": 100.0,
+                    "has_high_quality": True,  # 有 A/B 级
+                    "low_quality_only": False  # 只有 D/E 级
+                },
+                ...
+            }
+        """
+        stats = {}
+
+        for direction in plan.directions:
+            d_id = direction.id
+            evidence_ids = direction.evidence_ids
+
+            # 统计证据等级分布
+            grade_dist = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0}
+            weighted_score = 0.0
+
+            for eid in evidence_ids:
+                node = graph.get_node(eid) if graph else None
+                if node and node.grade:
+                    grade = node.grade.value
+                    grade_dist[grade] = grade_dist.get(grade, 0) + 1
+                    weighted_score += GRADE_WEIGHTS.get(grade, 1.0)
+                else:
+                    # 无等级的证据按 E 级计算
+                    grade_dist["E"] = grade_dist.get("E", 0) + 1
+                    weighted_score += 1.0
+
+            # 计算完成度
+            completeness = min(100.0, (weighted_score / TARGET_COMPLETENESS_SCORE) * 100)
+
+            # 判断证据质量
+            has_high_quality = (grade_dist["A"] > 0 or grade_dist["B"] > 0)
+            low_quality_only = (
+                grade_dist["A"] == 0 and
+                grade_dist["B"] == 0 and
+                grade_dist["C"] == 0 and
+                (grade_dist["D"] > 0 or grade_dist["E"] > 0)
+            )
+
+            stats[d_id] = {
+                "evidence_count": len(evidence_ids),
+                "grade_distribution": grade_dist,
+                "weighted_score": weighted_score,
+                "completeness": completeness,
+                "has_high_quality": has_high_quality,
+                "low_quality_only": low_quality_only,
+                "topic": direction.topic,
+                "target_agent": direction.target_agent,
+                "target_modules": direction.target_modules,
+                "status": direction.status.value,
+                "priority": direction.priority,
+            }
+
+        return stats
+
+    def _build_evaluation_prompt(
+        self,
+        state: Dict[str, Any],
+        phase: str,
+        iteration: int,
+        plan: ResearchPlan,
+        graph,
+        direction_stats: Dict[str, Dict[str, Any]]
+    ) -> str:
+        """构建迭代评估提示"""
+
+        # 汇总证据质量
+        total_evidence = sum(s["evidence_count"] for s in direction_stats.values())
+        high_quality_directions = [d for d, s in direction_stats.items() if s["has_high_quality"]]
+        low_quality_directions = [d for d, s in direction_stats.items() if s["low_quality_only"]]
+        incomplete_directions = [
+            d for d, s in direction_stats.items()
+            if s["completeness"] < CONTINUE_COMPLETENESS_THRESHOLD
+        ]
+
+        # 检测证据冲突
+        conflicts = graph.identify_gaps() if graph else []
+        conflict_descriptions = [c.get("description", "") for c in conflicts if c.get("type") == "evidence_conflict"]
+
+        # Phase 1 检查的 Agent
+        if phase == "phase1":
+            agents_to_check = ["Pathologist", "Geneticist", "Recruiter"]
+        else:
+            agents_to_check = ["Oncologist"]
+
+        # 过滤当前 phase 相关的方向
+        relevant_stats = {
+            d: s for d, s in direction_stats.items()
+            if s["target_agent"] in agents_to_check
+        }
+
+        return f"""## 迭代评估任务
+
+你正在评估 {phase.upper()} 的第 {iteration + 1} 轮迭代结果。
+
+### 当前研究进度
+
+**总证据数**: {total_evidence}
+**本阶段相关方向数**: {len(relevant_stats)}
+
+### 各研究方向状态
+
+{self._format_direction_stats(relevant_stats)}
+
+### 证据质量概况
+
+- **有高质量证据 (A/B级) 的方向**: {high_quality_directions if high_quality_directions else "无"}
+- **只有低质量证据 (D/E级) 的方向**: {low_quality_directions if low_quality_directions else "无"}
+- **完成度不足 (<60%) 的方向**: {incomplete_directions if incomplete_directions else "无"}
+
+### 证据冲突
+
+{conflict_descriptions if conflict_descriptions else "无检测到的证据冲突"}
+
+### 评估要求
+
+请根据以上信息，完成以下评估：
+
+1. **更新各方向状态**：
+   - 完成度 >= 80%: 标记为 "completed"
+   - 完成度 < 60%: 保持 "pending" 或 "in_progress"
+   - 调整优先级（低质量方向提升优先级）
+
+2. **决定研究模式**：
+   - "breadth_first": 还有未覆盖方向，需要广度收集
+   - "depth_first": 有高优先级发现需要深入，或证据冲突需要解决
+
+3. **收敛判断**：
+   - "converged": 所有方向完成度 >= 80%，且有足够高质量证据，无重大冲突
+   - "continue": 存在未完成方向，或只有低质量证据，或有未解决冲突
+
+### 输出格式
+
+请以 JSON 格式输出：
+
+```json
+{{
+    "updated_directions": [
+        {{
+            "id": "D1",
+            "status": "completed",
+            "priority": 1,
+            "completeness": 85
+        }}
+    ],
+    "new_directions": [],
+    "research_mode": "breadth_first",
+    "decision": "continue",
+    "reasoning": "决策理由...",
+    "quality_assessment": {{
+        "high_quality_coverage": ["模块1"],
+        "low_quality_only": ["模块2"],
+        "conflicts": []
+    }},
+    "gaps": ["空白1"],
+    "next_priorities": ["优先事项1"]
+}}
+```
+"""
+
+    def _format_direction_stats(self, stats: Dict[str, Dict[str, Any]]) -> str:
+        """格式化方向统计为 Markdown 表格"""
+        lines = ["| ID | 主题 | Agent | 证据数 | A | B | C | D | E | 加权分 | 完成度 | 状态 |",
+                 "|:---|:-----|:------|:-------|:--|:--|:--|:--|:--|:-------|:-------|:-----|"]
+
+        for d_id, s in stats.items():
+            gd = s["grade_distribution"]
+            lines.append(
+                f"| {d_id} | {s['topic'][:20]}... | {s['target_agent']} | "
+                f"{s['evidence_count']} | {gd['A']} | {gd['B']} | {gd['C']} | {gd['D']} | {gd['E']} | "
+                f"{s['weighted_score']:.1f} | {s['completeness']:.0f}% | {s['status']} |"
+            )
+
+        return "\n".join(lines)
+
+    def _parse_evaluation_output(
+        self,
+        output: str,
+        plan: ResearchPlan,
+        direction_stats: Dict[str, Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """解析 LLM 评估输出"""
+
+        # 提取 JSON
+        json_str = self._extract_json(output)
+
+        if not json_str:
+            logger.warning(f"[{self.role}] 无法从评估输出中提取 JSON，使用默认值")
+            return self._create_default_evaluation(plan, direction_stats)
+
+        try:
+            data = json.loads(json_str)
+
+            # 更新研究计划
+            updated_plan = self._apply_direction_updates(plan, data.get("updated_directions", []))
+
+            # 添加新方向（如果有）
+            new_directions = data.get("new_directions", [])
+            if new_directions:
+                for nd in new_directions:
+                    updated_plan.directions.append(ResearchDirection.from_dict(nd))
+
+            return {
+                "research_plan": updated_plan.to_dict(),
+                "research_mode": data.get("research_mode", "breadth_first"),
+                "decision": data.get("decision", "continue"),
+                "reasoning": data.get("reasoning", ""),
+                "quality_assessment": data.get("quality_assessment", {}),
+                "gaps": data.get("gaps", []),
+                "next_priorities": data.get("next_priorities", []),
+            }
+
+        except json.JSONDecodeError as e:
+            logger.warning(f"[{self.role}] JSON 解析失败: {e}，使用默认值")
+            return self._create_default_evaluation(plan, direction_stats)
+
+    def _apply_direction_updates(
+        self,
+        plan: ResearchPlan,
+        updates: List[Dict[str, Any]]
+    ) -> ResearchPlan:
+        """应用方向更新到研究计划"""
+
+        update_map = {u["id"]: u for u in updates}
+
+        for direction in plan.directions:
+            if direction.id in update_map:
+                update = update_map[direction.id]
+
+                # 更新状态
+                if "status" in update:
+                    direction.status = DirectionStatus(update["status"])
+
+                # 更新优先级
+                if "priority" in update:
+                    direction.priority = update["priority"]
+
+        return plan
+
+    def _create_default_evaluation(
+        self,
+        plan: ResearchPlan,
+        direction_stats: Dict[str, Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """创建默认评估结果（当 LLM 解析失败时）"""
+
+        # 根据统计数据自动判断
+        all_complete = all(
+            s["completeness"] >= CONVERGENCE_COMPLETENESS_THRESHOLD
+            for s in direction_stats.values()
+        )
+
+        has_low_quality_only = any(
+            s["low_quality_only"]
+            for s in direction_stats.values()
+        )
+
+        # 更新方向状态
+        updated_directions = []
+        for d_id, s in direction_stats.items():
+            status = "completed" if s["completeness"] >= CONVERGENCE_COMPLETENESS_THRESHOLD else "in_progress"
+            updated_directions.append({
+                "id": d_id,
+                "status": status,
+                "priority": s["priority"],
+                "completeness": s["completeness"]
+            })
+
+        # 应用更新
+        updated_plan = self._apply_direction_updates(plan, updated_directions)
+
+        # 决策
+        if all_complete and not has_low_quality_only:
+            decision = "converged"
+            reasoning = "所有方向完成度达标，且有足够高质量证据"
+        else:
+            decision = "continue"
+            reasoning = "存在未完成方向或只有低质量证据的方向"
+
+        return {
+            "research_plan": updated_plan.to_dict(),
+            "research_mode": "depth_first" if has_low_quality_only else "breadth_first",
+            "decision": decision,
+            "reasoning": reasoning,
+            "quality_assessment": {
+                "high_quality_coverage": [
+                    s["topic"] for s in direction_stats.values() if s["has_high_quality"]
+                ],
+                "low_quality_only": [
+                    s["topic"] for s in direction_stats.values() if s["low_quality_only"]
+                ],
+                "conflicts": []
+            },
+            "gaps": [
+                s["topic"] for s in direction_stats.values()
+                if s["completeness"] < CONTINUE_COMPLETENESS_THRESHOLD
+            ],
+            "next_priorities": [
+                s["topic"] for s in direction_stats.values()
+                if s["low_quality_only"] or s["completeness"] < CONTINUE_COMPLETENESS_THRESHOLD
+            ][:3],
+        }
 
 
 if __name__ == "__main__":

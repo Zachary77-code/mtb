@@ -1,11 +1,29 @@
 """
 Convergence Judge Agent - 收敛判断 Agent
 
-评估研究循环是否达到收敛条件：
+!!! DEPRECATED !!!
+此模块已废弃。收敛判断功能已移至 PlanAgent.evaluate_and_update()。
+保留此文件仅用于回滚目的。
+
+原功能：
 - 检查证据图质量
 - 评估关键模块的证据覆盖
 - 识别需要继续研究的空白
+
+新架构：
+- PlanAgent 在每轮迭代后统一评估研究进度
+- 基于证据质量（等级权重）而非仅数量判断收敛
+- 动态更新研究计划和方向优先级
+
+参见: src/agents/plan_agent.py - evaluate_and_update()
 """
+import warnings
+
+warnings.warn(
+    "ConvergenceJudgeAgent 已废弃，收敛判断已移至 PlanAgent.evaluate_and_update()",
+    DeprecationWarning,
+    stacklevel=2
+)
 import json
 import re
 from typing import Dict, Any, Optional, List

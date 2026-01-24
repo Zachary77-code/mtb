@@ -16,7 +16,6 @@ from src.models.evidence_graph import load_evidence_graph
 from src.models.research_plan import (
     load_research_plan,
     ResearchMode,
-    DirectionStatus,
     determine_research_mode
 )
 from src.agents.base_agent import SUBGRAPH_MODEL
@@ -25,6 +24,7 @@ from src.agents.geneticist import GeneticistAgent
 from src.agents.recruiter import RecruiterAgent
 from src.agents.oncologist import OncologistAgent
 from src.agents.research_mixin import ResearchMixin
+from src.agents.plan_agent import PlanAgent
 from src.utils.logger import (
     mtb_logger as logger,
     log_separator,
@@ -37,7 +37,8 @@ from config.settings import (
     MIN_EVIDENCE_PER_DIRECTION,
     COVERAGE_REQUIRED_MODULES
 )
-from src.agents.convergence_judge import ConvergenceJudgeAgent
+# ConvergenceJudge 已废弃，收敛判断移入 PlanAgent
+# from src.agents.convergence_judge import ConvergenceJudgeAgent
 
 
 # ==================== 研究增强型 Agent ====================
@@ -325,93 +326,6 @@ def _append_convergence_steps(lines: list, details: Dict[str, Any]):
         lines.append("")
 
 
-def check_single_agent_convergence(state: MtbState, agent_name: str) -> tuple[bool, Dict[str, Any]]:
-    """
-    检查单个 Agent 是否收敛
-
-    收敛条件：
-    1. 该 Agent 所有分配的方向都有证据
-    2. 每个方向证据数 >= MIN_EVIDENCE_PER_DIRECTION
-    3. ConvergenceJudge 评估通过
-
-    Args:
-        state: MtbState 状态
-        agent_name: Agent 名称
-
-    Returns:
-        (是否收敛, 检查详情字典)
-    """
-    check_details = {
-        "agent_name": agent_name,
-        "step1_direction_evidence": {"passed": False, "insufficient": []},
-        "step2_module_coverage": {"passed": False, "uncovered": []},
-        "step3_judge": None
-    }
-
-    plan = load_research_plan(state.get("research_plan", {}))
-    if not plan:
-        logger.info(f"[{agent_name}_CONVERGENCE] 无研究计划，视为收敛")
-        return True, check_details
-
-    # Step 1: 检查方向证据充分性
-    directions = [d for d in plan.directions if d.target_agent == agent_name]
-    if not directions:
-        logger.info(f"[{agent_name}_CONVERGENCE] 无分配方向，视为收敛")
-        return True, check_details
-
-    insufficient = []
-    for direction in directions:
-        evidence_count = len(direction.evidence_ids)
-        if evidence_count < MIN_EVIDENCE_PER_DIRECTION:
-            insufficient.append(f"{direction.id}({evidence_count}/{MIN_EVIDENCE_PER_DIRECTION})")
-
-    check_details["step1_direction_evidence"] = {
-        "passed": len(insufficient) == 0,
-        "insufficient": insufficient
-    }
-
-    if insufficient:
-        logger.info(f"[{agent_name}_CONVERGENCE] Step 1 未通过: 方向证据不足 {insufficient}")
-        return False, check_details
-
-    logger.info(f"[{agent_name}_CONVERGENCE] Step 1 通过: 所有方向证据充分")
-
-    # Step 2: 检查模块覆盖
-    module_passed, uncovered = check_agent_module_coverage(state, [agent_name])
-    check_details["step2_module_coverage"] = {"passed": module_passed, "uncovered": uncovered}
-
-    if not module_passed:
-        logger.info(f"[{agent_name}_CONVERGENCE] Step 2 未通过: 未覆盖模块 {uncovered}")
-        return False, check_details
-
-    logger.info(f"[{agent_name}_CONVERGENCE] Step 2 通过: 所有分配模块已覆盖")
-
-    # Step 3: ConvergenceJudge 评估（单个 Agent）
-    try:
-        judge = ConvergenceJudgeAgent()
-        judge_result = judge.evaluate(state, phase="phase1", agent_name=agent_name)
-        check_details["step3_judge"] = judge_result
-
-        if judge_result["decision"] == "continue":
-            logger.info(f"[{agent_name}_CONVERGENCE] Step 3 未通过: Judge 判断需继续")
-            return False, check_details
-
-        logger.info(f"[{agent_name}_CONVERGENCE] Step 3 通过: Judge 判断收敛")
-
-    except Exception as e:
-        logger.warning(f"[{agent_name}_CONVERGENCE] Step 3 评估失败: {e}")
-        check_details["step3_judge"] = {
-            "decision": "converged",
-            "confidence": 0.0,
-            "reasoning": f"评估失败: {str(e)}，Step 1/2 通过，允许收敛",
-            "gaps": [],
-            "strengths": []
-        }
-
-    logger.info(f"[{agent_name}_CONVERGENCE] ✓ 收敛")
-    return True, check_details
-
-
 # ==================== Phase 1 节点 ====================
 
 def phase1_router(state: MtbState) -> List[Send]:
@@ -554,26 +468,11 @@ def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict
     if result.get('needs_deep_research'):
         logger.info(f"[{tag}]   需深入研究: {len(result.get('needs_deep_research', []))} 项")
 
-    # 构建临时 state 用于收敛检查
-    temp_state = dict(state)
-    temp_state["evidence_graph"] = result.get("evidence_graph", evidence_graph)
-    if result.get("research_plan"):
-        temp_state["research_plan"] = result.get("research_plan")
-
-    # 检查该 Agent 是否收敛
-    is_converged, convergence_details = check_single_agent_convergence(temp_state, agent_name)
-
-    if is_converged:
-        logger.info(f"[{tag}] ✓ Agent 收敛")
-    else:
-        logger.info(f"[{tag}] ○ Agent 未收敛，继续下轮迭代")
-
-    # 返回更新后的证据图、研究计划和收敛状态
+    # 返回更新后的证据图和研究计划
+    # 收敛判断已移至 PlanAgent (plan_agent_evaluate_phase1)
     return_dict = {
         "evidence_graph": result.get("evidence_graph", evidence_graph),
         f"{agent_name.lower()}_research_result": result,
-        converged_key: is_converged,  # 收敛状态
-        f"{agent_name.lower()}_convergence_details": convergence_details,  # 收敛检查详情
     }
     # 如果有更新的研究计划，也返回
     if result.get("research_plan"):
@@ -583,9 +482,9 @@ def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict
 
 def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
     """
-    Phase 1 聚合：合并并行 Agent 的结果，汇总收敛状态，记录迭代历史
+    Phase 1 聚合：合并并行 Agent 的结果，记录迭代历史
 
-    每个 Agent 独立判断收敛，当所有 Agent 都收敛时，Phase 1 整体收敛。
+    收敛判断已移至 plan_agent_evaluate_phase1 节点，由 PlanAgent 统一处理。
     """
     log_separator("PHASE1")
     logger.info("[PHASE1] 聚合并行结果:")
@@ -618,90 +517,119 @@ def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
     current_iteration = state.get("phase1_iteration", 0)
     new_iteration = current_iteration + 1
 
-    # ==================== 汇总各 Agent 收敛状态 ====================
-    pathologist_converged = state.get("pathologist_converged", False)
-    geneticist_converged = state.get("geneticist_converged", False)
-    recruiter_converged = state.get("recruiter_converged", False)
-
-    # 显示各 Agent 收敛状态
-    logger.info("[PHASE1] Agent 收敛状态:")
-    logger.info(f"[PHASE1]   Pathologist: {'✓ 已收敛' if pathologist_converged else '○ 未收敛'}")
-    logger.info(f"[PHASE1]   Geneticist: {'✓ 已收敛' if geneticist_converged else '○ 未收敛'}")
-    logger.info(f"[PHASE1]   Recruiter: {'✓ 已收敛' if recruiter_converged else '○ 未收敛'}")
-
-    # 检查是否所有 Agent 都收敛
-    all_converged = pathologist_converged and geneticist_converged and recruiter_converged
-
-    # 检查迭代上限
-    if new_iteration >= MAX_PHASE1_ITERATIONS and not all_converged:
-        logger.warning(f"[PHASE1] 达到迭代上限 ({MAX_PHASE1_ITERATIONS})，强制收敛")
-        all_converged = True
-        # 强制标记所有未收敛的 Agent 为收敛
-        pathologist_converged = True
-        geneticist_converged = True
-        recruiter_converged = True
-
-    # 确定 Phase 1 整体决策
-    phase1_decision = "converged" if all_converged else "continue"
-
-    # 收集各 Agent 的收敛检查详情
-    convergence_details = {
-        "Pathologist": state.get("pathologist_convergence_details", {}),
-        "Geneticist": state.get("geneticist_convergence_details", {}),
-        "Recruiter": state.get("recruiter_convergence_details", {}),
-    }
-
-    # 构建迭代历史记录
+    # 构建迭代历史记录（收敛检查由 PlanAgent 填充）
     iteration_record = {
         "phase": "PHASE1",
         "iteration": new_iteration,
         "timestamp": datetime.now().isoformat(),
         "agent_findings": agent_findings_detail,
         "total_new_findings": new_findings,
-        "agent_convergence_status": {
-            "Pathologist": pathologist_converged,
-            "Geneticist": geneticist_converged,
-            "Recruiter": recruiter_converged,
-        },
-        "convergence_check": convergence_details,
-        "final_decision": phase1_decision
+        # 收敛检查详情将由 plan_agent_evaluate_phase1 更新
+        "convergence_check": {},
+        "final_decision": "pending"  # 由 PlanAgent 决定
     }
 
     # 追加到迭代历史
     history = list(state.get("iteration_history", []))
     history.append(iteration_record)
 
-    logger.info(f"[PHASE1] 迭代 {new_iteration} 记录完成")
-    logger.info(f"[PHASE1] 整体决策: {phase1_decision}")
+    logger.info(f"[PHASE1] 迭代 {new_iteration} 聚合完成，等待 PlanAgent 评估...")
 
-    # 保存迭代报告
+    # 保存临时迭代报告（决策待定）
     _save_iteration_report(
         state=state,
         phase="PHASE1",
         iteration=new_iteration,
         agent_findings=agent_findings_detail,
-        convergence_details=convergence_details,
-        final_decision=phase1_decision
+        convergence_details={"note": "由 PlanAgent 评估"},
+        final_decision="pending"
     )
 
     return {
         "phase1_iteration": new_iteration,
         "phase1_new_findings": new_findings,
         "iteration_history": history,
-        "phase1_decision": phase1_decision,
-        "phase1_all_converged": all_converged,
-        # 确保收敛状态被更新（强制收敛时需要）
-        "pathologist_converged": pathologist_converged,
-        "geneticist_converged": geneticist_converged,
-        "recruiter_converged": recruiter_converged,
     }
+
+
+def plan_agent_evaluate_phase1(state: MtbState) -> Dict[str, Any]:
+    """
+    PlanAgent 评估 Phase 1 研究进度并更新计划
+
+    在 Phase 1 聚合后调用，由 PlanAgent 统一判断收敛。
+    """
+    logger.info("[PHASE1_PLAN_EVAL] PlanAgent 评估研究进度...")
+
+    iteration = state.get("phase1_iteration", 0)
+
+    # 检查迭代上限
+    if iteration >= MAX_PHASE1_ITERATIONS:
+        logger.warning(f"[PHASE1_PLAN_EVAL] 达到迭代上限 ({MAX_PHASE1_ITERATIONS})，强制收敛")
+        return {
+            "phase1_decision": "converged",
+            "phase1_all_converged": True,
+            "pathologist_converged": True,
+            "geneticist_converged": True,
+            "recruiter_converged": True,
+            "plan_agent_evaluation": {
+                "phase": "phase1",
+                "iteration": iteration,
+                "reasoning": "达到迭代上限，强制收敛",
+                "gaps": [],
+                "next_priorities": []
+            }
+        }
+
+    # 调用 PlanAgent 评估
+    try:
+        plan_agent = PlanAgent()
+        eval_result = plan_agent.evaluate_and_update(state, "phase1", iteration)
+
+        decision = eval_result.get("decision", "continue")
+        logger.info(f"[PHASE1_PLAN_EVAL] PlanAgent 决策: {decision}")
+        logger.info(f"[PHASE1_PLAN_EVAL] 理由: {eval_result.get('reasoning', '')[:100]}...")
+
+        # 根据决策更新 Agent 收敛状态
+        all_converged = (decision == "converged")
+
+        return {
+            "research_plan": eval_result.get("research_plan", state.get("research_plan", {})),
+            "research_mode": eval_result.get("research_mode", "breadth_first"),
+            "phase1_decision": decision,
+            "phase1_all_converged": all_converged,
+            "pathologist_converged": all_converged,
+            "geneticist_converged": all_converged,
+            "recruiter_converged": all_converged,
+            "plan_agent_evaluation": {
+                "phase": "phase1",
+                "iteration": iteration,
+                "reasoning": eval_result.get("reasoning", ""),
+                "quality_assessment": eval_result.get("quality_assessment", {}),
+                "gaps": eval_result.get("gaps", []),
+                "next_priorities": eval_result.get("next_priorities", [])
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"[PHASE1_PLAN_EVAL] PlanAgent 评估失败: {e}")
+        # 评估失败时继续迭代
+        return {
+            "phase1_decision": "continue",
+            "plan_agent_evaluation": {
+                "phase": "phase1",
+                "iteration": iteration,
+                "reasoning": f"评估失败: {str(e)}",
+                "gaps": [],
+                "next_priorities": []
+            }
+        }
 
 
 def phase1_convergence_check(state: MtbState) -> Literal["continue", "converged"]:
     """
-    Phase 1 收敛检查 - 从 state 中读取已计算的决策
+    Phase 1 收敛检查 - 从 state 中读取 PlanAgent 的决策
 
-    收敛检查逻辑已移至 phase1_aggregator 中执行，以便记录完整的检查详情。
+    收敛检查逻辑已移至 plan_agent_evaluate_phase1 中执行。
     此函数仅作为条件边，读取 phase1_decision 字段。
     """
     decision = state.get("phase1_decision", "continue")
@@ -793,21 +721,10 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
 
     logger.info(f"[PHASE2_ONCOLOGIST] 完成, 新证据: {new_findings}")
 
-    # 更新 evidence_graph 到 state 供收敛检查使用
+    # 更新 evidence_graph
     updated_evidence_graph = result.get("evidence_graph", state.get("evidence_graph", {}))
-    updated_research_plan = result.get("research_plan", state.get("research_plan", {}))
 
-    # 构建临时 state 用于收敛检查
-    temp_state = dict(state)
-    temp_state["evidence_graph"] = updated_evidence_graph
-    temp_state["research_plan"] = updated_research_plan
-    temp_state["phase2_iteration"] = new_iteration
-    temp_state["phase2_new_findings"] = new_findings
-
-    # ==================== 执行收敛检查并记录 ====================
-    convergence_result = _perform_phase2_convergence_check(temp_state, new_iteration, new_findings)
-
-    # 构建迭代历史记录
+    # 构建迭代历史记录（收敛检查由 PlanAgent 填充）
     iteration_record = {
         "phase": "PHASE2",
         "iteration": new_iteration,
@@ -819,19 +736,20 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
             }
         },
         "total_new_findings": new_findings,
-        "convergence_check": convergence_result["check_details"],
-        "final_decision": convergence_result["decision"]
+        # 收敛检查详情将由 plan_agent_evaluate_phase2 更新
+        "convergence_check": {},
+        "final_decision": "pending"  # 由 PlanAgent 决定
     }
 
     # 追加到迭代历史
     history = list(state.get("iteration_history", []))
     history.append(iteration_record)
 
-    logger.info(f"[PHASE2] 迭代 {new_iteration} 记录完成，决策: {convergence_result['decision']}")
+    logger.info(f"[PHASE2] 迭代 {new_iteration} 执行完成，等待 PlanAgent 评估...")
 
-    # 保存迭代报告
+    # 保存临时迭代报告（决策待定）
     _save_iteration_report(
-        state=temp_state,  # 使用更新后的临时 state
+        state=state,
         phase="PHASE2",
         iteration=new_iteration,
         agent_findings={
@@ -840,8 +758,8 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
                 "evidence_ids": new_evidence_ids
             }
         },
-        convergence_details=convergence_result["check_details"],
-        final_decision=convergence_result["decision"]
+        convergence_details={"note": "由 PlanAgent 评估"},
+        final_decision="pending"
     )
 
     return_dict = {
@@ -850,7 +768,6 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
         "phase2_iteration": new_iteration,
         "phase2_new_findings": new_findings,
         "iteration_history": history,
-        "phase2_decision": convergence_result["decision"],  # 供条件边使用
     }
     # 如果有更新的研究计划，也返回
     if result.get("research_plan"):
@@ -858,152 +775,73 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
     return return_dict
 
 
-def _perform_phase2_convergence_check(state: MtbState, iteration: int, new_findings: int) -> Dict[str, Any]:
+def plan_agent_evaluate_phase2(state: MtbState) -> Dict[str, Any]:
     """
-    执行 Phase 2 收敛检查，返回完整检查结果
+    PlanAgent 评估 Phase 2 研究进度并更新计划
 
-    Returns:
-        {
-            "decision": "continue" | "converged",
-            "check_details": {
-                "step1_metrics": {...},
-                "step2_module": {...},
-                "step3_judge": {...}
+    在 Phase 2 Oncologist 执行后调用，由 PlanAgent 统一判断收敛。
+    """
+    logger.info("[PHASE2_PLAN_EVAL] PlanAgent 评估研究进度...")
+
+    iteration = state.get("phase2_iteration", 0)
+
+    # 检查迭代上限
+    if iteration >= MAX_PHASE2_ITERATIONS:
+        logger.warning(f"[PHASE2_PLAN_EVAL] 达到迭代上限 ({MAX_PHASE2_ITERATIONS})，强制收敛")
+        return {
+            "phase2_decision": "converged",
+            "plan_agent_evaluation": {
+                "phase": "phase2",
+                "iteration": iteration,
+                "reasoning": "达到迭代上限，强制收敛",
+                "gaps": [],
+                "next_priorities": []
             }
         }
-    """
-    # 收集检查信息
-    plan = load_research_plan(state.get("research_plan", {}))
-    graph = load_evidence_graph(state.get("evidence_graph", {}))
 
-    # 计算待完成方向数
-    pending_count = 0
-    onc_directions = []
-    if plan:
-        onc_directions = [d for d in plan.directions if d.target_agent == "Oncologist"]
-        pending = [d for d in onc_directions if d.status == DirectionStatus.PENDING]
-        pending_count = len(pending)
-
-    evidence_count = len(graph) if graph else 0
-
-    # 计算治疗方案证据数
-    drug_count = 0
-    guideline_count = 0
-    if graph:
-        from src.models.evidence_graph import EvidenceType
-        drug_nodes = graph.get_nodes_by_type(EvidenceType.DRUG)
-        guideline_nodes = graph.get_nodes_by_type(EvidenceType.GUIDELINE)
-        drug_count = len(drug_nodes)
-        guideline_count = len(guideline_nodes)
-
-    check_details = {
-        "step1_metrics": {"passed": False, "reason": "", "drug_count": drug_count, "guideline_count": guideline_count},
-        "step2_module": {"passed": False, "uncovered": []},
-        "step3_judge": None
-    }
-
-    # 显示检查状态
-    logger.info("[PHASE2_CONVERGENCE] 检查收敛条件...")
-    logger.info(f"[PHASE2_CONVERGENCE]   迭代: {iteration}/{MAX_PHASE2_ITERATIONS}")
-    logger.info(f"[PHASE2_CONVERGENCE]   待完成方向: {pending_count}")
-    logger.info(f"[PHASE2_CONVERGENCE]   证据节点: {evidence_count}")
-    logger.info(f"[PHASE2_CONVERGENCE]   本轮新发现: {new_findings}")
-    logger.info(f"[PHASE2_CONVERGENCE]   治疗证据: 药物={drug_count}, 指南={guideline_count}")
-
-    # ==================== 迭代上限检查（优先） ====================
-    if iteration >= MAX_PHASE2_ITERATIONS:
-        module_passed, uncovered = check_module_coverage(state)
-        if not module_passed:
-            logger.warning(f"[PHASE2_CONVERGENCE] 达到迭代上限，以下模块可能证据不足: {uncovered}")
-
-        check_details["step1_metrics"] = {
-            "passed": True,
-            "reason": "达到迭代上限",
-            "drug_count": drug_count,
-            "guideline_count": guideline_count
-        }
-        check_details["step2_module"] = {"passed": module_passed, "uncovered": uncovered}
-
-        logger.info("[PHASE2_CONVERGENCE] → 收敛 (原因: 达到迭代上限)")
-        return {"decision": "converged", "check_details": check_details}
-
-    # ==================== Step 1: Metric-based Fast Check ====================
-    logger.info("[PHASE2_CONVERGENCE] Step 1: Metric-based 检查...")
-
-    metrics_passed = False
-    metrics_reason = ""
-
-    # 条件 1: 研究方向完成
-    if plan and pending_count == 0 and len(onc_directions) > 0:
-        metrics_passed = True
-        metrics_reason = "所有 Oncologist 方向完成"
-
-    # 条件 2: 已有治疗方案证据
-    elif (drug_count >= 1 or guideline_count >= 1) and iteration >= 1:
-        metrics_passed = True
-        metrics_reason = f"已有治疗方案 (药物={drug_count}, 指南={guideline_count})"
-
-    check_details["step1_metrics"] = {
-        "passed": metrics_passed,
-        "reason": metrics_reason if metrics_passed else "尚无足够治疗方案证据",
-        "drug_count": drug_count,
-        "guideline_count": guideline_count
-    }
-
-    if not metrics_passed:
-        logger.info("[PHASE2_CONVERGENCE]   Step 1 未通过，继续迭代")
-        return {"decision": "continue", "check_details": check_details}
-
-    logger.info(f"[PHASE2_CONVERGENCE]   Step 1 通过: {metrics_reason}")
-
-    # ==================== Step 2: Agent Module Coverage Check ====================
-    logger.info("[PHASE2_CONVERGENCE] Step 2: Agent Module Coverage 检查...")
-
-    module_passed, uncovered = check_agent_module_coverage(state, ["Oncologist"])
-    check_details["step2_module"] = {"passed": module_passed, "uncovered": uncovered}
-
-    if not module_passed:
-        logger.info(f"[PHASE2_CONVERGENCE]   Step 2 未通过: Oncologist未覆盖分配模块 {uncovered}")
-        return {"decision": "continue", "check_details": check_details}
-
-    logger.info("[PHASE2_CONVERGENCE]   Step 2 通过: Oncologist所有分配模块已覆盖")
-
-    # ==================== Step 3: ConvergenceJudge Agent ====================
-    logger.info("[PHASE2_CONVERGENCE] Step 3: ConvergenceJudge 评估...")
-
+    # 调用 PlanAgent 评估
     try:
-        judge = ConvergenceJudgeAgent()
-        # 传递 phase="phase2" 以使用 Phase 2 特定的评估标准
-        judge_result = judge.evaluate(state, phase="phase2")
-        check_details["step3_judge"] = judge_result
+        plan_agent = PlanAgent()
+        eval_result = plan_agent.evaluate_and_update(state, "phase2", iteration)
 
-        if judge_result["decision"] == "continue":
-            logger.info("[PHASE2_CONVERGENCE]   Step 3 判断: 需要继续研究")
-            return {"decision": "continue", "check_details": check_details}
+        decision = eval_result.get("decision", "continue")
+        logger.info(f"[PHASE2_PLAN_EVAL] PlanAgent 决策: {decision}")
+        logger.info(f"[PHASE2_PLAN_EVAL] 理由: {eval_result.get('reasoning', '')[:100]}...")
 
-        logger.info("[PHASE2_CONVERGENCE]   Step 3 判断: 研究充分")
+        return {
+            "research_plan": eval_result.get("research_plan", state.get("research_plan", {})),
+            "research_mode": eval_result.get("research_mode", "breadth_first"),
+            "phase2_decision": decision,
+            "plan_agent_evaluation": {
+                "phase": "phase2",
+                "iteration": iteration,
+                "reasoning": eval_result.get("reasoning", ""),
+                "quality_assessment": eval_result.get("quality_assessment", {}),
+                "gaps": eval_result.get("gaps", []),
+                "next_priorities": eval_result.get("next_priorities", [])
+            }
+        }
 
     except Exception as e:
-        logger.error(f"[PHASE2_CONVERGENCE]   Step 3 评估失败: {e}")
-        check_details["step3_judge"] = {
-            "decision": "converged",
-            "confidence": 0.0,
-            "reasoning": f"评估失败: {str(e)}，但 Step 1/2 通过，允许收敛",
-            "gaps": [],
-            "strengths": []
+        logger.error(f"[PHASE2_PLAN_EVAL] PlanAgent 评估失败: {e}")
+        # 评估失败时继续迭代
+        return {
+            "phase2_decision": "continue",
+            "plan_agent_evaluation": {
+                "phase": "phase2",
+                "iteration": iteration,
+                "reasoning": f"评估失败: {str(e)}",
+                "gaps": [],
+                "next_priorities": []
+            }
         }
-        logger.info("[PHASE2_CONVERGENCE]   Step 3 失败，但 Step 1/2 通过，允许收敛")
-
-    # ==================== 三步检查全部通过 ====================
-    logger.info(f"[PHASE2_CONVERGENCE] → 收敛 (三步检查通过: {metrics_reason})")
-    return {"decision": "converged", "check_details": check_details}
 
 
 def phase2_convergence_check(state: MtbState) -> Literal["continue", "converged"]:
     """
-    Phase 2 收敛检查 - 从 state 中读取已计算的决策
+    Phase 2 收敛检查 - 从 state 中读取 PlanAgent 的决策
 
-    收敛检查逻辑已移至 phase2_oncologist_node 中执行，以便记录完整的检查详情。
+    收敛检查逻辑已移至 plan_agent_evaluate_phase2 中执行。
     此函数仅作为条件边，读取 phase2_decision 字段。
     """
     decision = state.get("phase2_decision", "continue")
@@ -1282,22 +1120,25 @@ def create_research_subgraph() -> StateGraph:
     """
     创建研究子图
 
-    结构：
+    结构（新架构，收敛判断由 PlanAgent 统一处理）：
     [entry]
         ↓
     ┌──────────────────────────────────────────┐
     │ Phase 1 Loop                              │
     │ [router] → [pathologist]                  │
     │          → [geneticist]  → [aggregator]   │
-    │          → [recruiter]                    │
-    │              ↓                            │
-    │       [convergence_check]                 │
-    │           ↓ continue  ↓ converged         │
-    └───────────┘           │                   │
-                            ↓
+    │          → [recruiter]        ↓           │
+    │                        [plan_agent_eval]  │
+    │                              ↓            │
+    │                    [convergence_check]    │
+    │           ↓ continue         ↓ converged  │
+    └───────────┘                  │            │
+                                   ↓
     ┌──────────────────────────────────────────┐
     │ Phase 2 Loop                              │
     │       [oncologist]                        │
+    │           ↓                               │
+    │    [plan_agent_eval]                      │
     │           ↓                               │
     │   [convergence_check]                     │
     │       ↓ continue  ↓ converged             │
@@ -1315,9 +1156,11 @@ def create_research_subgraph() -> StateGraph:
     workflow.add_node("phase1_geneticist", phase1_geneticist_node)
     workflow.add_node("phase1_recruiter", phase1_recruiter_node)
     workflow.add_node("phase1_aggregator", phase1_aggregator)
+    workflow.add_node("phase1_plan_eval", plan_agent_evaluate_phase1)  # PlanAgent 评估
 
     # ==================== Phase 2 节点 ====================
     workflow.add_node("phase2_oncologist", phase2_oncologist_node)
+    workflow.add_node("phase2_plan_eval", plan_agent_evaluate_phase2)  # PlanAgent 评估
 
     # ==================== 报告生成节点 ====================
     workflow.add_node("generate_reports", generate_agent_reports)
@@ -1336,9 +1179,12 @@ def create_research_subgraph() -> StateGraph:
     workflow.add_edge("phase1_geneticist", "phase1_aggregator")
     workflow.add_edge("phase1_recruiter", "phase1_aggregator")
 
-    # Phase 1 聚合器 → 收敛检查
+    # Phase 1 聚合器 → PlanAgent 评估
+    workflow.add_edge("phase1_aggregator", "phase1_plan_eval")
+
+    # Phase 1 PlanAgent 评估 → 收敛检查
     workflow.add_conditional_edges(
-        "phase1_aggregator",
+        "phase1_plan_eval",
         phase1_convergence_check,
         {
             "continue": "phase1_router",  # 继续循环
@@ -1353,9 +1199,12 @@ def create_research_subgraph() -> StateGraph:
         ["phase1_pathologist", "phase1_geneticist", "phase1_recruiter"]
     )
 
-    # Phase 2 收敛检查
+    # Phase 2 Oncologist → PlanAgent 评估
+    workflow.add_edge("phase2_oncologist", "phase2_plan_eval")
+
+    # Phase 2 PlanAgent 评估 → 收敛检查
     workflow.add_conditional_edges(
-        "phase2_oncologist",
+        "phase2_plan_eval",
         phase2_convergence_check,
         {
             "continue": "phase2_oncologist",  # 继续循环
@@ -1366,7 +1215,7 @@ def create_research_subgraph() -> StateGraph:
     # 报告生成 → 结束
     workflow.add_edge("generate_reports", END)
 
-    logger.info("[RESEARCH_SUBGRAPH] 子图构建完成")
+    logger.info("[RESEARCH_SUBGRAPH] 子图构建完成 (PlanAgent 统一收敛判断)")
     return workflow.compile()
 
 

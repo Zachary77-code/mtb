@@ -173,7 +173,7 @@ class ResearchMixin:
 - 现有证据: {existing_evidence.get('total_nodes', 0)} 条
 
 ### 病例背景
-{case_context[:2000]}
+{case_context}
 
 ### 分配给你的研究方向
 {directions_text}
@@ -271,7 +271,7 @@ class ResearchMixin:
 - 现有证据: {existing_evidence.get('total_nodes', 0)} 条
 
 ### 病例背景
-{case_context[:1500]}
+{case_context}
 
 ### 需要深入研究的项目
 {depth_text if depth_text else "无特定深入项，请基于现有证据进行深化研究"}
