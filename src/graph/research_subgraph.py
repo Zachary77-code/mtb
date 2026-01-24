@@ -186,6 +186,27 @@ def _grade_description(grade) -> str:
     return descs.get(grade.value if hasattr(grade, 'value') else grade, "")
 
 
+# ==================== Agent 报告保存 ====================
+
+def _save_agent_report(state: MtbState, filename: str, content: str):
+    """
+    保存 Agent 报告到 run_folder
+
+    Args:
+        state: MtbState 包含 run_folder
+        filename: 文件名（如 "1_pathologist_report.md"）
+        content: 报告内容
+    """
+    from pathlib import Path
+    run_folder = state.get("run_folder")
+    if not run_folder:
+        logger.warning(f"[SAVE_REPORT] run_folder 未设置，无法保存 {filename}")
+        return
+    filepath = Path(run_folder) / filename
+    filepath.write_text(content, encoding="utf-8")
+    logger.info(f"[SAVE_REPORT] 已保存: {filepath}")
+
+
 # ==================== 迭代报告输出 ====================
 
 def _save_iteration_report(
@@ -745,13 +766,14 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
     reports = {}
 
     # 为每个 Phase 1 Agent 生成报告
+    # (agent_name, agent_class, state_key, filename)
     agent_configs = [
-        ("Pathologist", ResearchPathologist, "pathologist_report"),
-        ("Geneticist", ResearchGeneticist, "geneticist_report"),
-        ("Recruiter", ResearchRecruiter, "recruiter_report"),
+        ("Pathologist", ResearchPathologist, "pathologist_report", "1_pathologist_report.md"),
+        ("Geneticist", ResearchGeneticist, "geneticist_report", "2_geneticist_report.md"),
+        ("Recruiter", ResearchRecruiter, "recruiter_report", "3_recruiter_report.md"),
     ]
 
-    for agent_name, agent_class, report_key in agent_configs:
+    for agent_name, agent_class, report_key, filename in agent_configs:
         logger.info(f"[PHASE1_REPORTS] 生成 {agent_name} 报告...")
 
         # 提取该 Agent 收集的证据（实体）
@@ -792,6 +814,8 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
                 report = response["output"]
                 reports[report_key] = report
                 logger.info(f"[PHASE1_REPORTS]   {agent_name} 报告生成成功: {len(report)} 字符")
+                # 保存到文件
+                _save_agent_report(state, filename, report)
             else:
                 reports[report_key] = f"## {agent_name} 报告\n\n报告生成失败。"
                 logger.warning(f"[PHASE1_REPORTS]   {agent_name} 报告生成失败")
@@ -932,6 +956,8 @@ def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
         if response and response.get("output"):
             report = response["output"]
             logger.info(f"[PHASE2_REPORTS] Oncologist 报告生成成功: {len(report)} 字符")
+            # 保存到文件
+            _save_agent_report(state, "4_oncologist_report.md", report)
             return {"oncologist_plan": report}
         else:
             logger.warning("[PHASE2_REPORTS] Oncologist 报告生成失败")
