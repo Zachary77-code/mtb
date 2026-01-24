@@ -168,6 +168,22 @@ def check_agent_module_coverage(state: MtbState, agent_names: list[str]) -> tupl
     return True, []
 
 
+# ==================== 证据等级辅助函数 ====================
+
+def _grade_description(grade) -> str:
+    """证据等级描述"""
+    if not grade:
+        return "未知"
+    descs = {
+        "A": "Validated",
+        "B": "Clinical",
+        "C": "Case Study",
+        "D": "Preclinical",
+        "E": "Inferential"
+    }
+    return descs.get(grade.value if hasattr(grade, 'value') else grade, "")
+
+
 # ==================== 迭代报告输出 ====================
 
 def _save_iteration_report(
@@ -324,6 +340,217 @@ def _append_convergence_steps(lines: list, details: Dict[str, Any]):
         lines.append("#### Step 3: ConvergenceJudge Agent")
         lines.append("- 未触发（前置检查未通过或达到迭代上限）")
         lines.append("")
+
+
+def _save_detailed_iteration_report(
+    state: MtbState,
+    phase: str,
+    iteration: int,
+    eval_result: Dict[str, Any],
+    agent_names: List[str]
+):
+    """
+    保存 PlanAgent 评估后的详细迭代报告
+
+    报告包含：
+    1. PlanAgent 决策和理由
+    2. 各研究方向的完成度和证据质量
+    3. 本轮新增证据的完整明细（不截断）
+    4. Evidence Graph 完整统计
+
+    Args:
+        state: MtbState 状态
+        phase: 阶段名称 "PHASE1" 或 "PHASE2"
+        iteration: 迭代轮次
+        eval_result: PlanAgent 评估结果
+        agent_names: 参与的 Agent 列表
+    """
+    import os
+
+    run_folder = state.get("run_folder", "")
+    if not run_folder:
+        logger.warning("[DETAILED_REPORT] run_folder 未设置，跳过保存")
+        return
+
+    evidence_graph = state.get("evidence_graph", {})
+    graph = load_evidence_graph(evidence_graph)
+
+    lines = [
+        f"# {phase} 迭代 {iteration} 详细报告",
+        "",
+        f"**时间**: {datetime.now().isoformat()}",
+        f"**PlanAgent 决策**: {eval_result.get('decision', 'unknown')}",
+        f"**下一轮模式**: {eval_result.get('research_mode', 'breadth_first')}",
+        "",
+    ]
+
+    # === 1. PlanAgent 评估结果 ===
+    lines.append("## 1. PlanAgent 评估结果")
+    lines.append("")
+    lines.append("### 决策理由")
+    lines.append(eval_result.get("reasoning", "无"))
+    lines.append("")
+
+    qa = eval_result.get("quality_assessment", {})
+    lines.append("### 质量评估")
+    high_quality = qa.get('high_quality_coverage', [])
+    low_quality = qa.get('low_quality_only', [])
+    conflicts = qa.get('conflicts', [])
+    lines.append(f"- **有高质量证据的模块**: {', '.join(high_quality) if high_quality else '无'}")
+    lines.append(f"- **只有低质量证据的模块**: {', '.join(low_quality) if low_quality else '无'}")
+    lines.append(f"- **证据冲突**: {', '.join(conflicts) if conflicts else '无'}")
+    lines.append("")
+
+    gaps = eval_result.get("gaps", [])
+    lines.append("### 待填补空白")
+    if gaps:
+        for gap in gaps:
+            lines.append(f"- {gap}")
+    else:
+        lines.append("- 无")
+    lines.append("")
+
+    priorities = eval_result.get("next_priorities", [])
+    lines.append("### 下一轮优先事项")
+    if priorities:
+        for i, p in enumerate(priorities, 1):
+            lines.append(f"{i}. {p}")
+    else:
+        lines.append("- 无")
+    lines.append("")
+
+    # === 2. 本轮新增证据明细 ===
+    lines.append("## 2. 本轮新增证据明细")
+    lines.append("")
+
+    for agent_name in agent_names:
+        result_key = f"{agent_name.lower()}_research_result"
+        agent_result = state.get(result_key, {})
+        new_evidence_ids = agent_result.get("new_evidence_ids", [])
+
+        lines.append(f"### {agent_name}: {len(new_evidence_ids)} 条")
+        lines.append("")
+
+        if not new_evidence_ids:
+            lines.append("本轮无新增证据")
+            lines.append("")
+            continue
+
+        for eid in new_evidence_ids:
+            node = graph.get_node(eid) if graph else None
+            if not node:
+                lines.append(f"#### 证据 {eid}")
+                lines.append("- *节点未找到*")
+                lines.append("")
+                continue
+
+            lines.append(f"#### 证据 {node.id}")
+            lines.append(f"- **类型**: {node.evidence_type.value if node.evidence_type else 'N/A'}")
+            grade_val = node.grade.value if node.grade else 'N/A'
+            grade_desc = _grade_description(node.grade)
+            lines.append(f"- **等级**: {grade_val} ({grade_desc})")
+            if node.civic_evidence_type:
+                lines.append(f"- **CIViC类型**: {node.civic_evidence_type.value}")
+            lines.append(f"- **来源Agent**: {node.source_agent}")
+            lines.append(f"- **来源工具**: {node.source_tool or 'N/A'}")
+            if node.provenance:
+                lines.append(f"- **来源文献**: {node.provenance}")
+            if node.observation:
+                lines.append(f"- **Observation**: {node.observation}")
+
+            # Context
+            if node.context and not node.context.is_empty():
+                lines.append("- **Context**:")
+                ctx = node.context
+                if ctx.cell_type:
+                    lines.append(f"  - 癌种: {ctx.cell_type}")
+                if ctx.disease_stage:
+                    lines.append(f"  - 分期: {ctx.disease_stage}")
+                if ctx.tissue:
+                    lines.append(f"  - 组织: {ctx.tissue}")
+                if ctx.assay:
+                    lines.append(f"  - 方法: {ctx.assay}")
+                if ctx.sample_size:
+                    lines.append(f"  - 样本量: {ctx.sample_size}")
+                if ctx.treatment_line:
+                    lines.append(f"  - 治疗线: {ctx.treatment_line}")
+                if ctx.biomarker_status:
+                    lines.append(f"  - 标志物状态: {ctx.biomarker_status}")
+                if ctx.species and ctx.species != "human":
+                    lines.append(f"  - 物种: {ctx.species}")
+
+            # 完整内容（不截断）
+            if node.content:
+                content_text = node.content.get("text", "") if isinstance(node.content, dict) else str(node.content)
+                if content_text:
+                    lines.append("- **完整内容**:")
+                    # 多行内容缩进处理
+                    for line in content_text.split('\n'):
+                        lines.append(f"  {line}")
+
+            # 量化结果
+            if node.numeric_result:
+                lines.append("- **量化结果**:")
+                for k, v in node.numeric_result.items():
+                    lines.append(f"  - {k}: {v}")
+
+            # 研究元信息
+            lines.append(f"- **收集轮次**: {node.iteration}")
+            lines.append(f"- **收集模式**: {node.research_mode}")
+            if node.needs_deep_research:
+                lines.append(f"- **需深入研究**: 是 - {node.depth_research_reason or 'N/A'}")
+
+            lines.append("")
+
+    # === 3. Evidence Graph 完整统计 ===
+    lines.append("## 3. Evidence Graph 完整统计")
+    lines.append("")
+    if graph:
+        summary = graph.summary()
+        lines.append("### 总体统计")
+        lines.append(f"- **总节点数**: {summary.get('total_nodes', 0)}")
+        lines.append(f"- **总边数**: {summary.get('total_edges', 0)}")
+        lines.append("")
+
+        by_type = summary.get("by_type", {})
+        if by_type:
+            lines.append("### 按类型分布")
+            lines.append("| 类型 | 数量 |")
+            lines.append("|------|------|")
+            for etype, count in by_type.items():
+                lines.append(f"| {etype} | {count} |")
+            lines.append("")
+
+        by_agent = summary.get("by_agent", {})
+        if by_agent:
+            lines.append("### 按 Agent 分布")
+            lines.append("| Agent | 数量 |")
+            lines.append("|-------|------|")
+            for agent, count in by_agent.items():
+                lines.append(f"| {agent} | {count} |")
+            lines.append("")
+
+        by_grade = summary.get("by_grade", {})
+        if by_grade:
+            lines.append("### 按证据等级分布")
+            lines.append("| 等级 | 数量 |")
+            lines.append("|------|------|")
+            for grade, count in by_grade.items():
+                lines.append(f"| {grade} | {count} |")
+            lines.append("")
+    else:
+        lines.append("- 证据图为空")
+        lines.append("")
+
+    # 保存文件
+    filename = f"{phase.lower()}_iter{iteration}_detailed_report.md"
+    filepath = os.path.join(run_folder, filename)
+    try:
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+        logger.info(f"[DETAILED_REPORT] 已保存: {filename}")
+    except Exception as e:
+        logger.error(f"[DETAILED_REPORT] 保存失败: {e}")
 
 
 # ==================== Phase 1 节点 ====================
@@ -535,15 +762,7 @@ def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
 
     logger.info(f"[PHASE1] 迭代 {new_iteration} 聚合完成，等待 PlanAgent 评估...")
 
-    # 保存临时迭代报告（决策待定）
-    _save_iteration_report(
-        state=state,
-        phase="PHASE1",
-        iteration=new_iteration,
-        agent_findings=agent_findings_detail,
-        convergence_details={"note": "由 PlanAgent 评估"},
-        final_decision="pending"
-    )
+    # 详细迭代报告由 plan_agent_evaluate_phase1() 保存
 
     return {
         "phase1_iteration": new_iteration,
@@ -565,6 +784,22 @@ def plan_agent_evaluate_phase1(state: MtbState) -> Dict[str, Any]:
     # 检查迭代上限
     if iteration >= MAX_PHASE1_ITERATIONS:
         logger.warning(f"[PHASE1_PLAN_EVAL] 达到迭代上限 ({MAX_PHASE1_ITERATIONS})，强制收敛")
+        forced_eval_result = {
+            "decision": "converged",
+            "research_mode": "breadth_first",
+            "reasoning": "达到迭代上限，强制收敛",
+            "quality_assessment": {},
+            "gaps": [],
+            "next_priorities": []
+        }
+        # 保存详细迭代报告
+        _save_detailed_iteration_report(
+            state=state,
+            phase="PHASE1",
+            iteration=iteration,
+            eval_result=forced_eval_result,
+            agent_names=["Pathologist", "Geneticist", "Recruiter"]
+        )
         return {
             "phase1_decision": "converged",
             "phase1_all_converged": True,
@@ -588,6 +823,15 @@ def plan_agent_evaluate_phase1(state: MtbState) -> Dict[str, Any]:
         decision = eval_result.get("decision", "continue")
         logger.info(f"[PHASE1_PLAN_EVAL] PlanAgent 决策: {decision}")
         logger.info(f"[PHASE1_PLAN_EVAL] 理由: {eval_result.get('reasoning', '')[:100]}...")
+
+        # 保存详细迭代报告
+        _save_detailed_iteration_report(
+            state=state,
+            phase="PHASE1",
+            iteration=iteration,
+            eval_result=eval_result,
+            agent_names=["Pathologist", "Geneticist", "Recruiter"]
+        )
 
         # 根据决策更新 Agent 收敛状态
         all_converged = (decision == "converged")
@@ -613,6 +857,22 @@ def plan_agent_evaluate_phase1(state: MtbState) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"[PHASE1_PLAN_EVAL] PlanAgent 评估失败: {e}")
         # 评估失败时继续迭代
+        error_eval_result = {
+            "decision": "continue",
+            "research_mode": "breadth_first",
+            "reasoning": f"评估失败: {str(e)}",
+            "quality_assessment": {},
+            "gaps": [],
+            "next_priorities": []
+        }
+        # 仍保存详细报告（记录失败情况）
+        _save_detailed_iteration_report(
+            state=state,
+            phase="PHASE1",
+            iteration=iteration,
+            eval_result=error_eval_result,
+            agent_names=["Pathologist", "Geneticist", "Recruiter"]
+        )
         return {
             "phase1_decision": "continue",
             "plan_agent_evaluation": {
@@ -747,20 +1007,7 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
 
     logger.info(f"[PHASE2] 迭代 {new_iteration} 执行完成，等待 PlanAgent 评估...")
 
-    # 保存临时迭代报告（决策待定）
-    _save_iteration_report(
-        state=state,
-        phase="PHASE2",
-        iteration=new_iteration,
-        agent_findings={
-            "Oncologist": {
-                "count": new_findings,
-                "evidence_ids": new_evidence_ids
-            }
-        },
-        convergence_details={"note": "由 PlanAgent 评估"},
-        final_decision="pending"
-    )
+    # 详细迭代报告由 plan_agent_evaluate_phase2() 保存
 
     return_dict = {
         "evidence_graph": updated_evidence_graph,
@@ -788,6 +1035,22 @@ def plan_agent_evaluate_phase2(state: MtbState) -> Dict[str, Any]:
     # 检查迭代上限
     if iteration >= MAX_PHASE2_ITERATIONS:
         logger.warning(f"[PHASE2_PLAN_EVAL] 达到迭代上限 ({MAX_PHASE2_ITERATIONS})，强制收敛")
+        forced_eval_result = {
+            "decision": "converged",
+            "research_mode": "breadth_first",
+            "reasoning": "达到迭代上限，强制收敛",
+            "quality_assessment": {},
+            "gaps": [],
+            "next_priorities": []
+        }
+        # 保存详细迭代报告
+        _save_detailed_iteration_report(
+            state=state,
+            phase="PHASE2",
+            iteration=iteration,
+            eval_result=forced_eval_result,
+            agent_names=["Oncologist"]
+        )
         return {
             "phase2_decision": "converged",
             "plan_agent_evaluation": {
@@ -808,6 +1071,15 @@ def plan_agent_evaluate_phase2(state: MtbState) -> Dict[str, Any]:
         logger.info(f"[PHASE2_PLAN_EVAL] PlanAgent 决策: {decision}")
         logger.info(f"[PHASE2_PLAN_EVAL] 理由: {eval_result.get('reasoning', '')[:100]}...")
 
+        # 保存详细迭代报告
+        _save_detailed_iteration_report(
+            state=state,
+            phase="PHASE2",
+            iteration=iteration,
+            eval_result=eval_result,
+            agent_names=["Oncologist"]
+        )
+
         return {
             "research_plan": eval_result.get("research_plan", state.get("research_plan", {})),
             "research_mode": eval_result.get("research_mode", "breadth_first"),
@@ -825,6 +1097,22 @@ def plan_agent_evaluate_phase2(state: MtbState) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"[PHASE2_PLAN_EVAL] PlanAgent 评估失败: {e}")
         # 评估失败时继续迭代
+        error_eval_result = {
+            "decision": "continue",
+            "research_mode": "breadth_first",
+            "reasoning": f"评估失败: {str(e)}",
+            "quality_assessment": {},
+            "gaps": [],
+            "next_priorities": []
+        }
+        # 仍保存详细报告（记录失败情况）
+        _save_detailed_iteration_report(
+            state=state,
+            phase="PHASE2",
+            iteration=iteration,
+            eval_result=error_eval_result,
+            agent_names=["Oncologist"]
+        )
         return {
             "phase2_decision": "continue",
             "plan_agent_evaluation": {
