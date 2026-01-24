@@ -253,10 +253,7 @@ class CIViCClient:
             elif etype == "PROGNOSTIC":
                 summary["prognostic"].append(evidence_entry)
 
-        # 限制数量
-        summary["therapeutic"] = summary["therapeutic"][:5]
-        summary["diagnostic"] = summary["diagnostic"][:3]
-        summary["prognostic"] = summary["prognostic"][:3]
+        # API 已限制 first:20，不再额外截断
 
         return summary
 
@@ -297,7 +294,7 @@ class CIViCClient:
             "has_therapeutic_evidence": True,
             "total_evidence_count": evidence.get("total_count", 0),
             "evidence_by_level": evidence.get("by_level", {}),
-            "top_therapeutic_evidence": therapeutic[:5],
+            "top_therapeutic_evidence": therapeutic,  # API 已限制 first:20
             "civic_url": variant_info.get("civic_url")
         }
 

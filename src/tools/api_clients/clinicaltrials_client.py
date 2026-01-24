@@ -25,7 +25,7 @@ class ClinicalTrialsClient:
         intervention: str = None,
         location: str = "China",
         status: str = "RECRUITING",
-        max_results: int = 10
+        max_results: int = 20
     ) -> List[Dict]:
         """
         搜索临床试验

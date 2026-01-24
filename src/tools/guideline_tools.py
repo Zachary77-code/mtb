@@ -282,14 +282,14 @@ class RxNormTool(BaseTool):
 
             output.append(f"**RxCUI**: {rxcui}")
             if drug_class:
-                output.append(f"**药物分类**: {', '.join(drug_class[:5])}")
+                output.append(f"**药物分类**: {', '.join(drug_class[:50])}")
 
         output.append("")
 
         # 已知相互作用 (RxNorm)
         if interactions:
             output.append("### 主要药物相互作用 (RxNorm)\n")
-            for i, intr in enumerate(interactions[:8], 1):
+            for i, intr in enumerate(interactions[:50], 1):
                 drugs = ", ".join(intr.get("drugs", []))
                 description = intr.get("description", "")
                 severity = intr.get("severity", "N/A")
@@ -310,7 +310,7 @@ class RxNormTool(BaseTool):
         # 多药相互作用
         if multi_interactions:
             output.append("### 多药相互作用检查\n")
-            for intr in multi_interactions[:5]:
+            for intr in multi_interactions[:50]:
                 drugs = ", ".join(intr.get("drugs", []))
                 severity = intr.get("severity", "N/A")
                 output.append(f"- **{drugs}**: {severity}")

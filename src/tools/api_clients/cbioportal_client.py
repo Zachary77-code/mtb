@@ -136,7 +136,7 @@ class cBioPortalClient:
             key=lambda x: x[1],
             reverse=True
         )
-        result["top_mutations"] = [{"mutation": m[0], "count": m[1]} for m in sorted_mutations[:10]]
+        result["top_mutations"] = [{"mutation": m[0], "count": m[1]} for m in sorted_mutations[:50]]
         result["total_mutations"] = len(all_mutations)
 
         return result
@@ -160,7 +160,7 @@ class cBioPortalClient:
                 if s.get("allSampleCount", 0) > 100
             ]
 
-            return major_studies[:20]
+            return major_studies[:50]
 
         except Exception as e:
             logger.error(f"[cBioPortal] 获取研究列表失败: {e}")

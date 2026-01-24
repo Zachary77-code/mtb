@@ -123,8 +123,8 @@ class ConvergenceJudgeAgent(BaseAgent):
         graph = load_evidence_graph(state.get("evidence_graph", {}))
         plan = load_research_plan(state.get("research_plan", {}))
 
-        # 获取病例背景摘要
-        case_summary = state.get("raw_pdf_text", "")[:1500]
+        # 获取病例背景（完整，不截断）
+        case_summary = state.get("raw_pdf_text", "")
 
         # 根据评估模式确定要检查的 Agent 列表和重点
         if agent_name:

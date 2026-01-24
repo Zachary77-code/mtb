@@ -250,7 +250,7 @@ class ResearchMixin:
 
         # 格式化深入研究项
         depth_text = ""
-        for i, item in enumerate(depth_items[:3], 1):  # 最多处理 3 个
+        for i, item in enumerate(depth_items, 1):  # 处理所有需要深入的方向
             depth_text += f"""
 ### 深入研究项 {i}
 - 方向 ID: {item.get('id', '')}
@@ -347,7 +347,7 @@ class ResearchMixin:
         # 解析失败，返回默认结构
         logger.warning(f"[ResearchMixin] JSON 解析失败，使用默认结构")
         return {
-            "summary": output[:500] if output else "无摘要",
+            "summary": output if output else "无摘要",
             "findings": [],
             "direction_updates": {},
             "needs_deep_research": [],

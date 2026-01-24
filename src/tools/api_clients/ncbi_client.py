@@ -51,7 +51,7 @@ class NCBIClient:
 
     # ==================== PubMed 相关 ====================
 
-    def search_pubmed(self, query: str, max_results: int = 10) -> List[Dict]:
+    def search_pubmed(self, query: str, max_results: int = 20) -> List[Dict]:
         """
         搜索 PubMed 文献
 

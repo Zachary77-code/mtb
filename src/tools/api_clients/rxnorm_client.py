@@ -142,7 +142,7 @@ class RxNormClient:
                 if class_name and class_name not in classes:
                     classes.append(class_name)
 
-            return classes[:5]  # 限制数量
+            return classes[:50]  # 限制数量
 
         except Exception as e:
             logger.debug(f"[RxNorm] 获取药物分类失败: {e}")

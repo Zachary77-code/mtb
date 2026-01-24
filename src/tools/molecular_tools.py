@@ -84,7 +84,7 @@ class CIViCTool(BaseTool):
         therapeutic = implications.get("top_therapeutic_evidence", [])
         if therapeutic:
             output.append("**治疗相关证据**:\n")
-            for i, evidence in enumerate(therapeutic[:5], 1):
+            for i, evidence in enumerate(therapeutic, 1):  # CIViC API 已限制
                 drugs = ", ".join(evidence.get("drugs", []))
                 disease = evidence.get("disease", "")
                 significance = evidence.get("clinical_significance", "")
@@ -170,7 +170,7 @@ class ClinVarTool(BaseTool):
             "---\n"
         ]
 
-        for i, result in enumerate(results[:5], 1):
+        for i, result in enumerate(results, 1):  # ClinVar retmax:20 已限制
             variation_name = result.get("variation_name", "N/A")
             classification = result.get("classification", "N/A")
             review_status = result.get("review_status", "N/A")

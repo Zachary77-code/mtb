@@ -25,7 +25,7 @@ class ClinicalTrialsTool(BaseTool):
         biomarker: str = "",
         intervention: str = "",
         location: str = "China",
-        max_results: int = 5,
+        max_results: int = 20,
         **kwargs
     ) -> Optional[str]:
         """
@@ -102,7 +102,7 @@ class ClinicalTrialsTool(BaseTool):
 
             # 干预措施
             if interventions:
-                drug_list = [f"{intr.get('name', '')} ({intr.get('type', '')})" for intr in interventions[:3]]
+                drug_list = [f"{intr.get('name', '')} ({intr.get('type', '')})" for intr in interventions]
                 output.append(f"**药物**: {', '.join(drug_list)}")
 
             # 入选标准
@@ -111,7 +111,7 @@ class ClinicalTrialsTool(BaseTool):
 
             # 中国中心
             if locations:
-                china_sites = [f"{loc.get('facility', '')} ({loc.get('city', '')})" for loc in locations[:5]]
+                china_sites = [f"{loc.get('facility', '')} ({loc.get('city', '')})" for loc in locations]
                 output.append(f"\n**中国中心**:")
                 for site in china_sites:
                     output.append(f"- {site}")
