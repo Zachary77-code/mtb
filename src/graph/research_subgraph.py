@@ -11,7 +11,10 @@ from langgraph.graph import StateGraph, END
 from langgraph.types import Send
 
 from src.models.state import MtbState
-from src.models.evidence_graph import load_evidence_graph
+from src.models.evidence_graph import (
+    load_evidence_graph,
+    Entity
+)
 from src.models.research_plan import (
     load_research_plan,
     ResearchMode
@@ -26,7 +29,8 @@ from src.agents.plan_agent import PlanAgent
 from src.utils.logger import (
     mtb_logger as logger,
     log_separator,
-    log_evidence_stats
+    log_evidence_stats,
+    log_edge_stats
 )
 from config.settings import (
     MAX_PHASE1_ITERATIONS,
@@ -231,12 +235,18 @@ def _save_iteration_report(
         lines.append(f"### {agent_name}: {count} 条")
         if graph and evidence_ids:
             for eid in evidence_ids:
-                node = graph.get_node(eid)
-                if node:
-                    grade = f"[{node.grade.value}]" if node.grade else ""
-                    etype = node.evidence_type.value if node.evidence_type else "unknown"
-                    text = node.content.get("text", str(node.content))[:100] if node.content else ""
-                    lines.append(f"- {grade} [{etype}] {text}...")
+                # 新模型：evidence_ids 是 entity canonical_id
+                entity = graph.get_entity(eid)
+                if entity:
+                    best_grade = entity.get_best_grade()
+                    grade = f"[{best_grade.value}]" if best_grade else ""
+                    etype = entity.entity_type.value if entity.entity_type else "unknown"
+                    # 获取最新观察的摘要
+                    obs_text = ""
+                    if entity.observations:
+                        latest_obs = entity.observations[-1]
+                        obs_text = latest_obs.statement[:100] if latest_obs.statement else ""
+                    lines.append(f"- {grade} [{etype}] {entity.name}: {obs_text}...")
         lines.append("")
 
     # === Evidence Graph 当前状态 ===
@@ -244,10 +254,15 @@ def _save_iteration_report(
     lines.append("")
     if graph:
         summary = graph.summary()
-        lines.append(f"- **总节点数**: {summary.get('total_nodes', 0)}")
-        lines.append(f"- **类型分布**: {summary.get('by_type', {})}")
-        lines.append(f"- **Agent 分布**: {summary.get('by_agent', {})}")
-        lines.append(f"- **证据等级分布**: {summary.get('by_grade', {})}")
+        agent_summary = graph.summary_by_agent()
+        lines.append(f"- **总实体数**: {summary.get('total_entities', 0)}")
+        lines.append(f"- **总边数**: {summary.get('total_edges', 0)}")
+        lines.append(f"- **总观察数**: {summary.get('total_observations', 0)}")
+        lines.append(f"- **实体类型分布**: {summary.get('entities_by_type', {})}")
+        # Agent 分布从 agent_summary 获取
+        agent_dist = {a: s.get('observation_count', 0) for a, s in agent_summary.items()}
+        lines.append(f"- **Agent 观察分布**: {agent_dist}")
+        lines.append(f"- **证据等级分布**: {summary.get('best_grades', {})}")
     else:
         lines.append("- 证据图为空")
     lines.append("")
@@ -502,68 +517,41 @@ def _save_detailed_iteration_report(
             continue
 
         for eid in new_evidence_ids:
-            node = graph.get_node(eid) if graph else None
-            if not node:
-                lines.append(f"#### 证据 {eid}")
-                lines.append("- *节点未找到*")
+            # 新模型：evidence_ids 是 entity canonical_id
+            entity = graph.get_entity(eid) if graph else None
+            if not entity:
+                lines.append(f"#### 实体 {eid}")
+                lines.append("- *实体未找到*")
                 lines.append("")
                 continue
 
-            lines.append(f"#### 证据 {node.id}")
-            lines.append(f"- **类型**: {node.evidence_type.value if node.evidence_type else 'N/A'}")
-            grade_val = node.grade.value if node.grade else 'N/A'
-            grade_desc = _grade_description(node.grade)
-            lines.append(f"- **等级**: {grade_val} ({grade_desc})")
-            if node.civic_evidence_type:
-                lines.append(f"- **CIViC类型**: {node.civic_evidence_type.value}")
-            lines.append(f"- **来源Agent**: {node.source_agent}")
-            lines.append(f"- **来源工具**: {node.source_tool or 'N/A'}")
-            if node.provenance:
-                lines.append(f"- **来源文献**: {node.provenance}")
-            if node.observation:
-                lines.append(f"- **Observation**: {node.observation}")
+            lines.append(f"#### 实体 {entity.canonical_id}")
+            lines.append(f"- **名称**: {entity.name}")
+            lines.append(f"- **类型**: {entity.entity_type.value if entity.entity_type else 'N/A'}")
+            best_grade = entity.get_best_grade()
+            grade_val = best_grade.value if best_grade else 'N/A'
+            grade_desc = _grade_description(best_grade)
+            lines.append(f"- **最佳等级**: {grade_val} ({grade_desc})")
+            if entity.aliases:
+                lines.append(f"- **别名**: {', '.join(entity.aliases[:5])}")
 
-            # Context
-            if node.context and not node.context.is_empty():
-                lines.append("- **Context**:")
-                ctx = node.context
-                if ctx.cell_type:
-                    lines.append(f"  - 癌种: {ctx.cell_type}")
-                if ctx.disease_stage:
-                    lines.append(f"  - 分期: {ctx.disease_stage}")
-                if ctx.tissue:
-                    lines.append(f"  - 组织: {ctx.tissue}")
-                if ctx.assay:
-                    lines.append(f"  - 方法: {ctx.assay}")
-                if ctx.sample_size:
-                    lines.append(f"  - 样本量: {ctx.sample_size}")
-                if ctx.treatment_line:
-                    lines.append(f"  - 治疗线: {ctx.treatment_line}")
-                if ctx.biomarker_status:
-                    lines.append(f"  - 标志物状态: {ctx.biomarker_status}")
-                if ctx.species and ctx.species != "human":
-                    lines.append(f"  - 物种: {ctx.species}")
-
-            # 完整内容（不截断）
-            if node.content:
-                content_text = node.content.get("text", "") if isinstance(node.content, dict) else str(node.content)
-                if content_text:
-                    lines.append("- **完整内容**:")
-                    # 多行内容缩进处理
-                    for line in content_text.split('\n'):
-                        lines.append(f"  {line}")
-
-            # 量化结果
-            if node.numeric_result:
-                lines.append("- **量化结果**:")
-                for k, v in node.numeric_result.items():
-                    lines.append(f"  - {k}: {v}")
-
-            # 研究元信息
-            lines.append(f"- **收集轮次**: {node.iteration}")
-            lines.append(f"- **收集模式**: {node.research_mode}")
-            if node.needs_deep_research:
-                lines.append(f"- **需深入研究**: 是 - {node.depth_research_reason or 'N/A'}")
+            # 显示该实体的所有观察
+            if entity.observations:
+                lines.append(f"- **观察数**: {len(entity.observations)}")
+                for i, obs in enumerate(entity.observations, 1):
+                    lines.append(f"  **观察 {i}**:")
+                    lines.append(f"    - 陈述: {obs.statement}")
+                    if obs.evidence_grade:
+                        lines.append(f"    - 等级: {obs.evidence_grade.value}")
+                    if obs.civic_type:
+                        lines.append(f"    - CIViC类型: {obs.civic_type.value}")
+                    lines.append(f"    - 来源Agent: {obs.source_agent}")
+                    lines.append(f"    - 来源工具: {obs.source_tool or 'N/A'}")
+                    if obs.provenance:
+                        lines.append(f"    - 来源文献: {obs.provenance}")
+                    if obs.source_url:
+                        lines.append(f"    - URL: {obs.source_url}")
+                    lines.append(f"    - 收集轮次: {obs.iteration}")
 
             lines.append("")
 
@@ -572,36 +560,83 @@ def _save_detailed_iteration_report(
     lines.append("")
     if graph:
         summary = graph.summary()
+        agent_summary = graph.summary_by_agent()
         lines.append("### 总体统计")
-        lines.append(f"- **总节点数**: {summary.get('total_nodes', 0)}")
+        lines.append(f"- **总实体数**: {summary.get('total_entities', 0)}")
         lines.append(f"- **总边数**: {summary.get('total_edges', 0)}")
+        lines.append(f"- **总观察数**: {summary.get('total_observations', 0)}")
+        lines.append(f"- **冲突数**: {summary.get('conflicts_count', 0)}")
         lines.append("")
 
-        by_type = summary.get("by_type", {})
+        by_type = summary.get("entities_by_type", {})
         if by_type:
-            lines.append("### 按类型分布")
+            lines.append("### 按实体类型分布")
             lines.append("| 类型 | 数量 |")
             lines.append("|------|------|")
             for etype, count in by_type.items():
                 lines.append(f"| {etype} | {count} |")
             lines.append("")
 
-        by_agent = summary.get("by_agent", {})
-        if by_agent:
+        if agent_summary:
             lines.append("### 按 Agent 分布")
-            lines.append("| Agent | 数量 |")
-            lines.append("|-------|------|")
-            for agent, count in by_agent.items():
-                lines.append(f"| {agent} | {count} |")
+            lines.append("| Agent | 观察数 | 实体数 |")
+            lines.append("|-------|--------|--------|")
+            for agent, stats in agent_summary.items():
+                obs_count = stats.get('observation_count', 0)
+                entity_count = stats.get('entity_count', 0)
+                lines.append(f"| {agent} | {obs_count} | {entity_count} |")
             lines.append("")
 
-        by_grade = summary.get("by_grade", {})
+        by_grade = summary.get("best_grades", {})
         if by_grade:
             lines.append("### 按证据等级分布")
             lines.append("| 等级 | 数量 |")
             lines.append("|------|------|")
             for grade, count in by_grade.items():
                 lines.append(f"| {grade} | {count} |")
+            lines.append("")
+
+        # 边关系统计
+        edges_by_predicate = summary.get("edges_by_predicate", {})
+        if edges_by_predicate:
+            lines.append("### 边关系类型分布")
+            lines.append("| 关系类型 | 数量 |")
+            lines.append("|----------|------|")
+            for predicate, count in edges_by_predicate.items():
+                lines.append(f"| {predicate} | {count} |")
+            lines.append("")
+
+        # 冲突详情
+        conflicts = graph.get_conflicts()
+        if conflicts:
+            lines.append("### 证据冲突详情")
+            lines.append("")
+            for i, conflict in enumerate(conflicts[:5], 1):  # 限制显示前5个
+                edge_ids = conflict.get("edge_ids", [])
+                group = conflict.get("conflict_group", "?")
+                lines.append(f"**冲突组 {i}** (group: {group})")
+                for eid in edge_ids[:3]:
+                    edge = graph.get_edge(eid)
+                    if edge:
+                        lines.append(f"  - `{edge.source_id}` --[{edge.predicate.value}]--> `{edge.target_id}`")
+                lines.append("")
+
+        # 药物敏感性关系
+        drug_sensitivity = graph.get_drug_sensitivity_map()
+        if drug_sensitivity:
+            lines.append("### 药物敏感性/耐药性关系")
+            lines.append("")
+            count = 0
+            for drug, relations in drug_sensitivity.items():
+                if count >= 10:
+                    break
+                lines.append(f"**{drug}**:")
+                for rel in relations[:3]:
+                    predicate = rel.get("predicate", "?")
+                    variant = rel.get("variant", "?")
+                    confidence = rel.get("confidence", 0.0)
+                    lines.append(f"  - {variant} → {predicate} (置信度: {confidence:.2f})")
+                count += 1
             lines.append("")
     else:
         lines.append("- 证据图为空")
@@ -620,48 +655,53 @@ def _save_detailed_iteration_report(
 
 # ==================== Phase 1 报告生成辅助函数 ====================
 
-def _format_evidence_for_report(evidence_list: List[Any]) -> str:
+def _format_evidence_for_report(entity_list: List[Entity], agent_name: str = None) -> str:
     """
-    将证据列表格式化为报告生成用的摘要
+    将实体列表格式化为报告生成用的摘要
 
     Args:
-        evidence_list: EvidenceNode 列表
+        entity_list: Entity 列表
+        agent_name: 可选，筛选特定 Agent 的观察
 
     Returns:
         格式化的证据摘要文本
     """
-    if not evidence_list:
+    if not entity_list:
         return "暂无相关证据。"
 
     lines = []
 
-    # 按证据等级排序（A 优先）
+    # 按最佳证据等级排序（A 优先）
     grade_order = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
-    sorted_evidence = sorted(
-        evidence_list,
-        key=lambda n: grade_order.get(n.grade.value if n.grade else "E", 5)
-    )
 
-    for i, node in enumerate(sorted_evidence, 1):
-        grade_str = f"[{node.grade.value}]" if node.grade else "[N/A]"
-        civic_str = f" ({node.civic_evidence_type.value})" if node.civic_evidence_type else ""
+    def get_sort_key(entity: Entity) -> int:
+        best_grade = entity.get_best_grade()
+        if best_grade:
+            return grade_order.get(best_grade.value, 5)
+        return 5
 
-        lines.append(f"### 证据 {i} {grade_str}{civic_str}")
+    sorted_entities = sorted(entity_list, key=get_sort_key)
 
-        if node.observation:
-            lines.append(f"**观察**: {node.observation}")
+    for i, entity in enumerate(sorted_entities, 1):
+        best_grade = entity.get_best_grade()
+        grade_str = f"[{best_grade.value}]" if best_grade else "[N/A]"
 
-        if node.content:
-            content_text = node.content.get("text", "") if isinstance(node.content, dict) else str(node.content)
-            if content_text:
-                # 保留完整内容，不截断
-                lines.append(f"**内容**: {content_text}")
+        lines.append(f"### 实体 {i}: {entity.name} {grade_str}")
+        lines.append(f"**类型**: {entity.entity_type.value}")
 
-        if node.provenance:
-            lines.append(f"**来源**: {node.provenance}")
+        # 筛选特定 Agent 的观察（如果指定）
+        observations = entity.observations
+        if agent_name:
+            observations = [obs for obs in observations if obs.source_agent == agent_name]
 
-        if node.source_tool:
-            lines.append(f"**工具**: {node.source_tool}")
+        for obs in observations:
+            obs_grade = f"[{obs.evidence_grade.value}]" if obs.evidence_grade else ""
+            civic_str = f" ({obs.civic_type.value})" if obs.civic_type else ""
+            lines.append(f"**观察** {obs_grade}{civic_str}: {obs.statement}")
+            if obs.provenance:
+                lines.append(f"  - 来源: {obs.provenance}")
+            if obs.source_tool:
+                lines.append(f"  - 工具: {obs.source_tool}")
 
         lines.append("")
 
@@ -698,17 +738,17 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
     for agent_name, agent_class, report_key in agent_configs:
         logger.info(f"[PHASE1_REPORTS] 生成 {agent_name} 报告...")
 
-        # 提取该 Agent 收集的证据
-        agent_evidence = graph.get_nodes_by_agent(agent_name)
-        evidence_count = len(agent_evidence) if agent_evidence else 0
-        logger.info(f"[PHASE1_REPORTS]   {agent_name} 证据数: {evidence_count}")
+        # 提取该 Agent 收集的证据（实体）
+        agent_entities = graph.get_entities_with_agent_observations(agent_name)
+        observation_count = graph.get_agent_observation_count(agent_name)
+        logger.info(f"[PHASE1_REPORTS]   {agent_name} 实体数: {len(agent_entities)}, 观察数: {observation_count}")
 
-        if not agent_evidence:
+        if not agent_entities:
             reports[report_key] = f"## {agent_name} 报告\n\n暂无相关发现。"
             continue
 
         # 构建证据摘要
-        evidence_summary = _format_evidence_for_report(agent_evidence)
+        evidence_summary = _format_evidence_for_report(agent_entities, agent_name)
 
         # 构建报告生成 prompt
         report_prompt = f"""基于以下病例信息和已收集的研究证据，生成你的专业领域综合报告。
@@ -716,7 +756,7 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
 ## 病例背景
 {raw_pdf_text}
 
-## 已收集的研究证据（共 {evidence_count} 条）
+## 已收集的研究证据（共 {observation_count} 条）
 {evidence_summary}
 
 ## 输出要求
@@ -768,17 +808,17 @@ def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
         logger.warning("[PHASE2_REPORTS] 证据图为空，跳过报告生成")
         return {}
 
-    # 提取 Oncologist 收集的证据
-    oncologist_evidence = graph.get_nodes_by_agent("Oncologist")
-    evidence_count = len(oncologist_evidence) if oncologist_evidence else 0
-    logger.info(f"[PHASE2_REPORTS] Oncologist 证据数: {evidence_count}")
+    # 提取 Oncologist 收集的证据（实体）
+    oncologist_entities = graph.get_entities_with_agent_observations("Oncologist")
+    observation_count = graph.get_agent_observation_count("Oncologist")
+    logger.info(f"[PHASE2_REPORTS] Oncologist 实体数: {len(oncologist_entities)}, 观察数: {observation_count}")
 
-    if not oncologist_evidence:
+    if not oncologist_entities:
         logger.warning("[PHASE2_REPORTS] Oncologist 无证据，生成默认报告")
         return {"oncologist_plan": "## 治疗方案分析\n\n暂无相关发现。"}
 
     # 构建证据摘要（完整，不截断）
-    evidence_summary = _format_evidence_for_report(oncologist_evidence)
+    evidence_summary = _format_evidence_for_report(oncologist_entities, "Oncologist")
 
     # 获取上游报告作为参考
     pathologist_report = state.get('pathologist_report', '')
@@ -802,7 +842,7 @@ def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
 ### 临床试验推荐报告
 {recruiter_report if recruiter_report else "暂无"}
 
-## 你收集的研究证据（共 {evidence_count} 条）
+## 你收集的研究证据（共 {observation_count} 条）
 {evidence_summary}
 
 ## 输出要求
@@ -1446,30 +1486,42 @@ def generate_agent_reports(state: MtbState) -> Dict[str, Any]:
 
     # 显示最终证据图统计
     log_evidence_stats(state.get("evidence_graph", {}))
+    log_edge_stats(state.get("evidence_graph", {}), "EDGE")
 
     graph = load_evidence_graph(state.get("evidence_graph", {}))
     iteration_history = state.get("iteration_history", [])
 
-    # 收集各 Agent 的证据
-    pathologist_evidence = graph.get_nodes_by_agent("Pathologist") if graph else []
-    geneticist_evidence = graph.get_nodes_by_agent("Geneticist") if graph else []
-    recruiter_evidence = graph.get_nodes_by_agent("Recruiter") if graph else []
-    oncologist_evidence = graph.get_nodes_by_agent("Oncologist") if graph else []
+    # 收集各 Agent 的观察数
+    pathologist_obs_count = graph.get_agent_observation_count("Pathologist") if graph else 0
+    geneticist_obs_count = graph.get_agent_observation_count("Geneticist") if graph else 0
+    recruiter_obs_count = graph.get_agent_observation_count("Recruiter") if graph else 0
+    oncologist_obs_count = graph.get_agent_observation_count("Oncologist") if graph else 0
 
-    # 提取试验信息
+    # 提取试验信息（从 TRIAL 类型实体）
     recruiter_trials = []
-    for ev in recruiter_evidence:
-        if ev.evidence_type.value == "trial":
-            trial_data = ev.content.get("raw", {})
-            if trial_data:
-                recruiter_trials.append(trial_data)
+    if graph:
+        from src.models.evidence_graph import EntityType
+        trial_entities = graph.get_entities_by_type(EntityType.TRIAL)
+        for entity in trial_entities:
+            # 从观察中提取试验数据
+            for obs in entity.observations:
+                if obs.source_agent == "Recruiter":
+                    trial_data = {
+                        "id": entity.canonical_id,
+                        "name": entity.name,
+                        "statement": obs.statement,
+                        "provenance": obs.provenance,
+                        "source_url": obs.source_url
+                    }
+                    recruiter_trials.append(trial_data)
+                    break  # 每个实体只添加一次
 
     oncologist_warnings = []
 
     # 生成研究进度报告
     progress_report = generate_progress_report(iteration_history)
 
-    logger.info(f"[REPORT_GEN] 证据统计: P={len(pathologist_evidence)}, G={len(geneticist_evidence)}, R={len(recruiter_evidence)}, O={len(oncologist_evidence)}")
+    logger.info(f"[REPORT_GEN] 观察统计: P={pathologist_obs_count}, G={geneticist_obs_count}, R={recruiter_obs_count}, O={oncologist_obs_count}")
 
     # 注意：不覆写 pathologist_report, geneticist_report, recruiter_report, oncologist_plan
     # 这些报告已由 generate_phase1_reports() 和 generate_phase2_reports() 生成

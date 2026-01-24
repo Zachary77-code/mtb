@@ -1,7 +1,8 @@
 """
-Research Mixin - BFRS/DFRS 研究能力
+Research Mixin - BFRS/DFRS 研究能力 (DeepEvidence Style)
 
 为现有 Agent 提供 BFRS（广度优先研究）和 DFRS（深度优先研究）能力。
+使用实体中心的证据图架构，将发现分解为 Entity + Edge + Observation。
 """
 import json
 from typing import Dict, List, Any, Optional, Tuple, TYPE_CHECKING
@@ -9,11 +10,9 @@ from dataclasses import dataclass
 
 from src.models.evidence_graph import (
     EvidenceGraph,
-    EvidenceType,
-    EvidenceGrade,
-    CivicEvidenceType,
     load_evidence_graph
 )
+from src.models.entity_extractors import extract_entities_from_finding
 from src.models.research_plan import (
     ResearchPlan,
     ResearchDirection,
@@ -31,7 +30,7 @@ if TYPE_CHECKING:
 class ResearchResult:
     """单次研究迭代的结果"""
     findings: List[Dict[str, Any]]      # 发现列表
-    evidence_ids: List[str]             # 添加到图中的证据 ID
+    evidence_ids: List[str]             # 添加到图中的实体 canonical_id 列表
     directions_updated: List[str]       # 更新状态的方向 ID
     research_complete: bool             # 是否完成研究
     needs_deep_research: List[str]      # 需要深入研究的发现
@@ -40,9 +39,10 @@ class ResearchResult:
 
 class ResearchMixin:
     """
-    研究能力混入类
+    研究能力混入类 (DeepEvidence Style)
 
     为 Agent 添加 BFRS/DFRS 研究能力。
+    使用实体中心架构：发现 -> LLM提取 -> Entity + Edge + Observation
     要求宿主类继承自 BaseAgent。
     """
 
@@ -151,9 +151,8 @@ class ResearchMixin:
             if parsed.get("summary"):
                 all_summaries.append(f"[DFRS] {parsed['summary']}")
 
-        # 更新证据图和研究计划（双向关联）
-        # 使用默认 mode 来标记证据来源模式
-        new_evidence_ids, updated_plan = self._update_evidence_graph(
+        # 更新证据图和研究计划（实体中心架构）
+        new_entity_ids, updated_plan = self._update_evidence_graph(
             graph=graph,
             findings=all_findings,
             agent_role=agent_role,
@@ -165,7 +164,7 @@ class ResearchMixin:
         # 增强结果日志
         logger.info(f"[{agent_role}] 迭代完成:")
         logger.info(f"[{agent_role}]   发现数: {len(all_findings)}")
-        logger.info(f"[{agent_role}]   新证据: {len(new_evidence_ids)}")
+        logger.info(f"[{agent_role}]   新实体: {len(new_entity_ids)}")
         if all_direction_updates:
             logger.info(f"[{agent_role}]   方向更新: {all_direction_updates}")
         if all_needs_deep:
@@ -178,7 +177,7 @@ class ResearchMixin:
         return {
             "evidence_graph": graph.to_dict(),
             "research_plan": updated_plan.to_dict() if updated_plan else None,
-            "new_evidence_ids": new_evidence_ids,
+            "new_evidence_ids": new_entity_ids,
             "direction_updates": all_direction_updates,
             "research_complete": len(bfrs_directions) == 0 and len(dfrs_directions) == 0,
             "needs_deep_research": all_needs_deep,
@@ -218,7 +217,8 @@ class ResearchMixin:
 ### 当前迭代信息
 - 迭代轮次: {iteration + 1} / {max_iterations}
 - 你的角色: {agent_role}
-- 现有证据: {existing_evidence.get('total_nodes', 0)} 条
+- 现有实体: {existing_evidence.get('total_entities', 0)} 个
+- 现有边: {existing_evidence.get('total_edges', 0)} 条
 
 ### 病例背景
 {case_context}
@@ -245,7 +245,12 @@ class ResearchMixin:
             "evidence_type": "molecular|clinical|literature|trial|guideline|drug|pathology|imaging",
             "grade": "A|B|C|D|E",
             "civic_type": "predictive|diagnostic|prognostic|predisposing|oncogenic",
-            "source_tool": "工具名称"
+            "source_tool": "工具名称",
+            "gene": "基因名（如有）",
+            "variant": "变异名（如有）",
+            "drug": "药物名（如有）",
+            "pmid": "PubMed ID（如有）",
+            "nct_id": "NCT ID（如有）"
         }}
     ],
     "direction_updates": {{
@@ -316,7 +321,8 @@ class ResearchMixin:
 ### 当前迭代信息
 - 迭代轮次: {iteration + 1} / {max_iterations}
 - 你的角色: {agent_role}
-- 现有证据: {existing_evidence.get('total_nodes', 0)} 条
+- 现有实体: {existing_evidence.get('total_entities', 0)} 个
+- 现有边: {existing_evidence.get('total_edges', 0)} 条
 
 ### 病例背景
 {case_context}
@@ -344,6 +350,11 @@ class ResearchMixin:
             "grade": "A|B|C|D|E",
             "civic_type": "predictive|diagnostic|prognostic|predisposing|oncogenic",
             "source_tool": "工具名称",
+            "gene": "基因名（如有）",
+            "variant": "变异名（如有）",
+            "drug": "药物名（如有）",
+            "pmid": "PubMed ID（如有）",
+            "nct_id": "NCT ID（如有）",
             "depth_chain": ["引用1", "引用2", "推理步骤"]
         }}
     ],
@@ -414,94 +425,93 @@ class ResearchMixin:
         """
         更新证据图并同步更新研究计划中的方向证据关联
 
+        DeepEvidence Style 实体提取策略:
+        - 使用 LLM 将 finding 分解为 Entity + Edge + Observation
+        - 实体通过 canonical_id 合并（不创建重复）
+        - Observation 附加到 Entity 和 Edge
+
         Returns:
-            (新增的证据 ID 列表, 更新后的研究计划)
+            (新增/更新的实体 canonical_id 列表, 更新后的研究计划)
         """
-        new_ids = []
+        new_entity_ids = []
 
         for finding in findings:
-            # 映射证据类型
-            type_str = finding.get("evidence_type", "literature")
+            source_tool = finding.get("source_tool", "unknown")
+
+            # ========== LLM 实体提取 ==========
             try:
-                evidence_type = EvidenceType(type_str)
-            except ValueError:
-                evidence_type = EvidenceType.LITERATURE
+                extraction_result = extract_entities_from_finding(
+                    finding=finding,
+                    source_agent=agent_role,
+                    source_tool=source_tool,
+                    iteration=iteration
+                )
+            except Exception as e:
+                logger.warning(f"[{agent_role}] Entity extraction failed: {e}")
+                continue
 
-            # 映射证据等级
-            grade_str = finding.get("grade")
-            grade = None
-            if grade_str:
-                try:
-                    grade = EvidenceGrade(grade_str)
-                except ValueError:
-                    pass
+            # ========== 处理提取的实体 ==========
+            for extracted_entity in extraction_result.entities:
+                # 获取或创建实体（自动合并）
+                entity = graph.get_or_create_entity(
+                    canonical_id=extracted_entity.canonical_id,
+                    entity_type=extracted_entity.entity_type,
+                    name=extracted_entity.name,
+                    source=source_tool,
+                    aliases=extracted_entity.aliases
+                )
 
-            # 映射 CIViC 证据类型
-            civic_type_str = finding.get("civic_type")
-            civic_type = None
-            if civic_type_str:
-                try:
-                    civic_type = CivicEvidenceType(civic_type_str)
-                except ValueError:
-                    pass
+                # 添加观察到实体
+                if extracted_entity.observation:
+                    graph.add_observation_to_entity(
+                        canonical_id=entity.canonical_id,
+                        observation=extracted_entity.observation
+                    )
 
-            # 确定该证据的研究模式（优先从 finding 获取，否则用默认 mode）
-            finding_mode = finding.get("research_mode", mode.value if mode else "breadth_first")
+                # 记录新实体
+                if entity.canonical_id not in new_entity_ids:
+                    new_entity_ids.append(entity.canonical_id)
 
-            # 提取来源 URL（不同工具返回不同字段名）
-            source_url = (
-                finding.get("civic_url") or          # CIViC
-                finding.get("url") or                # ClinicalTrials, ClinVar
-                finding.get("cbioportal_url") or     # cBioPortal
-                finding.get("source_url") or         # 通用字段
-                None
-            )
-            # 如果有 PMID 但没有 URL，构造 PubMed URL
-            pmid = finding.get("pmid")
-            if not source_url and pmid:
-                source_url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+            # ========== 处理提取的边 ==========
+            for extracted_edge in extraction_result.edges:
+                # 确保源和目标实体存在
+                source_entity = graph.get_entity(extracted_edge.source_id)
+                target_entity = graph.get_entity(extracted_edge.target_id)
 
-            # 提取 provenance（来源追踪标识）
-            provenance = finding.get("provenance")
-            if not provenance:
-                if pmid:
-                    provenance = f"PMID:{pmid}"
-                elif finding.get("nct_id"):
-                    provenance = f"NCT:{finding.get('nct_id')}"
-                elif finding.get("civic_id"):
-                    provenance = f"CIViC:{finding.get('civic_id')}"
-                elif finding.get("clinvar_id"):
-                    provenance = f"ClinVar:{finding.get('clinvar_id')}"
+                if not source_entity:
+                    # 尝试通过名称查找
+                    source_entity = graph.find_entity_by_name(extracted_edge.source_id)
+                if not target_entity:
+                    target_entity = graph.find_entity_by_name(extracted_edge.target_id)
 
-            # 添加节点
-            node_id = graph.add_node(
-                evidence_type=evidence_type,
-                content={"text": finding.get("content", ""), "raw": finding},
-                source_agent=agent_role,
-                source_tool=finding.get("source_tool"),
-                grade=grade,
-                civic_evidence_type=civic_type,
-                iteration=iteration,
-                research_mode=finding_mode,
-                needs_deep_research=bool(finding.get("needs_deep_research")),
-                depth_research_reason=finding.get("depth_research_reason"),
-                provenance=provenance,
-                source_url=source_url,
-                metadata={
-                    "direction_id": finding.get("direction_id"),
-                    "depth_chain": finding.get("depth_chain", [])
-                }
-            )
-            new_ids.append(node_id)
+                if source_entity and target_entity:
+                    graph.add_edge(
+                        source_id=source_entity.canonical_id,
+                        target_id=target_entity.canonical_id,
+                        predicate=extracted_edge.predicate,
+                        observation=extracted_edge.observation,
+                        confidence=extracted_edge.confidence
+                    )
 
-            # 更新 direction 的 evidence_ids（双向关联）
+            # ========== 处理冲突 ==========
+            for conflict in extraction_result.conflicts:
+                # 冲突标记会在 add_edge 时处理
+                pass
+
+            # ========== 更新方向的证据关联 ==========
             direction_id = finding.get("direction_id")
             if direction_id and plan:
                 direction = plan.get_direction_by_id(direction_id)
                 if direction:
-                    direction.add_evidence(node_id)
+                    # 关联所有新实体到方向
+                    for entity_id in new_entity_ids:
+                        direction.add_evidence(entity_id)
 
-        return new_ids, plan
+        # 记录统计
+        summary = graph.summary()
+        logger.info(f"[{agent_role}] Evidence graph: {summary.get('total_entities', 0)} entities, {summary.get('total_edges', 0)} edges")
+
+        return new_entity_ids, plan
 
 
 # ==================== 增强版 Agent 创建工厂 ====================
@@ -525,14 +535,14 @@ def create_research_agent(agent_class, **kwargs):
 
 
 if __name__ == "__main__":
-    print("ResearchMixin 模块加载成功")
+    print("ResearchMixin 模块加载成功 (DeepEvidence Style)")
 
     # 测试解析
     mixin = ResearchMixin()
     test_output = '''```json
 {
     "summary": "测试摘要",
-    "findings": [{"content": "测试发现", "evidence_type": "molecular"}],
+    "findings": [{"content": "测试发现", "evidence_type": "molecular", "gene": "EGFR"}],
     "direction_updates": {"D1": "completed"},
     "needs_deep_research": [],
     "research_complete": false

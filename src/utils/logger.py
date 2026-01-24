@@ -86,12 +86,13 @@ def log_phase_progress(phase: str, iteration: int, max_iter: int, mode: str):
 
 def log_evidence_stats(graph_dict: dict):
     """
-    显示证据图统计
+    显示证据图统计（包含边统计）
 
     Args:
         graph_dict: 证据图的字典表示
     """
     nodes = graph_dict.get("nodes", {})
+    edges = graph_dict.get("edges", {})
     by_type = {}
     by_agent = {}
 
@@ -103,14 +104,27 @@ def log_evidence_stats(graph_dict: dict):
         a = n.get("source_agent", "unknown")
         by_agent[a] = by_agent.get(a, 0) + 1
 
-    mtb_logger.info(f"[EVIDENCE] 总节点: {len(nodes)} | 类型分布: {by_type}")
+    mtb_logger.info(f"[EVIDENCE] 总节点: {len(nodes)}, 总边: {len(edges)} | 类型分布: {by_type}")
     if by_agent:
         mtb_logger.info(f"[EVIDENCE] Agent 分布: {by_agent}")
+
+    # 边统计
+    if edges:
+        edge_types = {}
+        for e in edges.values():
+            et = e.get("relation_type", "unknown")
+            edge_types[et] = edge_types.get(et, 0) + 1
+        mtb_logger.info(f"[EVIDENCE] 边类型分布: {edge_types}")
+
+        # 冲突检测
+        conflicts = [e for e in edges.values() if e.get("relation_type") in ["contradicts", "refutes"]]
+        if conflicts:
+            mtb_logger.warning(f"[EVIDENCE] 检测到 {len(conflicts)} 个证据冲突")
 
 
 def log_evidence_stats_detailed(graph_dict: dict, title: str = "EVIDENCE"):
     """
-    显示证据图详细统计（增强版）
+    显示证据图详细统计（增强版，包含边统计）
 
     Args:
         graph_dict: 证据图的字典表示
@@ -121,6 +135,7 @@ def log_evidence_stats_detailed(graph_dict: dict, title: str = "EVIDENCE"):
         return
 
     nodes = graph_dict.get("nodes", {})
+    edges = graph_dict.get("edges", {})
     by_type = {}
     by_agent = {}
     by_grade = {}
@@ -137,10 +152,47 @@ def log_evidence_stats_detailed(graph_dict: dict, title: str = "EVIDENCE"):
         by_grade[g] = by_grade.get(g, 0) + 1
 
     mtb_logger.info(f"[{title}] ════════════════════════════════════════")
-    mtb_logger.info(f"[{title}] 总节点: {len(nodes)}")
+    mtb_logger.info(f"[{title}] 总节点: {len(nodes)}, 总边: {len(edges)}")
     mtb_logger.info(f"[{title}] 类型分布: {by_type}")
     mtb_logger.info(f"[{title}] Agent 分布: {by_agent}")
     mtb_logger.info(f"[{title}] 证据等级分布: {by_grade}")
+
+    # 边统计
+    if edges:
+        edge_types = {}
+        rule_edges = 0
+        llm_edges = 0
+        total_confidence = 0.0
+
+        for e in edges.values():
+            et = e.get("relation_type", "unknown")
+            edge_types[et] = edge_types.get(et, 0) + 1
+
+            # 按提取方法统计
+            desc = e.get("description", "")
+            if "[Rule]" in desc:
+                rule_edges += 1
+            elif "[LLM]" in desc:
+                llm_edges += 1
+            else:
+                rule_edges += 1
+
+            total_confidence += e.get("confidence", 0.0)
+
+        avg_confidence = total_confidence / len(edges) if edges else 0.0
+        mtb_logger.info(f"[{title}] 边类型分布: {edge_types}")
+        mtb_logger.info(f"[{title}] 边提取方法: Rule={rule_edges}, LLM={llm_edges}")
+        mtb_logger.info(f"[{title}] 平均边置信度: {avg_confidence:.2f}")
+
+        # 冲突检测
+        conflicts = [e for e in edges.values() if e.get("relation_type") in ["contradicts", "refutes"]]
+        if conflicts:
+            mtb_logger.warning(f"[{title}] ⚠ 检测到 {len(conflicts)} 个证据冲突:")
+            for conflict in conflicts[:3]:  # 只显示前3个
+                src = conflict.get("source_id", "?")
+                tgt = conflict.get("target_id", "?")
+                rel = conflict.get("relation_type", "?")
+                mtb_logger.warning(f"[{title}]   - {src} --[{rel}]--> {tgt}")
 
     # 显示最近添加的证据（按迭代轮次排序）
     recent_nodes = sorted(
@@ -191,6 +243,54 @@ def log_separator(title: str = "", char: str = "═"):
         mtb_logger.info(f"[{title}] {char * 40}")
     else:
         mtb_logger.info(char * 50)
+
+
+def log_edge_stats(graph_dict: dict, title: str = "EDGE"):
+    """
+    显示边统计（独立函数）
+
+    Args:
+        graph_dict: 证据图的字典表示
+        title: 日志标签
+    """
+    edges = graph_dict.get("edges", {})
+
+    if not edges:
+        mtb_logger.info(f"[{title}] 尚无边")
+        return
+
+    edge_types = {}
+    rule_edges = 0
+    llm_edges = 0
+    total_confidence = 0.0
+
+    for e in edges.values():
+        et = e.get("relation_type", "unknown")
+        edge_types[et] = edge_types.get(et, 0) + 1
+
+        desc = e.get("description", "")
+        if "[Rule]" in desc:
+            rule_edges += 1
+        elif "[LLM]" in desc:
+            llm_edges += 1
+        else:
+            rule_edges += 1
+
+        total_confidence += e.get("confidence", 0.0)
+
+    avg_confidence = total_confidence / len(edges) if edges else 0.0
+
+    mtb_logger.info(f"[{title}] 总边数: {len(edges)}")
+    mtb_logger.info(f"[{title}] 类型分布: {edge_types}")
+    mtb_logger.info(f"[{title}] 提取方法: Rule={rule_edges}, LLM={llm_edges}")
+    mtb_logger.info(f"[{title}] 平均置信度: {avg_confidence:.2f}")
+
+    # 显示关键关系
+    key_relations = ["sensitizes", "causes_resistance", "contradicts", "supports"]
+    for rel in key_relations:
+        count = edge_types.get(rel, 0)
+        if count > 0:
+            mtb_logger.info(f"[{title}]   {rel}: {count} 条")
 
 
 def log_convergence_status(phase: str, iteration: int, max_iter: int,

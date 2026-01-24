@@ -12,14 +12,84 @@ def merge_evidence_graphs(left: Dict[str, Any], right: Dict[str, Any]) -> Dict[s
     合并两个证据图（用于并行 Agent 更新）
 
     LangGraph 在并行节点返回相同 key 时调用此函数合并结果。
+
+    实体中心合并策略 (DeepEvidence Style):
+    - 实体按 canonical_id 合并 (observations 追加)
+    - 边按 (source_id, target_id, predicate) 合并 (observations 追加)
     """
     if not left:
         return right
     if not right:
         return left
+
+    # ========== 合并实体 (按 canonical_id) ==========
+    merged_entities = dict(left.get("entities", {}))
+    for cid, entity_data in right.get("entities", {}).items():
+        if cid in merged_entities:
+            # 已存在：合并 observations
+            existing_obs = merged_entities[cid].get("observations", [])
+            new_obs = entity_data.get("observations", [])
+            # 按 ID 去重
+            existing_obs_ids = {o.get("id") for o in existing_obs}
+            for obs in new_obs:
+                if obs.get("id") not in existing_obs_ids:
+                    existing_obs.append(obs)
+            merged_entities[cid]["observations"] = existing_obs
+
+            # 合并 aliases
+            existing_aliases = set(merged_entities[cid].get("aliases", []))
+            existing_aliases.update(entity_data.get("aliases", []))
+            merged_entities[cid]["aliases"] = list(existing_aliases)
+
+            # 更新 updated_at (取较晚的)
+            left_updated = merged_entities[cid].get("updated_at", "")
+            right_updated = entity_data.get("updated_at", "")
+            if right_updated > left_updated:
+                merged_entities[cid]["updated_at"] = right_updated
+        else:
+            # 新实体：直接添加
+            merged_entities[cid] = entity_data
+
+    # ========== 合并边 (按 source_id|target_id|predicate) ==========
+    merged_edges = dict(left.get("edges", {}))
+
+    def make_edge_key(edge_data: Dict[str, Any]) -> str:
+        return f"{edge_data.get('source_id', '')}|{edge_data.get('target_id', '')}|{edge_data.get('predicate', '')}"
+
+    # 构建现有边的键索引
+    existing_edge_keys = {make_edge_key(e): eid for eid, e in merged_edges.items()}
+
+    for eid, edge_data in right.get("edges", {}).items():
+        edge_key = make_edge_key(edge_data)
+
+        if edge_key in existing_edge_keys:
+            # 已存在：合并 observations
+            existing_eid = existing_edge_keys[edge_key]
+            existing_obs = merged_edges[existing_eid].get("observations", [])
+            new_obs = edge_data.get("observations", [])
+            existing_obs_ids = {o.get("id") for o in existing_obs}
+            for obs in new_obs:
+                if obs.get("id") not in existing_obs_ids:
+                    existing_obs.append(obs)
+            merged_edges[existing_eid]["observations"] = existing_obs
+
+            # 更新 confidence (取较高的)
+            merged_edges[existing_eid]["confidence"] = max(
+                merged_edges[existing_eid].get("confidence", 0),
+                edge_data.get("confidence", 0)
+            )
+
+            # 合并 conflict_group
+            if edge_data.get("conflict_group"):
+                merged_edges[existing_eid]["conflict_group"] = edge_data["conflict_group"]
+        else:
+            # 新边：直接添加
+            merged_edges[eid] = edge_data
+            existing_edge_keys[edge_key] = eid
+
     return {
-        "nodes": {**left.get("nodes", {}), **right.get("nodes", {})},
-        "edges": {**left.get("edges", {}), **right.get("edges", {})}
+        "entities": merged_entities,
+        "edges": merged_edges
     }
 
 
@@ -194,7 +264,7 @@ def create_initial_state(input_text: str) -> MtbState:
         # DeepEvidence 研究循环初始化
         "research_plan": {},
         "research_mode": "breadth_first",
-        "evidence_graph": {"nodes": {}, "edges": {}},
+        "evidence_graph": {"entities": {}, "edges": {}},
         "phase1_iteration": 0,
         "phase1_new_findings": 0,
         "phase2_iteration": 0,

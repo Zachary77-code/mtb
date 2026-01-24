@@ -1,18 +1,23 @@
 """数据模型"""
 from src.models.state import MtbState, create_initial_state, is_state_valid
 from src.models.evidence_graph import (
+    # 新架构 (Entity-Edge-Observation)
     EvidenceGraph,
-    EvidenceNode,
-    EvidenceEdge,
-    EvidenceType,
+    Entity,
+    Edge,
+    Observation,
+    EntityType,
+    Predicate,
     EvidenceGrade,
-    RelationType,
+    CivicEvidenceType,
     create_evidence_graph,
     load_evidence_graph,
-    # 新增 (参考 DeepEvidence 论文)
-    ContextType,
-    EvidenceContext,
-    CivicEvidenceType,
+)
+from src.models.entity_extractors import (
+    extract_entities_from_finding,
+    ExtractionResult,
+    ExtractedEntity,
+    ExtractedEdge,
 )
 from src.models.research_plan import (
     ResearchPlan,
@@ -29,19 +34,22 @@ __all__ = [
     "MtbState",
     "create_initial_state",
     "is_state_valid",
-    # Evidence Graph
+    # Evidence Graph (新架构)
     "EvidenceGraph",
-    "EvidenceNode",
-    "EvidenceEdge",
-    "EvidenceType",
+    "Entity",
+    "Edge",
+    "Observation",
+    "EntityType",
+    "Predicate",
     "EvidenceGrade",
-    "RelationType",
+    "CivicEvidenceType",
     "create_evidence_graph",
     "load_evidence_graph",
-    # 新增 (参考 DeepEvidence 论文)
-    "ContextType",
-    "EvidenceContext",
-    "CivicEvidenceType",
+    # Entity Extractors
+    "extract_entities_from_finding",
+    "ExtractionResult",
+    "ExtractedEntity",
+    "ExtractedEdge",
     # Research Plan
     "ResearchPlan",
     "ResearchDirection",

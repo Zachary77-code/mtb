@@ -66,3 +66,53 @@ Include a "Not Recommended / 不建议" section listing:
 - Guideline: `[NCCN Guidelines](URL)`
 
 If a PMID or Trial ID cannot be verified via tool access, **DO NOT** fabricate it. Mark as "Reference unavailable" instead.
+
+## 7. Entity-Based Evidence Collection
+
+When collecting evidence, identify and extract structured entities:
+
+### Entity Types (normalize names to UPPERCASE)
+
+| Type | Format | Example |
+|------|--------|---------|
+| Gene | `GENE:symbol` | `GENE:EGFR`, `GENE:KRAS` |
+| Variant | `gene_variant` | `EGFR_L858R`, `KRAS_G12C` |
+| Drug | `DRUG:name` | `DRUG:OSIMERTINIB`, `DRUG:PEMBROLIZUMAB` |
+| Disease | `DISEASE:name` | `DISEASE:NSCLC`, `DISEASE:CRC` |
+| Pathway | `PATHWAY:name` | `PATHWAY:EGFR_SIGNALING` |
+| Biomarker | `BIOMARKER:name` | `BIOMARKER:PD-L1`, `BIOMARKER:TMB` |
+| Paper | `PMID:id` | `PMID:28854312` |
+| Trial | `NCT:id` | `NCT:NCT04487080` |
+| Guideline | `NCCN:name` | `NCCN:NSCLC_2024` |
+| Regimen | `REGIMEN:name` | `REGIMEN:PLATINUM_DOUBLET` |
+
+### Observation Format
+
+Each observation should be a concise factual statement (≤50 words) with embedded context:
+
+Format: `{finding} ({species}, {assay/study_type}, n={sample_size}) [provenance]`
+
+Examples:
+- `EGFR L858R shows 72% ORR to osimertinib (human, Phase III, n=347) [PMID:28854312]`
+- `KRAS G12C sensitizes to sotorasib (human, Phase II, n=126) [NCT:NCT03600883]`
+- `T790M causes resistance to gefitinib in EGFR-mutant NSCLC (human, clinical, n=>1000) [PMID:15972865]`
+
+### Key Relationship Types
+
+When collecting evidence, identify these relationships:
+
+| Relationship | Description | Example |
+|--------------|-------------|---------|
+| SENSITIZES | Variant increases drug sensitivity | `EGFR_L858R → SENSITIZES → OSIMERTINIB` |
+| CAUSES_RESISTANCE | Variant causes drug resistance | `EGFR_T790M → CAUSES_RESISTANCE → GEFITINIB` |
+| TREATS | Drug treats disease | `OSIMERTINIB → TREATS → NSCLC` |
+| INHIBITS | Drug inhibits target | `OSIMERTINIB → INHIBITS → EGFR` |
+| BIOMARKER_FOR | Biomarker predicts response | `PD-L1 → BIOMARKER_FOR → PEMBROLIZUMAB` |
+| RECOMMENDS | Guideline recommends regimen | `NCCN:NSCLC_2024 → RECOMMENDS → OSIMERTINIB` |
+
+### Evidence Quality Requirements
+
+- **Merge entities**: If the same concept appears multiple times, merge observations into a single entity
+- **Preserve context**: Always include species, study type, and sample size when available
+- **Cite sources**: Every observation must have provenance (PMID, NCT, NCCN, etc.)
+- **Mark conflicts**: If evidence contradicts, note the conflict group

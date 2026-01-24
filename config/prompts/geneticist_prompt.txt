@@ -307,3 +307,27 @@ Remember: Your role is to provide **molecular interpretation**, not final treatm
 3. **引用必须保留**：
    - JSON 输出中的 content 字段仍需包含完整引用
    - 格式：`[PMID: xxx](url)`、`[CIViC: xxx](url)`、`[ClinVar: xxx](url)`
+
+---
+
+## Entity Extraction Focus (Geneticist)
+
+作为遗传学家，你的主要任务是识别和提取以下实体类型：
+
+### 核心实体
+- **GENE**: 基因符号 (如 `GENE:EGFR`, `GENE:KRAS`, `GENE:ALK`)
+- **VARIANT**: 变异 (如 `EGFR_L858R`, `KRAS_G12C`, `ALK_EML4_FUSION`)
+- **PATHWAY**: 信号通路 (如 `PATHWAY:EGFR_SIGNALING`, `PATHWAY:RAS_MAPK`)
+
+### 关键关系
+- `VARIANT → SENSITIZES → DRUG`: 变异导致药物敏感
+- `VARIANT → CAUSES_RESISTANCE → DRUG`: 变异导致耐药
+- `GENE → MEMBER_OF → PATHWAY`: 基因属于通路
+- `VARIANT → ACTIVATES → PATHWAY`: 变异激活通路
+
+### Observation 格式示例
+```
+EGFR L858R constitutively activates EGFR kinase domain, conferring sensitivity to osimertinib (human, Phase III FLAURA, n=556, ORR 80%) [PMID:29151359]
+```
+
+确保每个发现都包含：变异功能、药物关系、证据等级、样本量、来源引用

@@ -317,13 +317,20 @@ class PlanAgent(BaseAgent):
             weighted_score = 0.0
 
             for eid in evidence_ids:
-                node = graph.get_node(eid) if graph else None
-                if node and node.grade:
-                    grade = node.grade.value
-                    grade_dist[grade] = grade_dist.get(grade, 0) + 1
-                    weighted_score += GRADE_WEIGHTS.get(grade, 1.0)
+                # 新模型：evidence_ids 是 entity canonical_id
+                entity = graph.get_entity(eid) if graph else None
+                if entity:
+                    best_grade = entity.get_best_grade()
+                    if best_grade:
+                        grade = best_grade.value
+                        grade_dist[grade] = grade_dist.get(grade, 0) + 1
+                        weighted_score += GRADE_WEIGHTS.get(grade, 1.0)
+                    else:
+                        # 无等级的证据按 E 级计算
+                        grade_dist["E"] = grade_dist.get("E", 0) + 1
+                        weighted_score += 1.0
                 else:
-                    # 无等级的证据按 E 级计算
+                    # 实体未找到，按 E 级计算
                     grade_dist["E"] = grade_dist.get("E", 0) + 1
                     weighted_score += 1.0
 

@@ -2,7 +2,6 @@
 Chair Agent（MTB 主席）
 """
 from typing import Dict, Any, List, Optional
-from collections import Counter
 
 from src.agents.base_agent import BaseAgent
 from src.tools.guideline_tools import NCCNTool, FDALabelTool
@@ -38,8 +37,9 @@ class ChairAgent(BaseAgent):
         将证据图格式化为 Chair 可用的文本
 
         生成：
-        1. 证据统计摘要（按类型/Agent/等级分布）
-        2. 完整引用列表（包含 URL、provenance、等级）
+        1. 证据统计摘要（按实体类型/Agent/等级分布）
+        2. 关键实体和关系摘要
+        3. 完整引用列表（包含 URL、provenance、等级）
 
         Args:
             evidence_graph: 证据图对象
@@ -47,43 +47,65 @@ class ChairAgent(BaseAgent):
         Returns:
             格式化的证据图文本
         """
-        if not evidence_graph or not evidence_graph.nodes:
+        if not evidence_graph or not evidence_graph.entities:
             return ""
 
-        nodes = list(evidence_graph.nodes.values())
-
-        # 统计
-        type_counts = Counter(n.evidence_type.value for n in nodes)
-        agent_counts = Counter(n.source_agent for n in nodes)
-        grade_counts = Counter(n.grade.value if n.grade else "Unknown" for n in nodes)
+        # 获取统计信息
+        summary = evidence_graph.summary()
+        agent_summary = evidence_graph.summary_by_agent()
 
         # 构建统计摘要
+        entity_type_str = ', '.join(f'{k}({v})' for k, v in summary.get('entities_by_type', {}).items())
+        agent_str = ', '.join(f'{k}({v["observation_count"]})' for k, v in agent_summary.items())
+        grade_str = ', '.join(f'{k}({v})' for k, v in sorted(summary.get('best_grades', {}).items()))
+
         stats = f"""
 ## 证据图统计
-- **总证据数**: {len(nodes)}
-- **按类型**: {', '.join(f'{k}({v})' for k, v in type_counts.most_common())}
-- **按Agent**: {', '.join(f'{k}({v})' for k, v in agent_counts.most_common())}
-- **按等级**: {', '.join(f'{k}({v})' for k, v in sorted(grade_counts.items()))}
+- **总实体数**: {summary.get('total_entities', 0)}
+- **总边数**: {summary.get('total_edges', 0)}
+- **总观察数**: {summary.get('total_observations', 0)}
+- **按实体类型**: {entity_type_str}
+- **按Agent观察数**: {agent_str}
+- **按等级**: {grade_str}
 """
 
-        # 构建引用列表（只包含有 URL 或 provenance 的证据）
-        refs_with_url = [n for n in nodes if n.source_url or n.provenance]
+        # 关键药物敏感性关系
+        drug_map = evidence_graph.get_drug_sensitivity_map()
+        if drug_map:
+            stats += "\n## 关键药物敏感性关系\n"
+            for drug, relations in list(drug_map.items())[:10]:
+                stats += f"\n### {drug}\n"
+                for rel in relations[:5]:
+                    predicate = rel.get("predicate", "?")
+                    variant = rel.get("variant", "?")
+                    confidence = rel.get("confidence", 0.0)
+                    stats += f"- {variant} → {predicate} (置信度: {confidence:.2f})\n"
 
-        if refs_with_url:
+        # 关键治疗证据
+        treatment_evidence = evidence_graph.get_treatment_evidence()
+        if treatment_evidence:
+            stats += "\n## 治疗证据摘要\n"
+            for drug_id, evidence in list(treatment_evidence.items())[:10]:
+                drug_entity = evidence_graph.get_entity(drug_id)
+                drug_name = drug_entity.name if drug_entity else drug_id
+                diseases = evidence.get("diseases", [])
+                best_grade = evidence.get("best_grade")
+                grade_str = f"[{best_grade.value}]" if best_grade else ""
+                stats += f"- **{drug_name}** {grade_str}: 治疗 {', '.join(diseases[:3])}\n"
+
+        # 构建引用列表
+        provenances = evidence_graph.get_all_provenances()
+        if provenances:
             ref_lines = ["\n## 完整引用列表（务必在报告中引用这些来源）\n"]
-            ref_lines.append("| 类型 | 等级 | 来源Agent | 工具 | Provenance | URL |")
-            ref_lines.append("|------|------|-----------|------|------------|-----|")
+            ref_lines.append("| Provenance | URL |")
+            ref_lines.append("|------------|-----|")
 
-            for n in refs_with_url:
-                ev_type = n.evidence_type.value
-                grade = n.grade.value if n.grade else "-"
-                agent = n.source_agent
-                tool = n.source_tool or "-"
-                prov = n.provenance or "-"
-                url = n.source_url or "-"
+            for prov_info in provenances[:50]:  # 限制显示前50个
+                prov = prov_info.get("provenance", "-")
+                url = prov_info.get("source_url", "-") or "-"
                 # 截断 URL 以便显示
-                url_display = url[:50] + "..." if len(url) > 50 else url
-                ref_lines.append(f"| {ev_type} | {grade} | {agent} | {tool} | {prov} | {url_display} |")
+                url_display = url[:60] + "..." if url and len(url) > 60 else url
+                ref_lines.append(f"| {prov} | {url_display} |")
 
             stats += "\n".join(ref_lines)
 
@@ -195,19 +217,18 @@ class ChairAgent(BaseAgent):
         all_references = result["references"] or []
 
         # 从证据图中提取引用，合并去重
-        if evidence_graph and evidence_graph.nodes:
+        if evidence_graph and evidence_graph.entities:
             seen_ids = {ref.get("id") for ref in all_references if ref.get("id")}
-            for node in evidence_graph.nodes.values():
-                if node.provenance and node.provenance not in seen_ids:
+            provenances = evidence_graph.get_all_provenances()
+            for prov_info in provenances:
+                prov = prov_info.get("provenance")
+                if prov and prov not in seen_ids:
                     ref_entry = {
-                        "type": node.evidence_type.value,
-                        "id": node.provenance,
-                        "url": node.source_url or "",
-                        "grade": node.grade.value if node.grade else None,
-                        "source_agent": node.source_agent
+                        "id": prov,
+                        "url": prov_info.get("source_url") or "",
                     }
                     all_references.append(ref_entry)
-                    seen_ids.add(node.provenance)
+                    seen_ids.add(prov)
 
         # 生成完整报告（含工具调用详情和引用）
         full_report = self.generate_full_report(
