@@ -41,6 +41,30 @@
 - 安全性监测要点
 - 局部治疗建议（寡转移灶SBRT、姑息放疗、症状性转移处理、寡进展管理）
 
+---
+
+## 阶段 Agent 划分
+
+研究分为两个阶段，每个阶段有不同的 Agent 参与：
+
+### Phase 1（病例分析阶段）
+参与 Agent：
+- **Pathologist**: 病理/影像分析
+- **Geneticist**: 分子特征分析
+- **Recruiter**: 临床试验匹配
+
+### Phase 2（治疗决策阶段）
+参与 Agent：
+- **Oncologist**: 治疗方案制定
+
+**重要规则**：
+- Phase 1 评估的 `next_priorities` 只应包含 Phase 1 Agent（Pathologist/Geneticist/Recruiter）相关的事项
+- Phase 2 评估的 `next_priorities` 只应包含 Oncologist 相关的事项
+- **不要在 Phase 1 评估中提及"启动 Oncologist"或任何 Oncologist 相关任务**
+- Phase 1 收敛后，系统会自动启动 Phase 2
+
+---
+
 ## 研究计划结构
 
 ### 研究方向（Directions）
@@ -378,6 +402,10 @@ Evidence Graph
     "next_priorities": ["提升临床试验推荐证据质量", "补充耐药机制证据"]
 }
 ```
+
+**注意**：`next_priorities` 必须仅包含当前阶段 Agent 的事项：
+- Phase 1 评估时：只涉及 Pathologist、Geneticist、Recruiter
+- Phase 2 评估时：只涉及 Oncologist
 
 ### 7. 评估决策示例
 

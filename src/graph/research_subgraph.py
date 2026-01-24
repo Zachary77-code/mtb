@@ -430,22 +430,23 @@ def _save_detailed_iteration_report(
             for agent_name in agent_names:
                 result_key = f"{agent_name.lower()}_research_result"
                 agent_result = state.get(result_key, {})
+                # 使用 agent_result 中的 new_evidence_ids 来计算新增证据数
                 new_ids = agent_result.get("new_evidence_ids", [])
+                agent_new_count = len(new_ids)
 
                 # 找该 agent 的方向
-                for pre_d in pre_plan.directions:
-                    if pre_d.target_agent == agent_name:
-                        post_d = post_plan.get_direction_by_id(pre_d.id) if post_plan else None
-                        # 计算新增证据数
-                        if post_d:
-                            new_count = len(post_d.evidence_ids) - len(pre_d.evidence_ids)
-                        else:
-                            new_count = len(new_ids)
-                        pre_status = pre_d.status.value
-                        post_status = post_d.status.value if post_d else pre_status
-                        status_change = f"{pre_status} → {post_status}" if pre_status != post_status else pre_status
-                        topic_short = pre_d.topic[:15] + "..." if len(pre_d.topic) > 15 else pre_d.topic
-                        lines.append(f"| {agent_name} | {topic_short} | +{new_count} | {status_change} |")
+                agent_directions = [d for d in pre_plan.directions if d.target_agent == agent_name]
+                num_directions = len(agent_directions) if agent_directions else 1
+
+                for pre_d in agent_directions:
+                    post_d = post_plan.get_direction_by_id(pre_d.id) if post_plan else None
+                    # 使用 agent_result 中的实际新增数，平均分配到各方向
+                    new_count = agent_new_count // num_directions
+                    pre_status = pre_d.status.value
+                    post_status = post_d.status.value if post_d else pre_status
+                    status_change = f"{pre_status} → {post_status}" if pre_status != post_status else pre_status
+                    topic_short = pre_d.topic[:15] + "..." if len(pre_d.topic) > 15 else pre_d.topic
+                    lines.append(f"| {agent_name} | {topic_short} | +{new_count} | {status_change} |")
             lines.append("")
 
     # === 0. 下一轮各方向研究模式 ===
