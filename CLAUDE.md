@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MTB (分子肿瘤委员会) is a multi-agent workflow system for generating clinical tumor board reports. It processes patient case files (PDF) through specialized AI agents and produces structured HTML reports.
+MTB (Molecular Tumor Board) is a multi-agent workflow system for generating clinical tumor board reports. It processes patient case files (PDF) through specialized AI agents and produces structured HTML reports.
 
 **Key constraint**: This system uses **LangGraph 1.0.6 only** - it does NOT use LangChain. All LLM calls go through OpenRouter API directly.
 
@@ -30,44 +30,69 @@ pytest tests/
 ### Workflow Pipeline (LangGraph StateGraph)
 
 ```
-PDF Input → PDF Parser → PlanAgent (生成研究计划+初始化EvidenceGraph)
+PDF Input → PDF Parser → PlanAgent (generates research plan + initializes EvidenceGraph)
                              ↓
+                    ┌────────────────┐
+                    │ EvidenceGraph  │ ← Global evidence graph (Entity-Edge-Observation)
+                    │   (empty)      │
+                    └───────┬────────┘
+                            ↓
               ┌──────────────────────────────────────┐
-              │ Research Subgraph (两阶段研究循环)    │
+              │ Research Subgraph (Two-Phase Loop)   │
               │                                      │
               │ ┌────────── Phase 1 Loop ──────────┐ │
-              │ │    (最多 MAX_PHASE1_ITERATIONS=7) │ │
+              │ │    (max MAX_PHASE1_ITERATIONS=7) │ │
               │ │ [Pathologist][Geneticist][Recruiter]│
-              │ │        ↓ (并行 BFRS/DFRS)          │ │
+              │ │        ↓ (parallel BFRS/DFRS)     │ │
+              │ │   ┌─────────────────────┐         │ │
+              │ │   │ Update EvidenceGraph│         │ │
+              │ │   │ (entity extraction) │         │ │
+              │ │   └─────────────────────┘         │ │
+              │ │        ↓                          │ │
               │ │      Phase1 Aggregator            │ │
               │ │        ↓                          │ │
               │ │  PlanAgent.evaluate_and_update()  │ │
               │ │    continue ↺    ↓ converged      │ │
               │ └───────────────────┘               │
               │                     ↓               │
+              │          generate_phase1_reports()  │ ← saves 1_pathologist/2_geneticist/3_recruiter
+              │                     ↓               │
+              │          phase2_plan_init()         │ ← generates Oncologist directions from Phase 1
+              │                     ↓               │
               │ ┌────────── Phase 2 Loop ──────────┐ │
-              │ │    (最多 MAX_PHASE2_ITERATIONS=7) │ │
+              │ │    (max MAX_PHASE2_ITERATIONS=7) │ │
               │ │         Oncologist               │ │
-              │ │        ↓ (独立 BFRS/DFRS)         │ │
+              │ │        ↓ (solo BFRS/DFRS)        │ │
+              │ │   ┌─────────────────────┐         │ │
+              │ │   │ Update EvidenceGraph│         │ │
+              │ │   └─────────────────────┘         │ │
+              │ │        ↓                          │ │
               │ │  PlanAgent.evaluate_and_update()  │ │
               │ │    continue ↺    ↓ converged      │ │
               │ └───────────────────┘               │
               │                     ↓               │
-              │        Generate Agent Reports       │
+              │          generate_phase2_reports()  │ ← saves 4_oncologist_report
+              │                     ↓               │
+              │          generate_agent_reports()   │ ← extracts references, trial info
               └──────────────────────────────────────┘
                              ↓
-                           Chair  ← Receives upstream_references
-                             ↓
-                    Format Verification
-                      ↓           ↓
-                   [Pass]      [Fail → Chair Retry, max 2x]
-                      ↓
-                  HTML Report
+                    ┌────────────────┐
+                    │ EvidenceGraph  │ ← Complete graph passed to Chair
+                    │  (88 entities) │
+                    └───────┬────────┘
+                            ↓
+                          Chair  ← generates final report from EvidenceGraph + agent reports
+                            ↓
+                   Format Verification
+                     ↓           ↓
+                  [Pass]      [Fail → Chair Retry, max 2x]
+                     ↓
+                 HTML Report
 ```
 
 - **State**: `MtbState` TypedDict in [src/models/state.py](src/models/state.py) - all data flows through this state object
 - **Graph**: [src/graph/state_graph.py](src/graph/state_graph.py) - workflow definition with `StateGraph`
-- **Research Subgraph**: [src/graph/research_subgraph.py](src/graph/research_subgraph.py) - 两阶段BFRS/DFRS研究循环
+- **Research Subgraph**: [src/graph/research_subgraph.py](src/graph/research_subgraph.py) - two-phase BFRS/DFRS research loop
 - **Nodes**: [src/graph/nodes.py](src/graph/nodes.py) - each node calls an agent and updates state
 - **Edges**: [src/graph/edges.py](src/graph/edges.py) - conditional logic for retry decisions
 
@@ -115,35 +140,35 @@ Tools in `src/tools/` follow the `BaseTool` pattern (OpenAI function calling for
 
 ### Research Subgraph
 
-两阶段研究循环实现 BFRS/DFRS 研究模式 ([src/graph/research_subgraph.py](src/graph/research_subgraph.py)):
+Two-phase research loop implementing BFRS/DFRS research modes ([src/graph/research_subgraph.py](src/graph/research_subgraph.py)):
 
-**研究模式**:
-- **BFRS (Breadth-First Research)**: 广度优先，每方向1-2次工具调用，收集广泛初步证据
-- **DFRS (Depth-First Research)**: 深度优先，针对高优先级发现进行3-5次连续工具调用
+**Research Modes**:
+- **BFRS (Breadth-First Research)**: 1-2 tool calls per direction, collecting broad preliminary evidence
+- **DFRS (Depth-First Research)**: 3-5 consecutive tool calls for high-priority findings
 
-**收敛检查**: `PlanAgent.evaluate_and_update()`
-- 统一由 PlanAgent 进行收敛判断（ConvergenceJudge 已废弃）
-- 计算各方向的证据质量统计（数量、等级分布、加权得分）
-- 调用 LLM 评估研究质量，判断是否收敛
-- 动态更新研究计划：调整优先级、设置各个direction的 preferred_mode (breadth_first/depth_first/skip)
+**Convergence Check**: `PlanAgent.evaluate_and_update()`
+- Unified convergence judgment by PlanAgent (ConvergenceJudge deprecated)
+- Computes evidence quality stats per direction (count, grade distribution, weighted score)
+- LLM evaluates research quality, decides whether to converge
+- Dynamically updates research plan: adjusts priorities, sets direction's preferred_mode (breadth_first/depth_first/skip)
 
-**研究迭代输出** (每次 `research_iterate()` 返回):
+**Research Iteration Output** (each `research_iterate()` returns):
 ```python
 {
-    "evidence_graph": Dict,        # 更新后的证据图
-    "research_plan": Dict,         # 更新后的研究计划
-    "new_evidence_ids": List[str], # 新添加的证据ID
-    "direction_updates": Dict,     # 方向状态更新 {id: "pending"|"completed"}
-    "needs_deep_research": List,   # 需要深入研究的发现
+    "evidence_graph": Dict,        # Updated evidence graph
+    "research_plan": Dict,         # Updated research plan
+    "new_evidence_ids": List[str], # Newly added evidence IDs
+    "direction_updates": Dict,     # Direction status updates {id: "pending"|"completed"}
+    "needs_deep_research": List,   # Findings requiring deep research
     "summary": str
 }
 ```
 
-### Evidence Graph (Entity-Edge-Observation 架构)
+### Evidence Graph (Entity-Edge-Observation Architecture)
 
-全局证据图采用 DeepEvidence 论文的实体中心架构 ([src/models/evidence_graph.py](src/models/evidence_graph.py)):
+Global evidence graph uses DeepEvidence paper's entity-centric architecture ([src/models/evidence_graph.py](src/models/evidence_graph.py)):
 
-**架构概述**:
+**Architecture Overview**:
 ```
 Finding: "Gefitinib improves survival in EGFR L858R NSCLC"
     ↓ LLM Entity Extraction
@@ -161,80 +186,80 @@ Finding: "Gefitinib improves survival in EGFR L858R NSCLC"
 └─────────────────────────────────────────────────────┘
 ```
 
-**数据结构**:
-- `Entity`: 实体节点（canonical_id, entity_type, name, aliases, observations）
-- `Edge`: 关系边（source_id, target_id, predicate, observations, confidence, conflict_group）
-- `Observation`: 事实陈述（statement, evidence_grade, civic_type, provenance, source_url）
+**Data Structures**:
+- `Entity`: Node (canonical_id, entity_type, name, aliases, observations)
+- `Edge`: Relationship (source_id, target_id, predicate, observations, confidence, conflict_group)
+- `Observation`: Factual statement (statement, evidence_grade, civic_type, provenance, source_url)
 
-**实体类型** (`EntityType`): gene, variant, drug, disease, pathway, biomarker, paper, trial, guideline, regimen, finding
+**Entity Types** (`EntityType`): gene, variant, drug, disease, pathway, biomarker, paper, trial, guideline, regimen, finding
 
-**关系类型** (`Predicate`):
-- 分子机制: ACTIVATES, INHIBITS, BINDS, PHOSPHORYLATES, REGULATES, AMPLIFIES, MUTATES_TO
-- 药物关系: TREATS, SENSITIZES, CAUSES_RESISTANCE, INTERACTS_WITH, CONTRAINDICATED_FOR
-- 证据关系: SUPPORTS, CONTRADICTS, CITES, DERIVED_FROM
-- 成员/注释: MEMBER_OF, EXPRESSED_IN, ASSOCIATED_WITH, BIOMARKER_FOR
-- 指南/试验: RECOMMENDS, EVALUATES, INCLUDES_ARM
+**Predicate Types** (`Predicate`):
+- Molecular mechanisms: ACTIVATES, INHIBITS, BINDS, PHOSPHORYLATES, REGULATES, AMPLIFIES, MUTATES_TO
+- Drug relationships: TREATS, SENSITIZES, CAUSES_RESISTANCE, INTERACTS_WITH, CONTRAINDICATED_FOR
+- Evidence relationships: SUPPORTS, CONTRADICTS, CITES, DERIVED_FROM
+- Membership/annotation: MEMBER_OF, EXPRESSED_IN, ASSOCIATED_WITH, BIOMARKER_FOR
+- Guidelines/trials: RECOMMENDS, EVALUATES, INCLUDES_ARM
 
-**证据等级** (`EvidenceGrade`): A, B, C, D, E (CIViC标准)
+**Evidence Grades** (`EvidenceGrade`): A, B, C, D, E (CIViC standard)
 
-**生命周期**:
-| 时机 | 操作 | 位置 |
-|------|------|------|
-| 创建 | `plan_agent_node()` 初始化空图 | nodes.py |
-| 更新 | `research_iterate()` → LLM实体提取 → 合并 | research_mixin.py |
-| 实体提取 | `extract_entities_from_finding()` | entity_extractors.py |
-| 收敛检查 | `check_direction_evidence_sufficiency()` | research_subgraph.py |
-| 报告生成 | `generate_agent_reports()` 按Agent提取 | research_subgraph.py |
-| 可视化 | `graph.to_mermaid()` 生成流程图 | evidence_graph.py |
+**Lifecycle**:
+| When | Operation | Location |
+|------|-----------|----------|
+| Creation | `plan_agent_node()` initializes empty graph | nodes.py |
+| Update | `research_iterate()` → LLM entity extraction → merge | research_mixin.py |
+| Entity Extraction | `extract_entities_from_finding()` | entity_extractors.py |
+| Convergence Check | `check_direction_evidence_sufficiency()` | research_subgraph.py |
+| Report Generation | `generate_agent_reports()` extracts by agent | research_subgraph.py |
+| Visualization | `graph.to_mermaid()` generates flowchart | evidence_graph.py |
 
-**关键方法**:
-- `get_or_create_entity(canonical_id, ...)`: 获取或创建实体（自动合并）
-- `add_observation_to_entity(canonical_id, observation)`: 添加观察
-- `add_edge(source_id, target_id, predicate, ...)`: 添加关系边
-- `find_entity_by_name(name)`: 模糊查找实体
-- `summary()`: 返回统计摘要（entities_by_type, best_grades, edges_by_predicate）
-- `to_mermaid()`: 生成 Mermaid 格式图表
+**Key Methods**:
+- `get_or_create_entity(canonical_id, ...)`: Get or create entity (auto-merge)
+- `add_observation_to_entity(canonical_id, observation)`: Add observation
+- `add_edge(source_id, target_id, predicate, ...)`: Add relationship edge
+- `find_entity_by_name(name)`: Fuzzy entity lookup
+- `summary()`: Returns stats summary (entities_by_type, best_grades, edges_by_predicate)
+- `to_mermaid()`: Generate Mermaid format diagram
 
 ### Monitoring & Logging
 
-日志配置使用 Loguru ([src/utils/logger.py](src/utils/logger.py)):
-- **输出位置**: `logs/mtb.log`
-- **轮转**: 10MB 触发，保留7天，zip压缩
+Logging configured with Loguru ([src/utils/logger.py](src/utils/logger.py)):
+- **Output**: `logs/mtb.log`
+- **Rotation**: 10MB trigger, 7-day retention, zip compression
 
-**日志标签**:
-| 标签 | 说明 |
-|------|------|
-| `[PHASE1]` / `[PHASE2]` | 研究循环迭代 |
-| `[PHASE1_CONVERGENCE]` | 收敛检查详情 |
-| `[EVIDENCE]` | 证据图统计 |
-| `[Agent名称]` | Agent执行状态 |
-| `[Tool:工具名]` | 工具调用详情 |
+**Log Tags**:
+| Tag | Description |
+|-----|-------------|
+| `[PHASE1]` / `[PHASE2]` | Research loop iteration |
+| `[PHASE1_CONVERGENCE]` | Convergence check details |
+| `[EVIDENCE]` | Evidence graph statistics |
+| `[AgentName]` | Agent execution status |
+| `[Tool:ToolName]` | Tool invocation details |
 
-**辅助函数**:
-- `log_phase_progress()` - 进度条 `[████░░] 4/7`
-- `log_evidence_stats()` - 证据图统计（类型分布、Agent分布）
-- `log_convergence_status()` - 收敛状态快照
+**Helper Functions**:
+- `log_phase_progress()` - Progress bar `[████░░] 4/7`
+- `log_evidence_stats()` - Evidence graph stats (type distribution, agent distribution)
+- `log_convergence_status()` - Convergence status snapshot
 
-**监控中间过程**:
-1. 查看 `logs/mtb.log` 实时日志
-2. 检查 `[EVIDENCE]` 标签了解证据收集进度
-3. 检查 `[PHASE1_CONVERGENCE]` / `[PHASE2_CONVERGENCE]` 标签了解收敛决策
+**Monitoring Intermediate Process**:
+1. View `logs/mtb.log` real-time logs
+2. Check `[EVIDENCE]` tag for evidence collection progress
+3. Check `[PHASE1_CONVERGENCE]` / `[PHASE2_CONVERGENCE]` tags for convergence decisions
 
 ### Report Validation
 
 Reports must contain **12 mandatory modules** (defined in `config/settings.py:REQUIRED_SECTIONS`):
-1. 执行摘要 (Executive Summary)
-2. 患者概况 (Patient Profile)
-3. 分子特征 (Molecular Profile)
-4. 治疗史回顾 (Treatment History)
-5. 药物/方案对比 (Regimen Comparison)
-6. 器官功能与剂量 (Organ Function & Dosing)
-7. 治疗路线图 (Treatment Roadmap)
-8. 分子复查建议 (Re-biopsy/Liquid Biopsy)
-9. 临床试验推荐 (Clinical Trials)
-10. 局部治疗建议 (Local Therapy)
-11. 核心建议汇总 (Core Recommendations)
-12. 参考文献 (References)
+1. Executive Summary
+2. Patient Profile
+3. Molecular Profile
+4. Treatment History
+5. Regimen Comparison
+6. Organ Function & Dosing
+7. Treatment Roadmap
+8. Re-biopsy/Liquid Biopsy
+9. Clinical Trials
+10. Local Therapy
+11. Core Recommendations
+12. References
 
 `FormatChecker` in [src/validators/format_checker.py](src/validators/format_checker.py) validates these modules with fuzzy matching.
 
@@ -260,10 +285,10 @@ Key settings in `config/settings.py`:
 - `AGENT_TEMPERATURE=0.2`
 - `AGENT_TIMEOUT=120` seconds
 - `MAX_RETRY_ITERATIONS=2`
-- `MAX_PHASE1_ITERATIONS=7` - Phase 1 最大迭代次数
-- `MAX_PHASE2_ITERATIONS=7` - Phase 2 最大迭代次数
-- `MIN_EVIDENCE_PER_DIRECTION=20` - 每研究方向最少证据数
-- `SUBGRAPH_MODEL` - 研究子图使用的模型（flash模型降低成本）
+- `MAX_PHASE1_ITERATIONS=7` - Phase 1 max iterations
+- `MAX_PHASE2_ITERATIONS=7` - Phase 2 max iterations
+- `MIN_EVIDENCE_PER_DIRECTION=20` - Minimum evidence per research direction
+- `SUBGRAPH_MODEL` - Model for research subgraph (flash model for cost efficiency)
 
 ## Prompts
 
@@ -272,18 +297,18 @@ All agent prompts are in `config/prompts/`:
 - `{agent}_prompt.txt` - role-specific instructions
 
 Evidence grading (CIViC Evidence Level):
-- A: Validated - 已验证，多项独立研究或 meta 分析支持
-- B: Clinical - 临床证据，来自临床试验或大规模临床研究
-- C: Case Study - 病例研究，来自个案报道或小规模病例系列
-- D: Preclinical - 临床前证据，来自细胞系、动物模型等实验
-- E: Inferential - 推断性证据，间接证据或基于生物学原理的推断
+- A: Validated - supported by multiple independent studies or meta-analyses
+- B: Clinical - from clinical trials or large-scale clinical studies
+- C: Case Study - from case reports or small case series
+- D: Preclinical - from cell lines, animal models, etc.
+- E: Inferential - indirect evidence or based on biological principles
 
-CIViC Evidence Types (临床意义分类):
-- Predictive (预测性): 预测对某种治疗的反应
-- Diagnostic (诊断性): 用于疾病诊断
-- Prognostic (预后性): 与疾病预后相关
-- Predisposing (易感性): 与癌症风险相关
-- Oncogenic (致癌性): 变异的致癌功能
+CIViC Evidence Types (Clinical Significance):
+- Predictive: Predicts response to a treatment
+- Diagnostic: Used for disease diagnosis
+- Prognostic: Related to disease prognosis
+- Predisposing: Related to cancer risk
+- Oncogenic: Variant's oncogenic function
 
 Citation format: `[PMID: 12345678](url)` or `[NCT04123456](url)`
 
