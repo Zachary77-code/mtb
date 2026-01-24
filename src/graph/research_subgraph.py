@@ -810,6 +810,49 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
     return reports
 
 
+# ==================== Phase 2 研究计划初始化 ====================
+
+def phase2_plan_init(state: MtbState) -> Dict[str, Any]:
+    """
+    Phase 2 研究计划初始化 - 基于 Phase 1 结果生成针对性的 Oncologist 方向
+
+    在 Phase 1 收敛后、Phase 2 开始前调用。
+    读取 Phase 1 完整报告和证据图，生成针对性的 Oncologist 研究方向。
+    """
+    log_separator("PHASE2_PLAN_INIT")
+    logger.info("[PHASE2_PLAN_INIT] 基于 Phase 1 结果生成 Phase 2 研究方向...")
+
+    # 检查 Phase 1 报告是否存在
+    pathologist_report = state.get("pathologist_report", "")
+    geneticist_report = state.get("geneticist_report", "")
+    recruiter_report = state.get("recruiter_report", "")
+
+    if not (pathologist_report or geneticist_report or recruiter_report):
+        logger.warning("[PHASE2_PLAN_INIT] Phase 1 报告缺失，使用默认 Phase 2 方向")
+        return {}
+
+    logger.info(f"[PHASE2_PLAN_INIT] Phase 1 报告长度: P={len(pathologist_report)}, G={len(geneticist_report)}, R={len(recruiter_report)}")
+
+    # 调用 PlanAgent 生成 Phase 2 方向
+    try:
+        agent = PlanAgent()
+        new_plan = agent.generate_phase2_directions(state)
+
+        # 统计新方向
+        plan = load_research_plan(new_plan)
+        oncologist_directions = [d for d in plan.directions if d.target_agent == "Oncologist"]
+        logger.info(f"[PHASE2_PLAN_INIT] 生成 {len(oncologist_directions)} 个 Oncologist 方向:")
+        for d in oncologist_directions:
+            logger.info(f"[PHASE2_PLAN_INIT]   - {d.id}: {d.topic}")
+
+        return {"research_plan": new_plan}
+
+    except Exception as e:
+        logger.error(f"[PHASE2_PLAN_INIT] Phase 2 方向生成失败: {e}")
+        logger.info("[PHASE2_PLAN_INIT] 继续使用原有 Oncologist 方向")
+        return {}
+
+
 # ==================== Phase 2 报告生成辅助函数 ====================
 
 def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
@@ -1748,8 +1791,11 @@ def create_research_subgraph() -> StateGraph:
     workflow.add_node("phase1_aggregator", phase1_aggregator)
     workflow.add_node("phase1_plan_eval", plan_agent_evaluate_phase1)  # PlanAgent 评估
 
-    # ==================== Phase 1 报告生成节点（新增）====================
+    # ==================== Phase 1 报告生成节点 ====================
     workflow.add_node("generate_phase1_reports", generate_phase1_reports)
+
+    # ==================== Phase 2 研究计划初始化节点 ====================
+    workflow.add_node("phase2_plan_init", phase2_plan_init)
 
     # ==================== Phase 2 节点 ====================
     workflow.add_node("phase2_oncologist", phase2_oncologist_node)
@@ -1788,8 +1834,9 @@ def create_research_subgraph() -> StateGraph:
         }
     )
 
-    # Phase 1 专家报告 → Phase 2 Oncologist
-    workflow.add_edge("generate_phase1_reports", "phase2_oncologist")
+    # Phase 1 专家报告 → Phase 2 研究计划初始化 → Phase 2 Oncologist
+    workflow.add_edge("generate_phase1_reports", "phase2_plan_init")
+    workflow.add_edge("phase2_plan_init", "phase2_oncologist")
 
     # Phase 1 路由 → 并行节点（循环时使用）
     workflow.add_conditional_edges(

@@ -660,6 +660,212 @@ class PlanAgent(BaseAgent):
             ][:3],
         }
 
+    # ==================== Phase 2 方向生成 ====================
+
+    def generate_phase2_directions(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        基于 Phase 1 结果生成 Phase 2 (Oncologist) 研究方向
+
+        Args:
+            state: 当前工作流状态，包含：
+                - evidence_graph: Phase 1 收集的证据图
+                - pathologist_report: 完整病理报告
+                - geneticist_report: 完整遗传学报告
+                - recruiter_report: 完整临床试验报告
+                - raw_pdf_text: 原始病历
+                - research_plan: 当前研究计划
+
+        Returns:
+            更新后的 research_plan（替换 Oncologist 方向）
+        """
+        logger.info(f"[{self.role}] 开始生成 Phase 2 研究方向...")
+
+        # 获取 Phase 1 完整报告（不截断）
+        pathologist_report = state.get("pathologist_report", "")
+        geneticist_report = state.get("geneticist_report", "")
+        recruiter_report = state.get("recruiter_report", "")
+        raw_pdf_text = state.get("raw_pdf_text", "")
+
+        # 获取证据图摘要
+        graph = load_evidence_graph(state.get("evidence_graph", {}))
+        graph_summary = graph.summary() if graph else {}
+
+        # 获取当前研究计划
+        current_plan = load_research_plan(state.get("research_plan", {}))
+
+        # 构建提示
+        prompt = self._build_phase2_prompt(
+            raw_pdf_text=raw_pdf_text,
+            pathologist_report=pathologist_report,
+            geneticist_report=geneticist_report,
+            recruiter_report=recruiter_report,
+            graph_summary=graph_summary
+        )
+
+        # 调用 LLM
+        result = self.invoke(prompt)
+        output = result.get("output", "")
+
+        # 解析输出
+        new_directions = self._parse_phase2_output(output)
+
+        # 更新研究计划：移除旧的 Oncologist 方向，添加新方向
+        updated_plan = self._update_plan_with_phase2_directions(current_plan, new_directions)
+
+        logger.info(f"[{self.role}] Phase 2 方向生成完成: {len(new_directions)} 个方向")
+
+        return updated_plan.to_dict()
+
+    def _build_phase2_prompt(
+        self,
+        raw_pdf_text: str,
+        pathologist_report: str,
+        geneticist_report: str,
+        recruiter_report: str,
+        graph_summary: Dict[str, Any]
+    ) -> str:
+        """构建 Phase 2 方向生成提示"""
+
+        # 读取 Phase 2 prompt 模板
+        from pathlib import Path
+        prompt_file = Path("config/prompts/phase2_plan_prompt.txt")
+        if prompt_file.exists():
+            base_prompt = prompt_file.read_text(encoding="utf-8")
+        else:
+            base_prompt = "基于 Phase 1 结果生成 Oncologist 研究方向。"
+
+        # 构建完整提示
+        return f"""{base_prompt}
+
+---
+
+## Phase 1 完整报告
+
+### Pathologist 报告
+{pathologist_report}
+
+### Geneticist 报告
+{geneticist_report}
+
+### Recruiter 报告（临床试验匹配）
+{recruiter_report}
+
+---
+
+## 证据图统计摘要
+- 总实体数: {graph_summary.get('total_entities', 0)}
+- 总边数: {graph_summary.get('total_edges', 0)}
+- 总观察数: {graph_summary.get('total_observations', 0)}
+- 实体类型分布: {graph_summary.get('entities_by_type', {})}
+- 证据等级分布: {graph_summary.get('best_grades', {})}
+
+---
+
+## 原始病历（参考）
+{raw_pdf_text}...
+
+---
+
+请基于以上 Phase 1 完整报告，生成针对性的 Oncologist 研究方向。
+"""
+
+    def _parse_phase2_output(self, output: str) -> List[Dict[str, Any]]:
+        """解析 Phase 2 方向生成输出"""
+        json_str = self._extract_json(output)
+
+        if not json_str:
+            logger.warning(f"[{self.role}] 无法从 Phase 2 输出中提取 JSON，使用默认方向")
+            return self._get_default_phase2_directions()
+
+        try:
+            data = json.loads(json_str)
+            directions = data.get("phase2_directions", [])
+
+            if not directions:
+                logger.warning(f"[{self.role}] Phase 2 输出无方向，使用默认方向")
+                return self._get_default_phase2_directions()
+
+            return directions
+
+        except json.JSONDecodeError as e:
+            logger.warning(f"[{self.role}] Phase 2 JSON 解析失败: {e}，使用默认方向")
+            return self._get_default_phase2_directions()
+
+    def _get_default_phase2_directions(self) -> List[Dict[str, Any]]:
+        """获取默认的 Phase 2 方向（备用）"""
+        return [
+            {
+                "id": "P2_D1",
+                "topic": "一线治疗方案评估",
+                "target_agent": "Oncologist",
+                "target_modules": ["方案对比"],
+                "priority": 1,
+                "queries": ["first-line treatment", "NCCN guidelines"],
+                "completion_criteria": "完成一线方案证据对比"
+            },
+            {
+                "id": "P2_D2",
+                "topic": "器官功能与剂量调整",
+                "target_agent": "Oncologist",
+                "target_modules": ["器官功能与剂量"],
+                "priority": 2,
+                "queries": ["renal dose adjustment", "hepatic impairment"],
+                "completion_criteria": "完成剂量调整建议"
+            },
+            {
+                "id": "P2_D3",
+                "topic": "治疗路线图制定",
+                "target_agent": "Oncologist",
+                "target_modules": ["治疗路线图"],
+                "priority": 2,
+                "queries": ["treatment sequence", "second-line options"],
+                "completion_criteria": "完成完整治疗路线图"
+            },
+            {
+                "id": "P2_D4",
+                "topic": "局部治疗评估",
+                "target_agent": "Oncologist",
+                "target_modules": ["局部治疗建议"],
+                "priority": 3,
+                "queries": ["SBRT", "palliative radiotherapy"],
+                "completion_criteria": "评估局部治疗适应症"
+            }
+        ]
+
+    def _update_plan_with_phase2_directions(
+        self,
+        plan: ResearchPlan,
+        new_directions: List[Dict[str, Any]]
+    ) -> ResearchPlan:
+        """更新研究计划，替换 Oncologist 方向"""
+
+        # 移除旧的 Oncologist 方向
+        non_oncologist_directions = [
+            d for d in plan.directions
+            if d.target_agent != "Oncologist"
+        ]
+
+        # 创建新的 Oncologist 方向
+        for d_data in new_directions:
+            direction = ResearchDirection(
+                id=d_data.get("id", f"P2_D{len(non_oncologist_directions) + 1}"),
+                topic=d_data.get("topic", ""),
+                target_agent="Oncologist",
+                target_modules=d_data.get("target_modules", []),
+                priority=d_data.get("priority", 1),
+                queries=d_data.get("queries", []),
+                status=DirectionStatus.PENDING,
+                completion_criteria=d_data.get("completion_criteria", ""),
+                evidence_ids=[],
+                preferred_mode="breadth_first",
+                mode_reason="Phase 2 新方向，需要广度收集证据"
+            )
+            non_oncologist_directions.append(direction)
+
+        # 更新计划
+        plan.directions = non_oncologist_directions
+        return plan
+
 
 if __name__ == "__main__":
     # 测试
