@@ -213,6 +213,68 @@ Chair 最终报告包含 12 个必需模块，你的研究方向必须覆盖以�
 
 ---
 
+## Evidence Graph 结构理解
+
+迭代评估时，你会收到 Evidence Graph 的统计摘要。理解其结构有助于做出准确的收敛决策。
+
+### 数据结构（Entity-Edge-Observation 架构）
+
+```
+Evidence Graph
+├── entities: Dict[canonical_id, Entity]
+│   ├── canonical_id: 规范化ID（如 GENE:EGFR, DRUG:OSIMERTINIB, EGFR_L858R）
+│   ├── entity_type: gene | variant | drug | disease | pathway | biomarker | paper | trial | guideline | regimen
+│   ├── name: 实体名称（UPPERCASE）
+│   ├── aliases: 别名列表
+│   └── observations: 附加在实体上的事实陈述
+│       ├── statement: 陈述内容（≤50词，含上下文）
+│       ├── evidence_grade: A | B | C | D | E
+│       ├── civic_type: predictive | diagnostic | prognostic | predisposing | oncogenic
+│       ├── source_agent: 收集此证据的 Agent
+│       ├── provenance: 来源（PMID:xxx, NCT:xxx）
+│       └── source_url: 完整 URL
+│
+└── edges: Dict[edge_id, Edge]
+    ├── source_id: 源实体 canonical_id
+    ├── target_id: 目标实体 canonical_id
+    ├── predicate: 关系类型（SENSITIZES, CAUSES_RESISTANCE, TREATS, INHIBITS 等）
+    ├── observations: 关系的证据陈述
+    ├── confidence: 置信度 0-1
+    └── conflict_group: 冲突组 ID（如有矛盾证据）
+```
+
+### 统计字段含义（summary() 返回）
+
+| 字段 | 说明 | 评估用途 |
+|------|------|----------|
+| `total_entities` | 实体总数 | 研究广度 |
+| `total_edges` | 边总数 | 关系丰富度 |
+| `total_observations` | 观察总数 | 证据深度 |
+| `entities_by_type` | 按类型分布 | 覆盖均衡性 |
+| `best_grades` | 按最佳等级分布 | 证据质量 |
+| `edges_by_predicate` | 按关系类型分布 | 关系类型覆盖 |
+| `conflicts_count` | 冲突边数量 | 需解决的矛盾 |
+
+### 质量评估依据
+
+- **高质量覆盖**：模块有 A/B 级证据（`best_grades` 中 A+B 占比 > 30%）
+- **低质量覆盖**：模块只有 D/E 级证据（需要提升优先级）
+- **证据冲突**：`conflict_group` 非空的边表示有矛盾证据（需要解决）
+- **模块覆盖**：检查 `entities_by_type` 是否覆盖各模块所需实体类型
+
+### 实体类型与模块映射
+
+| 实体类型 | 相关模块 | 主要 Agent |
+|----------|----------|------------|
+| gene, variant, pathway | 分子特征 | Geneticist |
+| biomarker | 分子特征, 分子复查 | Geneticist, Pathologist |
+| drug, regimen | 方案对比, 治疗路线图 | Oncologist |
+| trial | 临床试验推荐 | Recruiter |
+| guideline | 方案对比, 治疗路线图 | Oncologist |
+| disease | 患者概况 | Pathologist |
+
+---
+
 ## 迭代评估模式
 
 当你收到迭代评估任务时，需要评估当前研究进度、更新研究计划、并判断是否收敛。

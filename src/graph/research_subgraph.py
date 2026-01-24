@@ -638,6 +638,13 @@ def _save_detailed_iteration_report(
                     lines.append(f"  - {variant} → {predicate} (置信度: {confidence:.2f})")
                 count += 1
             lines.append("")
+
+        # === 4. Evidence Graph Mermaid 图 ===
+        lines.append("## 4. Evidence Graph 可视化")
+        lines.append("")
+        mermaid_diagram = graph.to_mermaid()
+        lines.append(mermaid_diagram)
+        lines.append("")
     else:
         lines.append("- 证据图为空")
         lines.append("")

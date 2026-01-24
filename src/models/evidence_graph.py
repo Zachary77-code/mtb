@@ -1005,6 +1005,85 @@ class EvidenceGraph:
         """返回实体数量"""
         return len(self.entities)
 
+    # ==================== Mermaid 图生成 ====================
+
+    def to_mermaid(self) -> str:
+        """
+        生成 Mermaid 格式的图表
+
+        Returns:
+            Mermaid 格式字符串
+        """
+        lines = ["```mermaid", "graph LR"]
+
+        # 实体类型对应的样式
+        type_styles = {
+            "gene": ":::gene",
+            "variant": ":::variant",
+            "drug": ":::drug",
+            "disease": ":::disease",
+            "pathway": ":::pathway",
+            "biomarker": ":::biomarker",
+            "paper": ":::paper",
+            "trial": ":::trial",
+            "guideline": ":::guideline",
+            "regimen": ":::regimen",
+            "finding": ":::finding",
+        }
+
+        # 生成节点 ID 映射 (Mermaid 不支持特殊字符)
+        node_map = {}
+        for i, (cid, entity) in enumerate(self.entities.items()):
+            node_id = f"N{i}"
+            node_map[cid] = node_id
+
+            # 节点标签: 类型缩写 + 名称
+            etype = entity.entity_type.value if entity.entity_type else "?"
+            etype_abbr = etype[:3].upper()
+            name = entity.name[:20] if len(entity.name) > 20 else entity.name
+            # 转义特殊字符
+            name = name.replace('"', "'").replace(":", "_")
+
+            # 获取最佳等级
+            best_grade = entity.get_best_grade()
+            grade_str = f" [{best_grade.value}]" if best_grade else ""
+
+            style = type_styles.get(etype, "")
+            lines.append(f'    {node_id}["{etype_abbr}: {name}{grade_str}"]{style}')
+
+        lines.append("")
+
+        # 生成边
+        for edge in self.edges.values():
+            source_node = node_map.get(edge.source_id)
+            target_node = node_map.get(edge.target_id)
+
+            if source_node and target_node:
+                predicate = edge.predicate.value if edge.predicate else "?"
+                # 缩短谓词显示
+                pred_short = predicate[:12] if len(predicate) > 12 else predicate
+                lines.append(f"    {source_node} -->|{pred_short}| {target_node}")
+
+        lines.append("")
+
+        # 添加样式定义
+        lines.append("    %% 样式定义")
+        lines.append("    classDef gene fill:#e1f5fe,stroke:#0288d1")
+        lines.append("    classDef variant fill:#fff3e0,stroke:#f57c00")
+        lines.append("    classDef drug fill:#e8f5e9,stroke:#388e3c")
+        lines.append("    classDef disease fill:#fce4ec,stroke:#c2185b")
+        lines.append("    classDef pathway fill:#f3e5f5,stroke:#7b1fa2")
+        lines.append("    classDef biomarker fill:#e0f2f1,stroke:#00796b")
+        lines.append("    classDef paper fill:#eceff1,stroke:#546e7a")
+        lines.append("    classDef trial fill:#fff8e1,stroke:#ffa000")
+        lines.append("    classDef guideline fill:#e8eaf6,stroke:#3f51b5")
+        lines.append("    classDef regimen fill:#fbe9e7,stroke:#e64a19")
+        lines.append("    classDef finding fill:#f5f5f5,stroke:#9e9e9e")
+
+        lines.append("```")
+
+        return "\n".join(lines)
+
 
 # ==================== 便捷函数 ====================
 
