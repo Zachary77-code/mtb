@@ -141,26 +141,61 @@ Tools in `src/tools/` follow the `BaseTool` pattern (OpenAI function calling for
 }
 ```
 
-### Evidence Graph
+### Evidence Graph (Entity-Edge-Observation 架构)
 
-全局证据图用于存储和管理所有Agent收集的证据 ([src/models/evidence_graph.py](src/models/evidence_graph.py)):
+全局证据图采用 DeepEvidence 论文的实体中心架构 ([src/models/evidence_graph.py](src/models/evidence_graph.py)):
+
+**架构概述**:
+```
+Finding: "Gefitinib improves survival in EGFR L858R NSCLC"
+    ↓ LLM Entity Extraction
+┌─────────────────────────────────────────────────────┐
+│ Entities:                                           │
+│   GENE:EGFR, EGFR_L858R, DRUG:GEFITINIB, DISEASE:NSCLC │
+│                                                     │
+│ Edges:                                              │
+│   EGFR_L858R → SENSITIZES → GEFITINIB              │
+│   GEFITINIB → TREATS → NSCLC                        │
+│                                                     │
+│ Observation (on edge):                              │
+│   "Gefitinib improves OS (human, Phase III, n=347) │
+│    [PMID:12345678]"                                 │
+└─────────────────────────────────────────────────────┘
+```
+
+**数据结构**:
+- `Entity`: 实体节点（canonical_id, entity_type, name, aliases, observations）
+- `Edge`: 关系边（source_id, target_id, predicate, observations, confidence, conflict_group）
+- `Observation`: 事实陈述（statement, evidence_grade, civic_type, provenance, source_url）
+
+**实体类型** (`EntityType`): gene, variant, drug, disease, pathway, biomarker, paper, trial, guideline, regimen, finding
+
+**关系类型** (`Predicate`):
+- 分子机制: ACTIVATES, INHIBITS, BINDS, PHOSPHORYLATES, REGULATES, AMPLIFIES, MUTATES_TO
+- 药物关系: TREATS, SENSITIZES, CAUSES_RESISTANCE, INTERACTS_WITH, CONTRAINDICATED_FOR
+- 证据关系: SUPPORTS, CONTRADICTS, CITES, DERIVED_FROM
+- 成员/注释: MEMBER_OF, EXPRESSED_IN, ASSOCIATED_WITH, BIOMARKER_FOR
+- 指南/试验: RECOMMENDS, EVALUATES, INCLUDES_ARM
+
+**证据等级** (`EvidenceGrade`): A, B, C, D, E (CIViC标准)
 
 **生命周期**:
 | 时机 | 操作 | 位置 |
 |------|------|------|
 | 创建 | `plan_agent_node()` 初始化空图 | nodes.py |
-| 更新 | `research_iterate()` 添加节点 | research_mixin.py |
+| 更新 | `research_iterate()` → LLM实体提取 → 合并 | research_mixin.py |
+| 实体提取 | `extract_entities_from_finding()` | entity_extractors.py |
 | 收敛检查 | `check_direction_evidence_sufficiency()` | research_subgraph.py |
-| 报告生成 | `generate_agent_reports()` 按Agent提取证据 | research_subgraph.py |
+| 报告生成 | `generate_agent_reports()` 按Agent提取 | research_subgraph.py |
+| 可视化 | `graph.to_mermaid()` 生成流程图 | evidence_graph.py |
 
-**数据结构**:
-- `EvidenceNode`: 证据节点（类型、等级、来源Agent、迭代轮次、上下文）
-- `EvidenceEdge`: 关系边（supports, contradicts, sensitizes 等）
-- `EvidenceContext`: 结构化上下文（species, cell_type, assay, sample_size 等）
-
-**证据类型** (`EvidenceType`): molecular, clinical, literature, trial, guideline, drug, pathology, imaging
-
-**证据等级** (`EvidenceGrade`): A, B, C, D, E (CIViC标准)
+**关键方法**:
+- `get_or_create_entity(canonical_id, ...)`: 获取或创建实体（自动合并）
+- `add_observation_to_entity(canonical_id, observation)`: 添加观察
+- `add_edge(source_id, target_id, predicate, ...)`: 添加关系边
+- `find_entity_by_name(name)`: 模糊查找实体
+- `summary()`: 返回统计摘要（entities_by_type, best_grades, edges_by_predicate）
+- `to_mermaid()`: 生成 Mermaid 格式图表
 
 ### Monitoring & Logging
 
