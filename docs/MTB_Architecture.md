@@ -60,6 +60,10 @@ MTB (Virtual Molecular Tumor Board) 是一个基于 LangGraph 的多智能体系
 │  │  │                   │ Oncologist │ ←── BFRS/DFRS               │  │ │
 │  │  │                   └─────┬──────┘                             │  │ │
 │  │  │                         ▼                                    │  │ │
+│  │  │              ┌─────────────────┐                             │  │ │
+│  │  │              │ EvidenceGraph   │ ← 更新证据图                │  │ │
+│  │  │              └────────┬────────┘                             │  │ │
+│  │  │                       ▼                                      │  │ │
 │  │  │       PlanAgent.evaluate_and_update() → 收敛判断             │  │ │
 │  │  └─────────────────────────────────────────────────────────────┘  │ │
 │  └───────────────────────────────────────────────────────────────────┘ │
@@ -83,8 +87,8 @@ MTB (Virtual Molecular Tumor Board) 是一个基于 LangGraph 的多智能体系
 
 | 组件 | 技术 | 说明 |
 |------|------|------|
-| 工作流编排 | LangGraph 1.0.6 | 不使用 LangChain |
-| LLM 调用 | OpenRouter API | 直接使用 requests，非 OpenAI SDK |
+| 工作流编排 | LangGraph 1.0.6 |  |
+| LLM 调用 | OpenRouter API |  |
 | 向量数据库 | ChromaDB | NCCN 指南 RAG |
 | HTML 渲染 | Jinja2 | 自定义模板 |
 | 证据架构 | Entity-Edge-Observation | 基于 DeepEvidence 论文 |

@@ -205,7 +205,7 @@ Chair 最终报告包含 12 个必需模块，你的研究方向必须覆盖以�
 - **target_agent**: Recruiter
 - **target_modules**: ["临床试验推荐"]
 - **topics**: 生物标志物匹配试验、入排标准评估、中国站点
-- **completion_criteria**: 提供至少3个可行试验推荐
+- **completion_criteria**: 提供至少5个可行试验推荐
 
 #### D_LOCAL_THERAPY（局部治疗建议）- 多Agent协作
 主方向：
