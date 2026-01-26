@@ -9,35 +9,106 @@ MTB 系统通过 5 个专业 AI Agent 协作，处理患者病历 PDF 文件，�
 ### 工作流程
 
 ```
-PDF 输入 → PDF 解析
-                ↓
-    ┌───────────┼───────────┐
-    ↓           ↓           ↓
-Pathologist  Geneticist  Recruiter   ← 并行执行
-    └───────────┼───────────┘
-                ↓ (汇聚)
-           Oncologist
-                ↓
-             Chair  ← 接收上游引用
-                ↓
-           格式验证
-         ↓         ↓
-      [通过]    [失败 → 重试, 最多2次]
-         ↓
-      HTML 报告
+PDF 输入 → PDF 解析 → PlanAgent (生成研究计划 + 初始化 EvidenceGraph)
+                             ↓
+              ┌──────────────────────────────────────┐
+              │ Research Subgraph (两阶段循环)        │
+              │                                      │
+              │ ┌────────── Phase 1 循环 ──────────┐ │
+              │ │    (最多 7 次迭代)                │ │
+              │ │ [Pathologist][Geneticist][Recruiter]│
+              │ │        ↓ (并行 BFRS/DFRS)         │ │
+              │ │   更新 EvidenceGraph              │ │
+              │ │        ↓                          │ │
+              │ │   PlanAgent.evaluate_and_update() │ │
+              │ │    继续 ↺      ↓ 收敛             │ │
+              │ └───────────────────┘               │
+              │                     ↓               │
+              │ ┌────────── Phase 2 循环 ──────────┐ │
+              │ │    (最多 7 次迭代)                │ │
+              │ │         Oncologist               │ │
+              │ │        ↓ (单独 BFRS/DFRS)        │ │
+              │ │   更新 EvidenceGraph              │ │
+              │ │        ↓                          │ │
+              │ │   PlanAgent.evaluate_and_update() │ │
+              │ │    继续 ↺      ↓ 收敛             │ │
+              │ └───────────────────┘               │
+              └──────────────────────────────────────┘
+                             ↓
+                          Chair  ← 接收 EvidenceGraph + 各 Agent 报告
+                             ↓
+                        格式验证
+                      ↓         ↓
+                   [通过]    [失败 → 重试, 最多2次]
+                      ↓
+                  HTML 报告
 ```
 
 ### Agent 角色
 
 | Agent | 职责 | 工具 | 温度 |
 |-------|------|------|------|
+| **PlanAgent** | 研究计划生成 + 收敛评估 | - | 0.3 |
 | **Pathologist** | 病理/影像分析 | PubMed, cBioPortal | 0.3 |
 | **Geneticist** | 分子特征分析 | CIViC, ClinVar, cBioPortal, PubMed | 0.2 |
 | **Recruiter** | 临床试验匹配 | ClinicalTrials.gov, NCCN, PubMed | 0.2 |
 | **Oncologist** | 治疗方案制定 | NCCN, FDA Label, RxNorm, PubMed | 0.2 |
-| **Chair** | 汇总整合，生成报告 | NCCN, FDA Label, PubMed | 0.3 |
+| **Chair** | 汇总整合，生成报告 (12 模块) | NCCN, FDA Label, PubMed | 0.3 |
 
-**引用保留机制**: Chair 接收来自 Pathologist、Geneticist、Recruiter 的上游引用，合并去重后生成最终参考文献。
+**Research-Enhanced Agents**: 在 Research Subgraph 中，Pathologist、Geneticist、Recruiter、Oncologist 通过 `ResearchMixin` 增强，支持 BFRS/DFRS 研究模式。
+
+### Research Subgraph (两阶段研究循环)
+
+Research Subgraph 实现了基于 BFRS/DFRS 的两阶段研究循环：
+
+**Phase 1 (并行研究)**:
+- Pathologist、Geneticist、Recruiter 并行执行研究
+- 每个 Agent 根据研究计划中的方向进行 BFRS 或 DFRS 研究
+- 研究结果更新到全局 EvidenceGraph
+- PlanAgent 评估收敛状态，决定是否继续迭代
+
+**Phase 2 (Oncologist 独立研究)**:
+- 基于 Phase 1 的研究报告生成 Oncologist 的研究方向
+- Oncologist 独立执行研究循环
+- 同样由 PlanAgent 评估收敛状态
+
+**研究模式**:
+| 模式 | 描述 | 工具调用次数 |
+|------|------|-------------|
+| **BFRS** (广度优先) | 收集广泛的初步证据 | 1-2 次/方向 |
+| **DFRS** (深度优先) | 深入调查高优先级发现 | 3-5 次连续调用 |
+
+**收敛检查**: PlanAgent 统一判断研究收敛状态，计算每个研究方向的证据质量统计（数量、等级分布、加权得分），并动态调整研究计划。
+
+### Evidence Graph (实体-边-观察架构)
+
+系统使用基于 DeepEvidence 论文的实体中心化证据图架构：
+
+```
+发现: "吉非替尼改善 EGFR L858R NSCLC 患者生存期"
+    ↓ LLM 实体提取
+┌─────────────────────────────────────────────────────┐
+│ Entities (实体):                                    │
+│   GENE:EGFR, EGFR_L858R, DRUG:GEFITINIB, DISEASE:NSCLC │
+│                                                     │
+│ Edges (边):                                         │
+│   EGFR_L858R → SENSITIZES → GEFITINIB              │
+│   GEFITINIB → TREATS → NSCLC                        │
+│                                                     │
+│ Observation (观察):                                 │
+│   "吉非替尼改善 OS (人类, Phase III, n=347)        │
+│    [PMID:12345678]"                                 │
+└─────────────────────────────────────────────────────┘
+```
+
+**实体类型**: gene, variant, drug, disease, pathway, biomarker, paper, trial, guideline, regimen, finding
+
+**关系类型 (Predicate)**:
+- 分子机制: ACTIVATES, INHIBITS, BINDS, PHOSPHORYLATES, REGULATES, AMPLIFIES, MUTATES_TO
+- 药物关系: TREATS, SENSITIZES, CAUSES_RESISTANCE, INTERACTS_WITH, CONTRAINDICATED_FOR
+- 证据关系: SUPPORTS, CONTRADICTS, CITES, DERIVED_FROM
+- 成员/注释: MEMBER_OF, EXPRESSED_IN, ASSOCIATED_WITH, BIOMARKER_FOR
+- 指南/试验: RECOMMENDS, EVALUATES, INCLUDES_ARM
 
 ## 安装
 
