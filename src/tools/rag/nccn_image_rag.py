@@ -11,9 +11,12 @@ from src.utils.logger import mtb_logger as logger
 try:
     from byaldi import RAGMultiModalModel
     HAS_BYALDI = True
-except ImportError:
+except (ImportError, RuntimeError) as e:
     HAS_BYALDI = False
-    logger.warning("[ImageRAG] byaldi 未安装，请运行: pip install byaldi colpali-engine")
+    if "flash_attn" in str(e):
+        logger.warning(f"[ImageRAG] flash_attn 组件导入失败 (可能与 Torch 版本不兼容)，已禁用多模态 RAG。错误: {e}")
+    else:
+        logger.warning(f"[ImageRAG] byaldi 未安装或导入失败 ({e})，请运行: pip install byaldi colpali-engine --no-deps")
 
 try:
     from transformers.utils.import_utils import is_flash_attn_2_available
@@ -69,7 +72,7 @@ class NCCNImageRag:
             overwrite: 是否覆盖已有索引
         """
         if not HAS_BYALDI:
-            raise ImportError("byaldi 未安装，请运行: pip install byaldi colpali-engine")
+            raise ImportError("byaldi 未安装或不可用，请检查日志中的导入错误或运行: pip install byaldi colpali-engine --no-deps")
 
         index_name = index_name or self.DEFAULT_INDEX_NAME
         pdf_path = Path(pdf_path)
@@ -87,6 +90,7 @@ class NCCNImageRag:
         )
         self.model = RAGMultiModalModel.from_pretrained(
             self.model_name,
+            index_root=str(self.index_root),
             device=self.device
         )
 
@@ -96,7 +100,6 @@ class NCCNImageRag:
         self.model.index(
             input_path=str(pdf_path),
             index_name=index_name,
-            index_root=str(self.index_root),
             store_collection_with_index=False,
             overwrite=overwrite
         )
@@ -112,7 +115,7 @@ class NCCNImageRag:
             index_name: 索引名称
         """
         if not HAS_BYALDI:
-            raise ImportError("byaldi 未安装，请运行: pip install byaldi colpali-engine")
+            raise ImportError("byaldi 未安装或不可用，请检查日志中的导入错误或运行: pip install byaldi colpali-engine --no-deps")
 
         index_name = index_name or self.DEFAULT_INDEX_NAME
         index_path = self.index_root / index_name

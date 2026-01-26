@@ -120,7 +120,7 @@ NCCN_IMAGE_VECTOR_DIR = Path(os.getenv(
     "NCCN_IMAGE_VECTOR_DIR",
     r"C:\Users\Windows11\Desktop\image_vector_store"
 ))
-COLPALI_MODEL = os.getenv("COLPALI_MODEL", "vidore/colqwen2.5-v0.2")
+COLPALI_MODEL = os.getenv("COLPALI_MODEL", "vidore/colqwen2-v1.0")
 
 
 def validate_config() -> bool:

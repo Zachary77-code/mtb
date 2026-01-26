@@ -276,7 +276,7 @@ Reports must contain **12 mandatory modules** (defined in `config/settings.py:RE
 Environment variables (`.env`):
 ```
 OPENROUTER_API_KEY=<required>
-OPENROUTER_MODEL=google/gemini-2.5-pro-preview  # default
+OPENROUTER_MODEL=google/gemini-3-pro-preview  # default
 DASHSCOPE_API_KEY=<for embeddings>
 NCBI_API_KEY=<optional, increases rate limits>
 ```

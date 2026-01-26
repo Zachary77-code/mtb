@@ -149,7 +149,7 @@ NCBI_API_KEY=your_ncbi_api_key
 DASHSCOPE_API_KEY=your_dashscope_api_key
 
 # 模型配置 (可选)
-OPENROUTER_MODEL=google/gemini-2.5-pro-preview
+OPENROUTER_MODEL=google/gemini-3-pro-preview
 ```
 
 ### 5. 初始化 NCCN 向量数据库 (可选)
