@@ -5,7 +5,7 @@ HTML 报告生成器
 - :::exec-summary ... ::: 执行摘要块
 - :::timeline ... ::: 治疗时间线
 - :::roadmap ... ::: 治疗路线图
-- [[ref:ID|Title|URL|Note]] 内联引用
+- [[ref:ID;;Title;;URL;;Note]] 内联引用（兼容旧 | 分隔符）
 """
 import os
 import re
@@ -306,12 +306,71 @@ class HtmlReportGenerator:
         with open(template_path, "w", encoding="utf-8") as f:
             f.write(template_content)
 
+    # 证据等级排序（用于 observation index 去重时保留最高等级）
+    _GRADE_ORDER = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
+
+    def _build_observation_index(self, eg_data: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+        """
+        从证据图数据构建 observation 索引
+
+        用于根据 provenance / source_url 查找 observation 内容，
+        在 HTML 渲染时为引用添加 tooltip 文本。
+
+        Args:
+            eg_data: 序列化的证据图字典 {entities: {...}, edges: {...}}
+
+        Returns:
+            {key: {statement, grade, source_tool, civic_type, provenance, source_url}}
+            key 为 provenance 或 source_url
+        """
+        index: Dict[str, Dict[str, Any]] = {}
+
+        def _index_observation(obs_data: Dict[str, Any]):
+            prov = obs_data.get("provenance")
+            url = obs_data.get("source_url")
+            grade = obs_data.get("evidence_grade")
+            entry = {
+                "statement": obs_data.get("statement", ""),
+                "grade": grade,
+                "source_tool": obs_data.get("source_tool"),
+                "civic_type": obs_data.get("civic_type"),
+                "provenance": prov,
+                "source_url": url,
+                "source_agent": obs_data.get("source_agent"),
+            }
+            grade_rank = self._GRADE_ORDER.get(grade, 5) if grade else 5
+
+            # 按 provenance 索引
+            if prov:
+                existing = index.get(prov)
+                if not existing or grade_rank < self._GRADE_ORDER.get(existing.get("grade"), 5):
+                    index[prov] = entry
+
+            # 按 source_url 索引（额外索引路径）
+            if url and url != prov:
+                existing = index.get(url)
+                if not existing or grade_rank < self._GRADE_ORDER.get(existing.get("grade"), 5):
+                    index[url] = entry
+
+        # 遍历所有实体的 observations
+        for entity_data in eg_data.get("entities", {}).values():
+            for obs_data in entity_data.get("observations", []):
+                _index_observation(obs_data)
+
+        # 遍历所有边的 observations
+        for edge_data in eg_data.get("edges", {}).values():
+            for obs_data in edge_data.get("observations", []):
+                _index_observation(obs_data)
+
+        return index
+
     def generate(
         self,
         raw_pdf_text: str,
         chair_synthesis: str,
         references: List[Dict[str, str]],
-        run_folder: str = None
+        run_folder: str = None,
+        evidence_graph_data: Dict[str, Any] = None
     ) -> str:
         """
         生成 HTML 报告
@@ -321,10 +380,16 @@ class HtmlReportGenerator:
             chair_synthesis: Chair 综合报告（Markdown）
             references: 引用列表
             run_folder: 本次运行的报告文件夹路径（可选，若不提供则使用默认目录）
+            evidence_graph_data: 序列化的证据图字典（可选，用于 observation tooltip）
 
         Returns:
             生成的 HTML 文件路径
         """
+        # 构建 observation 索引（用于引用 tooltip）
+        self._observation_index: Dict[str, Dict[str, Any]] = {}
+        if evidence_graph_data and isinstance(evidence_graph_data, dict):
+            self._observation_index = self._build_observation_index(evidence_graph_data)
+
         # 获取模板
         template = self.env.get_template("report.html")
 
@@ -377,12 +442,15 @@ class HtmlReportGenerator:
         - :::exec-summary ... ::: 执行摘要
         - :::timeline ... ::: 治疗时间线
         - :::roadmap ... ::: 治疗路线图
-        - [[ref:ID|Title|URL|Note]] 内联引用
+        - [[ref:ID;;Title;;URL;;Note]] 内联引用（兼容旧 | 分隔符）
         """
         # 1. 先解析自定义块标记
         md_text = self._parse_custom_blocks(md_text)
 
-        # 2. 标准 Markdown 转换
+        # 2. 解析内联引用（必须在 markdown 转换之前，避免 | 分隔符与表格冲突）
+        md_text = self._parse_inline_refs_in_markdown(md_text)
+
+        # 3. 标准 Markdown 转换
         html = markdown.markdown(
             md_text,
             extensions=[
@@ -393,7 +461,7 @@ class HtmlReportGenerator:
             ]
         )
 
-        # 3. 解析内联引用
+        # 4. 兜底：清理可能遗漏的内联引用
         html = self._parse_inline_refs(html)
 
         return html
@@ -465,13 +533,74 @@ class HtmlReportGenerator:
         html += '</ul></div>'
         return html
 
+    def _parse_timeline_items(self, content: str) -> List[Dict[str, str]]:
+        """
+        自定义时间线解析器（替代 yaml.safe_load）
+
+        逐行解析 YAML-like 时间线格式，避免 yaml.safe_load 在特殊值
+        （如 response: - 裸横杠、包含冒号的值）上的解析失败。
+
+        Args:
+            content: :::timeline 块内的文本
+
+        Returns:
+            解析后的时间线项目列表
+        """
+        items: List[Dict[str, str]] = []
+        current_item: Dict[str, str] = {}
+        known_keys = {"line", "date", "regimen", "response", "type", "note"}
+
+        for raw_line in content.split('\n'):
+            stripped = raw_line.strip()
+            if not stripped:
+                continue
+
+            # 新条目起始: "- key: value"
+            if stripped.startswith('- '):
+                if current_item:
+                    items.append(current_item)
+                current_item = {}
+                stripped = stripped[2:].strip()  # 去掉 "- "
+
+            # 解析 "key: value"（用 partition 处理值中包含冒号的情况）
+            if ':' in stripped:
+                key, _, value = stripped.partition(':')
+                key = key.strip().lower()
+                value = value.strip()
+                if key in known_keys:
+                    # 处理 yaml 特殊值：裸横杠 "-" 表示无数据
+                    if value == '-':
+                        value = '-'
+                    current_item[key] = value
+
+        # 最后一个条目
+        if current_item:
+            items.append(current_item)
+
+        return items
+
     def _render_timeline(self, content: str) -> str:
         """渲染治疗时间线"""
-        data = self._parse_yaml_content(content)
+        # 优先使用自定义解析器（更健壮）
+        data = self._parse_timeline_items(content)
 
-        if not data or not isinstance(data, list):
-            # 回退：简单文本显示
-            return f'<div class="treatment-timeline"><p>{content}</p></div>'
+        # 回退：尝试 yaml.safe_load
+        if not data:
+            yaml_data = self._parse_yaml_content(content)
+            if yaml_data and isinstance(yaml_data, list):
+                data = yaml_data
+
+        # 最终回退：格式化文本显示
+        if not data:
+            # 将原始文本按条目格式化，而非显示为一段纯文本
+            lines = [l.strip() for l in content.strip().split('\n') if l.strip()]
+            html = '<div class="treatment-timeline">'
+            for line in lines:
+                if line.startswith('- '):
+                    line = line[2:]
+                html += f'<div class="treatment-item"><div class="treatment-content"><p>{line}</p></div></div>'
+            html += '</div>'
+            return html
 
         html = '<div class="treatment-timeline">'
 
@@ -479,12 +608,12 @@ class HtmlReportGenerator:
             if not isinstance(item, dict):
                 continue
 
-            item_type = item.get('type', '')
-            line = item.get('line', '')
-            date = item.get('date', '')
-            regimen = item.get('regimen', '')
-            response = item.get('response', '')
-            note = item.get('note', '')
+            item_type = str(item.get('type', ''))
+            line = str(item.get('line', ''))
+            date = str(item.get('date', ''))
+            regimen = str(item.get('regimen', ''))
+            response = str(item.get('response', ''))
+            note = str(item.get('note', ''))
 
             # 确定标记样式类
             marker_class = self._get_marker_class(item_type)
@@ -542,23 +671,126 @@ class HtmlReportGenerator:
         html += '</div>'
         return html
 
+    def _is_nccn_citation(self, ref_id: str, url: str, title: str) -> bool:
+        """判断是否为 NCCN 引用（需要特殊处理：仅 tooltip，不可点击跳转）"""
+        ref_id_upper = ref_id.strip().upper()
+        if ref_id_upper.startswith("NCCN"):
+            return True
+        if url and "nccn.org" in url.lower():
+            return True
+        if title and title.strip().upper().startswith("NCCN"):
+            return True
+        # 检查 observation index 中是否为 NCCN 工具来源
+        obs = self._observation_index.get(url) or self._observation_index.get(ref_id)
+        if obs and obs.get("source_tool") == "search_nccn":
+            return True
+        return False
+
+    def _get_tooltip_text(self, ref_id: str, url: str, title: str, note: str) -> str:
+        """
+        获取引用的 tooltip 文本
+
+        优先从 observation index 查找 statement + grade，
+        否则回退到 title: note 格式。
+        """
+        # 尝试从 observation index 查找
+        obs = (self._observation_index.get(ref_id) or
+               self._observation_index.get(url) or
+               self._observation_index.get(title))
+        if obs and obs.get("statement"):
+            grade = obs.get("grade")
+            grade_str = f" [{grade}]" if grade else ""
+            tool = obs.get("source_tool") or ""
+            tool_str = f" ({tool})" if tool else ""
+            return f"{obs['statement']}{grade_str}{tool_str}"
+
+        # 回退：使用 citation 自带的 title + note
+        if title and note:
+            return f"{title}: {note}"
+        return title or note or ref_id
+
+    def _render_nccn_citation(self, ref_id: str, tooltip_text: str) -> str:
+        """渲染 NCCN 引用（tooltip-only，不可点击跳转）"""
+        safe_tooltip = tooltip_text.replace('"', '&quot;').replace('<', '&lt;').replace('>', '&gt;')
+        return (
+            f'<span class="ref-tooltip nccn-ref">'
+            f'<span class="cite cite-nccn">[NCCN]</span>'
+            f'<span class="ref-text">{safe_tooltip}</span>'
+            f'</span>'
+        )
+
+    def _render_standard_citation(self, ref_id: str, url: str, tooltip_text: str) -> str:
+        """渲染标准引用（可点击跳转 + hover tooltip）"""
+        safe_tooltip = tooltip_text.replace('"', '&quot;').replace('<', '&lt;').replace('>', '&gt;')
+        safe_url = url.replace('"', '&quot;')
+        safe_id = ref_id.replace('<', '&lt;').replace('>', '&gt;')
+        return (
+            f'<span class="ref-tooltip">'
+            f'<a class="cite" href="{safe_url}" target="_blank">[{safe_id}]</a>'
+            f'<span class="ref-text">{safe_tooltip}</span>'
+            f'</span>'
+        )
+
+    def _render_citation(self, ref_id: str, title: str, url: str, note: str) -> str:
+        """根据引用类型渲染为 NCCN 或标准引用 HTML"""
+        tooltip_text = self._get_tooltip_text(ref_id, url, title, note)
+        if self._is_nccn_citation(ref_id, url, title):
+            return self._render_nccn_citation(ref_id, tooltip_text)
+        return self._render_standard_citation(ref_id, url, tooltip_text)
+
+    def _parse_inline_refs_in_markdown(self, md_text: str) -> str:
+        """
+        在 markdown 转 HTML 之前解析 [[ref:...]] 引用
+
+        必须在 markdown.markdown() 之前运行，避免 markdown 表格解析器
+        将 | 分隔符误认为表格列分隔符。
+
+        支持两种分隔符：
+        - 新格式: [[ref:ID;;Title;;URL;;Note]]
+        - 旧格式: [[ref:ID|Title|URL|Note]]（向后兼容）
+        """
+        # 新格式：;; 分隔符
+        pattern_new = r'\[\[ref:([^;]+);;([^;]+);;([^;]+);;([^\]]+)\]\]'
+
+        def replacer_new(m):
+            ref_id, title, url, note = [s.strip() for s in m.groups()]
+            return self._render_citation(ref_id, title, url, note)
+
+        md_text = re.sub(pattern_new, replacer_new, md_text)
+
+        # 旧格式：| 分隔符（向后兼容，仅在非表格行中匹配）
+        # 使用更严格的匹配：要求 URL 以 http 开头
+        pattern_legacy = r'\[\[ref:([^|\]]+)\|([^|\]]+)\|(https?://[^|\]]+)\|([^\]]+)\]\]'
+
+        def replacer_legacy(m):
+            ref_id, title, url, note = [s.strip() for s in m.groups()]
+            return self._render_citation(ref_id, title, url, note)
+
+        md_text = re.sub(pattern_legacy, replacer_legacy, md_text)
+
+        return md_text
+
     def _parse_inline_refs(self, html: str) -> str:
         """
-        解析内联引用标记为带 tooltip 的 HTML
+        [Legacy] 解析内联引用标记（markdown 转换后的清理）
 
-        格式: [[ref:ID|Title|URL|Note]]
-        输出: <span class="ref-tooltip"><a class="cite">[ID]</a><span class="ref-text">...</span></span>
+        注意：主要解析已移至 _parse_inline_refs_in_markdown()（在 markdown 转换前执行）。
+        此方法作为兜底，处理可能遗漏的引用。
         """
-        pattern = r'\[\[ref:([^|]+)\|([^|]+)\|([^|]+)\|([^\]]+)\]\]'
+        # 新格式 ;; 分隔符
+        pattern_new = r'\[\[ref:([^;]+);;([^;]+);;([^;]+);;([^\]]+)\]\]'
 
         def replacer(m):
-            ref_id, title, url, note = m.groups()
-            return f'''<span class="ref-tooltip">
-              <a class="cite" href="{url}" target="_blank">[{ref_id}]</a>
-              <span class="ref-text">{title}: {note}</span>
-            </span>'''
+            ref_id, title, url, note = [s.strip() for s in m.groups()]
+            return self._render_citation(ref_id, title, url, note)
 
-        return re.sub(pattern, replacer, html)
+        html = re.sub(pattern_new, replacer, html)
+
+        # 旧格式 | 分隔符（兜底）
+        pattern_legacy = r'\[\[ref:([^|]+)\|([^|]+)\|([^|]+)\|([^\]]+)\]\]'
+        html = re.sub(pattern_legacy, replacer, html)
+
+        return html
 
     def _get_marker_class(self, item_type: str) -> str:
         """获取时间线标记的 CSS 类"""
@@ -597,18 +829,88 @@ class HtmlReportGenerator:
         return status_map.get(status.lower(), 'var(--primary)')
 
     def _add_reference_links(self, html: str) -> str:
-        """添加引用链接"""
-        # 转换 [PMID: xxx] 为链接
-        html = re.sub(
-            r'\[PMID:\s*(\d+)\]',
-            r'<a href="https://pubmed.ncbi.nlm.nih.gov/\1/" class="reference" target="_blank">[PMID: \1]</a>',
-            html
-        )
+        """
+        将剩余的引用模式转换为上标 tooltip 格式
 
-        # 转换 [NCTxxx] 为链接
+        处理未被 [[ref:...]] 覆盖的引用：
+        - 裸 [PMID: xxx] → 上标 tooltip（observation lookup）
+        - 裸 [NCTxxx] → 上标 tooltip（observation lookup）
+        - 裸 [NCCN: xxx] → NCCN tooltip（仅 hover）
+        - markdown 生成的 <a> 引用链接 → 上标 tooltip
+        """
+        # 1. 转换裸 [PMID: xxx]（未被 markdown 转为链接的）
+        def _pmid_replacer(m):
+            pmid = m.group(1)
+            prov_key = f"PMID:{pmid}"
+            url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+            tooltip = self._get_tooltip_text(prov_key, url, f"PMID: {pmid}", "")
+            return self._render_standard_citation(f"PMID: {pmid}", url, tooltip)
+
+        html = re.sub(r'\[PMID:\s*(\d+)\](?!\()', _pmid_replacer, html)
+
+        # 2. 转换裸 [NCTxxx]（未被 markdown 转为链接的）
+        def _nct_replacer(m):
+            nct_id = m.group(1)
+            url = f"https://clinicaltrials.gov/study/{nct_id}"
+            tooltip = self._get_tooltip_text(nct_id, url, nct_id, "")
+            return self._render_standard_citation(nct_id, url, tooltip)
+
+        html = re.sub(r'\[(NCT\d+)\](?!\()', _nct_replacer, html)
+
+        # 3. 转换裸 [NCCN: xxx]（未被 markdown 转为链接的）
+        def _nccn_replacer(m):
+            nccn_text = m.group(1)
+            tooltip = self._get_tooltip_text(f"NCCN:{nccn_text}", "", f"NCCN: {nccn_text}", "")
+            return self._render_nccn_citation("NCCN", tooltip)
+
+        html = re.sub(r'\[NCCN:\s*([^\]]+)\](?!\()', _nccn_replacer, html)
+
+        # 4. 转换 markdown 生成的 <a> 引用链接为上标 tooltip
+        # 匹配: <a href="url">PMID: xxx</a> 或 <a href="url">NCTxxx</a> 或 <a href="url">NCCN: xxx</a>
+        def _anchor_replacer(m):
+            url = m.group(1)
+            text = m.group(2)
+
+            # PMID 链接
+            pmid_match = re.match(r'PMID:\s*(\d+)', text)
+            if pmid_match:
+                prov_key = f"PMID:{pmid_match.group(1)}"
+                tooltip = self._get_tooltip_text(prov_key, url, text, "")
+                return self._render_standard_citation(text, url, tooltip)
+
+            # NCT 链接
+            nct_match = re.match(r'(NCT\d+)', text)
+            if nct_match:
+                tooltip = self._get_tooltip_text(nct_match.group(1), url, text, "")
+                return self._render_standard_citation(text, url, tooltip)
+
+            # NCCN 链接
+            nccn_match = re.match(r'NCCN[:\s]', text, re.IGNORECASE)
+            if nccn_match or 'nccn.org' in url.lower():
+                tooltip = self._get_tooltip_text(text, url, text, "")
+                return self._render_nccn_citation("NCCN", tooltip)
+
+            # CIViC 链接
+            if 'civicdb.org' in url.lower() or text.lower().startswith('civic'):
+                tooltip = self._get_tooltip_text(text, url, text, "")
+                return self._render_standard_citation(text, url, tooltip)
+
+            # cBioPortal 链接
+            if 'cbioportal.org' in url.lower() or text.lower().startswith('cbioportal'):
+                tooltip = self._get_tooltip_text(text, url, text, "")
+                return self._render_standard_citation(text, url, tooltip)
+
+            # FDA 链接
+            if 'fda.gov' in url.lower() or text.lower().startswith('fda'):
+                tooltip = self._get_tooltip_text(text, url, text, "")
+                return self._render_standard_citation(text, url, tooltip)
+
+            # 其他链接保持原样
+            return m.group(0)
+
         html = re.sub(
-            r'\[(NCT\d+)\]',
-            r'<a href="https://clinicaltrials.gov/study/\1" class="reference" target="_blank">[\1]</a>',
+            r'<a\s+href="([^"]+)"[^>]*>([^<]+)</a>',
+            _anchor_replacer,
             html
         )
 

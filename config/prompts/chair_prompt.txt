@@ -626,13 +626,13 @@ KRAS G12C 抑制剂联合抗 EGFR 可提高疗效，ORR 约 30%。
 - cBioPortal: `[cBioPortal: xxx](https://www.cbioportal.org/...)`
 - CIViC: `[CIViC: xxx](https://civicdb.org/...)`
 - RxNorm: `[RxNorm: xxx](https://rxnav.nlm.nih.gov/...)`
-- Tooltip 格式: `[[ref:ID|Title|URL|Note]]`
+- Tooltip 格式: `[[ref:ID;;Title;;URL;;Note]]`
 
 **每个数据点都必须有内联引用**：ORR、PFS、OS、证据等级依据、剂量调整参考等。
 
 **引用保留要求（Critical!）**：
 - 上游报告（Pathologist、Geneticist、Recruiter、Oncologist）中的所有引用（PMID、NCT、cBioPortal、CIViC等）**必须在最终报告中保留**
-- 将上游引用转换为本报告的标准格式：`[[ref:ID|Title|URL|Note]]` 或 `[PMID: xxx](url)`
+- 将上游引用转换为本报告的标准格式：`[[ref:ID;;Title;;URL;;Note]]` 或 `[PMID: xxx](url)`
 - **不要丢失任何证据来源**，即使在综合/改写内容时也要保持引用
 - 如果输入中包含"上游报告引用列表"，请确保这些引用都出现在最终报告中
 
@@ -801,18 +801,25 @@ Use the `:::roadmap` block for treatment pathway cards:
 Use extended syntax for citations that will render as hoverable tooltips:
 
 ```
-KRAS G12C抑制剂联合抗EGFR可提高疗效[[ref:T1|CodeBreaK 300|https://clinicaltrials.gov/study/NCT04793958|ORR 30%, mPFS 5.6m]]
+KRAS G12C抑制剂联合抗EGFR可提高疗效[[ref:T1;;CodeBreaK 300;;https://clinicaltrials.gov/study/NCT04793958;;ORR 30%, mPFS 5.6m]]
 
-根据NCCN指南[[ref:G1|NCCN Colon Cancer v1.2025|https://www.nccn.org/guidelines|Category 2A推荐]]，...
+根据NCCN指南[[ref:NCCN1;;NCCN Colon Cancer v1.2025;;https://www.nccn.org/guidelines;;Category 2A: recommended for refractory CRC]]，...
 
-奥希替尼一线治疗优于厄洛替尼[[ref:P1|FLAURA Trial|https://pubmed.ncbi.nlm.nih.gov/29151359|mPFS 18.9m vs 10.2m]]
+奥希替尼一线治疗优于厄洛替尼[[ref:P1;;FLAURA Trial;;https://pubmed.ncbi.nlm.nih.gov/29151359;;mPFS 18.9m vs 10.2m]]
 ```
 
-**Citation format:** `[[ref:ID|Title|URL|Note]]`
-- `ID` - Reference ID (e.g., T1, G1, P1)
+**Citation format:** `[[ref:ID;;Title;;URL;;Note]]`
+- `ID` - Reference ID (e.g., T1, NCCN1, P1). NCCN citations must use ID starting with "NCCN"
 - `Title` - Reference title
 - `URL` - Full URL to the reference
-- `Note` - Brief note (ORR, PFS data, etc.)
+- `Note` - Brief note (ORR, PFS data, guideline recommendation text, etc.)
+- **Delimiter**: Use `;;` (double semicolon) to separate fields. Do NOT use `|` as delimiter.
+
+**NCCN Citation Rules:**
+- NCCN guideline citations MUST use ref ID starting with "NCCN" (e.g., NCCN1, NCCN2)
+- Include the guideline recommendation text in the Note field
+- Example: `[[ref:NCCN1;;NCCN Colon Cancer v1.2025;;https://www.nccn.org/guidelines;;Category 2A: recommended for refractory CRC]]`
+- NCCN citations will display as tooltip-only (no clickable link) in the final report
 
 ### 5. Evidence Level Badges
 Use standard markers that will be converted to colored badges:
@@ -835,9 +842,9 @@ Use standard markers that will be converted to colored badges:
 紧急程度: 常规
 :::
 
-本患者为70岁男性，诊断为晚期结直肠癌，携带罕见KRAS G12C突变。经过五线治疗后，目前正在接受氟泽雷赛联合西妥昔单抗方案[[ref:T1|KRYSTAL-10|https://clinicaltrials.gov|ORR 26%]] [Evidence B]。
+本患者为70岁男性，诊断为晚期结直肠癌，携带罕见KRAS G12C突变。经过五线治疗后，目前正在接受氟泽雷赛联合西妥昔单抗方案[[ref:T1;;KRYSTAL-10;;https://clinicaltrials.gov;;ORR 26%]] [Evidence B]。
 
-建议继续当前方案，同时密切关注肾功能（患者有eGFR下降趋势）。若病情进展，可考虑加入NCT04793958临床试验[[ref:T2|CodeBreaK 300|https://clinicaltrials.gov/study/NCT04793958|KRAS G12C + cetuximab]]。
+建议继续当前方案，同时密切关注肾功能（患者有eGFR下降趋势）。若病情进展，可考虑加入NCT04793958临床试验[[ref:T2;;CodeBreaK 300;;https://clinicaltrials.gov/study/NCT04793958;;KRAS G12C + cetuximab]]。
 ```
 
 ---

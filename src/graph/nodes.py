@@ -492,7 +492,8 @@ def webpage_generator_node(state: MtbState) -> Dict[str, Any]:
         raw_pdf_text=state.get("raw_pdf_text", ""),
         chair_synthesis=state.get("chair_synthesis", ""),
         references=state.get("chair_final_references", []),
-        run_folder=state.get("run_folder")  # 传递运行文件夹路径
+        run_folder=state.get("run_folder"),  # 传递运行文件夹路径
+        evidence_graph_data=state.get("evidence_graph")  # 传递证据图用于 observation tooltip
     )
 
     # 打印生成结果

@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Optional
 from src.agents.base_agent import BaseAgent
 from src.tools.guideline_tools import NCCNTool, FDALabelTool
 from src.tools.literature_tools import PubMedTool
-from src.models.evidence_graph import EvidenceGraph, EntityType, Predicate
+from src.models.evidence_graph import EvidenceGraph, EntityType, Predicate, EvidenceGrade
 from config.settings import CHAIR_PROMPT_FILE, REQUIRED_SECTIONS
 
 
@@ -32,14 +32,37 @@ class ChairAgent(BaseAgent):
             temperature=0.3  # 稍高温度以增加综合能力
         )
 
+    @staticmethod
+    def _grade_sort_key(grade) -> int:
+        """证据等级排序键（A=0 最高, E=4 最低, None=5）"""
+        if grade is None:
+            return 5
+        order = {EvidenceGrade.A: 0, EvidenceGrade.B: 1, EvidenceGrade.C: 2,
+                 EvidenceGrade.D: 3, EvidenceGrade.E: 4}
+        return order.get(grade, 5)
+
+    def _format_observation(self, obs) -> str:
+        """格式化单条 Observation 为文本（输出所有字段）"""
+        grade_str = f"[{obs.evidence_grade.value}]" if obs.evidence_grade else "[?]"
+        civic_str = obs.civic_type.value if obs.civic_type else "-"
+        return (
+            f"  - {grade_str} {obs.statement}\n"
+            f"    id: {obs.id} | agent: {obs.source_agent or '-'} | "
+            f"tool: {obs.source_tool or '-'} | provenance: {obs.provenance or '-'} | "
+            f"url: {obs.source_url or '-'} | civic_type: {civic_str} | "
+            f"iteration: {obs.iteration}"
+        )
+
     def _format_evidence_for_chair(self, evidence_graph: Optional[EvidenceGraph]) -> str:
         """
-        将证据图格式化为 Chair 可用的文本
+        将证据图格式化为 Chair 可用的完整文本
 
-        生成：
+        输出：
         1. 证据统计摘要（按实体类型/Agent/等级分布）
-        2. 关键实体和关系摘要
-        3. 完整引用列表（包含 URL、provenance、等级）
+        2. 所有实体及其全部 Observation（按类型分组，含所有字段）
+        3. 所有边关系及其 Observation（按谓词重要性排序）
+        4. 矛盾/冲突证据
+        5. 完整引用列表（含 statement、source_tool、evidence_grade 等）
 
         Args:
             evidence_graph: 证据图对象
@@ -50,16 +73,15 @@ class ChairAgent(BaseAgent):
         if not evidence_graph or not evidence_graph.entities:
             return ""
 
-        # 获取统计信息
+        # ===== 1. 统计摘要 =====
         summary = evidence_graph.summary()
         agent_summary = evidence_graph.summary_by_agent()
 
-        # 构建统计摘要
         entity_type_str = ', '.join(f'{k}({v})' for k, v in summary.get('entities_by_type', {}).items())
         agent_str = ', '.join(f'{k}({v["observation_count"]})' for k, v in agent_summary.items())
         grade_str = ', '.join(f'{k}({v})' for k, v in sorted(summary.get('best_grades', {}).items()))
 
-        stats = f"""
+        parts = [f"""
 ## 证据图统计
 - **总实体数**: {summary.get('total_entities', 0)}
 - **总边数**: {summary.get('total_edges', 0)}
@@ -67,59 +89,135 @@ class ChairAgent(BaseAgent):
 - **按实体类型**: {entity_type_str}
 - **按Agent观察数**: {agent_str}
 - **按等级**: {grade_str}
-"""
+"""]
 
-        # 关键药物敏感性关系
-        drug_map = evidence_graph.get_drug_sensitivity_map()
-        if drug_map:
-            stats += "\n## 关键药物敏感性关系\n"
-            for variant_id, relations in drug_map.items():
-                stats += f"\n### {variant_id}\n"
-                for rel in relations:
-                    predicate = rel.get("predicate", "?")
-                    drug_entity = rel.get("drug")
-                    drug_name = drug_entity.name if drug_entity else "?"
-                    grade = rel.get("grade")
-                    grade_str = grade.value if grade else "?"
-                    stats += f"- {drug_name} → {predicate} (等级: {grade_str})\n"
+        # ===== 2. 所有实体与观察（按类型分组）=====
+        type_order = [
+            EntityType.VARIANT, EntityType.GENE, EntityType.DRUG,
+            EntityType.DISEASE, EntityType.BIOMARKER, EntityType.TRIAL,
+            EntityType.GUIDELINE, EntityType.PATHWAY, EntityType.REGIMEN,
+            EntityType.FINDING
+        ]
 
-        # 关键治疗证据
-        drug_entities = evidence_graph.get_entities_by_type(EntityType.DRUG)
-        if drug_entities:
-            stats += "\n## 治疗证据摘要\n"
-            for drug in drug_entities:
-                observations = evidence_graph.get_treatment_evidence(drug.canonical_id)
-                if observations:
-                    grades = [o.evidence_grade for o in observations if o.evidence_grade]
-                    best_grade = min(grades, default=None) if grades else None
-                    grade_str = f"[{best_grade.value}]" if best_grade else ""
-                    # 从相关边获取疾病信息
-                    disease_names = []
-                    for edge in evidence_graph.get_entity_edges(drug.canonical_id, direction="both"):
-                        if edge.predicate == Predicate.TREATS:
-                            target = evidence_graph.get_entity(edge.target_id)
-                            if target and target.entity_type == EntityType.DISEASE:
-                                disease_names.append(target.name)
-                    if disease_names:
-                        stats += f"- **{drug.name}** {grade_str}: 治疗 {', '.join(disease_names)}\n"
-                    else:
-                        stats += f"- **{drug.name}** {grade_str}: {len(observations)} 条观察\n"
+        parts.append("\n## 关键实体与观察\n")
 
-        # 构建引用列表
-        provenances = evidence_graph.get_all_provenances()
-        if provenances:
-            ref_lines = ["\n## 完整引用列表（务必在报告中引用这些来源）\n"]
-            ref_lines.append("| Provenance | URL |")
-            ref_lines.append("|------------|-----|")
+        for etype in type_order:
+            entities = evidence_graph.get_entities_by_type(etype)
+            if not entities:
+                continue
 
-            for prov_info in provenances:
-                prov = prov_info.get("provenance", "-")
-                url = prov_info.get("source_url", "-") or "-"
-                ref_lines.append(f"| {prov} | {url} |")
+            parts.append(f"\n### [{etype.value}]\n")
 
-            stats += "\n".join(ref_lines)
+            for entity in entities:
+                obs_list = sorted(
+                    entity.observations,
+                    key=lambda o: self._grade_sort_key(o.evidence_grade)
+                )
+                if not obs_list:
+                    parts.append(f"**{entity.name}** ({entity.canonical_id}) — 无观察\n")
+                    continue
 
-        return stats
+                parts.append(f"**{entity.name}** ({entity.canonical_id}) — {len(obs_list)} 条观察:")
+                for obs in obs_list:
+                    parts.append(self._format_observation(obs))
+                parts.append("")  # 空行分隔
+
+        # ===== 3. 所有边关系与观察 =====
+        predicate_order = [
+            Predicate.SENSITIZES, Predicate.CAUSES_RESISTANCE,
+            Predicate.TREATS, Predicate.RECOMMENDS,
+            Predicate.EVALUATES, Predicate.BIOMARKER_FOR,
+            Predicate.CONTRAINDICATED_FOR, Predicate.INTERACTS_WITH,
+            Predicate.SUPPORTS, Predicate.CONTRADICTS,
+            Predicate.ACTIVATES, Predicate.INHIBITS,
+            Predicate.BINDS, Predicate.REGULATES,
+            Predicate.ASSOCIATED_WITH, Predicate.MEMBER_OF,
+            Predicate.EXPRESSED_IN, Predicate.INCLUDES_ARM,
+            Predicate.CITES, Predicate.DERIVED_FROM,
+            Predicate.PHOSPHORYLATES, Predicate.AMPLIFIES,
+            Predicate.MUTATES_TO,
+        ]
+        predicate_rank = {p: i for i, p in enumerate(predicate_order)}
+
+        edges_with_obs = [
+            e for e in evidence_graph.edges.values() if e.observations
+        ]
+        edges_with_obs.sort(key=lambda e: predicate_rank.get(e.predicate, 999))
+
+        if edges_with_obs:
+            parts.append("\n## 关键关系（含观察）\n")
+
+            for edge in edges_with_obs:
+                source = evidence_graph.get_entity(edge.source_id)
+                target = evidence_graph.get_entity(edge.target_id)
+                source_name = source.name if source else edge.source_id
+                target_name = target.name if target else edge.target_id
+                pred_str = edge.predicate.value if edge.predicate else "?"
+                conf_str = f" (confidence: {edge.confidence:.2f})" if edge.confidence else ""
+
+                parts.append(f"### {source_name} → {pred_str} → {target_name}{conf_str}")
+
+                obs_sorted = sorted(
+                    edge.observations,
+                    key=lambda o: self._grade_sort_key(o.evidence_grade)
+                )
+                for obs in obs_sorted:
+                    parts.append(self._format_observation(obs))
+                parts.append("")
+
+        # ===== 4. 矛盾/冲突证据 =====
+        conflict_edges = [
+            e for e in evidence_graph.edges.values()
+            if e.conflict_group or e.predicate == Predicate.CONTRADICTS
+        ]
+        if conflict_edges:
+            parts.append("\n## 矛盾/冲突证据（需要仲裁）\n")
+            for edge in conflict_edges:
+                source = evidence_graph.get_entity(edge.source_id)
+                target = evidence_graph.get_entity(edge.target_id)
+                source_name = source.name if source else edge.source_id
+                target_name = target.name if target else edge.target_id
+                pred_str = edge.predicate.value if edge.predicate else "?"
+                conflict_info = f" [conflict_group: {edge.conflict_group}]" if edge.conflict_group else ""
+
+                parts.append(f"- {source_name} → {pred_str} → {target_name}{conflict_info}")
+                for obs in edge.observations:
+                    parts.append(self._format_observation(obs))
+                parts.append("")
+
+        # ===== 5. 完整引用列表（含所有字段）=====
+        all_observations = []
+        for entity in evidence_graph.entities.values():
+            for obs in entity.observations:
+                if obs.provenance:
+                    all_observations.append(obs)
+        for edge in evidence_graph.edges.values():
+            for obs in edge.observations:
+                if obs.provenance:
+                    all_observations.append(obs)
+
+        # 按 provenance 去重（保留最高等级的）
+        seen_prov = {}
+        for obs in all_observations:
+            key = obs.provenance
+            if key not in seen_prov or self._grade_sort_key(obs.evidence_grade) < self._grade_sort_key(seen_prov[key].evidence_grade):
+                seen_prov[key] = obs
+
+        if seen_prov:
+            parts.append("\n## 完整引用列表（务必在报告中引用这些来源）\n")
+            parts.append("| Provenance | URL | Statement | Agent | Tool | Grade | CivicType |")
+            parts.append("|------------|-----|-----------|-------|------|-------|-----------|")
+
+            for prov, obs in sorted(seen_prov.items()):
+                url = obs.source_url or "-"
+                stmt = (obs.statement or "-")[:80]  # 截断过长的 statement 避免表格变形
+                agent = obs.source_agent or "-"
+                tool = obs.source_tool or "-"
+                grade = obs.evidence_grade.value if obs.evidence_grade else "-"
+                civic = obs.civic_type.value if obs.civic_type else "-"
+                parts.append(f"| {prov} | {url} | {stmt} | {agent} | {tool} | {grade} | {civic} |")
+
+        return "\n".join(parts)
 
     def synthesize(
         self,
