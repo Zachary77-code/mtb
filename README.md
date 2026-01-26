@@ -202,21 +202,27 @@ MTB/
 │       ├── geneticist_prompt.txt
 │       ├── recruiter_prompt.txt
 │       ├── oncologist_prompt.txt
-│       └── chair_prompt.txt
+│       ├── chair_prompt.txt
+│       └── plan_agent_prompt.txt    # PlanAgent 提示词
 ├── src/
 │   ├── agents/             # Agent 实现
 │   │   ├── base_agent.py
+│   │   ├── research_mixin.py       # BFRS/DFRS 研究能力
+│   │   ├── plan_agent.py           # 研究计划 + 收敛评估
 │   │   ├── pathologist.py
 │   │   ├── geneticist.py
 │   │   ├── recruiter.py
 │   │   ├── oncologist.py
 │   │   └── chair.py
 │   ├── graph/              # LangGraph 工作流
-│   │   ├── state_graph.py
+│   │   ├── state_graph.py          # 主工作流
+│   │   ├── research_subgraph.py    # 两阶段研究循环
 │   │   ├── nodes.py
 │   │   └── edges.py
 │   ├── models/             # 数据模型
-│   │   └── state.py
+│   │   ├── state.py                # MtbState 定义
+│   │   ├── evidence_graph.py       # Entity-Edge-Observation 架构
+│   │   └── research_plan.py        # 研究计划模型
 │   ├── tools/              # 外部 API 工具
 │   │   ├── variant_tools.py    # CIViC, ClinVar, cBioPortal
 │   │   ├── literature_tools.py # PubMed
@@ -251,14 +257,22 @@ MTB/
 11. **核心建议汇总** (Core Recommendations)
 12. **参考文献** (References)
 
-## 证据等级
+## 证据等级 (CIViC 标准)
 
 | 等级 | 描述 |
 |------|------|
-| **A** | Phase III 随机对照试验 |
-| **B** | Phase I-II 临床试验 |
-| **C** | 回顾性研究 |
-| **D** | 临床前研究 |
+| **A** | Validated - 多项独立研究或荟萃分析支持 |
+| **B** | Clinical - 临床试验或大规模临床研究 |
+| **C** | Case Study - 病例报告或小样本病例系列 |
+| **D** | Preclinical - 细胞系、动物模型等 |
+| **E** | Inferential - 间接证据或基于生物学原理推断 |
+
+**CIViC 证据类型**:
+- **Predictive**: 预测治疗反应
+- **Diagnostic**: 用于疾病诊断
+- **Prognostic**: 与疾病预后相关
+- **Predisposing**: 与癌症风险相关
+- **Oncogenic**: 变异的致癌功能
 
 ## 引用格式
 
@@ -273,6 +287,11 @@ MTB/
 | `AGENT_TEMPERATURE` | 0.2 | LLM 生成温度 |
 | `AGENT_TIMEOUT` | 120 | API 调用超时 (秒) |
 | `MAX_RETRY_ITERATIONS` | 2 | 格式验证失败最大重试次数 |
+| `MAX_PHASE1_ITERATIONS` | 7 | Phase 1 最大迭代次数 |
+| `MAX_PHASE2_ITERATIONS` | 7 | Phase 2 最大迭代次数 |
+| `MIN_EVIDENCE_PER_DIRECTION` | 20 | 每个研究方向最少证据数 |
+| `SUBGRAPH_MODEL` | gemini-flash | Research Subgraph 使用的模型 |
+| `ORCHESTRATOR_MODEL` | gemini-pro | PlanAgent/Chair 使用的模型 |
 
 ## 技术栈
 
@@ -280,6 +299,8 @@ MTB/
 - **OpenRouter API** - LLM 调用
 - **ChromaDB** - 向量数据库 (NCCN RAG)
 - **Jinja2** - HTML 模板渲染
+- **Entity-Edge-Observation** - 证据图架构 (基于 DeepEvidence)
+- **BFRS/DFRS** - 广度/深度优先研究模式
 
 ## 许可证
 
