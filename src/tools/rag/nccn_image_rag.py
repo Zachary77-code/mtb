@@ -15,6 +15,12 @@ except ImportError:
     HAS_BYALDI = False
     logger.warning("[ImageRAG] byaldi 未安装，请运行: pip install byaldi colpali-engine")
 
+try:
+    from transformers.utils.import_utils import is_flash_attn_2_available
+    HAS_FLASH_ATTN = is_flash_attn_2_available()
+except ImportError:
+    HAS_FLASH_ATTN = False
+
 
 class NCCNImageRag:
     """NCCN 指南多模态图片 RAG 系统 (byaldi + ColQwen2.5 + MaxSim)"""
@@ -74,7 +80,11 @@ class NCCNImageRag:
         # 确保索引目录存在
         self.index_root.mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"[ImageRAG] 加载模型: {self.model_name} (device={self.device})")
+        attn_impl = "flash_attention_2" if HAS_FLASH_ATTN else "sdpa"
+        logger.info(
+            f"[ImageRAG] 加载模型: {self.model_name} "
+            f"(device={self.device}, attn={attn_impl})"
+        )
         self.model = RAGMultiModalModel.from_pretrained(
             self.model_name,
             device=self.device
@@ -113,7 +123,8 @@ class NCCNImageRag:
                 f"请先运行: python -m src.tools.rag.build_image_index"
             )
 
-        logger.info(f"[ImageRAG] 加载索引: {index_path}")
+        attn_impl = "flash_attention_2" if HAS_FLASH_ATTN else "sdpa"
+        logger.info(f"[ImageRAG] 加载索引: {index_path} (attn={attn_impl})")
         self.model = RAGMultiModalModel.from_index(
             index_name,
             index_root=str(self.index_root)
