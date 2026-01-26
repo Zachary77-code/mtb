@@ -23,10 +23,14 @@ requests==2.32.3
 # 日志
 loguru==0.7.2
 
-# RAG 依赖
+# RAG 依赖（文本）
 chromadb>=0.4.0
 sentence-transformers>=2.2.0
 PyMuPDF>=1.23.0
+
+# RAG 依赖（多模态图片）
+byaldi>=0.0.7
+colpali-engine>=0.3.7
 
 # XML 解析 (PubMed/ClinVar)
 lxml>=4.9.0

@@ -115,6 +115,14 @@ CHAIR_PROMPT_FILE = "chair_prompt.txt"
 PLAN_AGENT_PROMPT_FILE = "plan_agent_prompt.txt"  # PlanAgent 提示词
 
 
+# ==================== 多模态图片 RAG 配置 ====================
+NCCN_IMAGE_VECTOR_DIR = Path(os.getenv(
+    "NCCN_IMAGE_VECTOR_DIR",
+    r"C:\Users\Windows11\Desktop\image_vector_store"
+))
+COLPALI_MODEL = os.getenv("COLPALI_MODEL", "vidore/colqwen2.5-v0.2")
+
+
 def validate_config() -> bool:
     """验证配置有效性"""
     if not OPENROUTER_API_KEY:

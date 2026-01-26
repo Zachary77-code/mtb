@@ -86,6 +86,77 @@ class NCCNTool(BaseTool):
         }
 
 
+class NCCNImageTool(BaseTool):
+    """
+    NCCN 指南多模态图片检索工具
+
+    基于 byaldi + ColQwen2.5 的视觉文档检索
+    通过页面图片内容进行多模态语义匹配
+    """
+
+    def __init__(self):
+        super().__init__(
+            name="search_nccn_image",
+            description="通过多模态图片检索 NCCN 指南（基于页面视觉内容，适合表格、流程图等）"
+        )
+        self._rag = None
+
+    @property
+    def rag(self):
+        """延迟加载多模态 RAG 系统"""
+        if self._rag is None:
+            from src.tools.rag.nccn_image_rag import get_nccn_image_rag
+            self._rag = get_nccn_image_rag()
+        return self._rag
+
+    def _call_real_api(
+        self,
+        query: str = "",
+        cancer_type: str = "",
+        **kwargs
+    ) -> Optional[str]:
+        """
+        调用多模态 RAG 系统
+
+        Args:
+            query: 查询内容
+            cancer_type: 癌症类型 (可拼入查询)
+
+        Returns:
+            检索结果
+        """
+        # 构建查询
+        search_query = query
+        if cancer_type and cancer_type not in query:
+            search_query = f"{cancer_type} {query}"
+
+        if not search_query.strip():
+            search_query = "cancer treatment guidelines"
+
+        try:
+            result = self.rag.query(search_query)
+            return result
+        except Exception as e:
+            logger.error(f"[NCCNImageTool] 多模态检索失败: {e}")
+            return None
+
+    def _get_parameters_schema(self) -> Dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "查询内容（支持自然语言描述）"
+                },
+                "cancer_type": {
+                    "type": "string",
+                    "description": "癌症类型"
+                }
+            },
+            "required": ["query"]
+        }
+
+
 class FDALabelTool(BaseTool):
     """FDA 药品说明书查询工具"""
 
