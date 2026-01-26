@@ -29,6 +29,10 @@ logs/
 data/nccn_vectors/
 data/nccn_guidelines/
 
+# NCCN Guideline PDFs (large external files)
+NCCN2026/
+NCCN_English/
+
 # Reports (generated)
 reports/
 
