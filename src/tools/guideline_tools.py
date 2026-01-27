@@ -17,22 +17,23 @@ class NCCNTool(BaseTool):
     """
     NCCN 指南查询工具
 
-    基于本地 PDF 的 RAG (Retrieval Augmented Generation) 实现
+    基于 byaldi + ColQwen2.5 的多模态图片 RAG 实现。
+    返回检索到的 NCCN 指南页面原始图片，由 agent 直接读图分析。
     """
 
     def __init__(self):
         super().__init__(
             name="search_nccn",
-            description="查询 NCCN 指南获取标准治疗建议"
+            description="查询 NCCN 指南获取标准治疗建议（返回指南页面图片）"
         )
         self._rag = None  # 延迟加载
 
     @property
     def rag(self):
-        """延迟加载 RAG 系统"""
+        """延迟加载多模态 RAG 系统"""
         if self._rag is None:
-            from src.tools.rag.nccn_rag import get_nccn_rag
-            self._rag = get_nccn_rag()
+            from src.tools.rag.nccn_image_rag import get_nccn_image_rag
+            self._rag = get_nccn_image_rag()
         return self._rag
 
     def _call_real_api(
@@ -41,9 +42,11 @@ class NCCNTool(BaseTool):
         biomarker: str = "",
         line: str = "",
         **kwargs
-    ) -> Optional[str]:
+    ) -> Optional[Dict[str, Any]]:
         """
-        调用 NCCN RAG 系统
+        调用 NCCN 多模态 RAG 系统
+
+        检索相关 NCCN 指南页面，返回原始页面图片供 agent 直接读图。
 
         Args:
             cancer_type: 肿瘤类型
@@ -51,7 +54,7 @@ class NCCNTool(BaseTool):
             line: 治疗线
 
         Returns:
-            指南检索结果
+            {"text": 检索元数据, "images": [{"page_num": int, "base64": str}]}
         """
         # 构建查询
         query_parts = []
@@ -68,10 +71,10 @@ class NCCNTool(BaseTool):
         query = " ".join(query_parts)
 
         try:
-            result = self.rag.query(query, cancer_type=cancer_type if cancer_type else None)
+            result = self.rag.retrieve(query)
             return result
         except Exception as e:
-            logger.error(f"[NCCNTool] RAG 查询失败: {e}")
+            logger.error(f"[NCCNTool] 多模态 RAG 检索失败: {e}")
             return None
 
     def _get_parameters_schema(self) -> Dict[str, Any]:

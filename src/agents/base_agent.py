@@ -313,6 +313,8 @@ class BaseAgent:
         reasoning_content = assistant_message.get("content") or ""
 
         # 执行每个工具调用
+        pending_images = []  # 收集本轮多模态工具返回的图片
+
         for tool_call in tool_calls:
             tool_name = tool_call.get("function", {}).get("name")
             tool_args_str = tool_call.get("function", {}).get("arguments", "{}")
@@ -331,27 +333,65 @@ class BaseAgent:
             if tool_name in self.tool_registry:
                 tool = self.tool_registry[tool_name]
                 tool_result = tool.invoke(**tool_args)
-                result_len = len(tool_result) if tool_result else 0
-                log_tool_call(self.role, tool_name, query_display, True, result_len)
             else:
                 tool_result = f"错误：未找到工具 '{tool_name}'"
                 log_tool_call(self.role, tool_name, query_display, False, 0)
                 logger.warning(f"[{self.role}] 未找到工具: {tool_name}")
 
-            # 记录工具调用历史（完整信息，不截断）
-            self.tool_call_history.append(ToolCallRecord(
-                tool_name=tool_name,
-                parameters=tool_args,
-                reasoning=reasoning_content,
-                result=tool_result or ""
-            ))
+            # 检测多模态结果 (dict with "images" key)
+            if isinstance(tool_result, dict) and "images" in tool_result:
+                tool_text = tool_result.get("text", "")
+                images = tool_result.get("images", [])
+                pending_images.extend(images)
 
-            # 添加工具结果
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tool_call.get("id"),
-                "content": tool_result
-            })
+                log_tool_call(self.role, tool_name, query_display, True, len(tool_text))
+                logger.info(f"[{self.role}]   多模态结果: {len(images)} 张图片")
+
+                # 工具调用历史只记录文本部分
+                self.tool_call_history.append(ToolCallRecord(
+                    tool_name=tool_name,
+                    parameters=tool_args,
+                    reasoning=reasoning_content,
+                    result=tool_text
+                ))
+
+                # tool message 只放文本
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.get("id"),
+                    "content": tool_text
+                })
+            elif not isinstance(tool_result, dict):
+                # 标准文本结果（原有逻辑，跳过已在上方 log 过的 "未找到工具" 情况）
+                if tool_name in self.tool_registry:
+                    result_len = len(tool_result) if tool_result else 0
+                    log_tool_call(self.role, tool_name, query_display, True, result_len)
+
+                self.tool_call_history.append(ToolCallRecord(
+                    tool_name=tool_name,
+                    parameters=tool_args,
+                    reasoning=reasoning_content,
+                    result=tool_result or ""
+                ))
+
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.get("id"),
+                    "content": tool_result
+                })
+
+        # 如有多模态图片，追加一条 user message 让 agent 直接读图
+        if pending_images:
+            image_content = [
+                {"type": "text", "text": f"以下是 NCCN 指南检索到的 {len(pending_images)} 个相关页面图片，请仔细阅读并提取相关信息:"}
+            ]
+            for img in pending_images:
+                image_content.append({
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{img['base64']}"}
+                })
+            messages.append({"role": "user", "content": image_content})
+            logger.info(f"[{self.role}] 已注入 {len(pending_images)} 张 NCCN 指南页面图片到对话")
 
         # 继续生成响应（保持工具可用，以支持多轮调用）
         next_result = self._call_api(messages, include_tools=bool(self.tools))

@@ -4,7 +4,7 @@
 只使用真实 API 数据
 """
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 import json
 from src.utils.logger import mtb_logger as logger
 
@@ -27,7 +27,7 @@ class BaseTool(ABC):
         self.name = name
         self.description = description
 
-    def invoke(self, **kwargs) -> str:
+    def invoke(self, **kwargs) -> Union[str, Dict[str, Any]]:
         """
         调用工具
 
@@ -35,7 +35,9 @@ class BaseTool(ABC):
             **kwargs: 工具参数
 
         Returns:
-            工具响应 (字符串格式)
+            工具响应：
+            - str: 纯文本结果
+            - Dict: 多模态结果 {"text": str, "images": [{"page_num": int, "base64": str}]}
         """
         logger.debug(f"[Tool:{self.name}] 调用参数: {kwargs}")
 
@@ -54,7 +56,7 @@ class BaseTool(ABC):
             return f"错误: {self.name} 调用失败 - {str(e)}"
 
     @abstractmethod
-    def _call_real_api(self, **kwargs) -> Optional[str]:
+    def _call_real_api(self, **kwargs) -> Optional[Union[str, Dict[str, Any]]]:
         """
         调用真实 API (子类实现)
 
@@ -62,7 +64,7 @@ class BaseTool(ABC):
             **kwargs: API 参数
 
         Returns:
-            API 响应字符串，失败返回 None
+            API 响应字符串或多模态字典，失败返回 None
         """
         pass
 

@@ -247,6 +247,81 @@ class NCCNImageRag:
         # Fallback: 仅返回页码
         return self._format_results(question, results)
 
+    def retrieve(self, question: str, top_k: int = 10) -> Dict[str, Any]:
+        """
+        检索 NCCN 指南页面并返回原始图片（不经过多模态 LLM 读图）
+
+        Pipeline:
+        1. byaldi MaxSim 检索 → top-K 候选页面
+        2. 分数阈值过滤（保留 >= 最高分 × threshold 的结果）
+        3. PyMuPDF 从 PDF 提取页面图片
+        4. 返回 {text: 元数据摘要, images: [{page_num, base64}]}
+
+        供 agent 直接读图使用，跳过 Gemini reader 中间层。
+
+        Args:
+            question: 查询问题
+            top_k: 初始检索候选数（过滤前）
+
+        Returns:
+            {"text": str, "images": List[Dict[str, Any]]}
+        """
+        if not self._initialized:
+            self.load_index()
+
+        if not HAS_PYMUPDF:
+            logger.error("[ImageRAG] PyMuPDF 未安装，无法提取页面图片")
+            return {"text": "错误: PyMuPDF 未安装，无法提取 NCCN 指南页面图片", "images": []}
+
+        results = self.search(question, top_k)
+
+        if not results:
+            return {"text": "未找到相关 NCCN 指南页面", "images": []}
+
+        # 分数阈值过滤：只保留 >= 最高分 × threshold 的结果
+        max_score = results[0]["score"]  # byaldi 结果已按分数降序
+        threshold = max_score * self.score_threshold
+        filtered = [r for r in results if r["score"] >= threshold]
+        logger.info(
+            f"[ImageRAG] retrieve 分数过滤: 最高分={max_score:.2f}, "
+            f"阈值={threshold:.2f} ({self.score_threshold:.0%}), "
+            f"保留 {len(filtered)}/{len(results)} 页"
+        )
+
+        # 按 doc_id 分组页码
+        pages_by_doc: Dict[int, List[int]] = {}
+        for r in filtered:
+            doc_id = r.get("doc_id", 0)
+            page_num = r.get("page_num", 0)
+            pages_by_doc.setdefault(doc_id, []).append(page_num)
+
+        # 从各 PDF 提取图片
+        all_images = []
+        for doc_id, page_nums in pages_by_doc.items():
+            pdf_path = self._get_pdf_path(doc_id)
+            if not pdf_path:
+                logger.warning(f"[ImageRAG] 无法解析 doc_id={doc_id} 对应的 PDF 路径")
+                continue
+            all_images.extend(self._extract_page_images(pdf_path, page_nums))
+
+        # 按检索分数排序对齐
+        page_to_image = {img["page_num"]: img for img in all_images}
+        ordered_images = []
+        for r in filtered:
+            page_num = r.get("page_num", 0)
+            if page_num in page_to_image:
+                ordered_images.append(page_to_image[page_num])
+
+        # 构建文本摘要
+        page_info = ", ".join([
+            f"第{r['page_num']}页(相关度:{r['score']:.4f})"
+            for r in filtered if r.get("page_num", 0) in page_to_image
+        ])
+        text = f"NCCN 指南检索结果: 找到 {len(ordered_images)} 个相关页面 — {page_info}"
+
+        logger.info(f"[ImageRAG] retrieve 完成: {len(ordered_images)} 页图片")
+        return {"text": text, "images": ordered_images}
+
     # ==================== 多模态读图管线 ====================
 
     def _multimodal_read(
