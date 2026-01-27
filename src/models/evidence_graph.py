@@ -488,6 +488,16 @@ class EvidenceGraph:
         """按来源获取实体 (通过 ID 前缀)"""
         return [e for e in self.entities.values() if e.id.startswith(f"{source}_")]
 
+    def get_entity_index(self) -> str:
+        """生成已有实体索引（供 LLM 实体提取时参考，避免重复创建）"""
+        if not self.entities:
+            return ""
+        lines = []
+        for entity in self.entities.values():
+            aliases_str = f" (别名: {', '.join(entity.aliases[:3])})" if entity.aliases else ""
+            lines.append(f"- {entity.canonical_id}: {entity.name}{aliases_str}")
+        return "\n".join(lines)
+
     # ==================== 边操作 ====================
 
     def add_edge(

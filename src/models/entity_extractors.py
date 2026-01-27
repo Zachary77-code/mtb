@@ -183,7 +183,8 @@ class EntityExtractor:
         finding: Dict[str, Any],
         source_agent: str,
         source_tool: str,
-        iteration: int
+        iteration: int,
+        existing_entities: str = ""
     ) -> ExtractionResult:
         """
         从 finding 提取实体、边和观察
@@ -193,12 +194,13 @@ class EntityExtractor:
             source_agent: 来源 Agent
             source_tool: 来源工具
             iteration: 迭代轮次
+            existing_entities: 已有实体索引（供 LLM 参考避免重复创建）
 
         Returns:
             ExtractionResult
         """
         # 构建用户提示
-        user_prompt = self._build_prompt(finding, source_tool)
+        user_prompt = self._build_prompt(finding, source_tool, existing_entities)
 
         # 调用 LLM
         try:
@@ -222,13 +224,23 @@ class EntityExtractor:
                 raw_finding=finding
             )
 
-    def _build_prompt(self, finding: Dict[str, Any], source_tool: str) -> str:
+    def _build_prompt(self, finding: Dict[str, Any], source_tool: str, existing_entities: str = "") -> str:
         """构建用户提示"""
         finding_str = json.dumps(finding, indent=2, ensure_ascii=False, default=str)
 
+        existing_section = ""
+        if existing_entities:
+            existing_section = f"""
+## 已有实体（必须复用，不要创建重复实体）
+以下是当前知识图谱中已有的实体。如果你要提取的实体与其中某个相同或等价（包括单复数、缩写、别名），
+**必须使用已有的 canonical_id**，不要新建。
+
+{existing_entities}
+"""
+
         return f"""## 来源工具
 {source_tool}
-
+{existing_section}
 ## 发现数据
 ```json
 {finding_str}
@@ -616,7 +628,8 @@ def extract_entities_from_finding(
     source_agent: str,
     source_tool: str,
     iteration: int,
-    llm_caller=None
+    llm_caller=None,
+    existing_entities: str = ""
 ) -> ExtractionResult:
     """
     从 finding 提取实体和关系的便捷函数
@@ -627,6 +640,7 @@ def extract_entities_from_finding(
         source_tool: 来源工具
         iteration: 迭代轮次
         llm_caller: 可选的 LLM 调用函数
+        existing_entities: 已有实体索引（供 LLM 参考避免重复创建）
 
     Returns:
         ExtractionResult
@@ -639,7 +653,8 @@ def extract_entities_from_finding(
         finding=finding,
         source_agent=source_agent,
         source_tool=source_tool,
-        iteration=iteration
+        iteration=iteration,
+        existing_entities=existing_entities
     )
 
 

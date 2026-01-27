@@ -443,6 +443,7 @@ class ResearchMixin:
             (新增/更新的实体 canonical_id 列表, 更新后的研究计划)
         """
         new_entity_ids = []
+        existing_entities = graph.get_entity_index()
 
         for finding in findings:
             source_tool = finding.get("source_tool", "unknown")
@@ -453,7 +454,8 @@ class ResearchMixin:
                     finding=finding,
                     source_agent=agent_role,
                     source_tool=source_tool,
-                    iteration=iteration
+                    iteration=iteration,
+                    existing_entities=existing_entities
                 )
             except Exception as e:
                 logger.warning(f"[{agent_role}] Entity extraction failed: {e}")
@@ -515,6 +517,9 @@ class ResearchMixin:
                     # 关联所有新实体到方向
                     for entity_id in new_entity_ids:
                         direction.add_evidence(entity_id)
+
+            # 更新实体索引，让后续 finding 的 LLM 提取看到新增实体
+            existing_entities = graph.get_entity_index()
 
         # 记录统计
         summary = graph.summary()
