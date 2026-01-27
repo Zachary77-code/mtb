@@ -122,6 +122,13 @@ NCCN_IMAGE_VECTOR_DIR = Path(os.getenv(
 ))
 COLPALI_MODEL = os.getenv("COLPALI_MODEL", "vidore/colqwen2-v1.0")
 
+# 多模态 LLM 读图配置（Image RAG 第二阶段：提取页面图片后由多模态 LLM 分析）
+NCCN_IMAGE_READER_MODEL = os.getenv("NCCN_IMAGE_READER_MODEL", ORCHESTRATOR_MODEL)
+NCCN_IMAGE_READER_TEMPERATURE = float(os.getenv("NCCN_IMAGE_READER_TEMPERATURE", "0.1"))
+NCCN_IMAGE_READER_TIMEOUT = int(os.getenv("NCCN_IMAGE_READER_TIMEOUT", "120"))
+NCCN_IMAGE_RENDER_SCALE = float(os.getenv("NCCN_IMAGE_RENDER_SCALE", "2.0"))
+NCCN_IMAGE_SCORE_THRESHOLD = float(os.getenv("NCCN_IMAGE_SCORE_THRESHOLD", "0.8"))
+
 
 def validate_config() -> bool:
     """验证配置有效性"""

@@ -3,7 +3,12 @@ NCCN 多模态图片 RAG
 
 基于 byaldi + ColQwen2.5 的多模态文档检索
 PDF 每页转为图片，生成多向量嵌入，MaxSim 晚交互检索
+检索后由多模态 LLM（Gemini）读取页面图片，生成结构化分析
 """
+import base64
+import gzip
+import json
+import requests
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 from src.utils.logger import mtb_logger as logger
@@ -19,6 +24,13 @@ except (ImportError, RuntimeError) as e:
         logger.warning(f"[ImageRAG] byaldi 未安装或导入失败 ({e})，请运行: pip install byaldi colpali-engine --no-deps")
 
 try:
+    import fitz  # PyMuPDF
+    HAS_PYMUPDF = True
+except ImportError:
+    HAS_PYMUPDF = False
+    logger.warning("[ImageRAG] PyMuPDF 未安装，多模态读图功能不可用。请运行: pip install PyMuPDF")
+
+try:
     from transformers.utils.import_utils import is_flash_attn_2_available
     HAS_FLASH_ATTN = is_flash_attn_2_available()
 except ImportError:
@@ -26,7 +38,7 @@ except ImportError:
 
 
 class NCCNImageRag:
-    """NCCN 指南多模态图片 RAG 系统 (byaldi + ColQwen2 + MaxSim)"""
+    """NCCN 指南多模态图片 RAG 系统 (byaldi + ColQwen2 + MaxSim + 多模态 LLM 读图)"""
 
     DEFAULT_INDEX_NAME = "nccn_colon"
 
@@ -34,7 +46,8 @@ class NCCNImageRag:
         self,
         index_root: str = None,
         model_name: str = None,
-        device: str = "cuda"
+        device: str = "cuda",
+        enable_multimodal_reading: bool = True
     ):
         """
         初始化多模态 RAG 系统
@@ -43,14 +56,35 @@ class NCCNImageRag:
             index_root: 索引存储根目录
             model_name: ColPali/ColQwen 模型名称
             device: 推理设备 ("cuda" 或 "cpu")
+            enable_multimodal_reading: 是否启用多模态 LLM 读图（False 则仅返回页码）
         """
-        from config.settings import NCCN_IMAGE_VECTOR_DIR, COLPALI_MODEL
+        from config.settings import (
+            NCCN_IMAGE_VECTOR_DIR, COLPALI_MODEL,
+            NCCN_IMAGE_READER_MODEL, NCCN_IMAGE_READER_TEMPERATURE,
+            NCCN_IMAGE_READER_TIMEOUT, NCCN_IMAGE_RENDER_SCALE,
+            NCCN_IMAGE_SCORE_THRESHOLD,
+            OPENROUTER_API_KEY, OPENROUTER_BASE_URL, NCCN_PDF_DIR
+        )
 
         self.index_root = Path(index_root) if index_root else NCCN_IMAGE_VECTOR_DIR
         self.model_name = model_name or COLPALI_MODEL
         self.device = device
         self.model = None
         self._initialized = False
+
+        # 多模态读图配置
+        self.enable_multimodal_reading = enable_multimodal_reading
+        self.reader_model = NCCN_IMAGE_READER_MODEL
+        self.reader_temperature = NCCN_IMAGE_READER_TEMPERATURE
+        self.reader_timeout = NCCN_IMAGE_READER_TIMEOUT
+        self.render_scale = NCCN_IMAGE_RENDER_SCALE
+        self.score_threshold = NCCN_IMAGE_SCORE_THRESHOLD
+        self.api_key = OPENROUTER_API_KEY
+        self.api_url = OPENROUTER_BASE_URL
+        self.nccn_pdf_dir = NCCN_PDF_DIR
+
+        # PDF 路径缓存 (doc_id -> Path)
+        self._doc_id_to_pdf: Dict[int, Path] = {}
 
     def build_index(
         self,
@@ -165,16 +199,25 @@ class NCCNImageRag:
         logger.debug(f"[ImageRAG] 返回 {len(formatted)} 个结果")
         return formatted
 
-    def query(self, question: str, top_k: int = 5) -> str:
+    def query(self, question: str, top_k: int = 10) -> str:
         """
-        查询并格式化结果
+        查询并返回分析结果
+
+        Pipeline:
+        1. byaldi MaxSim 检索 -> top-K 候选页面
+        2. 分数阈值过滤（保留 >= 最高分 × threshold 的结果）
+        3. PyMuPDF 从 PDF 提取页面图片
+        4. 多模态 LLM (Gemini) 分析图片内容
+        5. 返回结构化分析
+
+        失败时 fallback 到仅返回页码。
 
         Args:
             question: 查询问题
-            top_k: 返回结果数
+            top_k: 初始检索候选数（过滤前）
 
         Returns:
-            格式化的查询结果文本
+            多模态 LLM 分析结果，或 fallback 的页码列表
         """
         if not self._initialized:
             self.load_index()
@@ -184,10 +227,357 @@ class NCCNImageRag:
         if not results:
             return self._no_results_response(question)
 
+        # 分数阈值过滤：只保留 >= 最高分 × threshold 的结果
+        max_score = results[0]["score"]  # byaldi 结果已按分数降序
+        threshold = max_score * self.score_threshold
+        filtered = [r for r in results if r["score"] >= threshold]
+        logger.info(
+            f"[ImageRAG] 分数过滤: 最高分={max_score:.2f}, "
+            f"阈值={threshold:.2f} ({self.score_threshold:.0%}), "
+            f"保留 {len(filtered)}/{len(results)} 页"
+        )
+        results = filtered
+
+        # 多模态读图
+        if self.enable_multimodal_reading and HAS_PYMUPDF:
+            llm_analysis = self._multimodal_read(question, results)
+            if llm_analysis:
+                return self._format_multimodal_results(question, results, llm_analysis)
+
+        # Fallback: 仅返回页码
         return self._format_results(question, results)
 
+    # ==================== 多模态读图管线 ====================
+
+    def _multimodal_read(
+        self,
+        question: str,
+        search_results: List[Dict[str, Any]]
+    ) -> Optional[str]:
+        """
+        多模态读图：提取页面图片 + 调用多模态 LLM
+
+        Args:
+            question: 用户问题
+            search_results: byaldi 检索结果 [{doc_id, page_num, score, ...}]
+
+        Returns:
+            LLM 分析文本，失败时返回 None
+        """
+        # 按 doc_id 分组页码
+        pages_by_doc: Dict[int, List[int]] = {}
+        for r in search_results:
+            doc_id = r.get("doc_id", 0)
+            page_num = r.get("page_num", 0)
+            if doc_id not in pages_by_doc:
+                pages_by_doc[doc_id] = []
+            pages_by_doc[doc_id].append(page_num)
+
+        # 从各 PDF 提取图片
+        all_images = []
+        for doc_id, page_nums in pages_by_doc.items():
+            pdf_path = self._get_pdf_path(doc_id)
+            if not pdf_path:
+                logger.warning(f"[ImageRAG] 无法解析 doc_id={doc_id} 对应的 PDF 路径")
+                continue
+
+            images = self._extract_page_images(pdf_path, page_nums)
+            all_images.extend(images)
+
+        if not all_images:
+            logger.warning("[ImageRAG] 未提取到页面图片，fallback 到仅页码模式")
+            return None
+
+        # 按检索排序对齐图片
+        page_to_image = {img["page_num"]: img for img in all_images}
+        ordered_images = []
+        ordered_results = []
+        for r in search_results:
+            page_num = r.get("page_num", 0)
+            if page_num in page_to_image:
+                ordered_images.append(page_to_image[page_num])
+                ordered_results.append(r)
+
+        # 调用多模态 LLM
+        return self._call_multimodal_llm(question, ordered_images, ordered_results)
+
+    def _load_doc_id_mapping(self, index_name: str = None) -> Dict[int, Path]:
+        """
+        从 byaldi 索引加载 doc_id -> PDF 路径映射
+
+        读取索引目录下的 doc_ids_to_file_names.json.gz。
+        若失败则 fallback 到扫描 NCCN_PDF_DIR。
+
+        Returns:
+            {doc_id(int): Path} 映射
+        """
+        index_name = index_name or self.DEFAULT_INDEX_NAME
+        mapping_file = self.index_root / index_name / "doc_ids_to_file_names.json.gz"
+
+        mapping = {}
+
+        if mapping_file.exists():
+            try:
+                with gzip.open(str(mapping_file), "rb") as f:
+                    raw = f.read()
+                    data = json.loads(raw.decode("utf-8"))
+                    for str_id, path_str in data.items():
+                        pdf_path = Path(path_str)
+                        if pdf_path.exists():
+                            mapping[int(str_id)] = pdf_path
+                        else:
+                            logger.warning(
+                                f"[ImageRAG] doc_id={str_id} 对应 PDF 不存在: {path_str}"
+                            )
+            except Exception as e:
+                logger.warning(f"[ImageRAG] 加载 doc_id 映射失败: {e}")
+
+        # Fallback: 扫描 NCCN_PDF_DIR
+        if not mapping and self.nccn_pdf_dir.exists():
+            logger.info(f"[ImageRAG] 使用 fallback: 扫描 {self.nccn_pdf_dir} 中的 PDF")
+            pdfs = sorted(self.nccn_pdf_dir.glob("*.pdf"))
+            for i, pdf in enumerate(pdfs):
+                mapping[i] = pdf
+                logger.debug(f"[ImageRAG] Fallback 映射: doc_id={i} -> {pdf.name}")
+
+        return mapping
+
+    def _get_pdf_path(self, doc_id: int) -> Optional[Path]:
+        """
+        解析 doc_id 对应的 PDF 文件路径
+
+        Args:
+            doc_id: byaldi 检索结果中的文档 ID
+
+        Returns:
+            PDF 路径，未找到时返回 None
+        """
+        if not self._doc_id_to_pdf:
+            self._doc_id_to_pdf = self._load_doc_id_mapping()
+
+        return self._doc_id_to_pdf.get(doc_id)
+
+    def _extract_page_images(
+        self,
+        pdf_path: Path,
+        page_nums: List[int]
+    ) -> List[Dict[str, Any]]:
+        """
+        用 PyMuPDF 从 PDF 提取指定页面为 base64 PNG
+
+        Args:
+            pdf_path: PDF 文件路径
+            page_nums: 页码列表 (1-indexed，与 byaldi 一致)
+
+        Returns:
+            [{"page_num": int, "base64": str}]
+        """
+        images = []
+        try:
+            doc = fitz.open(str(pdf_path))
+            total_pages = len(doc)
+            mat = fitz.Matrix(self.render_scale, self.render_scale)
+
+            for page_num in page_nums:
+                # byaldi page_num 1-indexed → PyMuPDF 0-indexed
+                page_index = page_num - 1
+                if page_index < 0 or page_index >= total_pages:
+                    logger.warning(
+                        f"[ImageRAG] 页码 {page_num} 超出范围 "
+                        f"(总页数: {total_pages})，跳过"
+                    )
+                    continue
+
+                page = doc[page_index]
+                pix = page.get_pixmap(matrix=mat)
+                png_bytes = pix.tobytes("png")
+                b64_str = base64.b64encode(png_bytes).decode("utf-8")
+
+                images.append({
+                    "page_num": page_num,
+                    "base64": b64_str
+                })
+
+                logger.debug(
+                    f"[ImageRAG] 提取页面 {page_num}: "
+                    f"{pix.width}x{pix.height}, {len(png_bytes)/1024:.0f} KB"
+                )
+
+            doc.close()
+
+        except Exception as e:
+            logger.error(f"[ImageRAG] 页面图片提取失败: {e}")
+
+        return images
+
+    def _build_reader_prompt(self) -> str:
+        """构建多模态 LLM 的 system prompt"""
+        return """You are a clinical guideline analysis expert. You are reading pages from NCCN (National Comprehensive Cancer Network) clinical practice guidelines.
+
+Your task:
+1. Carefully examine each provided guideline page image
+2. Extract ALL relevant information that answers the user's question
+3. Pay special attention to: treatment algorithms, decision trees, footnotes, category of evidence ratings, and specific drug regimens
+4. Preserve exact drug names, dosages, and evidence categories from the guidelines
+5. Note which page each piece of information comes from
+
+Output format:
+- Use clear markdown with headers
+- Cite page numbers as [Page N] for each piece of extracted information
+- Include treatment algorithms as structured lists when applicable
+- Preserve NCCN category of evidence and consensus ratings (e.g., "Category 1", "Category 2A")
+- If tables are present, reproduce their key content in markdown table format
+- If the pages do not contain information relevant to the question, state that clearly
+
+Language: Respond in the same language as the user's question."""
+
+    def _call_multimodal_llm(
+        self,
+        question: str,
+        images: List[Dict[str, Any]],
+        search_results: List[Dict[str, Any]]
+    ) -> Optional[str]:
+        """
+        调用多模态 LLM 分析页面图片
+
+        Args:
+            question: 用户问题
+            images: _extract_page_images() 返回的图片列表
+            search_results: 对应的 byaldi 检索结果
+
+        Returns:
+            LLM 分析文本，失败时返回 None
+        """
+        if not self.api_key:
+            logger.error("[ImageRAG] OPENROUTER_API_KEY 未设置，无法调用多模态 LLM")
+            return None
+
+        if not images:
+            logger.warning("[ImageRAG] 无图片可发送给多模态 LLM")
+            return None
+
+        # 构建用户消息的 content 数组（text + images）
+        page_info = ", ".join([
+            f"Page {img['page_num']} (score: {sr.get('score', 0):.4f})"
+            for img, sr in zip(images, search_results)
+        ])
+
+        content_parts = [
+            {
+                "type": "text",
+                "text": (
+                    f"Question: {question}\n\n"
+                    f"Below are {len(images)} pages retrieved from NCCN guidelines "
+                    f"as most relevant. Pages: {page_info}\n\n"
+                    f"Please analyze these pages and provide a comprehensive answer."
+                )
+            }
+        ]
+
+        for img_data in images:
+            content_parts.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/png;base64,{img_data['base64']}"
+                }
+            })
+
+        # 构建 API 请求
+        messages = [
+            {"role": "system", "content": self._build_reader_prompt()},
+            {"role": "user", "content": content_parts}
+        ]
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+        payload = {
+            "model": self.reader_model,
+            "messages": messages,
+            "temperature": self.reader_temperature,
+            "max_tokens": 8192,
+        }
+
+        logger.info(
+            f"[ImageRAG] 调用多模态 LLM: {self.reader_model}, "
+            f"{len(images)} 页图片"
+        )
+
+        try:
+            response = requests.post(
+                url=self.api_url,
+                headers=headers,
+                data=json.dumps(payload, ensure_ascii=False),
+                timeout=self.reader_timeout
+            )
+
+            if response.status_code != 200:
+                logger.error(
+                    f"[ImageRAG] 多模态 LLM API 错误 "
+                    f"(HTTP {response.status_code}): {response.text[:300]}"
+                )
+                return None
+
+            result = response.json()
+
+            if "choices" not in result or len(result["choices"]) == 0:
+                logger.error(f"[ImageRAG] API 响应格式异常: {result}")
+                return None
+
+            content = result["choices"][0].get("message", {}).get("content", "")
+
+            # 记录 token 用量
+            usage = result.get("usage", {})
+            if usage:
+                logger.info(
+                    f"[ImageRAG] 多模态 LLM token 用量 - "
+                    f"prompt: {usage.get('prompt_tokens', '?')}, "
+                    f"completion: {usage.get('completion_tokens', '?')}"
+                )
+
+            logger.info(f"[ImageRAG] 多模态 LLM 响应: {len(content)} 字符")
+            return content
+
+        except requests.exceptions.Timeout:
+            logger.error(
+                f"[ImageRAG] 多模态 LLM 调用超时 "
+                f"({self.reader_timeout}s)"
+            )
+            return None
+        except Exception as e:
+            logger.error(f"[ImageRAG] 多模态 LLM 调用失败: {e}")
+            return None
+
+    # ==================== 结果格式化 ====================
+
+    def _format_multimodal_results(
+        self,
+        question: str,
+        search_results: List[Dict],
+        llm_analysis: str
+    ) -> str:
+        """格式化多模态读图结果"""
+        output_parts = [
+            "**NCCN 指南多模态分析结果**\n",
+            f"**查询**: {question}\n",
+            f"**分析页数**: {len(search_results)} 页\n",
+            "---\n\n",
+            llm_analysis,
+            "\n\n---\n",
+            "**来源页面**:\n"
+        ]
+
+        for result in search_results:
+            page_num = result.get("page_num", 0)
+            score = result.get("score", 0)
+            output_parts.append(f"- 第 {page_num} 页 (相关度: {score:.4f})\n")
+
+        return "".join(output_parts)
+
     def _format_results(self, question: str, results: List[Dict]) -> str:
-        """格式化查询结果"""
+        """格式化查询结果（仅页码，fallback 模式）"""
         output_parts = [
             "**NCCN 指南多模态检索结果**\n",
             f"**查询**: {question}\n",
@@ -244,16 +634,23 @@ if __name__ == "__main__":
 
     print("=== NCCN 多模态图片 RAG ===\n")
 
-    rag = NCCNImageRag()
+    # 解析参数
+    no_multimodal = "--no-multimodal" in sys.argv
+
+    rag = NCCNImageRag(enable_multimodal_reading=not no_multimodal)
 
     # 检查命令行参数
-    if len(sys.argv) > 1 and sys.argv[1] == "--build":
+    if "--build" in sys.argv:
         from config.settings import NCCN_PDF_DIR
         pdf_path = NCCN_PDF_DIR / "（2025.V1）NCCN临床实践指南：结肠癌.pdf"
         print(f"构建索引: {pdf_path}")
         rag.build_index(pdf_path)
     else:
         rag.load_index()
+
+    mode = "多模态读图 (PyMuPDF + Gemini)" if not no_multimodal else "仅页码"
+    print(f"模式: {mode}")
+    print(f"读图模型: {rag.reader_model}")
 
     # 交互式查询
     print("\n输入查询 (输入 'quit' 退出):")
