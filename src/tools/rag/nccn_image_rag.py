@@ -26,7 +26,7 @@ except ImportError:
 
 
 class NCCNImageRag:
-    """NCCN 指南多模态图片 RAG 系统 (byaldi + ColQwen2.5 + MaxSim)"""
+    """NCCN 指南多模态图片 RAG 系统 (byaldi + ColQwen2 + MaxSim)"""
 
     DEFAULT_INDEX_NAME = "nccn_colon"
 
@@ -63,7 +63,7 @@ class NCCNImageRag:
 
         byaldi 自动完成:
         1. PDF 每页转为图片 (pdf2image)
-        2. ColQwen2.5 生成多向量嵌入
+        2. ColQwen2 生成多向量嵌入
         3. 持久化索引到 index_root
 
         Args:

@@ -90,7 +90,7 @@ class NCCNImageTool(BaseTool):
     """
     NCCN 指南多模态图片检索工具
 
-    基于 byaldi + ColQwen2.5 的视觉文档检索
+    基于 byaldi + ColQwen2 的视觉文档检索
     通过页面图片内容进行多模态语义匹配
     """
 

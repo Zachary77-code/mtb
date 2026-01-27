@@ -1,7 +1,7 @@
 """
 NCCN 多模态图片索引构建脚本
 
-将 NCCN 指南 PDF 每页转为图片，使用 ColQwen2.5 生成多向量嵌入，
+将 NCCN 指南 PDF 每页转为图片，使用 ColQwen2 生成多向量嵌入，
 通过 byaldi 索引引擎持久化存储。
 
 用法:
