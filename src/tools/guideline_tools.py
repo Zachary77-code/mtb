@@ -38,9 +38,7 @@ class NCCNTool(BaseTool):
 
     def _call_real_api(
         self,
-        cancer_type: str = "",
-        biomarker: str = "",
-        line: str = "",
+        query: str = "",
         **kwargs
     ) -> Optional[Dict[str, Any]]:
         """
@@ -49,26 +47,13 @@ class NCCNTool(BaseTool):
         检索相关 NCCN 指南页面，返回原始页面图片供 agent 直接读图。
 
         Args:
-            cancer_type: 肿瘤类型
-            biomarker: 生物标志物
-            line: 治疗线
+            query: 自然语言查询（如 "NSCLC EGFR L858R first-line treatment"）
 
         Returns:
             {"text": 检索元数据, "images": [{"page_num": int, "base64": str}]}
         """
-        # 构建查询
-        query_parts = []
-        if cancer_type:
-            query_parts.append(cancer_type)
-        if biomarker:
-            query_parts.append(biomarker)
-        if line:
-            query_parts.append(f"{line} treatment")
-
-        if not query_parts:
-            query_parts.append("cancer treatment guidelines")
-
-        query = " ".join(query_parts)
+        if not query.strip():
+            query = "cancer treatment guidelines"
 
         try:
             result = self.rag.retrieve(query)
@@ -81,11 +66,12 @@ class NCCNTool(BaseTool):
         return {
             "type": "object",
             "properties": {
-                "cancer_type": {"type": "string", "description": "肿瘤类型"},
-                "biomarker": {"type": "string", "description": "生物标志物"},
-                "line": {"type": "string", "description": "治疗线：first-line, second-line等"}
+                "query": {
+                    "type": "string",
+                    "description": "NCCN 指南查询内容（自然语言，如 'NSCLC EGFR mutation first-line treatment'）"
+                }
             },
-            "required": ["cancer_type"]
+            "required": ["query"]
         }
 
 
@@ -417,7 +403,7 @@ if __name__ == "__main__":
     # 测试
     print("=== NCCN 工具测试 ===")
     nccn_tool = NCCNTool()
-    result = nccn_tool.invoke(cancer_type="NSCLC", biomarker="EGFR mutation", line="first-line")
+    result = nccn_tool.invoke(query="NSCLC EGFR mutation first-line treatment")
     print(result)
 
     print("\n=== FDA 说明书测试 ===")

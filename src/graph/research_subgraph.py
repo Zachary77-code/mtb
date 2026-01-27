@@ -529,8 +529,25 @@ def _save_detailed_iteration_report(
         lines.append("- 无")
     lines.append("")
 
-    # === 2. 本轮新增证据明细 ===
-    lines.append("## 2. 本轮新增证据明细")
+    # === 2. 工具执行详情 ===
+    lines.append("## 2. 工具执行详情")
+    lines.append("")
+
+    for agent_name in agent_names:
+        result_key = f"{agent_name.lower()}_research_result"
+        agent_result = state.get(result_key, {})
+        tool_report = agent_result.get("tool_call_report", "")
+
+        lines.append(f"### {agent_name}")
+        lines.append("")
+        if tool_report:
+            lines.append(tool_report)
+        else:
+            lines.append("本轮无工具调用记录")
+        lines.append("")
+
+    # === 3. 本轮新增证据明细 ===
+    lines.append("## 3. 本轮新增证据明细")
     lines.append("")
 
     for agent_name in agent_names:
@@ -585,8 +602,8 @@ def _save_detailed_iteration_report(
 
             lines.append("")
 
-    # === 3. Evidence Graph 完整统计 ===
-    lines.append("## 3. Evidence Graph 完整统计")
+    # === 4. Evidence Graph 完整统计 ===
+    lines.append("## 4. Evidence Graph 完整统计")
     lines.append("")
     if graph:
         summary = graph.summary()
@@ -669,8 +686,8 @@ def _save_detailed_iteration_report(
                 count += 1
             lines.append("")
 
-        # === 4. Evidence Graph Mermaid 图 ===
-        lines.append("## 4. Evidence Graph 可视化")
+        # === 5. Evidence Graph Mermaid 图 ===
+        lines.append("## 5. Evidence Graph 可视化")
         lines.append("")
         mermaid_diagram = graph.to_mermaid()
         lines.append(mermaid_diagram)

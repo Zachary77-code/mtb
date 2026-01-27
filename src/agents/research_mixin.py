@@ -113,7 +113,8 @@ class ResearchMixin:
                 "research_complete": True,
                 "needs_deep_research": [],
                 "summary": "所有分配方向已完成，无需继续研究",
-                "raw_output": ""
+                "raw_output": "",
+                "tool_call_report": ""
             }
 
         # 收集所有结果
@@ -122,12 +123,16 @@ class ResearchMixin:
         all_needs_deep = []
         all_summaries = []
         all_outputs = []
+        all_tool_call_reports = []  # 收集每阶段的工具调用报告
 
         # 处理 BFRS 方向
         if bfrs_directions:
             logger.info(f"[{agent_role}] 执行 BFRS 广度研究: {len(bfrs_directions)} 个方向")
             prompt = self._build_bfrs_prompt(bfrs_directions, graph, iteration, max_iterations, case_context)
             result = self.invoke(prompt)  # type: ignore
+            bfrs_tool_report = self.get_tool_call_report()  # type: ignore  # 在下次 invoke() 重置前捕获
+            if bfrs_tool_report:
+                all_tool_call_reports.append(f"### BFRS 工具调用\n{bfrs_tool_report}")
             output = result.get("output", "")
             all_outputs.append(output)
             parsed = self._parse_research_output(output, ResearchMode.BREADTH_FIRST)
@@ -142,6 +147,9 @@ class ResearchMixin:
             logger.info(f"[{agent_role}] 执行 DFRS 深度研究: {len(dfrs_directions)} 个方向")
             prompt = self._build_dfrs_prompt(dfrs_directions, graph, iteration, max_iterations, case_context)
             result = self.invoke(prompt)  # type: ignore
+            dfrs_tool_report = self.get_tool_call_report()  # type: ignore  # 捕获 DFRS 工具调用报告
+            if dfrs_tool_report:
+                all_tool_call_reports.append(f"### DFRS 工具调用\n{dfrs_tool_report}")
             output = result.get("output", "")
             all_outputs.append(output)
             parsed = self._parse_research_output(output, ResearchMode.DEPTH_FIRST)
@@ -182,7 +190,8 @@ class ResearchMixin:
             "research_complete": len(bfrs_directions) == 0 and len(dfrs_directions) == 0,
             "needs_deep_research": all_needs_deep,
             "summary": combined_summary,
-            "raw_output": "\n---\n".join(all_outputs)
+            "raw_output": "\n---\n".join(all_outputs),
+            "tool_call_report": "\n\n".join(all_tool_call_reports)
         }
 
     def _build_bfrs_prompt(
