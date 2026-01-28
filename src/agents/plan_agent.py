@@ -267,16 +267,26 @@ class PlanAgent(BaseAgent):
         else:
             agent_keys = ["oncologist_research_result"]
 
-        all_needs_deep = []
+        all_needs_deep = []  # List[Dict]: {agent, direction_id, finding, reason}
         for key in agent_keys:
             items = state.get(key, {}).get("needs_deep_research", [])
             if items:
                 agent_name = key.replace("_research_result", "").capitalize()
                 for item in items:
                     if isinstance(item, dict):
-                        all_needs_deep.append(f"[{agent_name}] {item.get('finding', item.get('reason', str(item)))}")
+                        all_needs_deep.append({
+                            "agent": agent_name,
+                            "direction_id": item.get("direction_id", ""),
+                            "finding": item.get("finding", item.get("reason", str(item))),
+                            "reason": item.get("reason", ""),
+                        })
                     else:
-                        all_needs_deep.append(f"[{agent_name}] {item}")
+                        all_needs_deep.append({
+                            "agent": agent_name,
+                            "direction_id": "",
+                            "finding": str(item),
+                            "reason": "",
+                        })
 
         # 构建评估提示
         eval_prompt = self._build_evaluation_prompt(
@@ -290,6 +300,10 @@ class PlanAgent(BaseAgent):
 
         # 解析评估结果
         eval_result = self._parse_evaluation_output(output, plan, direction_stats, needs_deep_research=all_needs_deep)
+
+        # 附加统计数据和待深入研究项，供迭代报告使用
+        eval_result["direction_stats"] = direction_stats
+        eval_result["needs_deep_research"] = all_needs_deep
 
         logger.info(f"[{self.role}] 评估完成: decision={eval_result['decision']}, "
                    f"reasoning={eval_result['reasoning'][:100]}...")
@@ -381,7 +395,7 @@ class PlanAgent(BaseAgent):
         plan: ResearchPlan,
         graph,
         direction_stats: Dict[str, Dict[str, Any]],
-        needs_deep_research: List[str] = None
+        needs_deep_research: List[Dict[str, str]] = None
     ) -> str:
         """构建迭代评估提示"""
 
@@ -410,8 +424,19 @@ class PlanAgent(BaseAgent):
             if s["target_agent"] in agents_to_check
         }
 
-        # 构建各方向证据内容详情
-        evidence_details = self._build_direction_evidence_details(plan, graph, set(relevant_stats.keys()))
+        # 按方向分组 needs_deep_research
+        deep_by_direction = {}
+        if needs_deep_research:
+            for item in needs_deep_research:
+                d_id = item.get("direction_id", "")
+                if d_id not in deep_by_direction:
+                    deep_by_direction[d_id] = []
+                deep_by_direction[d_id].append(item)
+
+        # 构建各方向证据内容详情（含 per-direction needs_deep_research）
+        evidence_details = self._build_direction_evidence_details(
+            plan, graph, set(relevant_stats.keys()), deep_by_direction
+        )
 
         return f"""## 迭代评估任务
 
@@ -440,32 +465,33 @@ class PlanAgent(BaseAgent):
 
 {conflict_descriptions if conflict_descriptions else "无检测到的证据冲突"}
 
-### 待深入研究项（Agent 标记）
-
-{chr(10).join(f'- {item}' for item in needs_deep_research) if needs_deep_research else "无"}
-
-注意：如果有待深入研究项尚未被充分覆盖，应慎重判断收敛。
-
 ### 评估要求
 
 请根据以上信息，完成以下评估：
 
-1. **评估证据充分性**：
+1. **评估证据充分性**（对每个方向逐一评估）：
    - 对比每个方向的「完成标准」和「核心观察」，判断研究问题是否已被充分回答
    - 即使完成度数值较高，如果核心观察未覆盖完成标准的关键问题，仍应标记为未完成
    - 即使完成度数值较低，如果核心观察已充分回答研究问题，可标记为完成
+   - 如该方向有「待深入研究项」，必须评估这些项是否已被后续研究覆盖
 
-2. **更新各方向状态**：
+2. **为每个方向生成 evidence_assessment**（必填，不可为空）：
+   - 该方向已有证据的要点总结（列出关键发现及其证据等级）
+   - 完成标准中哪些关键点已覆盖、哪些未覆盖
+   - 如有「待深入研究项」，说明是否已覆盖及覆盖程度
+   - 综合判断该方向的证据充分性
+
+3. **更新各方向状态**：
    - 证据已充分回答完成标准: 标记为 "completed"
    - 证据不足或缺少关键内容: 保持 "pending" 或 "in_progress"
    - 调整优先级（证据缺口大或只有低质量证据的方向提升优先级）
 
-3. **决定每个方向的研究模式**：
+4. **决定每个方向的研究模式**：
    - "skip": 证据已充分回答完成标准，无需继续研究
    - "breadth_first": 证据覆盖面不足，需要广度收集更多初步证据
-   - "depth_first": 有初步发现但需要更高质量证据支撑，或存在证据冲突需要解决
+   - "depth_first": 有初步发现但需要更高质量证据支撑，或存在证据冲突需要解决，或有待深入研究项未覆盖
 
-4. **收敛判断**：
+5. **收敛判断**：
    - "converged": 所有方向的完成标准已被充分回答，且有足够高质量证据，无重大冲突
    - "continue": 存在未充分回答的方向，或关键发现只有低质量证据，或有未解决冲突
 
@@ -520,15 +546,25 @@ class PlanAgent(BaseAgent):
 **preferred_mode 选择指南**:
 - "skip": 证据已充分回答完成标准的所有关键问题，无需继续研究
 - "breadth_first": 证据覆盖面不足，多个关键问题未涉及，需要广度收集
-- "depth_first": 有初步发现但证据等级不够（只有 D/E 级），或存在证据冲突需要解决
+- "depth_first": 有初步发现但证据等级不够（只有 D/E 级），或存在证据冲突需要解决，或有待深入研究项未覆盖
+
+**evidence_assessment 必须包含**:
+1. 已有证据要点（关键发现 + 等级）
+2. 完成标准覆盖情况（已覆盖/未覆盖的关键点）
+3. 待深入研究项覆盖情况（如有）
+4. 综合充分性判断
 """
 
     def _build_direction_evidence_details(
-        self, plan: ResearchPlan, graph, relevant_direction_ids: set
+        self, plan: ResearchPlan, graph, relevant_direction_ids: set,
+        deep_by_direction: Dict[str, List[Dict[str, str]]] = None
     ) -> str:
-        """为每个方向生成证据内容详情（含完成标准 + 实体 + 观察）"""
+        """为每个方向生成证据内容详情（含完成标准 + 实体 + 观察 + 待深入研究项）"""
         if not graph:
             return "无证据图谱数据"
+
+        if deep_by_direction is None:
+            deep_by_direction = {}
 
         sections = []
         for direction in plan.directions:
@@ -538,8 +574,36 @@ class PlanAgent(BaseAgent):
             sections.append(f"#### {direction.id}: {direction.topic}")
             sections.append(f"**完成标准**: {direction.completion_criteria}")
             sections.append("")
+
+            # 该方向的待深入研究项
+            dir_deep = deep_by_direction.get(direction.id, [])
+            # 也包含未关联到具体方向的项（direction_id 为空）
+            if not dir_deep:
+                dir_deep = []
+            if dir_deep:
+                sections.append("**待深入研究项**:")
+                for item in dir_deep:
+                    agent = item.get("agent", "")
+                    finding = item.get("finding", "")
+                    reason = item.get("reason", "")
+                    reason_str = f" — {reason}" if reason else ""
+                    sections.append(f"- [{agent}] {finding}{reason_str}")
+                sections.append("")
+
             summary = graph.get_direction_evidence_summary(direction.evidence_ids)
             sections.append(summary)
+            sections.append("")
+
+        # 显示未关联到方向的待深入研究项
+        unassigned = deep_by_direction.get("", [])
+        if unassigned:
+            sections.append("#### 未关联方向的待深入研究项")
+            for item in unassigned:
+                agent = item.get("agent", "")
+                finding = item.get("finding", "")
+                reason = item.get("reason", "")
+                reason_str = f" — {reason}" if reason else ""
+                sections.append(f"- [{agent}] {finding}{reason_str}")
             sections.append("")
 
         return "\n".join(sections) if sections else "暂无证据数据"
@@ -564,7 +628,7 @@ class PlanAgent(BaseAgent):
         output: str,
         plan: ResearchPlan,
         direction_stats: Dict[str, Dict[str, Any]],
-        needs_deep_research: List[str] = None
+        needs_deep_research: List[Dict[str, str]] = None
     ) -> Dict[str, Any]:
         """解析 LLM 评估输出"""
 
@@ -644,9 +708,18 @@ class PlanAgent(BaseAgent):
         self,
         plan: ResearchPlan,
         direction_stats: Dict[str, Dict[str, Any]],
-        needs_deep_research: List[str] = None
+        needs_deep_research: List[Dict[str, str]] = None
     ) -> Dict[str, Any]:
         """创建默认评估结果（当 LLM 解析失败时）"""
+
+        # 按方向分组 needs_deep_research
+        deep_by_direction = {}
+        if needs_deep_research:
+            for item in needs_deep_research:
+                d_id = item.get("direction_id", "")
+                if d_id not in deep_by_direction:
+                    deep_by_direction[d_id] = []
+                deep_by_direction[d_id].append(item)
 
         # 根据统计数据自动判断
         all_complete = all(
@@ -659,20 +732,25 @@ class PlanAgent(BaseAgent):
             for s in direction_stats.values()
         )
 
-        has_pending_deep = bool(needs_deep_research)
-
-        # 更新方向状态，并为每个方向设置独立的研究模式 (新增)
+        # 更新方向状态，并为每个方向设置独立的研究模式
         updated_directions = []
+        direction_assessments = {}
         for d_id, s in direction_stats.items():
             completeness = s["completeness"]
             has_high_quality = s["has_high_quality"]
             low_quality_only = s["low_quality_only"]
+            dir_deep = deep_by_direction.get(d_id, [])
 
             # 确定状态
             status = "completed" if completeness >= CONVERGENCE_COMPLETENESS_THRESHOLD else "in_progress"
 
-            # 确定每个方向的研究模式 (新增逻辑)
-            if completeness >= CONVERGENCE_COMPLETENESS_THRESHOLD and has_high_quality:
+            # 确定每个方向的研究模式（needs_deep_research 影响 per-direction 模式而非全局收敛）
+            if dir_deep:
+                # 该方向有待深入研究项 → 强制 depth_first
+                preferred_mode = "depth_first"
+                deep_items_str = "; ".join(item.get("finding", "") for item in dir_deep)
+                mode_reason = f"有{len(dir_deep)}项待深入研究: {deep_items_str}"
+            elif completeness >= CONVERGENCE_COMPLETENESS_THRESHOLD and has_high_quality:
                 preferred_mode = "skip"
                 mode_reason = f"完成度{completeness:.0f}%，有高质量证据，无需继续研究"
             elif completeness < CONTINUE_COMPLETENESS_THRESHOLD:
@@ -694,11 +772,27 @@ class PlanAgent(BaseAgent):
                 "mode_reason": mode_reason,
             })
 
+            # 生成默认 direction_assessments（基于统计数据自动描述）
+            gd = s["grade_distribution"]
+            grade_parts = []
+            for g in ["A", "B", "C", "D", "E"]:
+                if gd[g] > 0:
+                    grade_parts.append(f"{g}级{gd[g]}条")
+            grade_str = "、".join(grade_parts) if grade_parts else "无证据"
+            deep_str = ""
+            if dir_deep:
+                deep_items = [item.get("finding", "") for item in dir_deep]
+                deep_str = f"；待深入研究: {'; '.join(deep_items)}"
+            direction_assessments[d_id] = (
+                f"完成度{completeness:.0f}%，证据{s['evidence_count']}条（{grade_str}），"
+                f"模式: {preferred_mode}{deep_str}"
+            )
+
         # 应用更新
         updated_plan = self._apply_direction_updates(plan, updated_directions)
 
-        # 决策
-        if all_complete and not has_low_quality_only and not has_pending_deep:
+        # 决策（不再使用 needs_deep_research 硬规则阻止全局收敛）
+        if all_complete and not has_low_quality_only:
             decision = "converged"
             reasoning = "所有方向完成度达标，且有足够高质量证据"
         else:
@@ -708,8 +802,6 @@ class PlanAgent(BaseAgent):
                 reasons.append("存在未完成方向")
             if has_low_quality_only:
                 reasons.append("存在只有低质量证据的方向")
-            if has_pending_deep:
-                reasons.append(f"有 {len(needs_deep_research)} 项待深入研究")
             reasoning = "；".join(reasons) if reasons else "存在未完成方向或只有低质量证据的方向"
 
         return {
@@ -733,7 +825,7 @@ class PlanAgent(BaseAgent):
                 s["topic"] for s in direction_stats.values()
                 if s["low_quality_only"] or s["completeness"] < CONTINUE_COMPLETENESS_THRESHOLD
             ],
-            "direction_assessments": {},  # 默认评估无详细方向评估
+            "direction_assessments": direction_assessments,
         }
 
     # ==================== Phase 2 方向生成 ====================

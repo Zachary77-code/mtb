@@ -340,9 +340,9 @@ class BaseAgent:
                 for tc in tool_calls
             ]
         }
-        # 保留 reasoning_details 用于多轮工具调用
-        if assistant_message.get("reasoning_details"):
-            assistant_msg["reasoning_details"] = assistant_message["reasoning_details"]
+        # 注意：不要将 reasoning_details 回传给 API，Gemini 的 thinking tokens 带签名，
+        # 回传会导致 "Thought signature is not valid" 错误。
+        # reasoning 内容已在下方通过 _extract_reasoning_text() 提取用于内部记录。
         messages.append(assistant_msg)
 
         # 获取 LLM 的推理内容（优先从 reasoning_details 提取）

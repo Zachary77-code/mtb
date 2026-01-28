@@ -9,7 +9,8 @@
       "Bash(tree:*)",
       "Bash(dir:*)",
       "Bash(git push:*)",
-      "Bash(wsl -e bash -c \"ls ~/deepseek-ocr2-test 2>/dev/null || echo ''test dir not found''; ls ~/miniconda3 2>/dev/null || echo ''miniconda not found''\")"
+      "Bash(wsl -e bash -c \"ls ~/deepseek-ocr2-test 2>/dev/null || echo ''test dir not found''; ls ~/miniconda3 2>/dev/null || echo ''miniconda not found''\")",
+      "Bash(wc:*)"
     ]
   }
 }

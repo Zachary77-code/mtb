@@ -953,6 +953,23 @@ class EvidenceGraph:
                 entities.append(entity)
         return entities
 
+    def get_agent_edges(self, agent_name: str) -> List[Edge]:
+        """
+        获取包含指定 Agent 观察的所有边
+
+        Args:
+            agent_name: Agent 名称
+
+        Returns:
+            包含该 Agent 观察的边列表
+        """
+        edges = []
+        for edge in self.edges.values():
+            has_agent_obs = any(obs.source_agent == agent_name for obs in edge.observations)
+            if has_agent_obs:
+                edges.append(edge)
+        return edges
+
     def get_agent_observation_count(self, agent_name: str) -> int:
         """
         统计指定 Agent 收集的观察数量

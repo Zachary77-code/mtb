@@ -5,6 +5,7 @@ Research Subgraph - 两阶段研究循环子图
 - Phase 1: Pathologist + Geneticist + Recruiter 并行 BFRS/DFRS 循环
 - Phase 2: Oncologist 独立 BFRS/DFRS 循环
 """
+import json
 from typing import List, Literal, Dict, Any, Optional
 from datetime import datetime
 from langgraph.graph import StateGraph, END
@@ -13,13 +14,14 @@ from langgraph.types import Send
 from src.models.state import MtbState
 from src.models.evidence_graph import (
     load_evidence_graph,
-    Entity
+    Entity,
+    Edge,
 )
 from src.models.research_plan import (
     load_research_plan,
     ResearchMode
 )
-from src.agents.base_agent import SUBGRAPH_MODEL
+from src.agents.base_agent import SUBGRAPH_MODEL, ORCHESTRATOR_MODEL
 from src.agents.pathologist import PathologistAgent
 from src.agents.geneticist import GeneticistAgent
 from src.agents.recruiter import RecruiterAgent
@@ -71,6 +73,40 @@ class ResearchOncologist(OncologistAgent, ResearchMixin):
     def __init__(self):
         super().__init__()
         self.model = SUBGRAPH_MODEL
+
+
+# ==================== 报告生成型 Agent（Pro 模型）====================
+
+class ReportPathologist(PathologistAgent):
+    """使用 Pro 模型生成领域报告的病理学家"""
+    def __init__(self):
+        super().__init__()
+        self.model = ORCHESTRATOR_MODEL
+        self.tools = []
+
+
+class ReportGeneticist(GeneticistAgent):
+    """使用 Pro 模型生成领域报告的遗传学家"""
+    def __init__(self):
+        super().__init__()
+        self.model = ORCHESTRATOR_MODEL
+        self.tools = []
+
+
+class ReportRecruiter(RecruiterAgent):
+    """使用 Pro 模型生成领域报告的临床试验专员"""
+    def __init__(self):
+        super().__init__()
+        self.model = ORCHESTRATOR_MODEL
+        self.tools = []
+
+
+class ReportOncologist(OncologistAgent):
+    """使用 Pro 模型生成领域报告的肿瘤学家"""
+    def __init__(self):
+        super().__init__()
+        self.model = ORCHESTRATOR_MODEL
+        self.tools = []
 
 
 # ==================== 模块覆盖检查 ====================
@@ -506,21 +542,63 @@ def _save_detailed_iteration_report(
     lines.append(f"- **证据冲突**: {', '.join(conflicts) if conflicts else '无'}")
     lines.append("")
 
-    # 各方向完成情况评估
+    # 各方向完成情况评估（始终显示）
     direction_assessments = eval_result.get("direction_assessments", {})
+    direction_stats = eval_result.get("direction_stats", {})
+    needs_deep_items = eval_result.get("needs_deep_research", [])
     research_plan_data = eval_result.get("research_plan", state.get("research_plan", {}))
     assessed_plan = load_research_plan(research_plan_data)
-    if direction_assessments and assessed_plan:
+
+    # 按方向分组 needs_deep_research
+    deep_by_dir = {}
+    for item in needs_deep_items:
+        d_id = item.get("direction_id", "") if isinstance(item, dict) else ""
+        if d_id not in deep_by_dir:
+            deep_by_dir[d_id] = []
+        deep_by_dir[d_id].append(item)
+
+    if assessed_plan:
         lines.append("### 各方向完成情况")
         lines.append("")
         for d in assessed_plan.directions:
-            if d.target_agent in agent_names and d.id in direction_assessments:
-                status_display = d.status.value if hasattr(d.status, 'value') else str(d.status)
-                mode_display = {"breadth_first": "BFRS", "depth_first": "DFRS", "skip": "Skip"}.get(d.preferred_mode, d.preferred_mode)
-                lines.append(f"#### {d.id}: {d.topic}")
-                lines.append(f"**状态**: {status_display} | **模式**: {mode_display}")
-                lines.append(f"**评估**: {direction_assessments[d.id]}")
-                lines.append("")
+            if d.target_agent not in agent_names:
+                continue
+            status_display = d.status.value if hasattr(d.status, 'value') else str(d.status)
+            mode_display = {"breadth_first": "BFRS", "depth_first": "DFRS", "skip": "Skip"}.get(d.preferred_mode, d.preferred_mode)
+            lines.append(f"#### {d.id}: {d.topic}")
+            lines.append(f"**状态**: {status_display} | **模式**: {mode_display}")
+
+            # 显示 direction_stats（完成度、证据等级分布）
+            stats = direction_stats.get(d.id, {})
+            if stats:
+                gd = stats.get("grade_distribution", {})
+                grade_parts = []
+                for g in ["A", "B", "C", "D", "E"]:
+                    if gd.get(g, 0) > 0:
+                        grade_parts.append(f"{g}={gd[g]}")
+                grade_str = " ".join(grade_parts) if grade_parts else "无"
+                lines.append(f"**完成度**: {stats.get('completeness', 0):.0f}% | **证据数**: {stats.get('evidence_count', 0)} | **等级分布**: {grade_str}")
+
+            # 显示该方向的 needs_deep_research
+            dir_deep = deep_by_dir.get(d.id, [])
+            if dir_deep:
+                lines.append("**待深入研究项**:")
+                for item in dir_deep:
+                    if isinstance(item, dict):
+                        agent = item.get("agent", "")
+                        finding = item.get("finding", "")
+                        reason = item.get("reason", "")
+                        reason_str = f" — {reason}" if reason else ""
+                        lines.append(f"- [{agent}] {finding}{reason_str}")
+                    else:
+                        lines.append(f"- {item}")
+
+            # 显示 LLM 的 evidence_assessment
+            assessment = direction_assessments.get(d.id, "")
+            if assessment:
+                lines.append(f"**评估**: {assessment}")
+
+            lines.append("")
         lines.append("")
 
     gaps = eval_result.get("gaps", [])
@@ -541,52 +619,136 @@ def _save_detailed_iteration_report(
         lines.append("- 无")
     lines.append("")
 
-    # === 2. 工具执行详情 ===
+    # === 2. 工具执行详情（含实体提取） ===
     lines.append("## 2. 工具执行详情")
     lines.append("")
 
     for agent_name in agent_names:
         result_key = f"{agent_name.lower()}_research_result"
         agent_result = state.get(result_key, {})
-        tool_report = agent_result.get("tool_call_report", "")
+        tool_records = agent_result.get("tool_call_records", [])
+        ext_details = agent_result.get("extraction_details", [])
 
         lines.append(f"### {agent_name}")
         lines.append("")
-        if tool_report:
-            lines.append(tool_report)
-        else:
-            lines.append("本轮无工具调用记录")
-        lines.append("")
 
-    # === 2.5 实体提取详情 ===
-    has_extraction = False
-    for agent_name in agent_names:
-        result_key = f"{agent_name.lower()}_research_result"
-        agent_result = state.get(result_key, {})
-        ext_details = agent_result.get("extraction_details", [])
-        if ext_details:
-            if not has_extraction:
-                lines.append("## 2.5 实体提取详情")
+        if not tool_records:
+            # 回退到旧的 tool_call_report 字符串（兼容）
+            tool_report = agent_result.get("tool_call_report", "")
+            if tool_report:
+                lines.append(tool_report)
+            else:
+                lines.append("本轮无工具调用记录")
+            lines.append("")
+            continue
+
+        # 按 source_tool 分组 extraction_details，用于按顺序匹配
+        ext_by_tool = {}
+        for detail in ext_details:
+            tool_key = detail.get("source_tool", "")
+            if tool_key not in ext_by_tool:
+                ext_by_tool[tool_key] = []
+            ext_by_tool[tool_key].append(detail)
+        # 跟踪每个 tool 已消费的 extraction index
+        ext_consumed = {k: 0 for k in ext_by_tool}
+
+        for i, record in enumerate(tool_records, 1):
+            tool_name = record.get("tool_name", "")
+            phase_tag = record.get("phase", "")
+            lines.append(f"#### Tool Call {i}: `{tool_name}` [{phase_tag}]")
+            lines.append(f"**Timestamp:** {record.get('timestamp', '')}")
+            lines.append("")
+
+            reasoning = record.get("reasoning", "")
+            if reasoning:
+                lines.append("**Reasoning:**")
+                for line in reasoning.split("\n"):
+                    lines.append(f"> {line}")
                 lines.append("")
-                has_extraction = True
-            lines.append(f"### {agent_name}")
+
+            lines.append("**Parameters:**")
+            lines.append("```json")
+            lines.append(json.dumps(record.get("parameters", {}), ensure_ascii=False, indent=2))
+            lines.append("```")
             lines.append("")
-            lines.append("| 来源工具 | 方向 | 发现摘要 | 新增实体 | 新增Obs | 新增Edge |")
-            lines.append("|----------|------|----------|----------|---------|----------|")
-            for detail in ext_details:
-                entities_str = ", ".join(detail.get("new_entities", []))
-                if not entities_str:
-                    entities_str = "-"
+
+            lines.append("**Result:**")
+            lines.append("```")
+            lines.append(record.get("result", ""))
+            lines.append("```")
+            lines.append("")
+
+            # 插入匹配的 extraction_details（按顺序消费）
+            if tool_name in ext_by_tool and ext_consumed[tool_name] < len(ext_by_tool[tool_name]):
+                detail = ext_by_tool[tool_name][ext_consumed[tool_name]]
+                ext_consumed[tool_name] += 1
+
                 summary = detail.get("finding_summary", "")
-                lines.append(
-                    f"| {detail.get('source_tool', '')} "
-                    f"| {detail.get('direction_id', '')} "
-                    f"| {summary} "
-                    f"| {entities_str} "
-                    f"| {detail.get('new_observations', 0)} "
-                    f"| {detail.get('new_edges', 0)} |"
-                )
+                direction_id = detail.get("direction_id", "")
+                lines.append(f"**证据分解** (→ {direction_id}):")
+                if summary:
+                    lines.append(f"> {summary}")
+                    lines.append("")
+
+                # 实体详情
+                entities_detail = detail.get("entities_detail", [])
+                if entities_detail:
+                    lines.append("**Entities:**")
+                    for ent in entities_detail:
+                        grade_str = f" [{ent['evidence_grade']}]" if ent.get("evidence_grade") else ""
+                        obs_str = f' — "{ent["observation_statement"]}"' if ent.get("observation_statement") else ""
+                        lines.append(f"- `{ent['canonical_id']}` ({ent['type']}){obs_str}{grade_str}")
+                    lines.append("")
+
+                # 边详情
+                edges_detail = detail.get("edges_detail", [])
+                if edges_detail:
+                    lines.append("**Edges:**")
+                    for edge in edges_detail:
+                        conf_str = f" (conf={edge['confidence']:.1f})" if edge.get("confidence") else ""
+                        obs_str = f' — "{edge["observation_statement"]}"' if edge.get("observation_statement") else ""
+                        lines.append(f"- `{edge['source']}` → **{edge['predicate']}** → `{edge['target']}`{conf_str}{obs_str}")
+                    lines.append("")
+
+                lines.append(f"*统计: {detail.get('new_observations', 0)} obs, {detail.get('new_edges', 0)} edges*")
+                lines.append("")
+
+        # 追加未匹配到 tool call 的剩余 extraction_details
+        remaining = []
+        for tool_key, details_list in ext_by_tool.items():
+            consumed = ext_consumed.get(tool_key, 0)
+            remaining.extend(details_list[consumed:])
+        # 无 source_tool 的 extraction_details
+        for detail in ext_details:
+            if not detail.get("source_tool"):
+                remaining.append(detail)
+
+        if remaining:
+            lines.append("#### 其他证据分解")
             lines.append("")
+            for detail in remaining:
+                summary = detail.get("finding_summary", "")
+                source_tool = detail.get("source_tool", "")
+                direction_id = detail.get("direction_id", "")
+                lines.append(f"**{source_tool}** → {direction_id}")
+                if summary:
+                    lines.append(f"> {summary}")
+                    lines.append("")
+                entities_detail = detail.get("entities_detail", [])
+                if entities_detail:
+                    for ent in entities_detail:
+                        grade_str = f" [{ent['evidence_grade']}]" if ent.get("evidence_grade") else ""
+                        obs_str = f' — "{ent["observation_statement"]}"' if ent.get("observation_statement") else ""
+                        lines.append(f"- `{ent['canonical_id']}` ({ent['type']}){obs_str}{grade_str}")
+                edges_detail = detail.get("edges_detail", [])
+                if edges_detail:
+                    for edge in edges_detail:
+                        conf_str = f" (conf={edge['confidence']:.1f})" if edge.get("confidence") else ""
+                        obs_str = f' — "{edge["observation_statement"]}"' if edge.get("observation_statement") else ""
+                        lines.append(f"- `{edge['source']}` → **{edge['predicate']}** → `{edge['target']}`{conf_str}{obs_str}")
+                lines.append("")
+
+        lines.append("")
 
     # === 3. 本轮新增证据明细 ===
     lines.append("## 3. 本轮新增证据明细")
@@ -751,6 +913,93 @@ def _save_detailed_iteration_report(
 
 # ==================== Phase 1 报告生成辅助函数 ====================
 
+def _format_evidence_table(entities: List[Entity], edges: List[Edge], agent_name: str) -> str:
+    """
+    从 agent 的 entities + edges 生成结构化 markdown 证据表格
+
+    Args:
+        entities: 包含该 agent 观察的实体列表
+        edges: 包含该 agent 观察的边列表
+        agent_name: Agent 名称，用于筛选观察
+
+    Returns:
+        markdown 格式的证据表格字符串
+    """
+    lines = []
+
+    # === 实体观察表 ===
+    grade_order = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
+
+    # 收集所有 agent 的实体观察
+    entity_rows = []
+    for entity in entities:
+        agent_obs = [obs for obs in entity.observations if obs.source_agent == agent_name]
+        for obs in agent_obs:
+            grade = obs.evidence_grade.value if obs.evidence_grade else "N/A"
+            civic = obs.civic_type.value if obs.civic_type else ""
+            tool = obs.source_tool or ""
+            provenance = obs.provenance or ""
+            entity_rows.append({
+                "entity": entity.canonical_id,
+                "type": entity.entity_type.value,
+                "statement": obs.statement,
+                "grade": grade,
+                "civic_type": civic,
+                "tool": tool,
+                "provenance": provenance,
+                "sort_key": grade_order.get(grade, 5),
+            })
+
+    # 按证据等级排序
+    entity_rows.sort(key=lambda r: r["sort_key"])
+
+    if entity_rows:
+        lines.append(f"### 实体观察表（共 {len(entity_rows)} 条）\n")
+        lines.append("| # | 实体 | 类型 | 观察陈述 | 等级 | CIViC类型 | 来源工具 | 出处 |")
+        lines.append("|---|------|------|----------|------|-----------|----------|------|")
+        for i, row in enumerate(entity_rows, 1):
+            # 转义管道符
+            stmt = row["statement"].replace("|", "\\|")
+            lines.append(
+                f"| {i} | {row['entity']} | {row['type']} | {stmt} | {row['grade']} | {row['civic_type']} | {row['tool']} | {row['provenance']} |"
+            )
+        lines.append("")
+
+    # === 关系边表 ===
+    edge_rows = []
+    for edge in edges:
+        agent_obs = [obs for obs in edge.observations if obs.source_agent == agent_name]
+        for obs in agent_obs:
+            grade = obs.evidence_grade.value if obs.evidence_grade else "N/A"
+            edge_rows.append({
+                "source": edge.source_id,
+                "predicate": edge.predicate.value,
+                "target": edge.target_id,
+                "statement": obs.statement,
+                "grade": grade,
+                "confidence": edge.confidence,
+                "sort_key": grade_order.get(grade, 5),
+            })
+
+    edge_rows.sort(key=lambda r: r["sort_key"])
+
+    if edge_rows:
+        lines.append(f"### 关系边表（共 {len(edge_rows)} 条）\n")
+        lines.append("| # | 源实体 | 关系 | 目标实体 | 观察陈述 | 等级 | 置信度 |")
+        lines.append("|---|--------|------|----------|----------|------|--------|")
+        for i, row in enumerate(edge_rows, 1):
+            stmt = row["statement"].replace("|", "\\|")
+            lines.append(
+                f"| {i} | {row['source']} | {row['predicate']} | {row['target']} | {stmt} | {row['grade']} | {row['confidence']:.1f} |"
+            )
+        lines.append("")
+
+    if not entity_rows and not edge_rows:
+        lines.append("暂无结构化证据数据。\n")
+
+    return "\n".join(lines)
+
+
 def _format_evidence_for_report(entity_list: List[Entity], agent_name: str = None) -> str:
     """
     将实体列表格式化为报告生成用的摘要
@@ -827,25 +1076,29 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
     # 为每个 Phase 1 Agent 生成报告
     # (agent_name, agent_class, state_key, filename)
     agent_configs = [
-        ("Pathologist", ResearchPathologist, "pathologist_report", "1_pathologist_report.md"),
-        ("Geneticist", ResearchGeneticist, "geneticist_report", "2_geneticist_report.md"),
-        ("Recruiter", ResearchRecruiter, "recruiter_report", "3_recruiter_report.md"),
+        ("Pathologist", ReportPathologist, "pathologist_report", "1_pathologist_report.md"),
+        ("Geneticist", ReportGeneticist, "geneticist_report", "2_geneticist_report.md"),
+        ("Recruiter", ReportRecruiter, "recruiter_report", "3_recruiter_report.md"),
     ]
 
     for agent_name, agent_class, report_key, filename in agent_configs:
         logger.info(f"[PHASE1_REPORTS] 生成 {agent_name} 报告...")
 
-        # 提取该 Agent 收集的证据（实体）
+        # 提取该 Agent 收集的证据（实体 + 边）
         agent_entities = graph.get_entities_with_agent_observations(agent_name)
+        agent_edges = graph.get_agent_edges(agent_name)
         observation_count = graph.get_agent_observation_count(agent_name)
-        logger.info(f"[PHASE1_REPORTS]   {agent_name} 实体数: {len(agent_entities)}, 观察数: {observation_count}")
+        logger.info(f"[PHASE1_REPORTS]   {agent_name} 实体数: {len(agent_entities)}, 边数: {len(agent_edges)}, 观察数: {observation_count}")
 
         if not agent_entities:
             reports[report_key] = f"## {agent_name} 报告\n\n暂无相关发现。"
             continue
 
-        # 构建证据摘要
+        # 构建证据摘要（文本格式，供 LLM 理解上下文）
         evidence_summary = _format_evidence_for_report(agent_entities, agent_name)
+
+        # 构建完整证据表格（结构化表格，确保不遗漏）
+        evidence_table = _format_evidence_table(agent_entities, agent_edges, agent_name)
 
         # 构建报告生成 prompt
         report_prompt = f"""基于以下病例信息和已收集的研究证据，生成你的专业领域综合报告。
@@ -856,12 +1109,17 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
 ## 已收集的研究证据（共 {observation_count} 条）
 {evidence_summary}
 
+## 完整证据清单
+{evidence_table}
+
 ## 输出要求
 请生成一份完整的 Markdown 格式的领域分析报告。注意：
 1. 整合所有证据，给出综合分析结论
 2. 保留所有引用（PMID、NCT 等）
 3. 明确标注证据等级 [Evidence A/B/C/D/E]
 4. 重点突出对治疗决策有指导意义的发现
+5. **报告末尾必须包含「完整证据清单」模块**，以表格形式列出上述所有证据，
+   每条证据附带你的分析结论（该证据对治疗决策的意义）。这不是综述，是逐条证据分析。
 """
 
         try:
@@ -871,6 +1129,10 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
 
             if response and response.get("output"):
                 report = response["output"]
+
+                # 程序化追加完整证据清单（确保不遗漏）
+                report += f"\n\n---\n\n## 完整证据清单（Evidence Graph）\n\n{evidence_table}"
+
                 reports[report_key] = report
                 logger.info(f"[PHASE1_REPORTS]   {agent_name} 报告生成成功: {len(report)} 字符")
                 # 保存到文件
@@ -951,17 +1213,21 @@ def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
         logger.warning("[PHASE2_REPORTS] 证据图为空，跳过报告生成")
         return {}
 
-    # 提取 Oncologist 收集的证据（实体）
+    # 提取 Oncologist 收集的证据（实体 + 边）
     oncologist_entities = graph.get_entities_with_agent_observations("Oncologist")
+    oncologist_edges = graph.get_agent_edges("Oncologist")
     observation_count = graph.get_agent_observation_count("Oncologist")
-    logger.info(f"[PHASE2_REPORTS] Oncologist 实体数: {len(oncologist_entities)}, 观察数: {observation_count}")
+    logger.info(f"[PHASE2_REPORTS] Oncologist 实体数: {len(oncologist_entities)}, 边数: {len(oncologist_edges)}, 观察数: {observation_count}")
 
     if not oncologist_entities:
         logger.warning("[PHASE2_REPORTS] Oncologist 无证据，生成默认报告")
         return {"oncologist_plan": "## 治疗方案分析\n\n暂无相关发现。"}
 
-    # 构建证据摘要（完整，不截断）
+    # 构建证据摘要（文本格式，供 LLM 理解上下文）
     evidence_summary = _format_evidence_for_report(oncologist_entities, "Oncologist")
+
+    # 构建完整证据表格（结构化表格，确保不遗漏）
+    evidence_table = _format_evidence_table(oncologist_entities, oncologist_edges, "Oncologist")
 
     # 获取上游报告作为参考
     pathologist_report = state.get('pathologist_report', '')
@@ -988,6 +1254,9 @@ def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
 ## 你收集的研究证据（共 {observation_count} 条）
 {evidence_summary}
 
+## 完整证据清单
+{evidence_table}
+
 ## 输出要求
 请生成一份完整的 Markdown 格式的肿瘤学治疗方案分析报告。注意：
 1. 整合所有证据和上游报告信息，给出综合治疗建议
@@ -995,15 +1264,21 @@ def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
 3. 明确标注证据等级 [Evidence A/B/C/D/E]
 4. 重点突出治疗方案选择、用药建议、安全性考量
 5. 包含治疗路线图和分子复查建议
+6. **报告末尾必须包含「完整证据清单」模块**，以表格形式列出上述所有证据，
+   每条证据附带你的分析结论（该证据对治疗决策的意义）。这不是综述，是逐条证据分析。
 """
 
     try:
-        # 实例化 Oncologist Agent 并调用
-        agent = ResearchOncologist()
+        # 实例化 Oncologist Report Agent（Pro 模型）并调用
+        agent = ReportOncologist()
         response = agent.invoke(report_prompt)
 
         if response and response.get("output"):
             report = response["output"]
+
+            # 程序化追加完整证据清单（确保不遗漏）
+            report += f"\n\n---\n\n## 完整证据清单（Evidence Graph）\n\n{evidence_table}"
+
             logger.info(f"[PHASE2_REPORTS] Oncologist 报告生成成功: {len(report)} 字符")
             # 保存到文件
             _save_agent_report(state, "4_oncologist_report.md", report)

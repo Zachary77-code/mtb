@@ -124,6 +124,7 @@ class ResearchMixin:
         all_summaries = []
         all_outputs = []
         all_tool_call_reports = []  # 收集每阶段的工具调用报告
+        all_tool_call_records = []  # 原始工具调用记录（dict 列表）
 
         # 处理 BFRS 方向
         if bfrs_directions:
@@ -133,6 +134,16 @@ class ResearchMixin:
             bfrs_tool_report = self.get_tool_call_report()  # type: ignore  # 在下次 invoke() 重置前捕获
             if bfrs_tool_report:
                 all_tool_call_reports.append(f"### BFRS 工具调用\n{bfrs_tool_report}")
+            # 捕获原始 tool call records（标记 phase）
+            for record in getattr(self, 'tool_call_history', []):
+                all_tool_call_records.append({
+                    "tool_name": record.tool_name,
+                    "parameters": record.parameters,
+                    "reasoning": record.reasoning,
+                    "result": record.result,
+                    "timestamp": record.timestamp,
+                    "phase": "BFRS",
+                })
             output = result.get("output", "")
             all_outputs.append(output)
             parsed = self._parse_research_output(output, ResearchMode.BREADTH_FIRST)
@@ -150,6 +161,16 @@ class ResearchMixin:
             dfrs_tool_report = self.get_tool_call_report()  # type: ignore  # 捕获 DFRS 工具调用报告
             if dfrs_tool_report:
                 all_tool_call_reports.append(f"### DFRS 工具调用\n{dfrs_tool_report}")
+            # 捕获原始 tool call records（标记 phase）
+            for record in getattr(self, 'tool_call_history', []):
+                all_tool_call_records.append({
+                    "tool_name": record.tool_name,
+                    "parameters": record.parameters,
+                    "reasoning": record.reasoning,
+                    "result": record.result,
+                    "timestamp": record.timestamp,
+                    "phase": "DFRS",
+                })
             output = result.get("output", "")
             all_outputs.append(output)
             parsed = self._parse_research_output(output, ResearchMode.DEPTH_FIRST)
@@ -192,6 +213,7 @@ class ResearchMixin:
             "summary": combined_summary,
             "raw_output": "\n---\n".join(all_outputs),
             "tool_call_report": "\n\n".join(all_tool_call_reports),
+            "tool_call_records": all_tool_call_records,
             "extraction_details": extraction_details
         }
 
@@ -269,6 +291,7 @@ class ResearchMixin:
     }},
     "needs_deep_research": [
         {{
+            "direction_id": "D1",
             "finding": "需要深入的发现描述",
             "reason": "为什么需要深入研究"
         }}
@@ -371,7 +394,13 @@ class ResearchMixin:
     "direction_updates": {{
         "D1": "pending|completed"
     }},
-    "needs_deep_research": [],
+    "needs_deep_research": [
+        {{
+            "direction_id": "D1",
+            "finding": "仍需深入的发现描述",
+            "reason": "为什么需要继续深入"
+        }}
+    ],
     "research_complete": true|false
 }}
 ```
@@ -467,6 +496,7 @@ class ResearchMixin:
                 continue
 
             # ========== 处理提取的实体 ==========
+            finding_entities_detail = []
             for extracted_entity in extraction_result.entities:
                 # 获取或创建实体（自动合并）
                 entity = graph.get_or_create_entity(
@@ -490,7 +520,18 @@ class ResearchMixin:
                     new_entity_ids.append(entity.canonical_id)
                     finding_new_entities.append(entity.canonical_id)
 
+                # 收集实体详情
+                obs = extracted_entity.observation
+                finding_entities_detail.append({
+                    "canonical_id": extracted_entity.canonical_id,
+                    "type": extracted_entity.entity_type.value if hasattr(extracted_entity.entity_type, 'value') else str(extracted_entity.entity_type),
+                    "name": extracted_entity.name,
+                    "observation_statement": obs.statement if obs else "",
+                    "evidence_grade": obs.evidence_grade.value if obs and hasattr(obs.evidence_grade, 'value') else (str(obs.evidence_grade) if obs else ""),
+                })
+
             # ========== 处理提取的边 ==========
+            finding_edges_detail = []
             for extracted_edge in extraction_result.edges:
                 # 确保源和目标实体存在
                 source_entity = graph.get_entity(extracted_edge.source_id)
@@ -511,6 +552,17 @@ class ResearchMixin:
                         confidence=extracted_edge.confidence
                     )
                     finding_new_edges += 1
+
+                    # 收集边详情
+                    edge_obs = extracted_edge.observation
+                    predicate_str = extracted_edge.predicate.value if hasattr(extracted_edge.predicate, 'value') else str(extracted_edge.predicate)
+                    finding_edges_detail.append({
+                        "source": source_entity.canonical_id,
+                        "target": target_entity.canonical_id,
+                        "predicate": predicate_str,
+                        "observation_statement": edge_obs.statement if edge_obs else "",
+                        "confidence": extracted_edge.confidence,
+                    })
 
             # ========== 处理冲突 ==========
             for conflict in extraction_result.conflicts:
@@ -538,6 +590,8 @@ class ResearchMixin:
                 "new_entities": finding_new_entities,
                 "new_observations": finding_new_obs,
                 "new_edges": finding_new_edges,
+                "entities_detail": finding_entities_detail,
+                "edges_detail": finding_edges_detail,
             })
 
         # 记录统计

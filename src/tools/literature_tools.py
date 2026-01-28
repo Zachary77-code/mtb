@@ -36,24 +36,28 @@ class PubMedTool(BaseTool):
 
         # Use smart search (LLM-API-LLM sandwich architecture)
         # broad_search_count defaults to 100 in SmartPubMedSearch
-        results = self.smart_search.search(
+        results, optimized_query = self.smart_search.search(
             query,
             max_results=max_results
         )
 
         if not results:
-            return f"**PubMed 搜索结果**\n\n**搜索关键词**: {query}\n\n未找到相关文献。"
+            return f"**PubMed 搜索结果**\n\n**搜索关键词**: {query}\n**优化查询**: {optimized_query}\n\n未找到相关文献。"
 
-        return self._format_results(query, results)
+        return self._format_results(query, results, optimized_query=optimized_query)
 
-    def _format_results(self, query: str, results: List[Dict]) -> str:
+    def _format_results(self, query: str, results: List[Dict], optimized_query: str = "") -> str:
         """格式化搜索结果（包含相关性评分）"""
         output = [
             f"**PubMed 搜索结果**\n",
             f"**搜索关键词**: {query}",
+        ]
+        if optimized_query and optimized_query != query:
+            output.append(f"**优化查询**: {optimized_query}")
+        output.extend([
             f"**找到文献**: {len(results)} 篇\n",
             "---\n"
-        ]
+        ])
 
         for i, article in enumerate(results, 1):
             pmid = article.get("pmid", "N/A")

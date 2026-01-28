@@ -9,7 +9,7 @@ Architecture:
 import json
 import re
 import requests
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from src.tools.api_clients.ncbi_client import get_ncbi_client
 from src.utils.logger import mtb_logger as logger
@@ -260,7 +260,7 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
         max_results: int = 20,
         broad_search_count: int = 100,
         skip_filtering: bool = False
-    ) -> List[Dict]:
+    ) -> Tuple[List[Dict], str]:
         """
         智能搜索主流程
 
@@ -271,7 +271,7 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
             skip_filtering: 跳过 LLM 筛选（用于简单查询）
 
         Returns:
-            筛选后的高相关性文献列表
+            (筛选后的高相关性文献列表, 优化后的查询字符串)
         """
         logger.info(f"[SmartPubMed] 开始搜索: {query[:50]}...")
 
@@ -285,6 +285,7 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
             # 回退策略 1: 尝试简化后的原始查询
             logger.warning(f"[SmartPubMed] 优化查询无结果，尝试回退查询")
             fallback_query = self._fallback_query_cleanup(query)
+            optimized_query = fallback_query  # 记录实际使用的查询
             results = self.ncbi_client.search_pubmed(fallback_query, max_results=broad_search_count)
 
         if not results:
@@ -292,20 +293,21 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
             first_term = query.split()[0] if query else ""
             if first_term:
                 logger.warning(f"[SmartPubMed] 回退查询无结果，尝试单词查询: {first_term}")
+                optimized_query = first_term  # 记录实际使用的查询
                 results = self.ncbi_client.search_pubmed(first_term, max_results=broad_search_count)
 
         if not results:
             logger.warning(f"[SmartPubMed] 所有查询策略均无结果")
-            return []
+            return [], optimized_query
 
         logger.info(f"[SmartPubMed] API 返回 {len(results)} 篇文献")
 
         # Step 3: LLM 筛选（可选）
         if skip_filtering:
-            return results[:max_results]
+            return results[:max_results], optimized_query
 
         filtered = self._filter_results(query, results)
-        return filtered[:max_results]
+        return filtered[:max_results], optimized_query
 
 
 # ==================== 全局单例 ====================
