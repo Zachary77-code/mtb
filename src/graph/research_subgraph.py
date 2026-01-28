@@ -467,21 +467,35 @@ def _save_detailed_iteration_report(
             lines.append("")
 
             # 合并表格：本轮各方向执行概览
-            lines.append("| 方向 ID | 主题 | Agent | 模式 | Obs数 | Entity数 | 状态变化 |")
-            lines.append("|---------|------|-------|------|-------|----------|----------|")
+            lines.append("| 方向 ID | 主题 | Agent | 模式 | Obs数(实体+边) | Entity数 | 状态变化 |")
+            lines.append("|---------|------|-------|------|----------------|----------|----------|")
             for d in pre_plan.directions:
                 if d.target_agent in agent_names:
                     mode_disp = {"breadth_first": "BFRS", "depth_first": "DFRS", "skip": "Skip"}.get(
                         d.preferred_mode, d.preferred_mode
                     )
                     topic_short = d.topic
-                    # 计算 observation 数和 entity 数
+                    # 计算 observation 数和 entity 数（只计算本 agent 的观察，含实体+边）
+                    target_agent = d.target_agent
                     entity_count = len(d.evidence_ids)
-                    obs_count = sum(
-                        len(graph.get_entity(eid).observations)
+                    evidence_id_set = set(d.evidence_ids)
+                    # 实体观察数（仅本 agent）
+                    entity_obs_count = sum(
+                        sum(1 for obs in graph.get_entity(eid).observations
+                            if obs.source_agent == target_agent)
                         for eid in d.evidence_ids
                         if graph and graph.get_entity(eid)
                     )
+                    # 边观察数（仅本 agent，且边的端点在该方向的 evidence_ids 中）
+                    edge_obs_count = 0
+                    if graph:
+                        for edge in graph.edges.values():
+                            if edge.source_id in evidence_id_set or edge.target_id in evidence_id_set:
+                                edge_obs_count += sum(
+                                    1 for obs in edge.observations
+                                    if obs.source_agent == target_agent
+                                )
+                    obs_count = entity_obs_count + edge_obs_count
                     # 状态变化
                     post_d = post_plan.get_direction_by_id(d.id) if post_plan else None
                     pre_status = d.status.value
@@ -557,6 +571,9 @@ def _save_detailed_iteration_report(
             deep_by_dir[d_id] = []
         deep_by_dir[d_id].append(item)
 
+    # 收集未收敛方向信息（用于全局收敛判断段落）
+    unconverged_directions = []
+
     if assessed_plan:
         lines.append("### 各方向完成情况")
         lines.append("")
@@ -566,7 +583,6 @@ def _save_detailed_iteration_report(
             status_display = d.status.value if hasattr(d.status, 'value') else str(d.status)
             mode_display = {"breadth_first": "BFRS", "depth_first": "DFRS", "skip": "Skip"}.get(d.preferred_mode, d.preferred_mode)
             lines.append(f"#### {d.id}: {d.topic}")
-            lines.append(f"**状态**: {status_display} | **模式**: {mode_display}")
 
             # 显示 direction_stats（完成度、证据等级分布）
             stats = direction_stats.get(d.id, {})
@@ -577,29 +593,109 @@ def _save_detailed_iteration_report(
                     if gd.get(g, 0) > 0:
                         grade_parts.append(f"{g}={gd[g]}")
                 grade_str = " ".join(grade_parts) if grade_parts else "无"
-                lines.append(f"**完成度**: {stats.get('completeness', 0):.0f}% | **证据数**: {stats.get('evidence_count', 0)} | **等级分布**: {grade_str}")
+                lines.append(f"**状态**: {status_display} | **模式**: {mode_display} | **完成度**: {stats.get('completeness', 0):.0f}% | **证据数**: {stats.get('evidence_count', 0)} | **等级分布**: {grade_str}")
+            else:
+                lines.append(f"**状态**: {status_display} | **模式**: {mode_display}")
+            lines.append("")
 
-            # 显示该方向的 needs_deep_research
+            # ① 证据充分性评估
+            assessment_data = direction_assessments.get(d.id, {})
+            # 兼容旧格式（字符串）和新格式（dict）
+            if isinstance(assessment_data, str):
+                evidence_text = assessment_data
+                deep_assessments = []
+            else:
+                evidence_text = assessment_data.get("evidence_assessment", "")
+                deep_assessments = assessment_data.get("deep_research_assessment", [])
+
+            lines.append(f"**① 证据充分性评估**:")
+            if evidence_text:
+                lines.append(evidence_text)
+            else:
+                lines.append("（无评估信息）")
+            lines.append("")
+
+            # ② 待深入研究项评估
             dir_deep = deep_by_dir.get(d.id, [])
-            if dir_deep:
-                lines.append("**待深入研究项**:")
-                for item in dir_deep:
-                    if isinstance(item, dict):
-                        agent = item.get("agent", "")
-                        finding = item.get("finding", "")
-                        reason = item.get("reason", "")
-                        reason_str = f" — {reason}" if reason else ""
-                        lines.append(f"- [{agent}] {finding}{reason_str}")
-                    else:
-                        lines.append(f"- {item}")
+            if dir_deep or deep_assessments:
+                lines.append("**② 待深入研究项评估**:")
+                if deep_assessments:
+                    # 使用 LLM 的结构化评估
+                    lines.append("| 项目 | 覆盖 | 影响 | 说明 |")
+                    lines.append("|------|------|------|------|")
+                    coverage_map = {"covered": "已覆盖", "partial": "部分覆盖", "uncovered": "未覆盖"}
+                    impact_map = {"critical": "关键", "important": "重要", "minor": "次要"}
+                    for da in deep_assessments:
+                        item_name = da.get("item", "")
+                        coverage = coverage_map.get(da.get("coverage", ""), da.get("coverage", ""))
+                        impact = impact_map.get(da.get("impact", ""), da.get("impact", ""))
+                        justification = da.get("justification", "")
+                        lines.append(f"| {item_name} | {coverage} | {impact} | {justification} |")
+                else:
+                    # 无结构化评估，仅列出原始 needs_deep_research
+                    for item in dir_deep:
+                        if isinstance(item, dict):
+                            agent = item.get("agent", "")
+                            finding = item.get("finding", "")
+                            reason = item.get("reason", "")
+                            reason_str = f" — {reason}" if reason else ""
+                            lines.append(f"- [{agent}] {finding}{reason_str}")
+                        else:
+                            lines.append(f"- {item}")
+                lines.append("")
+            else:
+                lines.append("**② 待深入研究项评估**: 无待深入研究项")
+                lines.append("")
 
-            # 显示 LLM 的 evidence_assessment
-            assessment = direction_assessments.get(d.id, "")
-            if assessment:
-                lines.append(f"**评估**: {assessment}")
+            # ③ 方向收敛判定
+            is_converged = (status_display == "completed" and d.preferred_mode == "skip")
+            if is_converged:
+                lines.append(f"**③ 方向收敛判定**: 已收敛")
+            else:
+                # 构建未收敛原因
+                unconverge_reasons = []
+                if deep_assessments:
+                    blocking_items = [
+                        da for da in deep_assessments
+                        if da.get("coverage") != "covered" and da.get("impact") in ("critical", "important")
+                    ]
+                    if blocking_items:
+                        impact_counts = {}
+                        for bi in blocking_items:
+                            imp = {"critical": "关键", "important": "重要"}.get(bi.get("impact", ""), bi.get("impact", ""))
+                            impact_counts[imp] = impact_counts.get(imp, 0) + 1
+                        impact_str = "、".join(f"{k}×{v}" for k, v in impact_counts.items())
+                        unconverge_reasons.append(f"存在{impact_str}级别未覆盖项")
+                        unconverged_directions.append(f"{d.id} ({impact_str})")
+                elif dir_deep:
+                    unconverge_reasons.append(f"有{len(dir_deep)}项待深入研究")
+                    unconverged_directions.append(f"{d.id} (待深入×{len(dir_deep)})")
+                if status_display != "completed":
+                    unconverge_reasons.append(f"完成度不足")
+                    if d.id not in [ud.split(" ")[0] for ud in unconverged_directions]:
+                        unconverged_directions.append(f"{d.id} (完成度不足)")
+                reason_text = " — " + "；".join(unconverge_reasons) if unconverge_reasons else ""
+                lines.append(f"**③ 方向收敛判定**: 未收敛{reason_text}")
+            lines.append("")
+
+            # ④ 下一轮模式
+            lines.append(f"**④ 下一轮模式**: {mode_display} — {d.mode_reason}")
 
             lines.append("")
+            lines.append("---")
+            lines.append("")
         lines.append("")
+
+    # 全局收敛判断
+    decision = eval_result.get("decision", "unknown")
+    reasoning = eval_result.get("reasoning", "")
+    lines.append("### 全局收敛判断")
+    lines.append("")
+    lines.append(f"**决策**: {decision}")
+    lines.append(f"**理由**: {reasoning}")
+    if unconverged_directions:
+        lines.append(f"**未收敛方向**: {', '.join(unconverged_directions)}")
+    lines.append("")
 
     gaps = eval_result.get("gaps", [])
     lines.append("### 待填补空白")

@@ -467,33 +467,31 @@ class PlanAgent(BaseAgent):
 
 ### 评估要求
 
-请根据以上信息，完成以下评估：
+请根据以上信息，对每个研究方向逐一进行综合评估，判断该方向是否可以收敛：
 
-1. **评估证据充分性**（对每个方向逐一评估）：
-   - 对比每个方向的「完成标准」和「核心观察」，判断研究问题是否已被充分回答
+1. **证据充分性评估**（每个方向）：
+   - 对比「完成标准」与「核心观察」，判断研究问题是否已被充分回答
    - 即使完成度数值较高，如果核心观察未覆盖完成标准的关键问题，仍应标记为未完成
    - 即使完成度数值较低，如果核心观察已充分回答研究问题，可标记为完成
-   - 如该方向有「待深入研究项」，必须评估这些项是否已被后续研究覆盖
 
-2. **为每个方向生成 evidence_assessment**（必填，不可为空）：
-   - 该方向已有证据的要点总结（列出关键发现及其证据等级）
-   - 完成标准中哪些关键点已覆盖、哪些未覆盖
-   - 如有「待深入研究项」，说明是否已覆盖及覆盖程度
-   - 综合判断该方向的证据充分性
+2. **待深入研究项评估**（每个方向，如有「待深入研究项」则必须逐条评估）：
+   - 逐条评估该方向的每个「待深入研究项」
+   - 判断该项是否已被当前证据覆盖: covered（完全覆盖）/ partial（部分覆盖）/ uncovered（未覆盖）
+   - 判断未覆盖/部分覆盖的项对最终报告质量的影响程度:
+     - **critical（关键）**: 直接影响患者治疗决策或安全性
+     - **important（重要）**: 影响报告完整性或证据强度
+     - **minor（次要）**: 与患者病情、治疗基本不相关的补充信息
+   - 只有 minor 级别的未覆盖项可以忽略；存在 critical 或 important 级别的未覆盖/部分覆盖项，该方向不应收敛
+   - 如该方向无「待深入研究项」，则 deep_research_assessment 为空数组 []
 
-3. **更新各方向状态**：
-   - 证据已充分回答完成标准: 标记为 "completed"
-   - 证据不足或缺少关键内容: 保持 "pending" 或 "in_progress"
-   - 调整优先级（证据缺口大或只有低质量证据的方向提升优先级）
+3. **方向收敛判定**（综合以上两点）：
+   - 证据已充分回答完成标准 且 无 critical/important 级别未覆盖的待深入研究项 → status="completed", preferred_mode="skip"
+   - 证据不足 或 有 critical/important 待深入研究项未覆盖 → status="pending"/"in_progress", preferred_mode="breadth_first"/"depth_first"
+   - 调整优先级（证据缺口大、有 critical/important 待深入项的方向提升优先级）
 
-4. **决定每个方向的研究模式**：
-   - "skip": 证据已充分回答完成标准，无需继续研究
-   - "breadth_first": 证据覆盖面不足，需要广度收集更多初步证据
-   - "depth_first": 有初步发现但需要更高质量证据支撑，或存在证据冲突需要解决，或有待深入研究项未覆盖
-
-5. **收敛判断**：
-   - "converged": 所有方向的完成标准已被充分回答，且有足够高质量证据，无重大冲突
-   - "continue": 存在未充分回答的方向，或关键发现只有低质量证据，或有未解决冲突
+4. **全局收敛判断**（基于所有方向的综合判定）：
+   - "converged": 所有方向均已收敛（status=completed, preferred_mode=skip）
+   - "continue": 任何方向未收敛
 
 ### 输出格式
 
@@ -508,26 +506,43 @@ class PlanAgent(BaseAgent):
             "priority": 1,
             "completeness": 85,
             "preferred_mode": "skip",
-            "mode_reason": "完成度85%，有高质量证据，无需继续研究",
-            "evidence_assessment": "已找到 EGFR L858R 的靶向药物证据(A级)及耐药机制(B级)，完成标准中的分子分型、药物敏感性、耐药机制均有覆盖"
+            "mode_reason": "证据已充分回答完成标准，待深入项已被覆盖",
+            "evidence_assessment": "已找到 EGFR L858R 的靶向药物证据(A级)及耐药机制(B级)，完成标准中的分子分型、药物敏感性、耐药机制均有覆盖",
+            "deep_research_assessment": [
+                {{
+                    "item": "耐药后二线方案",
+                    "coverage": "covered",
+                    "impact": "minor",
+                    "justification": "已有奥希替尼耐药后方案数据(B级)"
+                }}
+            ]
         }},
         {{
             "id": "D2",
+            "status": "in_progress",
+            "priority": 1,
+            "completeness": 60,
+            "preferred_mode": "depth_first",
+            "mode_reason": "有关键待深入项未覆盖，需深入研究",
+            "evidence_assessment": "已找到肾功能剂量调整的初步数据(C/D级)，但缺少 FDA 标签中的具体剂量建议",
+            "deep_research_assessment": [
+                {{
+                    "item": "氟泽雷赛联合西妥昔单抗 ORR/PFS 数据",
+                    "coverage": "uncovered",
+                    "impact": "critical",
+                    "justification": "患者正在使用该方案，缺少疗效数据直接影响治疗评估"
+                }}
+            ]
+        }},
+        {{
+            "id": "D3",
             "status": "pending",
             "priority": 2,
             "completeness": 30,
             "preferred_mode": "breadth_first",
             "mode_reason": "完成度30%，需要广度收集更多初步证据",
-            "evidence_assessment": "仅有 PubMed 文献中的间接证据(D级)，缺少指南级治疗方案对比数据和临床试验结果"
-        }},
-        {{
-            "id": "D3",
-            "status": "in_progress",
-            "priority": 1,
-            "completeness": 60,
-            "preferred_mode": "depth_first",
-            "mode_reason": "完成度60%但只有D/E级证据，需深入找高质量证据",
-            "evidence_assessment": "已找到肾功能剂量调整的初步数据(C/D级)，但缺少 FDA 标签中的具体剂量建议和 RxNorm 药物相互作用数据"
+            "evidence_assessment": "仅有 PubMed 文献中的间接证据(D级)，缺少指南级治疗方案对比数据",
+            "deep_research_assessment": []
         }}
     ],
     "new_directions": [],
@@ -544,15 +559,21 @@ class PlanAgent(BaseAgent):
 ```
 
 **preferred_mode 选择指南**:
-- "skip": 证据已充分回答完成标准的所有关键问题，无需继续研究
+- "skip": 证据已充分回答完成标准，且该方向的待深入研究项已覆盖或仅剩 minor 级别（与患者病情/治疗基本无关）的未覆盖项
 - "breadth_first": 证据覆盖面不足，多个关键问题未涉及，需要广度收集
-- "depth_first": 有初步发现但证据等级不够（只有 D/E 级），或存在证据冲突需要解决，或有待深入研究项未覆盖
+- "depth_first": 有初步发现但证据等级不够（只有 D/E 级），或存在证据冲突需要解决，或有 critical/important 级别的待深入研究项未覆盖
 
 **evidence_assessment 必须包含**:
 1. 已有证据要点（关键发现 + 等级）
 2. 完成标准覆盖情况（已覆盖/未覆盖的关键点）
-3. 待深入研究项覆盖情况（如有）
-4. 综合充分性判断
+3. 综合充分性判断
+
+**deep_research_assessment 格式要求**:
+- 如该方向有「待深入研究项」，必须对每一项输出结构化评估
+- coverage 取值: "covered" / "partial" / "uncovered"
+- impact 取值: "critical" / "important" / "minor"
+- justification: 说明判断依据
+- 如无待深入研究项，输出空数组 []
 """
 
     def _build_direction_evidence_details(
@@ -646,12 +667,16 @@ class PlanAgent(BaseAgent):
             updated_directions = data.get("updated_directions", [])
             updated_plan = self._apply_direction_updates(plan, updated_directions)
 
-            # 提取各方向证据评估（用于报告展示）
-            direction_assessments = {
-                u["id"]: u.get("evidence_assessment", "")
-                for u in updated_directions
-                if u.get("evidence_assessment")
-            }
+            # 提取各方向证据评估 + 待深入研究项评估（用于报告展示）
+            direction_assessments = {}
+            for u in updated_directions:
+                d_id = u.get("id", "")
+                if not d_id:
+                    continue
+                direction_assessments[d_id] = {
+                    "evidence_assessment": u.get("evidence_assessment", ""),
+                    "deep_research_assessment": u.get("deep_research_assessment", []),
+                }
 
             # 添加新方向（如果有）
             new_directions = data.get("new_directions", [])
@@ -721,12 +746,6 @@ class PlanAgent(BaseAgent):
                     deep_by_direction[d_id] = []
                 deep_by_direction[d_id].append(item)
 
-        # 根据统计数据自动判断
-        all_complete = all(
-            s["completeness"] >= CONVERGENCE_COMPLETENESS_THRESHOLD
-            for s in direction_stats.values()
-        )
-
         has_low_quality_only = any(
             s["low_quality_only"]
             for s in direction_stats.values()
@@ -741,10 +760,15 @@ class PlanAgent(BaseAgent):
             low_quality_only = s["low_quality_only"]
             dir_deep = deep_by_direction.get(d_id, [])
 
-            # 确定状态
+            # 有待深入研究项的方向，完成度打折（每项扣 10%，无上限）
+            if dir_deep:
+                deep_penalty = len(dir_deep) * 10
+                completeness = max(completeness - deep_penalty, 0)
+
+            # 确定状态（使用打折后的完成度）
             status = "completed" if completeness >= CONVERGENCE_COMPLETENESS_THRESHOLD else "in_progress"
 
-            # 确定每个方向的研究模式（needs_deep_research 影响 per-direction 模式而非全局收敛）
+            # 确定每个方向的研究模式
             if dir_deep:
                 # 该方向有待深入研究项 → 强制 depth_first
                 preferred_mode = "depth_first"
@@ -772,26 +796,45 @@ class PlanAgent(BaseAgent):
                 "mode_reason": mode_reason,
             })
 
-            # 生成默认 direction_assessments（基于统计数据自动描述）
+            # 生成默认 direction_assessments（与 LLM 路径格式一致）
             gd = s["grade_distribution"]
             grade_parts = []
             for g in ["A", "B", "C", "D", "E"]:
                 if gd[g] > 0:
                     grade_parts.append(f"{g}级{gd[g]}条")
             grade_str = "、".join(grade_parts) if grade_parts else "无证据"
-            deep_str = ""
-            if dir_deep:
-                deep_items = [item.get("finding", "") for item in dir_deep]
-                deep_str = f"；待深入研究: {'; '.join(deep_items)}"
-            direction_assessments[d_id] = (
+
+            evidence_text = (
                 f"完成度{completeness:.0f}%，证据{s['evidence_count']}条（{grade_str}），"
-                f"模式: {preferred_mode}{deep_str}"
+                f"模式: {preferred_mode}"
             )
+
+            # 生成默认 deep_research_assessment
+            default_deep_assessment = []
+            if dir_deep:
+                for item in dir_deep:
+                    default_deep_assessment.append({
+                        "item": item.get("finding", item.get("reason", "")),
+                        "coverage": "uncovered",
+                        "impact": "important",  # default 路径无法判断，保守标记为 important
+                        "justification": f"[{item.get('agent', '')}] {item.get('reason', '待深入研究')}",
+                    })
+
+            direction_assessments[d_id] = {
+                "evidence_assessment": evidence_text,
+                "deep_research_assessment": default_deep_assessment,
+            }
 
         # 应用更新
         updated_plan = self._apply_direction_updates(plan, updated_directions)
 
-        # 决策（不再使用 needs_deep_research 硬规则阻止全局收敛）
+        # 基于惩罚后的完成度判断是否全部完成
+        all_complete = all(
+            ud["completeness"] >= CONVERGENCE_COMPLETENESS_THRESHOLD
+            for ud in updated_directions
+        )
+
+        # 决策（完成度已含 needs_deep_research 惩罚）
         if all_complete and not has_low_quality_only:
             decision = "converged"
             reasoning = "所有方向完成度达标，且有足够高质量证据"
