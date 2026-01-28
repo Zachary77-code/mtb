@@ -388,7 +388,7 @@ def _save_detailed_iteration_report(
     保存 PlanAgent 评估后的详细迭代报告
 
     报告包含：
-    0. 本轮迭代执行详情（迭代前状态 + 本轮执行结果）
+    0. 本轮迭代执行详情（各方向执行概览表）
     1. 下一轮各方向研究模式
     2. PlanAgent 决策和理由
     3. 本轮新增证据的完整明细（不截断）
@@ -430,10 +430,9 @@ def _save_detailed_iteration_report(
             lines.append("## 本轮迭代执行详情")
             lines.append("")
 
-            # 表格：本轮研究完成后状态
-            lines.append("### 本轮研究完成后各方向状态")
-            lines.append("| 方向 ID | 主题 | Agent | 模式 | Obs数 | Entity数 | 状态 |")
-            lines.append("|---------|------|-------|------|-------|----------|------|")
+            # 合并表格：本轮各方向执行概览
+            lines.append("| 方向 ID | 主题 | Agent | 模式 | Obs数 | Entity数 | 状态变化 |")
+            lines.append("|---------|------|-------|------|-------|----------|----------|")
             for d in pre_plan.directions:
                 if d.target_agent in agent_names:
                     mode_disp = {"breadth_first": "BFRS", "depth_first": "DFRS", "skip": "Skip"}.get(
@@ -447,35 +446,12 @@ def _save_detailed_iteration_report(
                         for eid in d.evidence_ids
                         if graph and graph.get_entity(eid)
                     )
-                    lines.append(f"| {d.id} | {topic_short} | {d.target_agent} | {mode_disp} | {obs_count} | {entity_count} | {d.status.value} |")
-            lines.append("")
-
-            # 表格：本轮执行结果
-            lines.append("### 本轮执行结果")
-            lines.append("| Agent | 方向 | 新增Obs | 新增Entity | 状态变化 |")
-            lines.append("|-------|------|---------|------------|----------|")
-
-            for agent_name in agent_names:
-                # 找该 agent 的方向
-                agent_directions = [d for d in pre_plan.directions if d.target_agent == agent_name]
-
-                for pre_d in agent_directions:
-                    post_d = post_plan.get_direction_by_id(pre_d.id) if post_plan else None
-                    # 按 direction.evidence_ids 差集精确计算新增数量
-                    pre_ids = set(pre_d.evidence_ids)
-                    post_ids = set(post_d.evidence_ids) if post_d else pre_ids
-                    new_ids = post_ids - pre_ids
-                    new_entity = len(new_ids)
-                    new_obs = sum(
-                        len(graph.get_entity(eid).observations)
-                        for eid in new_ids
-                        if graph and graph.get_entity(eid)
-                    )
-                    pre_status = pre_d.status.value
+                    # 状态变化
+                    post_d = post_plan.get_direction_by_id(d.id) if post_plan else None
+                    pre_status = d.status.value
                     post_status = post_d.status.value if post_d else pre_status
                     status_change = f"{pre_status} → {post_status}" if pre_status != post_status else pre_status
-                    topic_short = pre_d.topic[:15] + "..." if len(pre_d.topic) > 15 else pre_d.topic
-                    lines.append(f"| {agent_name} | {topic_short} | +{new_obs} | +{new_entity} | {status_change} |")
+                    lines.append(f"| {d.id} | {topic_short} | {d.target_agent} | {mode_disp} | {obs_count} | {entity_count} | {status_change} |")
             lines.append("")
 
     # === 0. 下一轮各方向研究模式 ===
