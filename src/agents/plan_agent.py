@@ -29,8 +29,8 @@ GRADE_WEIGHTS = {
     "E": 1.0,   # Inferential
 }
 
-# 方向完成度目标得分（相当于 2 条 A 级 或 10 条 E 级）
-TARGET_COMPLETENESS_SCORE = 10.0
+# 方向完成度目标得分（相当于 6 条 A 级 或 30 条 E 级）
+TARGET_COMPLETENESS_SCORE = 30.0
 
 # 收敛阈值
 CONVERGENCE_COMPLETENESS_THRESHOLD = 80  # 完成度 >= 80% 视为完成
@@ -398,6 +398,9 @@ class PlanAgent(BaseAgent):
             if s["target_agent"] in agents_to_check
         }
 
+        # 构建各方向证据内容详情
+        evidence_details = self._build_direction_evidence_details(plan, graph, set(relevant_stats.keys()))
+
         return f"""## 迭代评估任务
 
 你正在评估 {phase.upper()} 的第 {iteration + 1} 轮迭代结果。
@@ -410,6 +413,10 @@ class PlanAgent(BaseAgent):
 ### 各研究方向状态
 
 {self._format_direction_stats(relevant_stats)}
+
+### 各方向证据内容
+
+{evidence_details}
 
 ### 证据质量概况
 
@@ -425,18 +432,24 @@ class PlanAgent(BaseAgent):
 
 请根据以上信息，完成以下评估：
 
-1. **更新各方向状态**：
-   - 完成度 >= 80%: 标记为 "completed"
-   - 完成度 < 60%: 保持 "pending" 或 "in_progress"
-   - 调整优先级（低质量方向提升优先级）
+1. **评估证据充分性**：
+   - 对比每个方向的「完成标准」和「核心观察」，判断研究问题是否已被充分回答
+   - 即使完成度数值较高，如果核心观察未覆盖完成标准的关键问题，仍应标记为未完成
+   - 即使完成度数值较低，如果核心观察已充分回答研究问题，可标记为完成
 
-2. **决定研究模式**：
-   - "breadth_first": 还有未覆盖方向，需要广度收集
-   - "depth_first": 有高优先级发现需要深入，或证据冲突需要解决
+2. **更新各方向状态**：
+   - 证据已充分回答完成标准: 标记为 "completed"
+   - 证据不足或缺少关键内容: 保持 "pending" 或 "in_progress"
+   - 调整优先级（证据缺口大或只有低质量证据的方向提升优先级）
 
-3. **收敛判断**：
-   - "converged": 所有方向完成度 >= 80%，且有足够高质量证据，无重大冲突
-   - "continue": 存在未完成方向，或只有低质量证据，或有未解决冲突
+3. **决定每个方向的研究模式**：
+   - "skip": 证据已充分回答完成标准，无需继续研究
+   - "breadth_first": 证据覆盖面不足，需要广度收集更多初步证据
+   - "depth_first": 有初步发现但需要更高质量证据支撑，或存在证据冲突需要解决
+
+4. **收敛判断**：
+   - "converged": 所有方向的完成标准已被充分回答，且有足够高质量证据，无重大冲突
+   - "continue": 存在未充分回答的方向，或关键发现只有低质量证据，或有未解决冲突
 
 ### 输出格式
 
@@ -484,10 +497,31 @@ class PlanAgent(BaseAgent):
 ```
 
 **preferred_mode 选择指南**:
-- "skip": 完成度 >= 80% 且有 A/B 级证据，无需继续研究
-- "breadth_first": 完成度 < 60%，需要广度收集更多初步证据
-- "depth_first": 完成度 60-80% 或只有 D/E 级证据，需深入找高质量证据
+- "skip": 证据已充分回答完成标准的所有关键问题，无需继续研究
+- "breadth_first": 证据覆盖面不足，多个关键问题未涉及，需要广度收集
+- "depth_first": 有初步发现但证据等级不够（只有 D/E 级），或存在证据冲突需要解决
 """
+
+    def _build_direction_evidence_details(
+        self, plan: ResearchPlan, graph, relevant_direction_ids: set
+    ) -> str:
+        """为每个方向生成证据内容详情（含完成标准 + 实体 + 观察）"""
+        if not graph:
+            return "无证据图谱数据"
+
+        sections = []
+        for direction in plan.directions:
+            if direction.id not in relevant_direction_ids:
+                continue
+
+            sections.append(f"#### {direction.id}: {direction.topic}")
+            sections.append(f"**完成标准**: {direction.completion_criteria}")
+            sections.append("")
+            summary = graph.get_direction_evidence_summary(direction.evidence_ids)
+            sections.append(summary)
+            sections.append("")
+
+        return "\n".join(sections) if sections else "暂无证据数据"
 
     def _format_direction_stats(self, stats: Dict[str, Dict[str, Any]]) -> str:
         """格式化方向统计为 Markdown 表格"""

@@ -380,28 +380,35 @@ Evidence Graph
             "id": "D1",
             "status": "completed",
             "priority": 1,
-            "completeness": 85
+            "completeness": 85,
+            "preferred_mode": "skip",
+            "mode_reason": "完成标准已充分回答：肿瘤分型、分期、IHC标记物均有A/B级证据支撑"
         },
         {
             "id": "D2",
             "status": "in_progress",
             "priority": 2,
-            "completeness": 65
+            "completeness": 65,
+            "preferred_mode": "depth_first",
+            "mode_reason": "有初步临床试验信息但缺少具体入排标准和招募状态，需深入查询"
         }
     ],
     "new_directions": [],
-    "research_mode": "breadth_first",
     "decision": "continue",
-    "reasoning": "D2方向完成度不足，且只有D/E级证据，需要继续收集高质量证据",
+    "reasoning": "D2方向虽有试验列表但缺少关键入排标准信息，完成标准未充分满足",
     "quality_assessment": {
         "high_quality_coverage": ["分子特征", "方案对比"],
         "low_quality_only": ["临床试验推荐"],
         "conflicts": []
     },
-    "gaps": ["临床试验推荐方向证据不足"],
-    "next_priorities": ["提升临床试验推荐证据质量", "补充耐药机制证据"]
+    "gaps": ["临床试验推荐方向缺少入排标准详情"],
+    "next_priorities": ["深入查询D2方向的临床试验入排标准和招募状态"]
 }
 ```
+
+**字段说明**：
+- `preferred_mode`: 每个方向独立的研究模式（"skip" / "breadth_first" / "depth_first"）
+- `mode_reason`: 基于证据内容的模式选择理由（对比完成标准与实际发现）
 
 **注意**：`next_priorities` 必须仅包含当前阶段 Agent 的事项：
 - Phase 1 评估时：只涉及 Pathologist、Geneticist、Recruiter
@@ -409,23 +416,24 @@ Evidence Graph
 
 ### 7. 评估决策示例
 
-**示例1：继续迭代**
+**示例1：继续迭代（基于证据内容判断）**
 ```
 输入状态：
-- D1 (分子特征): 完成度 90%, 有 2 条 A 级
-- D2 (临床试验): 完成度 40%, 只有 4 条 E 级
+- D1 (分子特征): 完成度 90%, 有 EGFR/ALK/ROS1 等关键靶点的 A/B 级证据
+- D2 (临床试验): 完成度 40%, 只找到 4 个试验名称(E级)，缺少入排标准和招募状态
 
 决策: "continue"
-理由: D2 方向完成度不足且只有低级别证据
-模式: "depth_first"（需要深入 D2 方向）
+理由: D2 方向虽列出试验但未回答完成标准中的"具体入排标准和招募状态"
+D1: preferred_mode = "skip"（完成标准已充分满足）
+D2: preferred_mode = "depth_first"（需深入查询试验详情）
 ```
 
 **示例2：收敛**
 ```
 输入状态：
-- D1 (分子特征): 完成度 95%, 有 1 条 A 级 + 3 条 B 级
-- D2 (临床试验): 完成度 85%, 有 2 条 B 级 + 3 条 C 级
+- D1 (分子特征): 有 EGFR L858R 敏感性、T790M 耐药机制的 A/B 级证据
+- D2 (临床试验): 有 3 个匹配试验的详细入排标准和招募状态(B/C级)
 
 决策: "converged"
-理由: 所有方向完成度达标，各模块有高质量证据覆盖
+理由: 各方向完成标准均已被证据充分回答，关键模块有高质量证据覆盖
 ```
