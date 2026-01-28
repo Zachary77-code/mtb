@@ -22,7 +22,9 @@ from config.settings import (
     GLOBAL_PRINCIPLES_FILE,
     SUBGRAPH_MODEL,
     ORCHESTRATOR_MODEL,
-    CONVERGENCE_JUDGE_MODEL
+    CONVERGENCE_JUDGE_MODEL,
+    ORCHESTRATOR_REASONING_EFFORT,
+    SUBGRAPH_REASONING_EFFORT,
 )
 from src.utils.logger import mtb_logger as logger, log_tool_call
 
@@ -184,6 +186,15 @@ class BaseAgent:
             "temperature": self.temperature
         }
 
+        # 根据模型选择 reasoning effort（Pro → high, Flash → medium）
+        reasoning_effort = ""
+        if self.model == SUBGRAPH_MODEL:
+            reasoning_effort = SUBGRAPH_REASONING_EFFORT
+        elif self.model in (ORCHESTRATOR_MODEL, CONVERGENCE_JUDGE_MODEL):
+            reasoning_effort = ORCHESTRATOR_REASONING_EFFORT
+        if reasoning_effort:
+            payload["reasoning"] = {"effort": reasoning_effort}
+
         # 如果有工具且模型支持，添加工具定义
         if include_tools and self.tools:
             payload["tools"] = self._get_tools_schema()
@@ -269,6 +280,27 @@ class BaseAgent:
             return f"{user_message}\n\n**上下文数据**:\n```json\n{context_str}\n```"
         return user_message
 
+    def _extract_reasoning_text(self, message: Dict[str, Any]) -> str:
+        """从 API 响应 message 中提取推理内容
+
+        优先从 reasoning_details 提取（Gemini 3 / Claude 等支持 reasoning 的模型），
+        退回到 content 字段（某些模型在 content 中包含推理说明）。
+        """
+        reasoning_details = message.get("reasoning_details", [])
+        if reasoning_details:
+            texts = []
+            for detail in reasoning_details:
+                detail_type = detail.get("type", "")
+                if detail_type == "reasoning.text":
+                    texts.append(detail.get("text", ""))
+                elif detail_type == "reasoning.summary":
+                    texts.append(detail.get("summary", ""))
+            if texts:
+                return "\n".join(texts)
+
+        # 退回到 content
+        return message.get("content") or ""
+
     def _handle_tool_calls(
         self,
         assistant_message: Dict[str, Any],
@@ -293,7 +325,7 @@ class BaseAgent:
         logger.info(f"[{self.role}] 工具调用轮次 {iteration}/{max_iterations}，调用数: {len(tool_calls)}")
 
         # 添加助手消息到历史
-        messages.append({
+        assistant_msg = {
             "role": "assistant",
             "content": assistant_message.get("content") or "",
             "tool_calls": [
@@ -307,10 +339,14 @@ class BaseAgent:
                 }
                 for tc in tool_calls
             ]
-        })
+        }
+        # 保留 reasoning_details 用于多轮工具调用
+        if assistant_message.get("reasoning_details"):
+            assistant_msg["reasoning_details"] = assistant_message["reasoning_details"]
+        messages.append(assistant_msg)
 
-        # 获取 LLM 的推理内容（工具调用前的说明）
-        reasoning_content = assistant_message.get("content") or ""
+        # 获取 LLM 的推理内容（优先从 reasoning_details 提取）
+        reasoning_content = self._extract_reasoning_text(assistant_message)
 
         # 执行每个工具调用
         pending_images = []  # 收集本轮多模态工具返回的图片
@@ -475,7 +511,12 @@ class BaseAgent:
 
             if record.reasoning:
                 lines.append("**Reasoning:**")
-                lines.append(f"> {record.reasoning}")
+                reasoning_display = record.reasoning
+                if len(reasoning_display) > 500:
+                    reasoning_display = reasoning_display[:500] + "...(truncated)"
+                # 处理多行 reasoning，每行加 blockquote 前缀
+                for line in reasoning_display.split("\n"):
+                    lines.append(f"> {line}")
                 lines.append("")
 
             lines.append("**Parameters:**")

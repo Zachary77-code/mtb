@@ -160,7 +160,7 @@ class ResearchMixin:
                 all_summaries.append(f"[DFRS] {parsed['summary']}")
 
         # 更新证据图和研究计划（实体中心架构）
-        new_entity_ids, updated_plan = self._update_evidence_graph(
+        new_entity_ids, updated_plan, extraction_details = self._update_evidence_graph(
             graph=graph,
             findings=all_findings,
             agent_role=agent_role,
@@ -191,7 +191,8 @@ class ResearchMixin:
             "needs_deep_research": all_needs_deep,
             "summary": combined_summary,
             "raw_output": "\n---\n".join(all_outputs),
-            "tool_call_report": "\n\n".join(all_tool_call_reports)
+            "tool_call_report": "\n\n".join(all_tool_call_reports),
+            "extraction_details": extraction_details
         }
 
     def _build_bfrs_prompt(
@@ -430,7 +431,7 @@ class ResearchMixin:
         iteration: int,
         mode: ResearchMode,
         plan: Optional[ResearchPlan] = None
-    ) -> Tuple[List[str], Optional[ResearchPlan]]:
+    ) -> Tuple[List[str], Optional[ResearchPlan], List[Dict[str, Any]]]:
         """
         更新证据图并同步更新研究计划中的方向证据关联
 
@@ -440,13 +441,17 @@ class ResearchMixin:
         - Observation 附加到 Entity 和 Edge
 
         Returns:
-            (新增/更新的实体 canonical_id 列表, 更新后的研究计划)
+            (新增/更新的实体 canonical_id 列表, 更新后的研究计划, per-finding 提取详情)
         """
         new_entity_ids = []
+        extraction_details = []
         existing_entities = graph.get_entity_index()
 
         for finding in findings:
             source_tool = finding.get("source_tool", "unknown")
+            finding_new_entities = []
+            finding_new_obs = 0
+            finding_new_edges = 0
 
             # ========== LLM 实体提取 ==========
             try:
@@ -478,10 +483,12 @@ class ResearchMixin:
                         canonical_id=entity.canonical_id,
                         observation=extracted_entity.observation
                     )
+                    finding_new_obs += 1
 
                 # 记录新实体
                 if entity.canonical_id not in new_entity_ids:
                     new_entity_ids.append(entity.canonical_id)
+                    finding_new_entities.append(entity.canonical_id)
 
             # ========== 处理提取的边 ==========
             for extracted_edge in extraction_result.edges:
@@ -503,6 +510,7 @@ class ResearchMixin:
                         observation=extracted_edge.observation,
                         confidence=extracted_edge.confidence
                     )
+                    finding_new_edges += 1
 
             # ========== 处理冲突 ==========
             for conflict in extraction_result.conflicts:
@@ -521,11 +529,22 @@ class ResearchMixin:
             # 更新实体索引，让后续 finding 的 LLM 提取看到新增实体
             existing_entities = graph.get_entity_index()
 
+            # ========== 记录 per-finding 提取详情 ==========
+            finding_summary = finding.get("statement", finding.get("title", ""))[:80]
+            extraction_details.append({
+                "source_tool": source_tool,
+                "direction_id": direction_id or "",
+                "finding_summary": finding_summary,
+                "new_entities": finding_new_entities,
+                "new_observations": finding_new_obs,
+                "new_edges": finding_new_edges,
+            })
+
         # 记录统计
         summary = graph.summary()
         logger.info(f"[{agent_role}] Evidence graph: {summary.get('total_entities', 0)} entities, {summary.get('total_edges', 0)} edges")
 
-        return new_entity_ids, plan
+        return new_entity_ids, plan, extraction_details
 
 
 # ==================== 增强版 Agent 创建工厂 ====================

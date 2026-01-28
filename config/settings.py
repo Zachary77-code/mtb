@@ -67,6 +67,13 @@ ORCHESTRATOR_MODEL = os.getenv("ORCHESTRATOR_MODEL", "google/gemini-3-pro-previe
 # 收敛判断 Agent 使用 pro 模型（ConvergenceJudgeAgent）
 CONVERGENCE_JUDGE_MODEL = os.getenv("CONVERGENCE_JUDGE_MODEL", "google/gemini-3-pro-preview")
 
+# ==================== Reasoning 配置 ====================
+# 启用 LLM 推理输出（reasoning tokens），用于工具调用报告
+# effort: "minimal" / "low" / "medium" / "high" / ""(禁用)
+# Pro 模型（PlanAgent, Chair）使用 high，Flash 模型（Research Agents）使用 medium
+ORCHESTRATOR_REASONING_EFFORT = os.getenv("ORCHESTRATOR_REASONING_EFFORT", "high")
+SUBGRAPH_REASONING_EFFORT = os.getenv("SUBGRAPH_REASONING_EFFORT", "medium")
+
 # ==================== DeepEvidence 收敛配置 ====================
 MAX_PHASE1_ITERATIONS = int(os.getenv("MAX_PHASE1_ITERATIONS", "7"))  # 并行分析阶段最大迭代
 MAX_PHASE2_ITERATIONS = int(os.getenv("MAX_PHASE2_ITERATIONS", "7"))  # Oncologist 阶段最大迭代

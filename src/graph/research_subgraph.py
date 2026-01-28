@@ -458,16 +458,35 @@ def _save_detailed_iteration_report(
     research_plan = eval_result.get("research_plan", state.get("research_plan", {}))
     plan = load_research_plan(research_plan)
     if plan and plan.directions:
+        # 构建 pre_plan 方向索引，用于检测新增/更新
+        pre_plan_obj = load_research_plan(pre_eval_plan) if pre_eval_plan else None
+        pre_direction_map = {}
+        if pre_plan_obj:
+            for d in pre_plan_obj.directions:
+                pre_direction_map[d.id] = d
+
         lines.append("## 0. 下一轮各方向研究模式")
         lines.append("")
-        lines.append("| 方向 ID | 主题 | Agent | 模式 | 理由 |")
-        lines.append("|---------|------|-------|------|------|")
+        lines.append("| 方向 ID | 主题 | Agent | 模式 | 变动 | 理由 |")
+        lines.append("|---------|------|-------|------|------|------|")
         for d in plan.directions:
             if d.target_agent in agent_names:
                 mode_display = {"breadth_first": "BFRS", "depth_first": "DFRS", "skip": "Skip"}.get(d.preferred_mode, d.preferred_mode)
                 topic_short = d.topic[:25] + "..." if len(d.topic) > 25 else d.topic
-                reason_short = d.mode_reason[:40] + "..." if len(d.mode_reason) > 40 else d.mode_reason
-                lines.append(f"| {d.id} | {topic_short} | {d.target_agent} | {mode_display} | {reason_short} |")
+                # 判断变动类型
+                if d.id not in pre_direction_map:
+                    change_tag = "新增"
+                else:
+                    pre_d = pre_direction_map[d.id]
+                    pre_status = pre_d.status.value if hasattr(pre_d.status, 'value') else str(pre_d.status)
+                    post_status = d.status.value if hasattr(d.status, 'value') else str(d.status)
+                    pre_mode = pre_d.preferred_mode
+                    post_mode = d.preferred_mode
+                    if pre_status != post_status or pre_mode != post_mode:
+                        change_tag = "更新"
+                    else:
+                        change_tag = "—"
+                lines.append(f"| {d.id} | {topic_short} | {d.target_agent} | {mode_display} | {change_tag} | {d.mode_reason} |")
         lines.append("")
 
     # === 1. PlanAgent 评估结果 ===
@@ -486,6 +505,23 @@ def _save_detailed_iteration_report(
     lines.append(f"- **只有低质量证据的模块**: {', '.join(low_quality) if low_quality else '无'}")
     lines.append(f"- **证据冲突**: {', '.join(conflicts) if conflicts else '无'}")
     lines.append("")
+
+    # 各方向完成情况评估
+    direction_assessments = eval_result.get("direction_assessments", {})
+    research_plan_data = eval_result.get("research_plan", state.get("research_plan", {}))
+    assessed_plan = load_research_plan(research_plan_data)
+    if direction_assessments and assessed_plan:
+        lines.append("### 各方向完成情况")
+        lines.append("")
+        for d in assessed_plan.directions:
+            if d.target_agent in agent_names and d.id in direction_assessments:
+                status_display = d.status.value if hasattr(d.status, 'value') else str(d.status)
+                mode_display = {"breadth_first": "BFRS", "depth_first": "DFRS", "skip": "Skip"}.get(d.preferred_mode, d.preferred_mode)
+                lines.append(f"#### {d.id}: {d.topic}")
+                lines.append(f"**状态**: {status_display} | **模式**: {mode_display}")
+                lines.append(f"**评估**: {direction_assessments[d.id]}")
+                lines.append("")
+        lines.append("")
 
     gaps = eval_result.get("gaps", [])
     lines.append("### 待填补空白")
@@ -521,6 +557,40 @@ def _save_detailed_iteration_report(
         else:
             lines.append("本轮无工具调用记录")
         lines.append("")
+
+    # === 2.5 实体提取详情 ===
+    has_extraction = False
+    for agent_name in agent_names:
+        result_key = f"{agent_name.lower()}_research_result"
+        agent_result = state.get(result_key, {})
+        ext_details = agent_result.get("extraction_details", [])
+        if ext_details:
+            if not has_extraction:
+                lines.append("## 2.5 实体提取详情")
+                lines.append("")
+                has_extraction = True
+            lines.append(f"### {agent_name}")
+            lines.append("")
+            lines.append("| 来源工具 | 方向 | 发现摘要 | 新增实体 | 新增Obs | 新增Edge |")
+            lines.append("|----------|------|----------|----------|---------|----------|")
+            for detail in ext_details:
+                entities_str = ", ".join(detail.get("new_entities", [])[:3])
+                if len(detail.get("new_entities", [])) > 3:
+                    entities_str += f" (+{len(detail['new_entities']) - 3})"
+                if not entities_str:
+                    entities_str = "-"
+                summary = detail.get("finding_summary", "")[:50]
+                if len(detail.get("finding_summary", "")) > 50:
+                    summary += "..."
+                lines.append(
+                    f"| {detail.get('source_tool', '')} "
+                    f"| {detail.get('direction_id', '')} "
+                    f"| {summary} "
+                    f"| {entities_str} "
+                    f"| {detail.get('new_observations', 0)} "
+                    f"| {detail.get('new_edges', 0)} |"
+                )
+            lines.append("")
 
     # === 3. 本轮新增证据明细 ===
     lines.append("## 3. 本轮新增证据明细")
@@ -849,20 +919,10 @@ def phase2_plan_init(state: MtbState) -> Dict[str, Any]:
         agent = PlanAgent()
         new_plan = agent.generate_phase2_directions(state)
 
-        # 统计新方向
+        # 统计新方向（Phase 1 不含 Oncologist 方向，无需移除）
         plan = load_research_plan(new_plan)
-        if plan:
-            # 移除旧的 Oncologist 方向 (D5/D6/D9 等)，只保留新生成的 P2_* 方向
-            # 这避免了主题重叠导致的证据关联混乱
-            old_oncologist_count = len([d for d in plan.directions if d.target_agent == "Oncologist" and not d.id.startswith("P2_")])
-            plan.directions = [
-                d for d in plan.directions
-                if d.target_agent != "Oncologist" or d.id.startswith("P2_")
-            ]
-            if old_oncologist_count > 0:
-                logger.info(f"[PHASE2_PLAN_INIT] 移除 {old_oncologist_count} 个旧的 Oncologist 方向 (已被 P2_* 方向覆盖)")
 
-        oncologist_directions = [d for d in plan.directions if d.target_agent == "Oncologist"]
+        oncologist_directions = [d for d in plan.directions if d.target_agent == "Oncologist"] if plan else []
         logger.info(f"[PHASE2_PLAN_INIT] 生成 {len(oncologist_directions)} 个 Oncologist 方向:")
         for d in oncologist_directions:
             logger.info(f"[PHASE2_PLAN_INIT]   - {d.id}: {d.topic}")

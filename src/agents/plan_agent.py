@@ -29,8 +29,8 @@ GRADE_WEIGHTS = {
     "E": 1.0,   # Inferential
 }
 
-# 方向完成度目标得分（相当于 6 条 A 级 或 30 条 E 级）
-TARGET_COMPLETENESS_SCORE = 30.0
+# 方向完成度目标得分（相当于 10 条 A 级 或 50 条 E 级）
+TARGET_COMPLETENESS_SCORE = 50.0
 
 # 收敛阈值
 CONVERGENCE_COMPLETENESS_THRESHOLD = 80  # 完成度 >= 80% 视为完成
@@ -38,15 +38,13 @@ CONTINUE_COMPLETENESS_THRESHOLD = 60     # 完成度 < 60% 需要继续收集
 
 
 # 必须覆盖的 Chair 模块列表
+# Phase 1 必需覆盖的模块（Oncologist 相关模块在 Phase 2 覆盖）
 REQUIRED_MODULE_COVERAGE = [
     "患者概况",
     "分子特征",
-    "方案对比",
-    "器官功能与剂量",
     "治疗路线图",
     "分子复查建议",
     "临床试验推荐",
-    "局部治疗建议",
 ]
 
 
@@ -123,7 +121,7 @@ class PlanAgent(BaseAgent):
         {{
             "id": "D1",
             "topic": "研究方向主题",
-            "target_agent": "Geneticist",  // Pathologist/Geneticist/Recruiter/Oncologist
+            "target_agent": "Geneticist",  // Pathologist/Geneticist/Recruiter
             "target_modules": ["分子特征"],  // 目标 Chair 模块
             "priority": 1,  // 1-5，1最高
             "queries": ["建议的查询关键词"],
@@ -152,25 +150,18 @@ class PlanAgent(BaseAgent):
 - 入排标准评估
 - 试验阶段和状态
 
-### Oncologist（肿瘤学家）
-- 治疗方案制定
-- 药物相互作用
-- 剂量调整建议
-- 安全性评估
-
 ## 必需模块覆盖
-确保研究方向覆盖以下所有模块：
+确保研究方向覆盖以下 Phase 1 模块：
 - 患者概况 (Pathologist)
 - 分子特征 (Geneticist + Pathologist)
-- 方案对比 (Oncologist)
-- 器官功能与剂量 (Oncologist)
-- 治疗路线图 (Oncologist + Geneticist + Recruiter)
-- 分子复查建议 (Geneticist + Oncologist)
+- 治疗路线图 (Geneticist + Recruiter)
+- 分子复查建议 (Geneticist)
 - 临床试验推荐 (Recruiter)
-- 局部治疗建议 (Oncologist + Pathologist)
+
+注意：方案对比、器官功能与剂量、局部治疗建议等 Oncologist 相关模块将在 Phase 2 中由 Oncologist 单独研究，此处无需分配。
 
 ## 注意事项
-1. 每个 Agent 分配 2-5 个研究方向
+1. 每个 Agent 分配 2-4 个研究方向（仅限 Pathologist/Geneticist/Recruiter）
 2. 优先级 1 为最关键方向
 3. 确保 JSON 格式正确，可以被解析
 4. 每个方向必须指定 target_modules
@@ -197,10 +188,12 @@ class PlanAgent(BaseAgent):
 
         try:
             data = json.loads(json_str)
+            # Phase 1 不包含 Oncologist 方向（Oncologist 方向在 Phase 2 单独生成）
+            directions = [d for d in data.get("directions", []) if d.get("target_agent") != "Oncologist"]
             plan = create_research_plan(
                 case_summary=data.get("case_summary", ""),
                 key_entities=data.get("key_entities", {}),
-                directions=data.get("directions", [])
+                directions=directions
             )
 
             # 验证模块覆盖
@@ -464,7 +457,8 @@ class PlanAgent(BaseAgent):
             "priority": 1,
             "completeness": 85,
             "preferred_mode": "skip",
-            "mode_reason": "完成度85%，有高质量证据，无需继续研究"
+            "mode_reason": "完成度85%，有高质量证据，无需继续研究",
+            "evidence_assessment": "已找到 EGFR L858R 的靶向药物证据(A级)及耐药机制(B级)，完成标准中的分子分型、药物敏感性、耐药机制均有覆盖"
         }},
         {{
             "id": "D2",
@@ -472,7 +466,8 @@ class PlanAgent(BaseAgent):
             "priority": 2,
             "completeness": 30,
             "preferred_mode": "breadth_first",
-            "mode_reason": "完成度30%，需要广度收集更多初步证据"
+            "mode_reason": "完成度30%，需要广度收集更多初步证据",
+            "evidence_assessment": "仅有 PubMed 文献中的间接证据(D级)，缺少指南级治疗方案对比数据和临床试验结果"
         }},
         {{
             "id": "D3",
@@ -480,7 +475,8 @@ class PlanAgent(BaseAgent):
             "priority": 1,
             "completeness": 60,
             "preferred_mode": "depth_first",
-            "mode_reason": "完成度60%但只有D/E级证据，需深入找高质量证据"
+            "mode_reason": "完成度60%但只有D/E级证据，需深入找高质量证据",
+            "evidence_assessment": "已找到肾功能剂量调整的初步数据(C/D级)，但缺少 FDA 标签中的具体剂量建议和 RxNorm 药物相互作用数据"
         }}
     ],
     "new_directions": [],
@@ -557,7 +553,15 @@ class PlanAgent(BaseAgent):
             data = json.loads(json_str)
 
             # 更新研究计划（包括每个方向的 preferred_mode）
-            updated_plan = self._apply_direction_updates(plan, data.get("updated_directions", []))
+            updated_directions = data.get("updated_directions", [])
+            updated_plan = self._apply_direction_updates(plan, updated_directions)
+
+            # 提取各方向证据评估（用于报告展示）
+            direction_assessments = {
+                u["id"]: u.get("evidence_assessment", "")
+                for u in updated_directions
+                if u.get("evidence_assessment")
+            }
 
             # 添加新方向（如果有）
             new_directions = data.get("new_directions", [])
@@ -572,6 +576,7 @@ class PlanAgent(BaseAgent):
                 "quality_assessment": data.get("quality_assessment", {}),
                 "gaps": data.get("gaps", []),
                 "next_priorities": data.get("next_priorities", []),
+                "direction_assessments": direction_assessments,
             }
 
         except json.JSONDecodeError as e:
@@ -692,6 +697,7 @@ class PlanAgent(BaseAgent):
                 s["topic"] for s in direction_stats.values()
                 if s["low_quality_only"] or s["completeness"] < CONTINUE_COMPLETENESS_THRESHOLD
             ][:3],
+            "direction_assessments": {},  # 默认评估无详细方向评估
         }
 
     # ==================== Phase 2 方向生成 ====================
@@ -871,18 +877,11 @@ class PlanAgent(BaseAgent):
         plan: ResearchPlan,
         new_directions: List[Dict[str, Any]]
     ) -> ResearchPlan:
-        """更新研究计划，替换 Oncologist 方向"""
+        """更新研究计划，添加 Phase 2 Oncologist 方向（Phase 1 不含 Oncologist 方向）"""
 
-        # 移除旧的 Oncologist 方向
-        non_oncologist_directions = [
-            d for d in plan.directions
-            if d.target_agent != "Oncologist"
-        ]
-
-        # 创建新的 Oncologist 方向
         for d_data in new_directions:
             direction = ResearchDirection(
-                id=d_data.get("id", f"P2_D{len(non_oncologist_directions) + 1}"),
+                id=d_data.get("id", f"P2_D{len(plan.directions) + 1}"),
                 topic=d_data.get("topic", ""),
                 target_agent="Oncologist",
                 target_modules=d_data.get("target_modules", []),
@@ -894,10 +893,8 @@ class PlanAgent(BaseAgent):
                 preferred_mode="breadth_first",
                 mode_reason="Phase 2 新方向，需要广度收集证据"
             )
-            non_oncologist_directions.append(direction)
+            plan.directions.append(direction)
 
-        # 更新计划
-        plan.directions = non_oncologist_directions
         return plan
 
 
