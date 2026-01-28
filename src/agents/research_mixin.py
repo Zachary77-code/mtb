@@ -530,7 +530,7 @@ class ResearchMixin:
             existing_entities = graph.get_entity_index()
 
             # ========== 记录 per-finding 提取详情 ==========
-            finding_summary = finding.get("statement", finding.get("title", ""))[:80]
+            finding_summary = finding.get("statement", finding.get("title", ""))
             extraction_details.append({
                 "source_tool": source_tool,
                 "direction_id": direction_id or "",

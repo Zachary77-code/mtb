@@ -494,17 +494,16 @@ class EvidenceGraph:
             return ""
         lines = []
         for entity in self.entities.values():
-            aliases_str = f" (别名: {', '.join(entity.aliases[:3])})" if entity.aliases else ""
+            aliases_str = f" (别名: {', '.join(entity.aliases)})" if entity.aliases else ""
             lines.append(f"- {entity.canonical_id}: {entity.name}{aliases_str}")
         return "\n".join(lines)
 
-    def get_direction_evidence_summary(self, entity_ids: List[str], max_observations: int = 5) -> str:
+    def get_direction_evidence_summary(self, entity_ids: List[str]) -> str:
         """
         生成指定方向的证据摘要（供 PlanAgent 评估时参考）
 
         Args:
             entity_ids: 方向关联的实体 canonical_id 列表
-            max_observations: 每个方向最多展示的观察数量
 
         Returns:
             格式化的证据摘要字符串
@@ -531,15 +530,12 @@ class EvidenceGraph:
             key=lambda o: grade_order.get(o.evidence_grade.value if o.evidence_grade else "E", 5)
         )
 
-        # 取 top N 观察
-        top_obs = all_observations[:max_observations]
+        top_obs = all_observations
 
         lines = []
-        lines.append(f"**关键实体** ({len(entities_found)}个): {', '.join(entities_found[:10])}")
-        if len(entities_found) > 10:
-            lines.append(f"  ...及其他 {len(entities_found) - 10} 个实体")
+        lines.append(f"**关键实体** ({len(entities_found)}个): {', '.join(entities_found)}")
         lines.append("")
-        lines.append(f"**核心观察** (共{len(all_observations)}条，展示前{len(top_obs)}条):")
+        lines.append(f"**核心观察** (共{len(top_obs)}条):")
         for obs in top_obs:
             grade_str = f"[{obs.evidence_grade.value}级]" if obs.evidence_grade else "[未分级]"
             source_str = f" ({obs.source_tool})" if obs.source_tool else ""

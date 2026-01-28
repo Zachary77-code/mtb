@@ -511,11 +511,8 @@ class BaseAgent:
 
             if record.reasoning:
                 lines.append("**Reasoning:**")
-                reasoning_display = record.reasoning
-                if len(reasoning_display) > 500:
-                    reasoning_display = reasoning_display[:500] + "...(truncated)"
                 # 处理多行 reasoning，每行加 blockquote 前缀
-                for line in reasoning_display.split("\n"):
+                for line in record.reasoning.split("\n"):
                     lines.append(f"> {line}")
                 lines.append("")
 

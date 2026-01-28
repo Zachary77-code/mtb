@@ -266,7 +266,7 @@ def _save_iteration_report(
                     obs_text = ""
                     if entity.observations:
                         latest_obs = entity.observations[-1]
-                        obs_text = latest_obs.statement[:100] if latest_obs.statement else ""
+                        obs_text = latest_obs.statement or ""
                     lines.append(f"- {grade} [{etype}] {entity.name}: {obs_text}...")
         lines.append("")
 
@@ -438,7 +438,7 @@ def _save_detailed_iteration_report(
                     mode_disp = {"breadth_first": "BFRS", "depth_first": "DFRS", "skip": "Skip"}.get(
                         d.preferred_mode, d.preferred_mode
                     )
-                    topic_short = d.topic[:20] + "..." if len(d.topic) > 20 else d.topic
+                    topic_short = d.topic
                     # 计算 observation 数和 entity 数
                     entity_count = len(d.evidence_ids)
                     obs_count = sum(
@@ -472,7 +472,7 @@ def _save_detailed_iteration_report(
         for d in plan.directions:
             if d.target_agent in agent_names:
                 mode_display = {"breadth_first": "BFRS", "depth_first": "DFRS", "skip": "Skip"}.get(d.preferred_mode, d.preferred_mode)
-                topic_short = d.topic[:25] + "..." if len(d.topic) > 25 else d.topic
+                topic_short = d.topic
                 # 判断变动类型
                 if d.id not in pre_direction_map:
                     change_tag = "新增"
@@ -574,14 +574,10 @@ def _save_detailed_iteration_report(
             lines.append("| 来源工具 | 方向 | 发现摘要 | 新增实体 | 新增Obs | 新增Edge |")
             lines.append("|----------|------|----------|----------|---------|----------|")
             for detail in ext_details:
-                entities_str = ", ".join(detail.get("new_entities", [])[:3])
-                if len(detail.get("new_entities", [])) > 3:
-                    entities_str += f" (+{len(detail['new_entities']) - 3})"
+                entities_str = ", ".join(detail.get("new_entities", []))
                 if not entities_str:
                     entities_str = "-"
-                summary = detail.get("finding_summary", "")[:50]
-                if len(detail.get("finding_summary", "")) > 50:
-                    summary += "..."
+                summary = detail.get("finding_summary", "")
                 lines.append(
                     f"| {detail.get('source_tool', '')} "
                     f"| {detail.get('direction_id', '')} "
@@ -704,11 +700,11 @@ def _save_detailed_iteration_report(
         if conflicts:
             lines.append("### 证据冲突详情")
             lines.append("")
-            for i, conflict in enumerate(conflicts[:5], 1):  # 限制显示前5个
+            for i, conflict in enumerate(conflicts, 1):
                 edge_ids = conflict.get("edge_ids", [])
                 group = conflict.get("conflict_group", "?")
                 lines.append(f"**冲突组 {i}** (group: {group})")
-                for eid in edge_ids[:3]:
+                for eid in edge_ids:
                     edge = graph.get_edge(eid)
                     if edge:
                         lines.append(f"  - `{edge.source_id}` --[{edge.predicate.value}]--> `{edge.target_id}`")
@@ -724,7 +720,7 @@ def _save_detailed_iteration_report(
                 if count >= 10:
                     break
                 lines.append(f"**{drug}**:")
-                for rel in relations[:3]:
+                for rel in relations:
                     predicate = rel.get("predicate", "?")
                     variant = rel.get("variant", "?")
                     confidence = rel.get("confidence", 0.0)

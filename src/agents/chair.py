@@ -210,7 +210,7 @@ class ChairAgent(BaseAgent):
 
             for prov, obs in sorted(seen_prov.items()):
                 url = obs.source_url or "-"
-                stmt = (obs.statement or "-")[:80]  # 截断过长的 statement 避免表格变形
+                stmt = obs.statement or "-"
                 agent = obs.source_agent or "-"
                 tool = obs.source_tool or "-"
                 grade = obs.evidence_grade.value if obs.evidence_grade else "-"

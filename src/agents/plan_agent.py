@@ -261,9 +261,27 @@ class PlanAgent(BaseAgent):
         # 计算各方向的证据质量统计
         direction_stats = self._calculate_direction_stats(plan, graph)
 
+        # 提取 needs_deep_research（Research Agent 标记的待深入研究项）
+        if phase == "phase1":
+            agent_keys = ["pathologist_research_result", "geneticist_research_result", "recruiter_research_result"]
+        else:
+            agent_keys = ["oncologist_research_result"]
+
+        all_needs_deep = []
+        for key in agent_keys:
+            items = state.get(key, {}).get("needs_deep_research", [])
+            if items:
+                agent_name = key.replace("_research_result", "").capitalize()
+                for item in items:
+                    if isinstance(item, dict):
+                        all_needs_deep.append(f"[{agent_name}] {item.get('finding', item.get('reason', str(item)))}")
+                    else:
+                        all_needs_deep.append(f"[{agent_name}] {item}")
+
         # 构建评估提示
         eval_prompt = self._build_evaluation_prompt(
-            state, phase, iteration, plan, graph, direction_stats
+            state, phase, iteration, plan, graph, direction_stats,
+            needs_deep_research=all_needs_deep
         )
 
         # 调用 LLM 进行评估
@@ -271,7 +289,7 @@ class PlanAgent(BaseAgent):
         output = result.get("output", "")
 
         # 解析评估结果
-        eval_result = self._parse_evaluation_output(output, plan, direction_stats)
+        eval_result = self._parse_evaluation_output(output, plan, direction_stats, needs_deep_research=all_needs_deep)
 
         logger.info(f"[{self.role}] 评估完成: decision={eval_result['decision']}, "
                    f"reasoning={eval_result['reasoning'][:100]}...")
@@ -362,7 +380,8 @@ class PlanAgent(BaseAgent):
         iteration: int,
         plan: ResearchPlan,
         graph,
-        direction_stats: Dict[str, Dict[str, Any]]
+        direction_stats: Dict[str, Dict[str, Any]],
+        needs_deep_research: List[str] = None
     ) -> str:
         """构建迭代评估提示"""
 
@@ -420,6 +439,12 @@ class PlanAgent(BaseAgent):
 ### 证据冲突
 
 {conflict_descriptions if conflict_descriptions else "无检测到的证据冲突"}
+
+### 待深入研究项（Agent 标记）
+
+{chr(10).join(f'- {item}' for item in needs_deep_research) if needs_deep_research else "无"}
+
+注意：如果有待深入研究项尚未被充分覆盖，应慎重判断收敛。
 
 ### 评估要求
 
@@ -527,7 +552,7 @@ class PlanAgent(BaseAgent):
         for d_id, s in stats.items():
             gd = s["grade_distribution"]
             lines.append(
-                f"| {d_id} | {s['topic'][:20]}... | {s['target_agent']} | "
+                f"| {d_id} | {s['topic']} | {s['target_agent']} | "
                 f"{s['evidence_count']} | {gd['A']} | {gd['B']} | {gd['C']} | {gd['D']} | {gd['E']} | "
                 f"{s['weighted_score']:.1f} | {s['completeness']:.0f}% | {s['status']} |"
             )
@@ -538,7 +563,8 @@ class PlanAgent(BaseAgent):
         self,
         output: str,
         plan: ResearchPlan,
-        direction_stats: Dict[str, Dict[str, Any]]
+        direction_stats: Dict[str, Dict[str, Any]],
+        needs_deep_research: List[str] = None
     ) -> Dict[str, Any]:
         """解析 LLM 评估输出"""
 
@@ -547,7 +573,7 @@ class PlanAgent(BaseAgent):
 
         if not json_str:
             logger.warning(f"[{self.role}] 无法从评估输出中提取 JSON，使用默认值")
-            return self._create_default_evaluation(plan, direction_stats)
+            return self._create_default_evaluation(plan, direction_stats, needs_deep_research=needs_deep_research)
 
         try:
             data = json.loads(json_str)
@@ -581,7 +607,7 @@ class PlanAgent(BaseAgent):
 
         except json.JSONDecodeError as e:
             logger.warning(f"[{self.role}] JSON 解析失败: {e}，使用默认值")
-            return self._create_default_evaluation(plan, direction_stats)
+            return self._create_default_evaluation(plan, direction_stats, needs_deep_research=needs_deep_research)
 
     def _apply_direction_updates(
         self,
@@ -617,7 +643,8 @@ class PlanAgent(BaseAgent):
     def _create_default_evaluation(
         self,
         plan: ResearchPlan,
-        direction_stats: Dict[str, Dict[str, Any]]
+        direction_stats: Dict[str, Dict[str, Any]],
+        needs_deep_research: List[str] = None
     ) -> Dict[str, Any]:
         """创建默认评估结果（当 LLM 解析失败时）"""
 
@@ -631,6 +658,8 @@ class PlanAgent(BaseAgent):
             s["low_quality_only"]
             for s in direction_stats.values()
         )
+
+        has_pending_deep = bool(needs_deep_research)
 
         # 更新方向状态，并为每个方向设置独立的研究模式 (新增)
         updated_directions = []
@@ -669,12 +698,19 @@ class PlanAgent(BaseAgent):
         updated_plan = self._apply_direction_updates(plan, updated_directions)
 
         # 决策
-        if all_complete and not has_low_quality_only:
+        if all_complete and not has_low_quality_only and not has_pending_deep:
             decision = "converged"
             reasoning = "所有方向完成度达标，且有足够高质量证据"
         else:
             decision = "continue"
-            reasoning = "存在未完成方向或只有低质量证据的方向"
+            reasons = []
+            if not all_complete:
+                reasons.append("存在未完成方向")
+            if has_low_quality_only:
+                reasons.append("存在只有低质量证据的方向")
+            if has_pending_deep:
+                reasons.append(f"有 {len(needs_deep_research)} 项待深入研究")
+            reasoning = "；".join(reasons) if reasons else "存在未完成方向或只有低质量证据的方向"
 
         return {
             "research_plan": updated_plan.to_dict(),
@@ -696,7 +732,7 @@ class PlanAgent(BaseAgent):
             "next_priorities": [
                 s["topic"] for s in direction_stats.values()
                 if s["low_quality_only"] or s["completeness"] < CONTINUE_COMPLETENESS_THRESHOLD
-            ][:3],
+            ],
             "direction_assessments": {},  # 默认评估无详细方向评估
         }
 

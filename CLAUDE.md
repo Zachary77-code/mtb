@@ -320,3 +320,4 @@ Citation format: `[PMID: 12345678](url)` or `[NCT04123456](url)`
 4. **Reference flow**: Upstream agents generate `*_references` arrays; Chair merges all into `chair_final_references`
 5. **Logging**: All logs go to `logs/mtb.log` via Loguru
 6. **Report saving**: Each agent saves `{n}_{agent}_report.md` to the run folder
+7. **No truncation**: Do NOT truncate strings (`[:N]`) or limit list sizes (`[:N]`) in evidence flow, reports, or prompt construction for the purpose of saving tokens or context length. All evidence, entity lists, observations, and reasoning content must be passed in full. Truncation is only acceptable in logger output.
