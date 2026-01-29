@@ -1,10 +1,16 @@
 """
-Smart PubMed Search - Sandwich Architecture (LLM-API-LLM)
+Smart PubMed Search - 3-Layer LLM Progressive Architecture
 
-Uses LLM query preprocessing + API broad search + LLM post-filtering to improve search accuracy.
+Each layer uses LLM to build progressively broader PubMed queries,
+with later layers receiving previous failures as context.
 
 Architecture:
-    User Query -> [LLM Optimization] -> API Broad Search -> [LLM Filtering] -> Precise Results
+    User Query
+        → [Layer 1 LLM] High-precision tiab-only query → API search
+        → [Layer 2 LLM] Expanded MeSH+tiab+synonyms (receives Layer 1 failure) → API search
+        → [Layer 3 LLM] Minimal disease+gene only (receives Layer 1+2 failures) → API search
+        → [Regex Fallback] Best single concept → API search
+        → [LLM Post-filtering] Relevance scoring → Precise Results
 """
 import json
 import re
@@ -22,29 +28,88 @@ from config.settings import (
 
 class SmartPubMedSearch:
     """
-    Smart PubMed Search with Sandwich Architecture
+    Smart PubMed Search with 3-Layer LLM Progressive Architecture
 
-    Step 1: LLM Preprocessing - Convert natural language to optimized PubMed Boolean query
-    Step 2: API Broad Search - Retrieve more candidate articles (high Recall)
-    Step 3: LLM Post-filtering - Read abstracts for precise matching (high Precision)
+    Layer 1: High-precision [tiab]-only query (no MeSH, avoids LLM MeSH errors)
+    Layer 2: Expanded recall with MeSH+TIAB dual insurance + synonym expansion
+    Layer 3: Minimal fallback with only disease + gene/variant
+    Fallback: Regex-based best single concept (no LLM)
+    Post-filter: LLM batch relevance scoring on retrieved articles
     """
 
-    QUERY_OPTIMIZATION_PROMPT = """You are a PubMed Search Specialist.
+    LAYER1_PROMPT = """You are a PubMed Search Specialist.
 
-Task: Convert the clinical query into an optimized PubMed Boolean search string.
+Task: Convert the clinical query into a HIGH-PRECISION PubMed Boolean search string.
 
-Rules:
-1. Identify key entities: Disease, Drug, Gene, Biomarker
-2. Use MeSH terms where possible (e.g., "Colorectal Neoplasms"[MeSH])
-3. CRITICAL: Remove specific numeric values like "2+", "CPS 3", "79 mut/Mb", "ECOG 1" - these cause search failures. Only keep the biomarker/score NAME.
-4. Expand acronyms (CRC -> Colorectal Cancer, NSCLC -> Non-Small Cell Lung Cancer, mCRC -> metastatic Colorectal Cancer)
-5. Keep gene names (KRAS, EGFR, ATM) and drug names (cetuximab, pembrolizumab)
-6. Use AND to connect different concepts, OR to connect synonyms
-7. Output ONLY the raw query string, no explanation or markdown
+Strategy:
+1. Extract key concepts: Disease, Gene/Variant, Drug, Mechanism/Outcome
+2. Use ONLY [tiab] field tag (title/abstract search) — do NOT use [MeSH]
+3. Within each concept, use OR to connect synonyms (wrap each synonym in quotes)
+4. Between different concepts, use AND
+5. Remove: numeric values (2+, CPS 3, ECOG 1, 79 mut/Mb), staging info, non-English characters
+6. Expand common acronyms: CRC → "colorectal cancer", NSCLC → "non-small cell lung cancer", mCRC → "metastatic colorectal cancer"
+7. Keep gene names (KRAS, EGFR), variant names (G12C, L858R), and drug names (cetuximab, osimertinib)
+8. Combine gene+variant as a single phrase when possible: "KRAS G12C"[tiab]
+
+Example:
+  Input: KRAS G12C colorectal cancer resistance SHP2 SOS1 inhibitor
+  Output: ("colorectal cancer"[tiab] OR "colorectal neoplasm"[tiab]) AND ("KRAS G12C"[tiab]) AND ("resistance"[tiab] OR "resistant"[tiab]) AND ("SHP2"[tiab] OR "SOS1"[tiab] OR "inhibitor"[tiab])
+
+Output ONLY the raw PubMed query string. No explanation, no markdown.
 
 User Query: {query}
 
-Optimized PubMed Query:"""
+PubMed Query:"""
+
+    LAYER2_PROMPT = """You are a PubMed Search Specialist.
+
+Task: The previous search query returned ZERO results on PubMed. Build a BROADER query with higher recall.
+
+Previous failed query (returned 0 results):
+{failed_queries}
+
+Strategy — use MeSH + TIAB dual insurance for each concept:
+1. For each concept, use BOTH MeSH and free text: ("MeSH Term"[MeSH] OR "free text"[tiab])
+2. Expand drug synonyms: generic name + brand name + development code
+   e.g., (osimertinib[tiab] OR Tagrisso[tiab] OR AZD9291[tiab])
+3. Expand variant notations: L858R OR "exon 21" OR "p.L858R"
+4. Expand disease terms with MeSH: ("Colorectal Neoplasms"[MeSH] OR "colorectal cancer"[tiab])
+5. Be more inclusive within each concept group (more OR synonyms)
+6. Remove overly specific terms that may have caused the previous query to fail
+
+Example:
+  Input: KRAS G12C colorectal cancer inhibitor resistance
+  Output: ("Colorectal Neoplasms"[MeSH] OR "colorectal cancer"[tiab] OR "CRC"[tiab]) AND ("KRAS"[tiab] OR "KRAS G12C"[tiab]) AND ("drug resistance"[MeSH] OR "resistance"[tiab] OR "inhibitor"[tiab])
+
+Output ONLY the raw PubMed query string. No explanation, no markdown.
+
+Original User Query: {query}
+
+Broader PubMed Query:"""
+
+    LAYER3_PROMPT = """You are a PubMed Search Specialist.
+
+Task: ALL previous queries returned ZERO results. Build a MINIMAL fallback query using only the 2 most essential concepts.
+
+Previous failed queries (all returned 0 results):
+{failed_queries}
+
+Strategy:
+1. Identify the 2 MOST IMPORTANT concepts from the original query (usually: disease + gene/variant)
+2. DROP all drug names, interventions, mechanisms, and modifiers
+3. Use simple [tiab] search only — do NOT use [MeSH]
+4. Each concept can have 2-3 synonyms connected by OR
+5. Connect the 2 concepts with a single AND
+
+Example:
+  Input: KRAS G12C colorectal cancer cetuximab resistance SHP2 inhibitor
+  Output: ("colorectal cancer"[tiab] OR "CRC"[tiab]) AND ("KRAS G12C"[tiab] OR "KRAS"[tiab])
+
+Output ONLY the raw PubMed query string. No explanation, no markdown.
+
+Original User Query: {query}
+
+Minimal PubMed Query:"""
 
     RELEVANCE_FILTER_PROMPT = """You are a Clinical Literature Reviewer.
 
@@ -119,31 +184,121 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
             logger.error(f"[SmartPubMed] LLM 调用失败: {e}")
             return ""
 
-    def _optimize_query(self, query: str) -> str:
+    def _build_layer_query(self, layer: int, query: str, failed_queries: List[str]) -> str:
         """
-        Step 1: LLM Query Optimization
+        Use LLM to build a PubMed query at a specific layer.
 
-        Convert natural language query to PubMed Boolean search string,
-        removing special characters and numeric values that cause search failures.
+        Args:
+            layer: Layer number (1=high precision, 2=expanded recall, 3=minimal fallback)
+            query: Original user query
+            failed_queries: List of previously failed query strings
+
+        Returns:
+            Optimized PubMed query string
         """
-        prompt = self.QUERY_OPTIMIZATION_PROMPT.format(query=query)
-        optimized = self._call_llm(prompt, max_tokens=300)
+        prompts = {
+            1: self.LAYER1_PROMPT,
+            2: self.LAYER2_PROMPT,
+            3: self.LAYER3_PROMPT,
+        }
 
-        if not optimized:
-            # 回退：简单正则清理
-            optimized = self._fallback_query_cleanup(query)
+        prompt_template = prompts.get(layer, self.LAYER1_PROMPT)
+        failed_str = "\n".join(f"  - {q}" for q in failed_queries) if failed_queries else "(none)"
 
-        logger.info(f"[SmartPubMed] 查询优化: '{query[:40]}...' -> '{optimized[:60]}...'")
-        return optimized
+        prompt = prompt_template.format(query=query, failed_queries=failed_str)
+        result = self._call_llm(prompt, max_tokens=400)
+
+        if not result:
+            result = self._fallback_query_cleanup(query)
+
+        logger.info(f"[SmartPubMed] Layer {layer} 查询: '{query[:40]}...' -> '{result[:80]}...'")
+        return result
 
     def _fallback_query_cleanup(self, query: str) -> str:
         """回退的简单查询清理"""
+        # 移除中文字符
+        cleaned = re.sub(r'[\u4e00-\u9fff]+', '', query)
         # 移除数值和特殊符号
-        cleaned = re.sub(r'\b\d+\.?\d*\s*(\+|%|mut/Mb|ng/ml|U/ml)\b', '', query, flags=re.IGNORECASE)
+        cleaned = re.sub(r'\b\d+\.?\d*\s*(\+|%|mut/Mb|ng/ml|U/ml)\b', '', cleaned, flags=re.IGNORECASE)
         cleaned = re.sub(r'\b(ECOG|CPS|PS|TPS)\s*\d+\b', '', cleaned, flags=re.IGNORECASE)
         cleaned = re.sub(r'\bp\.([A-Z]\d+[A-Z])\b', r'\1', cleaned)  # p.G12C -> G12C
         cleaned = ' '.join(cleaned.split())
         return cleaned
+
+    def _extract_best_single_concept(self, query: str) -> str:
+        """
+        最后的纯正则兜底（无 LLM 调用），从查询中提取最佳单概念。
+
+        优先级：基因+变异 > 药物名 > 基因名 > 疾病名
+        不选泛用词（high, resistance, mechanisms, response, treatment 等）
+        """
+        # 先清理中文和数值
+        cleaned = self._fallback_query_cleanup(query)
+        tokens = cleaned.split()
+
+        # 泛用词排除表
+        generic_words = {
+            "high", "low", "resistance", "resistant", "mechanisms", "mechanism",
+            "response", "treatment", "therapy", "clinical", "monitoring",
+            "efficacy", "safety", "analysis", "study", "review", "outcomes",
+            "prognosis", "diagnosis", "sensitivity", "inhibitor", "inhibitors",
+            "mutation", "mutations", "expression", "pathway", "signaling",
+            "China", "patients", "cancer", "tumor", "tumour",
+        }
+
+        # 1. 基因+变异 (e.g., "KRAS G12C", "EGFR L858R")
+        gene_variant_pattern = re.compile(
+            r'\b([A-Z][A-Z0-9]{1,6})\s+([A-Z]\d+[A-Z])\b'
+        )
+        match = gene_variant_pattern.search(cleaned)
+        if match:
+            concept = f'"{match.group(1)} {match.group(2)}"'
+            logger.info(f"[SmartPubMed] 最佳单概念（基因+变异）: {concept}")
+            return concept
+
+        # 2. 药物名 (-ib, -mab, -nib, -lib, -sib 后缀)
+        drug_pattern = re.compile(r'\b(\w*(?:inib|tinib|ertinib|umab|izumab|ximab|rasib|clib|lisib|parib))\b', re.IGNORECASE)
+        drug_match = drug_pattern.search(cleaned)
+        if drug_match:
+            drug = drug_match.group(1)
+            logger.info(f"[SmartPubMed] 最佳单概念（药物）: {drug}")
+            return drug
+
+        # 3. 基因名 (2-6 大写字母+数字)
+        gene_pattern = re.compile(r'\b([A-Z][A-Z0-9]{1,5})\b')
+        for match in gene_pattern.finditer(cleaned):
+            candidate = match.group(1)
+            if candidate.lower() not in generic_words and len(candidate) >= 2:
+                # 排除常见非基因缩写
+                non_gene = {"AND", "OR", "NOT", "MeSH", "TIAB", "CRC", "MSS", "MSI", "TMB", "IHC", "CPS", "TPS", "ECOG"}
+                if candidate not in non_gene:
+                    logger.info(f"[SmartPubMed] 最佳单概念（基因）: {candidate}")
+                    return candidate
+
+        # 4. 疾病名（多词短语）
+        disease_patterns = [
+            r'"?(colorectal cancer|colorectal neoplasm|colon cancer|rectal cancer)"?',
+            r'"?(non-small cell lung cancer|NSCLC|lung adenocarcinoma|lung cancer)"?',
+            r'"?(breast cancer|pancreatic cancer|gastric cancer|ovarian cancer)"?',
+            r'"?(hepatocellular carcinoma|prostate cancer|melanoma|glioblastoma)"?',
+        ]
+        for dp in disease_patterns:
+            dm = re.search(dp, cleaned, re.IGNORECASE)
+            if dm:
+                disease = dm.group(0).strip('"')
+                logger.info(f"[SmartPubMed] 最佳单概念（疾病）: {disease}")
+                return f'"{disease}"'
+
+        # 5. 兜底：第一个非泛用词 token
+        for token in tokens:
+            if token.lower() not in generic_words and len(token) >= 3:
+                logger.info(f"[SmartPubMed] 最佳单概念（首非泛用词）: {token}")
+                return token
+
+        # 最终兜底
+        fallback = tokens[0] if tokens else query.split()[0] if query else ""
+        logger.info(f"[SmartPubMed] 最佳单概念（兜底）: {fallback}")
+        return fallback
 
     def _filter_batch(self, original_query: str, batch: List[Dict], batch_idx: int) -> List[Dict]:
         """
@@ -262,7 +417,9 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
         skip_filtering: bool = False
     ) -> Tuple[List[Dict], str]:
         """
-        智能搜索主流程
+        智能搜索主流程：3 层 LLM 递进检索 + 正则兜底
+
+        每层由 LLM 构建查询，后一层收到前一层失败的查询作为上下文，逐步放宽策略。
 
         Args:
             query: 用户原始查询（自然语言）
@@ -271,43 +428,62 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
             skip_filtering: 跳过 LLM 筛选（用于简单查询）
 
         Returns:
-            (筛选后的高相关性文献列表, 优化后的查询字符串)
+            (筛选后的高相关性文献列表, 实际使用的查询字符串)
         """
-        logger.info(f"[SmartPubMed] 开始搜索: {query[:50]}...")
+        logger.info(f"[SmartPubMed] 开始搜索: {query[:80]}...")
 
-        # Step 1: LLM 优化查询
-        optimized_query = self._optimize_query(query)
+        failed_queries = []
 
-        # Step 2: API 宽搜
-        results = self.ncbi_client.search_pubmed(optimized_query, max_results=broad_search_count)
+        # Layer 1: 高精度 [tiab]-only 查询
+        q1 = self._build_layer_query(1, query, failed_queries)
+        results = self.ncbi_client.search_pubmed(q1, max_results=broad_search_count)
+        if results:
+            logger.info(f"[SmartPubMed] Layer 1 命中 {len(results)} 篇")
+            return self._finalize_results(query, results, q1, max_results, skip_filtering)
+        failed_queries.append(q1)
 
-        if not results:
-            # 回退策略 1: 尝试简化后的原始查询
-            logger.warning(f"[SmartPubMed] 优化查询无结果，尝试回退查询")
-            fallback_query = self._fallback_query_cleanup(query)
-            optimized_query = fallback_query  # 记录实际使用的查询
-            results = self.ncbi_client.search_pubmed(fallback_query, max_results=broad_search_count)
+        # Layer 2: 扩召回 MeSH+TIAB+同义词
+        q2 = self._build_layer_query(2, query, failed_queries)
+        results = self.ncbi_client.search_pubmed(q2, max_results=broad_search_count)
+        if results:
+            logger.info(f"[SmartPubMed] Layer 2 命中 {len(results)} 篇")
+            return self._finalize_results(query, results, q2, max_results, skip_filtering)
+        failed_queries.append(q2)
 
-        if not results:
-            # 回退策略 2: 只用第一个词（通常是基因名或癌症类型）
-            first_term = query.split()[0] if query else ""
-            if first_term:
-                logger.warning(f"[SmartPubMed] 回退查询无结果，尝试单词查询: {first_term}")
-                optimized_query = first_term  # 记录实际使用的查询
-                results = self.ncbi_client.search_pubmed(first_term, max_results=broad_search_count)
+        # Layer 3: 兜底 疾病+基因 only
+        q3 = self._build_layer_query(3, query, failed_queries)
+        results = self.ncbi_client.search_pubmed(q3, max_results=broad_search_count)
+        if results:
+            logger.info(f"[SmartPubMed] Layer 3 命中 {len(results)} 篇")
+            return self._finalize_results(query, results, q3, max_results, skip_filtering)
 
-        if not results:
-            logger.warning(f"[SmartPubMed] 所有查询策略均无结果")
-            return [], optimized_query
+        # Fallback: 最佳单概念（纯正则，无 LLM）
+        best_concept = self._extract_best_single_concept(query)
+        logger.warning(f"[SmartPubMed] 3 层 LLM 均无结果，正则兜底: {best_concept}")
+        results = self.ncbi_client.search_pubmed(best_concept, max_results=broad_search_count)
+        if results:
+            logger.info(f"[SmartPubMed] Fallback 命中 {len(results)} 篇")
+            return self._finalize_results(query, results, best_concept, max_results, skip_filtering)
 
+        logger.warning(f"[SmartPubMed] 所有查询策略均无结果")
+        return [], best_concept
+
+    def _finalize_results(
+        self,
+        original_query: str,
+        results: List[Dict],
+        used_query: str,
+        max_results: int,
+        skip_filtering: bool
+    ) -> Tuple[List[Dict], str]:
+        """对搜索结果进行 LLM 筛选（可选）并返回"""
         logger.info(f"[SmartPubMed] API 返回 {len(results)} 篇文献")
 
-        # Step 3: LLM 筛选（可选）
         if skip_filtering:
-            return results[:max_results], optimized_query
+            return results[:max_results], used_query
 
-        filtered = self._filter_results(query, results)
-        return filtered[:max_results], optimized_query
+        filtered = self._filter_results(original_query, results)
+        return filtered[:max_results], used_query
 
 
 # ==================== 全局单例 ====================
