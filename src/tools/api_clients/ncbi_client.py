@@ -5,6 +5,8 @@ NCBI E-utilities 客户端
 API 文档: https://www.ncbi.nlm.nih.gov/books/NBK25500/
 """
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import time
 import xml.etree.ElementTree as ET
 from typing import Dict, List, Any, Optional
@@ -30,6 +32,17 @@ class NCBIClient:
         self.session.headers.update({
             "User-Agent": "MTB-Workflow/1.0 (Medical Tumor Board)"
         })
+        # 重试策略：处理瞬态 SSL/网络错误和服务端限流
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,           # 1s → 2s → 4s
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET"],
+            raise_on_status=False,
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
         # 请求间隔 (无 API Key 限制 3/秒)
         self._last_request_time = 0
         self._min_interval = 0.34 if not api_key else 0.1
