@@ -1,0 +1,250 @@
+====================================================================================================
+SmartPubMed Pipeline Detailed Report
+====================================================================================================
+Query: Fulzerasib cetuximab colorectal cancer KRAS G12C efficacy
+Time: 2026-01-29 19:43:48
+
+====================================================================================================
+STEP 1: LLM Query Build (Layer 1)
+====================================================================================================
+Generated: ("colorectal cancer"[tiab] OR "colorectal neoplasm"[tiab] OR "metastatic colorectal cancer"[tiab]) AND ("KRAS G12C"[tiab]) AND ("fulzerasib"[tiab] OR "cetuximab"[tiab]) AND ("efficacy"[tiab] OR "response"[tiab] OR "outcome"[tiab])
+
+====================================================================================================
+STEP 2: PubMed API broad search (broad=200, year_window=10)
+====================================================================================================
+API returned: 17 articles
+
+====================================================================================================
+STEP 3: XML Metadata Bucketing
+====================================================================================================
+     1. PMID 36546659     | XML: rct                  | PubTypes: ['Clinical Trial', 'Clinical Trial, Phase I', 'Clinical Trial, Phase II', 'Journal Article', "Research Support, Non-U.S. Gov't", 'Research Support, N.I.H., Extramural']
+      Title: Adagrasib with or without Cetuximab in Colorectal Cancer with Mutated 
+      Journal: The New England journal of medicine (2023)
+      Abstract: Adagrasib, an oral small-molecule inhibitor of mutant KRAS G12C protein, has shown clinical activity in pretreated patients with several tumor types, including colorectal cancer. Preclinical studies s...
+     2. PMID 38052910     | XML: rct                  | PubTypes: ['Clinical Trial, Phase I', 'Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Divarasib plus cetuximab in KRAS G12C-positive colorectal cancer: a phase 1b tri
+      Journal: Nature medicine (2024)
+      Abstract: KRAS G12C mutation is prevalent in ~4% of colorectal cancer (CRC) and is associated with poor prognosis. Divarasib, a KRAS G12C inhibitor, has shown modest activity as a single agent in KRAS G12C-posi...
+     3. PMID 38422896     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Current advances in targeted therapy for metastatic colorectal cancer - Clinical
+      Journal: Cancer treatment reviews (2024)
+      Abstract: The last two decades have witnessed major breakthroughs in the development of targeted therapy for patients with metastatic colorectal cancer (mCRC), an achievement which stems largely from advances i...
+     4. PMID 40523897     | XML: rct                  | PubTypes: ['Journal Article', 'Clinical Trial, Phase II']
+      Title: Garsorasib, a KRAS G12C inhibitor, with or without cetuximab, an EGFR antibody, 
+      Journal: Signal transduction and targeted therapy (2025)
+      Abstract: Mutations in the KRAS gene have long been implicated in the pathogenesis of colorectal cancer (CRC). KRAS G12C inhibitors overcome the "undruggable" challenge, enabling precision therapy. Garsorasib (...
+     5. PMID 40274247     | XML: systematic_review    | PubTypes: ['Comparative Study', 'Journal Article', 'Meta-Analysis', 'Systematic Review']
+      Title: KRAS G12C inhibitors as monotherapy or in combination for metastatic colorectal 
+      Journal: Critical reviews in oncology/hematology (2025)
+      Abstract: 1-2 % of metastatic colorectal cancers (mCRC) harbor an activating KRAS-G12C mutation. This study aims to pool the results of available clinical trials of KRAS-G12C inhibitors, comparing monotherapy a...
+     6. PMID 40715048     | XML: rct                  | PubTypes: ['Journal Article', 'Clinical Trial, Phase I']
+      Title: Efficacy and safety of IBI351 (fulzerasib) monotherapy in KRAS
+      Journal: Signal transduction and targeted therapy (2025)
+      Abstract: IBI351 (also known as fulzerasib or GFH925), an irreversible covalent inhibitor of KRAS
+     7. PMID 40692745     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Targeting KRAS in colorectal cancer (Review).
+      Journal: Molecular and clinical oncology (2025)
+      Abstract: RAS genes play crucial roles in regulating important biological processes such as cell growth, differentiation, and apoptosis in normal cells. When RAS genes undergo mutations or abnormal expression, ...
+     8. PMID 36670267     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Therapeutic landscape and future direction of metastatic colorectal cancer.
+      Journal: Nature reviews. Gastroenterology & hepatology (2023)
+      Abstract: In the era of targeted therapy based on genomic alterations, the treatment strategy for metastatic colorectal cancer (mCRC) has been changing. Before systemic treatment initiation, determination of tu...
+     9. PMID 40619745     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Adagrasib in the treatment of colorectal cancer.
+      Journal: Future oncology (London, England) (2025)
+      Abstract: (no abstract)
+    10. PMID 40116975     | XML: systematic_review    | PubTypes: ['Journal Article', 'Systematic Review']
+      Title: Efficacy and safety of KRAS -G12C inhibitors in colorectal cancer: a systematic 
+      Journal: Medical oncology (Northwood, London, England) (2025)
+      Abstract: Patients with colorectal cancer (CRC) who have KRAS mutations often see poor results with standard treatments, leaving them with fewer viable options. Over the past few years, new KRAS G12C inhibitors...
+    11. PMID 38542278     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Targeting 
+      Journal: International journal of molecular sciences (2024)
+      Abstract: Kirsten rat sarcoma virus oncogene homolog (
+    12. PMID 41344351     | XML: rct                  | PubTypes: ['Journal Article', 'Clinical Trial, Phase II', 'Clinical Trial, Phase I', 'Multicenter Study']
+      Title: Glecirasib with or without cetuximab in previously treated locally advanced or m
+      Journal: The lancet. Gastroenterology & hepatology (2026)
+      Abstract: KRAS
+    13. PMID 40080361     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: The emerging role of Sotorasib plus Panitumumab combination therapy in colorecta
+      Journal: International journal of clinical oncology (2025)
+      Abstract: Colorectal cancer (CRC) poses a substantial global health challenge, ranking as the third most commonly diagnosed and second most fatal cancer worldwide. With an increasing incidence, particularly in ...
+    14. PMID 37336286     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: MEK inhibitor and anti-EGFR antibody overcome sotorasib resistance signals and e
+      Journal: Cancer letters (2023)
+      Abstract: The Kirsten rat sarcoma (KRAS) oncogene was "undruggable" until sotorasib, a KRAS
+    15. PMID 40555076     | XML: rct                  | PubTypes: ['Journal Article', 'Clinical Trial, Phase II', 'Randomized Controlled Trial']
+      Title: Comprehensive genomic profiling by liquid biopsy in refractory metastatic colore
+      Journal: ESMO open (2025)
+      Abstract: Biomarker-guided therapies are needed for patients with refractory metastatic colorectal cancer (mCRC). Liquid biopsy (LBx) circulating tumor DNA (ctDNA) comprehensive genomic profiling (CGP) could co...
+    16. PMID 38126770     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Divarasib Plus Cetuximab Is Safe and Has Efficacy in Colorectal Cancer.
+      Journal: Cancer discovery (2023)
+      Abstract: Divarasib plus cetuximab is well tolerated in patients with KRAS G12C-positive colorectal cancer.
+    17. PMID 38033418     | XML: case_report          | PubTypes: ['Case Reports', 'Journal Article']
+      Title: Anti-epidermal growth factor receptor treatment for patients with Neo
+      Journal: Therapeutic advances in medical oncology (2023)
+      Abstract: The Neo
+  Summary: XML classified 15/17
+
+====================================================================================================
+STEP 4: LLM Batch Evaluation (raw JSON responses)
+====================================================================================================
+--- Batch 1/1 (16 articles) ---
+PMIDs: ['36546659', '38052910', '38422896', '40523897', '40274247', '40715048', '40692745', '36670267', '40116975', '38542278', '41344351', '40080361', '37336286', '40555076', '38126770', '38033418']
+LLM raw response (len=5132):
+  [PASS  ] PMID 36546659     | score= 8 | study_type=rct                  | criteria=['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+           findings: Adagrasib with or without cetuximab shows clinical activity in pretreated KRAS G12C-mutated CRC; com
+  [PASS  ] PMID 38052910     | score= 8 | study_type=rct                  | criteria=['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+           findings: Phase 1b trial of divarasib plus cetuximab in KRAS G12C CRC showed an ORR of 62.5% in inhibitor-naiv
+  [PASS  ] PMID 38422896     | score= 7 | study_type=systematic_review    | criteria=['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+           findings: Review of targeted therapies noting that combinations of KRAS G12C inhibitors with EGFR inhibitors (
+  [PASS  ] PMID 40523897     | score= 8 | study_type=rct                  | criteria=['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+           findings: Phase II trial of garsorasib plus cetuximab showed an ORR of 45.2% and median PFS of 7.5 months in K
+  [PASS  ] PMID 40274247     | score= 8 | study_type=systematic_review    | criteria=['KRAS G12C', 'Colorectal Cancer']
+           findings: Meta-analysis of Phase I-III trials comparing KRAS G12C inhibitor monotherapy vs. combinations in mC
+  [PASS  ] PMID 40715048     | score= 8 | study_type=rct                  | criteria=['Fulzerasib', 'KRAS G12C', 'Colorectal Cancer']
+           findings: Reports on the efficacy and safety of fulzerasib (IBI351) monotherapy in KRAS G12C-mutated patients.
+  [PASS  ] PMID 40692745     | score= 7 | study_type=systematic_review    | criteria=['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+           findings: Review highlighting that combining KRAS G12C inhibitors with EGFR antibodies like cetuximab doubles 
+  [PASS  ] PMID 36670267     | score= 6 | study_type=systematic_review    | criteria=['KRAS G12C', 'Colorectal Cancer']
+           findings: General review of the therapeutic landscape for mCRC, including the role of KRAS G12C testing and ta
+  [PASS  ] PMID 40116975     | score= 9 | study_type=systematic_review    | criteria=['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+           findings: Systematic review of 9 trials; adagrasib+cetuximab reached 42% ORR and divarasib+cetuximab reached 6
+  [PASS  ] PMID 38542278     | score= 5 | study_type=systematic_review    | criteria=['KRAS G12C', 'Colorectal Cancer']
+           findings: Review focusing on targeting KRAS mutations in colorectal cancer.
+  [PASS  ] PMID 41344351     | score= 8 | study_type=rct                  | criteria=['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+           findings: Phase I/II study of glecirasib with or without cetuximab in KRAS G12C-mutated advanced or metastatic
+  [PASS  ] PMID 40080361     | score= 6 | study_type=systematic_review    | criteria=['KRAS G12C', 'Colorectal Cancer']
+           findings: Review of sotorasib plus panitumumab (another EGFR inhibitor) showing significant PFS and ORR improv
+  [REJECT] PMID 37336286     | score= 4 | study_type=preclinical          | criteria=['KRAS G12C', 'Colorectal Cancer']
+           findings: Preclinical study showing MEK and EGFR inhibitors overcome sotorasib resistance in CRC cell lines.
+  [REJECT] PMID 40555076     | score= 3 | study_type=rct                  | criteria=['Colorectal Cancer', 'Cetuximab']
+           findings: Focuses on liquid biopsy for anti-EGFR rechallenge; does not specifically target KRAS G12C inhibitor
+  [PASS  ] PMID 38126770     | score= 7 | study_type=systematic_review    | criteria=['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+           findings: Brief report confirming that divarasib plus cetuximab is safe and effective in KRAS G12C-positive CR
+  [REJECT] PMID 38033418     | score= 2 | study_type=case_report          | criteria=['Cetuximab']
+           findings: Case report regarding anti-EGFR treatment; not specific to KRAS G12C or fulzerasib.
+
+LLM filter summary: 17 -> 13 (score >= 5)
+
+====================================================================================================
+STEP 5: XML vs LLM Bucket Comparison (Manual Verification Table)
+====================================================================================================
+  No |       PMID   |       XML Bucket |       LLM study_type |     Final Bucket |   Source | Score | Title
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1 |   36546659   |              rct |                  rct |              rct |      xml |     8 | Adagrasib with or without Cetuximab in Colorectal 
+   2 |   38052910   |              rct |                  rct |              rct |      xml |     8 | Divarasib plus cetuximab in KRAS G12C-positive col
+   3 |   38422896   | systematic_review |    systematic_review | systematic_review |      xml |     7 | Current advances in targeted therapy for metastati
+   4 |   40523897   |              rct |                  rct |              rct |      xml |     8 | Garsorasib, a KRAS G12C inhibitor, with or without
+   5 |   40274247   | systematic_review |    systematic_review | systematic_review |      xml |     8 | KRAS G12C inhibitors as monotherapy or in combinat
+   6 |   40715048   |              rct |                  rct |              rct |      xml |     8 | Efficacy and safety of IBI351 (fulzerasib) monothe
+   7 |   40692745   | systematic_review |    systematic_review | systematic_review |      xml |     7 | Targeting KRAS in colorectal cancer (Review).
+   8 |   36670267   | systematic_review |    systematic_review | systematic_review |      xml |     6 | Therapeutic landscape and future direction of meta
+   9 |   40116975   | systematic_review |    systematic_review | systematic_review |      xml |     9 | Efficacy and safety of KRAS -G12C inhibitors in co
+  10 |   38542278   | systematic_review |    systematic_review | systematic_review |      xml |     5 | Targeting 
+  11 |   41344351   |              rct |                  rct |              rct |      xml |     8 | Glecirasib with or without cetuximab in previously
+  12 |   40080361   | systematic_review |    systematic_review | systematic_review |      xml |     6 | The emerging role of Sotorasib plus Panitumumab co
+  13 |   38126770   |             None |    systematic_review | systematic_review |      llm |     7 | Divarasib Plus Cetuximab Is Safe and Has Efficacy 
+
+====================================================================================================
+STEP 6: Stratified Sampling
+====================================================================================================
+Quotas: {"guideline": 3, "rct": 6, "systematic_review": 4, "observational": 4, "case_report": 2, "preclinical": 1}
+Input: 13 articles, max_results=20
+  Pre-sample dist:  {"rct": 5, "systematic_review": 8}
+  Post-sample dist: {"rct": 5, "systematic_review": 8}
+  Sampled: 13 -> 13
+
+Final results:
+    1. [rct               ] (src=xml     , score=8) PMID 36546659: Adagrasib with or without Cetuximab in Colorectal Cancer with Mutated 
+       Journal: The New England journal of medicine (2023)
+       Authors: Yaeger R, Weiss J, Pelster MS, Spira AI, Barve M et al.
+       Matched: ['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+       Findings: Adagrasib with or without cetuximab shows clinical activity in pretreated KRAS G12C-mutated CRC; combination therapy is a viable clinical strategy.
+       Abstract: Adagrasib, an oral small-molecule inhibitor of mutant KRAS G12C protein, has shown clinical activity in pretreated patients with several tumor types, including colorectal cancer. Preclinical studies suggest that combining a KRAS G12C inhibitor with an epidermal growth factor receptor antibody could be an effective clinical strategy.
+       Link: https://pubmed.ncbi.nlm.nih.gov/36546659/
+    2. [rct               ] (src=xml     , score=8) PMID 38052910: Divarasib plus cetuximab in KRAS G12C-positive colorectal cancer: a phase 1b tri
+       Journal: Nature medicine (2024)
+       Authors: Desai J, Alonso G, Kim SH, Cervantes A, Karasic T et al.
+       Matched: ['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+       Findings: Phase 1b trial of divarasib plus cetuximab in KRAS G12C CRC showed an ORR of 62.5% in inhibitor-naive patients and a median PFS of 8.1 months.
+       Abstract: KRAS G12C mutation is prevalent in ~4% of colorectal cancer (CRC) and is associated with poor prognosis. Divarasib, a KRAS G12C inhibitor, has shown modest activity as a single agent in KRAS G12C-positive CRC at 400 mg. Epidermal growth factor receptor has been recognized as a major upstream activator of RAS-MAPK signaling, a proposed key mechanism of resistance to KRAS G12C inhibition in CRC. Here, we report on divarasib plus cetuximab (epidermal growth factor receptor inhibitor) in patients with KRAS G12C-positive CRC (n = 29) from arm C of an ongoing phase 1b trial. The primary objective was to evaluate safety. Secondary objectives included preliminary antitumor activity. The safety profile of this combination was consistent with those of single-agent divarasib and cetuximab. Treatment-related adverse events led to divarasib dose reductions in four patients (13.8%); there were no treatment withdrawals. The objective response rate was 62.5% (95% confidence interval: 40.6%, 81.2%) in KRAS G12C inhibitor-naive patients (n = 24). The median duration of response was 6.9 months. The median progression-free survival was 8.1 months (95% confidence interval: 5.5, 12.3). As an exploratory objective, we observed a decline in KRAS G12C variant allele frequency associated with response and identified acquired genomic alterations at disease progression that may be associated with resistance. The manageable safety profile and encouraging antitumor activity of divarasib plus cetuximab support the further investigation of this combination in KRAS G12C-positive CRC.ClinicalTrials.gov identifier: NCT04449874.
+       Link: https://pubmed.ncbi.nlm.nih.gov/38052910/
+    3. [rct               ] (src=xml     , score=8) PMID 40523897: Garsorasib, a KRAS G12C inhibitor, with or without cetuximab, an EGFR antibody, 
+       Journal: Signal transduction and targeted therapy (2025)
+       Authors: Ruan DY, Wu HX, Xu Y, Munster PN, Deng Y et al.
+       Matched: ['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+       Findings: Phase II trial of garsorasib plus cetuximab showed an ORR of 45.2% and median PFS of 7.5 months in KRAS G12C-mutated CRC.
+       Abstract: Mutations in the KRAS gene have long been implicated in the pathogenesis of colorectal cancer (CRC). KRAS G12C inhibitors overcome the "undruggable" challenge, enabling precision therapy. Garsorasib (D-1553), a highly potent and selective KRAS G12C inhibitor, has demonstrated promising anti-tumor activity and favorable safety profile in early clinical trials. We conducted an open-label, nonrandomized phase II trial (ClinicalTrials.gov, NCT04585035) to assess the safety and efficacy of garsorasib with or without cetuximab in KRAS G12C-mutated CRC. In the monotherapy cohort (n = 26), objective response rate (ORR) was 19.2% (95% CI, 6.6-39.4), disease control rate (DCR) was 92.3% (95% CI, 74.9-99.1), median progression-free survival (PFS) was 5.5 months (95% CI, 2.9-11.6) and median overall survival (OS) was 13.1 months (95% CI, 9.5-NE). In the combination cohort (n = 42), ORR was 45.2% (95% CI, 29.8-61.3), DCR was 92.9% (95% CI, 80.5-98.5), median PFS was 7.5 months (95% CI, 5.5-8.1), and median OS was not reached. Grade ≥3 treatment-related adverse events occurred in 5 (19.2%) and 6 (14.3%) patients in monotherapy and combination cohort, respectively. Garsorasib with or without cetuximab showed a promising efficacy and manageable safety profiles in heavily pretreated patients with KRAS G12C-mutated CRC, providing a potential new treatment approach for such population.
+       Link: https://pubmed.ncbi.nlm.nih.gov/40523897/
+    4. [rct               ] (src=xml     , score=8) PMID 40715048: Efficacy and safety of IBI351 (fulzerasib) monotherapy in KRAS
+       Journal: Signal transduction and targeted therapy (2025)
+       Authors: Yuan Y, Deng Y, Jin Y, Guo Z, Pan Y et al.
+       Matched: ['Fulzerasib', 'KRAS G12C', 'Colorectal Cancer']
+       Findings: Reports on the efficacy and safety of fulzerasib (IBI351) monotherapy in KRAS G12C-mutated patients.
+       Abstract: IBI351 (also known as fulzerasib or GFH925), an irreversible covalent inhibitor of KRAS
+       Link: https://pubmed.ncbi.nlm.nih.gov/40715048/
+    5. [rct               ] (src=xml     , score=8) PMID 41344351: Glecirasib with or without cetuximab in previously treated locally advanced or m
+       Journal: The lancet. Gastroenterology & hepatology (2026)
+       Authors: Li J, Wang Z, Huang J, Ba Y, Cao B et al.
+       Matched: ['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+       Findings: Phase I/II study of glecirasib with or without cetuximab in KRAS G12C-mutated advanced or metastatic CRC.
+       Abstract: KRAS
+       Link: https://pubmed.ncbi.nlm.nih.gov/41344351/
+    6. [systematic_review ] (src=xml     , score=9) PMID 40116975: Efficacy and safety of KRAS -G12C inhibitors in colorectal cancer: a systematic 
+       Journal: Medical oncology (Northwood, London, England) (2025)
+       Authors: Sayed MS, Alami Idrissi Y, Ahmed O, Samir SH, Pandita S et al.
+       Matched: ['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+       Findings: Systematic review of 9 trials; adagrasib+cetuximab reached 42% ORR and divarasib+cetuximab reached 62.5% ORR, confirming synergy.
+       Abstract: Patients with colorectal cancer (CRC) who have KRAS mutations often see poor results with standard treatments, leaving them with fewer viable options. Over the past few years, new KRAS G12C inhibitors have emerged as a targeted approach for a specific subset of these mutations, though their effectiveness and safety in advanced CRC remain areas of ongoing research. In this systematic review, we identified nine clinical trials including a total of 668 patients, by searching PubMed, Web of Science, CENTRAL, and Embase through October 2024. When sotorasib was used alone, the objective response rate (ORR) ranged from 7.1 to 9.7%, with disease control (DC) rates of 73.8 to 82.3% and a median progression-free survival (PFS) spanning 4-5.6 months. Combining sotorasib with panitumumab, especially at higher doses, raised its ORR to 26.4%. Meanwhile, pairing adagrasib with cetuximab led to a 42% ORR and a median PFS of 6.9 months, surpassing the 19% ORR observed with adagrasib alone. Divarasib monotherapy produced a 36% ORR and an 85.5% DC rate, with a PFS of 5.6 months; in tandem with cetuximab, those numbers climbed to a 62.5% ORR and a PFS of 8.1 months. Common side effects across these trials included diarrhea, nausea, fatigue, and various skin reactions. Overall, KRAS G12C inhibitors appear to offer meaningful benefits for CRC patients, particularly when used alongside EGFR inhibitors like cetuximab or panitumumab. However, further large-scale, randomized trials are needed to refine dosing strategies and gain a clearer picture of both efficacy and potential risks.
+       Link: https://pubmed.ncbi.nlm.nih.gov/40116975/
+    7. [systematic_review ] (src=xml     , score=8) PMID 40274247: KRAS G12C inhibitors as monotherapy or in combination for metastatic colorectal 
+       Journal: Critical reviews in oncology/hematology (2025)
+       Authors: Akkus E, Öksüz NE, Erul E
+       Matched: ['KRAS G12C', 'Colorectal Cancer']
+       Findings: Meta-analysis of Phase I-III trials comparing KRAS G12C inhibitor monotherapy vs. combinations in mCRC.
+       Abstract: 1-2 % of metastatic colorectal cancers (mCRC) harbor an activating KRAS-G12C mutation. This study aims to pool the results of available clinical trials of KRAS-G12C inhibitors, comparing monotherapy and combinations.
+       Link: https://pubmed.ncbi.nlm.nih.gov/40274247/
+    8. [systematic_review ] (src=xml     , score=7) PMID 38422896: Current advances in targeted therapy for metastatic colorectal cancer - Clinical
+       Journal: Cancer treatment reviews (2024)
+       Authors: Johnson D, Chee CE, Wong W, Lam RCT, Tan IBH et al.
+       Matched: ['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+       Findings: Review of targeted therapies noting that combinations of KRAS G12C inhibitors with EGFR inhibitors (cetuximab/panitumumab) are practice-changing for mCRC.
+       Abstract: The last two decades have witnessed major breakthroughs in the development of targeted therapy for patients with metastatic colorectal cancer (mCRC), an achievement which stems largely from advances in translational research. Precision medicine is now widely practiced in routine oncological care, where systemic therapy is individualized based on clinical factors such as primary tumor sidedness, location and number of metastases, as well as molecular factors such as the RAS and BRAF mutation status, mismatch repair / microsatellite status and presence of other actionable genomic alterations in the tumor. The optimal selection of patients with RAS and BRAF-wild type (WT), left-sided primary tumor for treatment with epidermal growth factor receptor (EGFR) and chemotherapy (chemo) has markedly improved survival in the first-line setting. The pivotal trials of cetuximab in combination with BRAF/ MEK inhibitor for BRAF V600E mutant mCRC, and panitumumab with KRAS G12C inhibitor in KRAS(G12C)-mutant mCRC have been practice-changing. Anti-HER2 small molecular inhibitor, antibodies and antibody-drug conjugates have significantly improved the treatment outcome of patients with HER2 amplified mCRC. Anti-angiogenesis agents are now used across all lines of treatment and novel combinations with immune-checkpoint inhibitors are under active investigation in MSS mCRC. The non-invasive monitoring of molecular resistance to targeted therapies using Next Generation Sequencing analysis of circulating tumor-derived DNA (ctDNA) and captured sequencing of tumors have improved patient selection for targeted therapies. This review will focus on how latest advances, challenges and future directions in the development of targeted therapies in mCRC.
+       Link: https://pubmed.ncbi.nlm.nih.gov/38422896/
+    9. [systematic_review ] (src=xml     , score=7) PMID 40692745: Targeting KRAS in colorectal cancer (Review).
+       Journal: Molecular and clinical oncology (2025)
+       Authors: Zhang M, Wu D, Tang Y, Zhang L, Zhang S et al.
+       Matched: ['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+       Findings: Review highlighting that combining KRAS G12C inhibitors with EGFR antibodies like cetuximab doubles ORR compared to monotherapy.
+       Abstract: RAS genes play crucial roles in regulating important biological processes such as cell growth, differentiation, and apoptosis in normal cells. When RAS genes undergo mutations or abnormal expression, they can become oncogenic drivers, and the oncogenic mechanism of KRAS mutations which drive cancer progression is highly complex. Colorectal cancer carrying KRAS mutation genes often exhibits poor prognosis. Despite the advent of KRAS G12C inhibitors, monotherapy demonstrates suboptimal clinical efficacy in colorectal cancer, which is attributed to primary resistance and limited coverage of prevalent KRAS mutations (such as G12D and G12V). Notably, combinatorial regimens integrating KRASG12C inhibitors with EGFR monoclonal antibodies (such as cetuximab) have doubled objective response rates, highlighting synergistic therapeutic potential.
+       Link: https://pubmed.ncbi.nlm.nih.gov/40692745/
+   10. [systematic_review ] (src=llm     , score=7) PMID 38126770: Divarasib Plus Cetuximab Is Safe and Has Efficacy in Colorectal Cancer.
+       Journal: Cancer discovery (2023)
+       Authors: 
+       Matched: ['KRAS G12C', 'Cetuximab', 'Colorectal Cancer']
+       Findings: Brief report confirming that divarasib plus cetuximab is safe and effective in KRAS G12C-positive CRC.
+       Abstract: Divarasib plus cetuximab is well tolerated in patients with KRAS G12C-positive colorectal cancer.
+       Link: https://pubmed.ncbi.nlm.nih.gov/38126770/
+   11. [systematic_review ] (src=xml     , score=6) PMID 36670267: Therapeutic landscape and future direction of metastatic colorectal cancer.
+       Journal: Nature reviews. Gastroenterology & hepatology (2023)
+       Authors: Bando H, Ohtsu A, Yoshino T
+       Matched: ['KRAS G12C', 'Colorectal Cancer']
+       Findings: General review of the therapeutic landscape for mCRC, including the role of KRAS G12C testing and targeted therapy.
+       Abstract: In the era of targeted therapy based on genomic alterations, the treatment strategy for metastatic colorectal cancer (mCRC) has been changing. Before systemic treatment initiation, determination of tumour genomic status for KRAS and NRAS, BRAF
+       Link: https://pubmed.ncbi.nlm.nih.gov/36670267/
+   12. [systematic_review ] (src=xml     , score=6) PMID 40080361: The emerging role of Sotorasib plus Panitumumab combination therapy in colorecta
+       Journal: International journal of clinical oncology (2025)
+       Authors: Kokori E, Olatunji G, Ogieuhi IJ, Ajayi YI, Akinmoju O et al.
+       Matched: ['KRAS G12C', 'Colorectal Cancer']
+       Findings: Review of sotorasib plus panitumumab (another EGFR inhibitor) showing significant PFS and ORR improvements in KRAS G12C mCRC.
+       Abstract: Colorectal cancer (CRC) poses a substantial global health challenge, ranking as the third most commonly diagnosed and second most fatal cancer worldwide. With an increasing incidence, particularly in older populations, CRC demands innovative therapeutic approaches to address the limitations of existing treatments. One critical target in CRC is the KRAS gene, which is frequently mutated and implicated in various cancer-related processes. This narrative review explores the promising role of Sotorasib plus Panitumumab combination therapy in CRC treatment. Combining Sotorasib with Panitumumab, an EGFR antagonist, offers a synergistic approach to comprehensively block KRAS and EGFR pathways, potentially overcoming resistance mechanisms observed in monotherapies. The review discusses the evolution of CRC treatment from traditional chemotherapy to the advent of targeted therapies like Bevacizumab and Cetuximab. It highlights the limitations of existing therapies, including resistance and toxicities, emphasising the urgency for innovative approaches. The CodeBreak clinical trials, specifically CodeBreak 101 and CodeBreak 300, provide a focal point for evaluating the efficacy of Sotorasib plus Panitumumab in patients with refractory KRAS G12C-mutated mCRC. Preliminary results demonstrate significant improvements in progression-free survival (PFS) and objective response rates, suggesting a paradigm shift in CRC treatment. The preliminary findings from the CodeBreak 300 trial signify a transformative impact of Sotorasib plus Panitumumab in refractory KRAS G12C-mutated mCRC. With a notable increase in PFS and objective response rates and a well-tolerated safety profile, this combination therapy emerges as a potential new standard of care. The results present an optimistic outlook for patients resistant to conventional therapies.
+       Link: https://pubmed.ncbi.nlm.nih.gov/40080361/
+   13. [systematic_review ] (src=xml     , score=5) PMID 38542278: Targeting 
+       Journal: International journal of molecular sciences (2024)
+       Authors: Ros J, Vaghi C, Baraibar I, Saoudi González N, Rodríguez-Castells M et al.
+       Matched: ['KRAS G12C', 'Colorectal Cancer']
+       Findings: Review focusing on targeting KRAS mutations in colorectal cancer.
+       Abstract: Kirsten rat sarcoma virus oncogene homolog (
+       Link: https://pubmed.ncbi.nlm.nih.gov/38542278/

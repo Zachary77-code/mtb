@@ -80,6 +80,18 @@ MAX_PHASE2_ITERATIONS = int(os.getenv("MAX_PHASE2_ITERATIONS", "7"))  # Oncologi
 MIN_EVIDENCE_NODES = int(os.getenv("MIN_EVIDENCE_NODES", "10"))       # 最小证据节点数（全局）
 MIN_EVIDENCE_PER_DIRECTION = int(os.getenv("MIN_EVIDENCE_PER_DIRECTION", "20"))  # 每个研究方向最小证据数
 
+# ==================== PubMed 搜索配置 ====================
+DEFAULT_YEAR_WINDOW = int(os.getenv("DEFAULT_YEAR_WINDOW", "10"))  # 默认搜索最近 N 年
+PUBMED_BROAD_SEARCH_COUNT = int(os.getenv("PUBMED_BROAD_SEARCH_COUNT", "200"))  # 宽搜数量
+PUBMED_BUCKET_QUOTAS = {
+    "guideline": 3,
+    "rct": 6,
+    "systematic_review": 4,
+    "observational": 4,
+    "case_report": 2,
+    "preclinical": 1,
+}
+
 # ==================== 12 个必选模块 ====================
 REQUIRED_SECTIONS = [
     "执行摘要",

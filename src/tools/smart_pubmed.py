@@ -22,7 +22,10 @@ from src.utils.logger import mtb_logger as logger
 from config.settings import (
     OPENROUTER_API_KEY,
     OPENROUTER_BASE_URL,
-    SUBGRAPH_MODEL  # 使用 flash 模型降低成本
+    SUBGRAPH_MODEL,  # 使用 flash 模型降低成本
+    DEFAULT_YEAR_WINDOW,
+    PUBMED_BROAD_SEARCH_COUNT,
+    PUBMED_BUCKET_QUOTAS,
 )
 
 
@@ -34,8 +37,49 @@ class SmartPubMedSearch:
     Layer 2: Expanded recall with MeSH+TIAB dual insurance + synonym expansion
     Layer 3: Minimal fallback with only disease + gene/variant
     Fallback: Regex-based best single concept (no LLM)
-    Post-filter: LLM batch relevance scoring on retrieved articles
+    Post-filter: LLM batch relevance scoring + study type classification
+    Sampling: Stratified sampling by MTB evidence bucket quotas
     """
+
+    # MTB 证据桶（按优先级排序，索引越小优先级越高）
+    MTB_EVIDENCE_BUCKETS = [
+        "guideline", "rct", "systematic_review",
+        "observational", "case_report", "preclinical",
+    ]
+
+    # PubMed PublicationType → MTB 桶映射
+    PUBTYPE_TO_BUCKET = {
+        # 指南
+        "Practice Guideline": "guideline",
+        "Guideline": "guideline",
+        "Consensus Development Conference": "guideline",
+        "Consensus Development Conference, NIH": "guideline",
+        # RCT / 临床试验
+        "Randomized Controlled Trial": "rct",
+        "Clinical Trial": "rct",
+        "Clinical Trial, Phase I": "rct",
+        "Clinical Trial, Phase II": "rct",
+        "Clinical Trial, Phase III": "rct",
+        "Clinical Trial, Phase IV": "rct",
+        "Controlled Clinical Trial": "rct",
+        "Pragmatic Clinical Trial": "rct",
+        # 系统综述 / 荟萃分析 / 综述
+        "Systematic Review": "systematic_review",
+        "Meta-Analysis": "systematic_review",
+        "Review": "systematic_review",
+        # 观察性研究
+        "Observational Study": "observational",
+        "Multicenter Study": "observational",
+        "Comparative Study": "observational",
+        # 病例报告
+        "Case Reports": "case_report",
+    }
+
+    # Preclinical 启发式关键词
+    PRECLINICAL_MARKERS = [
+        "in vitro", "cell line", "xenograft", "mouse model",
+        "animal model", "preclinical", "cell culture",
+    ]
 
     LAYER1_PROMPT = """You are a PubMed Search Specialist.
 
@@ -50,10 +94,18 @@ Strategy:
 6. Expand common acronyms: CRC → "colorectal cancer", NSCLC → "non-small cell lung cancer", mCRC → "metastatic colorectal cancer"
 7. Keep gene names (KRAS, EGFR), variant names (G12C, L858R), and drug names (cetuximab, osimertinib)
 8. Combine gene+variant as a single phrase when possible: "KRAS G12C"[tiab]
+9. IMPORTANT: Use AT MOST 4 AND groups. Prioritize concepts in this order:
+   (1) Disease/cancer type — ALWAYS include
+   (2) Gene/variant — ALWAYS include if present
+   (3) Drug name — include if it is the primary focus of the query
+   (4) Mechanism/outcome (resistance, efficacy, prognosis) — include only if ≤3 AND groups so far
+   DROP these from AND groups: geographic terms (China, Japan, etc.), staging info, secondary modifiers,
+   general terms like "inhibitor" when specific drug names already exist, biomarker subtypes (MSS, TMB-H)
+10. When multiple related concepts exist (e.g., SHP2 + SOS1 + inhibitor), merge them into ONE OR group rather than separate AND groups
 
 Example:
-  Input: KRAS G12C colorectal cancer resistance SHP2 SOS1 inhibitor
-  Output: ("colorectal cancer"[tiab] OR "colorectal neoplasm"[tiab]) AND ("KRAS G12C"[tiab]) AND ("resistance"[tiab] OR "resistant"[tiab]) AND ("SHP2"[tiab] OR "SOS1"[tiab] OR "inhibitor"[tiab])
+  Input: KRAS G12C colorectal cancer resistance SHP2 SOS1 inhibitor China
+  Output: ("colorectal cancer"[tiab] OR "colorectal neoplasm"[tiab]) AND ("KRAS G12C"[tiab]) AND ("SHP2"[tiab] OR "SOS1"[tiab] OR "resistance"[tiab])
 
 Output ONLY the raw PubMed query string. No explanation, no markdown.
 
@@ -68,17 +120,23 @@ Task: The previous search query returned ZERO results on PubMed. Build a BROADER
 Previous failed query (returned 0 results):
 {failed_queries}
 
-Strategy — use MeSH + TIAB dual insurance for each concept:
+Strategy — use MeSH + TIAB dual insurance, AND reduce AND groups:
 1. For each concept, use BOTH MeSH and free text: ("MeSH Term"[MeSH] OR "free text"[tiab])
 2. Expand drug synonyms: generic name + brand name + development code
    e.g., (osimertinib[tiab] OR Tagrisso[tiab] OR AZD9291[tiab])
 3. Expand variant notations: L858R OR "exon 21" OR "p.L858R"
 4. Expand disease terms with MeSH: ("Colorectal Neoplasms"[MeSH] OR "colorectal cancer"[tiab])
 5. Be more inclusive within each concept group (more OR synonyms)
-6. Remove overly specific terms that may have caused the previous query to fail
+6. CRITICAL: You MUST use FEWER AND groups than the failed query. Maximum 3 AND groups total.
+   - Analyze the failed query: identify which AND group likely caused zero results
+   - DROP geographic terms (China, Japan, etc.), mechanism modifiers, biomarker subtypes (MSS, TMB-H), general terms
+   - Keep only: Disease + Gene/Drug (primary) + one optional modifier
+   - Merge related concepts into OR groups instead of separate AND groups
+7. If the query involves a rare/new drug name, drop the combination partner drug and keep only the rare drug + disease
 
 Example:
-  Input: KRAS G12C colorectal cancer inhibitor resistance
+  Input: KRAS G12C colorectal cancer inhibitor resistance China
+  Failed: ... AND ("China"[tiab]) — too restrictive
   Output: ("Colorectal Neoplasms"[MeSH] OR "colorectal cancer"[tiab] OR "CRC"[tiab]) AND ("KRAS"[tiab] OR "KRAS G12C"[tiab]) AND ("drug resistance"[MeSH] OR "resistance"[tiab] OR "inhibitor"[tiab])
 
 Output ONLY the raw PubMed query string. No explanation, no markdown.
@@ -130,23 +188,43 @@ Evaluate relevance considering:
 Return ONLY valid JSON (no markdown, no explanation):
 {{"is_relevant": true/false, "relevance_score": 0-10, "matched_criteria": ["list"], "key_findings": "brief summary"}}"""
 
-    BATCH_RELEVANCE_FILTER_PROMPT = """You are a Clinical Literature Reviewer.
+    BATCH_RELEVANCE_FILTER_PROMPT = """You are a Clinical Literature Reviewer for a Molecular Tumor Board.
 
-Task: Evaluate if EACH abstract matches the user's specific search criteria.
+Task: Evaluate EACH abstract for relevance, evidence quality, and study type.
 
 User's Original Query: {original_query}
 
-Articles to evaluate (JSON array):
+Articles to evaluate (JSON array with title, abstract, and PubMed publication types):
 {articles_json}
 
 For EACH article, evaluate:
-- Does it discuss the specific disease/cancer type?
-- Does it mention the gene/biomarker of interest?
-- Does it discuss relevant treatments or clinical outcomes?
-- Does it match any specific numeric criteria from the original query?
+1. Relevance: Does it discuss the specific disease, gene/biomarker, treatment, or clinical outcomes?
+2. Evidence quality: Consider study design strength (Phase III RCT > Phase II > Phase I > prospective cohort > retrospective > case series > preclinical), sample size, and whether it reports primary endpoints.
+3. Study type classification: Classify into ONE of the following categories based on the study methodology described in the abstract.
+
+IMPORTANT: Use the "publication_types" field as a strong signal for study_type classification.
+If publication_types contains "Review", classify as "systematic_review" (not "preclinical").
+If publication_types contains "Randomized Controlled Trial", classify as "rct".
+
+study_type categories:
+- "guideline": Clinical practice guidelines, consensus statements, expert panel recommendations
+- "rct": Randomized controlled trials, clinical trials (any phase), interventional studies
+- "systematic_review": Systematic reviews, meta-analyses, pooled analyses, narrative reviews, literature reviews
+- "observational": Cohort studies, cross-sectional studies, retrospective analyses, real-world data, registry studies
+- "case_report": Case reports, case series (typically < 10 patients)
+- "preclinical": In vitro studies, cell line experiments, animal models, xenograft studies.
+  A review article that DISCUSSES preclinical data is NOT preclinical — classify it as "systematic_review".
+  Only classify as "preclinical" if the article reports ORIGINAL preclinical experimental results.
 
 Return ONLY a valid JSON array (no markdown, no explanation):
-[{{"pmid": "...", "is_relevant": true/false, "relevance_score": 0-10, "matched_criteria": ["..."], "key_findings": "..."}}]
+[{{"pmid": "...", "is_relevant": true/false, "relevance_score": 0-10, "study_type": "rct|systematic_review|observational|case_report|preclinical|guideline", "matched_criteria": ["..."], "key_findings": "..."}}]
+
+Scoring guideline for relevance_score:
+- 9-10: Directly relevant + high-quality evidence (large RCT, guideline, pivotal study)
+- 7-8: Directly relevant + moderate evidence (Phase I/II, prospective cohort)
+- 5-6: Partially relevant or lower evidence quality (retrospective, case series)
+- 1-4: Tangentially relevant or preclinical only
+- 0: Not relevant
 
 IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same order."""
 
@@ -300,6 +378,35 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
         logger.info(f"[SmartPubMed] 最佳单概念（兜底）: {fallback}")
         return fallback
 
+    def _classify_publication_bucket(self, article: Dict) -> Optional[str]:
+        """
+        基于 PubMed PublicationType XML 元数据对文章分桶。
+
+        Returns:
+            桶名（如 "rct", "guideline"）或 None（仅 "Journal Article"，需 LLM 二次分类）
+        """
+        pub_types = article.get("publication_types", [])
+
+        # 查映射表，取最高优先级桶
+        best_bucket = None
+        best_priority = len(self.MTB_EVIDENCE_BUCKETS)
+
+        for pt in pub_types:
+            bucket = self.PUBTYPE_TO_BUCKET.get(pt)
+            if bucket:
+                priority = self.MTB_EVIDENCE_BUCKETS.index(bucket)
+                if priority < best_priority:
+                    best_priority = priority
+                    best_bucket = bucket
+
+        # Preclinical 启发式：无映射匹配时检查 title/abstract 关键词
+        if best_bucket is None:
+            text = ((article.get("title") or "") + " " + (article.get("abstract") or "")).lower()
+            if any(marker in text for marker in self.PRECLINICAL_MARKERS):
+                best_bucket = "preclinical"
+
+        return best_bucket
+
     def _filter_batch(self, original_query: str, batch: List[Dict], batch_idx: int) -> List[Dict]:
         """
         评估一批文章的相关性（单次 LLM 调用评估多篇）
@@ -323,8 +430,9 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
             pmid_to_article[pmid] = article
             articles_for_eval.append({
                 "pmid": pmid,
-                "title": article.get("title", ""),
-                "abstract": abstract
+                "title": article.get("title") or "",
+                "abstract": abstract,
+                "publication_types": article.get("publication_types", []),
             })
 
         if not articles_for_eval:
@@ -356,6 +464,10 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
                     article["relevance_score"] = score
                     article["matched_criteria"] = eval_result.get("matched_criteria", [])
                     article["key_findings"] = eval_result.get("key_findings", "")
+                    # LLM 研究类型分类（用于 XML 未分类文章的二次分桶）
+                    llm_study_type = eval_result.get("study_type", "")
+                    if llm_study_type in self.MTB_EVIDENCE_BUCKETS:
+                        article["llm_study_type"] = llm_study_type
                     filtered.append(article)
 
             logger.debug(f"[SmartPubMed] 批次 {batch_idx}: {len(articles_for_eval)} -> {len(filtered)} 篇相关")
@@ -409,34 +521,112 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
         logger.info(f"[SmartPubMed] 筛选完成: {len(results)} -> {len(filtered)} 篇")
         return filtered
 
+    def _stratified_sample(self, articles: List[Dict], max_results: int) -> List[Dict]:
+        """
+        从已分桶的文章中按 MTB 证据配额进行分层采样。
+
+        策略:
+        1. 各桶内按 relevance_score 降序排列
+        2. 按 PUBMED_BUCKET_QUOTAS 配额取文章
+        3. 空桶剩余配额按优先级顺序重新分配给有余量的桶
+        4. 最终按 (桶优先级, -relevance_score) 排序返回
+        """
+        # Step 1: 分桶
+        buckets: Dict[str, List[Dict]] = {b: [] for b in self.MTB_EVIDENCE_BUCKETS}
+
+        for article in articles:
+            bucket = article.get("mtb_bucket")
+            if bucket and bucket in buckets:
+                buckets[bucket].append(article)
+            else:
+                # 兜底：未分类文章归入 observational
+                article["mtb_bucket"] = "observational"
+                buckets["observational"].append(article)
+
+        # Step 2: 各桶内按 relevance_score 降序排列
+        for bucket_name in buckets:
+            buckets[bucket_name].sort(
+                key=lambda x: x.get("relevance_score", 0), reverse=True
+            )
+
+        # 日志：分桶分布
+        dist = {b: len(arts) for b, arts in buckets.items() if arts}
+        logger.info(f"[SmartPubMed] 证据分桶: {dist}")
+
+        # Step 3: 按配额取文章
+        selected = []
+        remaining_by_bucket: Dict[str, List[Dict]] = {}
+
+        for bucket_name in self.MTB_EVIDENCE_BUCKETS:
+            quota = PUBMED_BUCKET_QUOTAS.get(bucket_name, 0)
+            available = buckets[bucket_name]
+            take = min(quota, len(available))
+            selected.extend(available[:take])
+            remaining_by_bucket[bucket_name] = available[take:]
+
+        # Step 4: 空桶剩余配额重分配
+        shortfall = max_results - len(selected)
+        if shortfall > 0:
+            for bucket_name in self.MTB_EVIDENCE_BUCKETS:
+                if shortfall <= 0:
+                    break
+                surplus = remaining_by_bucket.get(bucket_name, [])
+                take = min(shortfall, len(surplus))
+                if take > 0:
+                    selected.extend(surplus[:take])
+                    shortfall -= take
+
+        # Step 5: 按 (桶优先级, -relevance_score) 排序
+        def sort_key(article):
+            bucket = article.get("mtb_bucket", "observational")
+            try:
+                bucket_priority = self.MTB_EVIDENCE_BUCKETS.index(bucket)
+            except ValueError:
+                bucket_priority = len(self.MTB_EVIDENCE_BUCKETS)
+            relevance = article.get("relevance_score", 0)
+            return (bucket_priority, -relevance)
+
+        selected.sort(key=sort_key)
+
+        logger.info(f"[SmartPubMed] 分层采样: {len(articles)} -> {len(selected[:max_results])} 篇")
+        return selected[:max_results]
+
     def search(
         self,
         query: str,
         max_results: int = 20,
-        broad_search_count: int = 100,
-        skip_filtering: bool = False
+        broad_search_count: int = None,
+        skip_filtering: bool = False,
+        year_window: int = None,
     ) -> Tuple[List[Dict], str]:
         """
-        智能搜索主流程：3 层 LLM 递进检索 + 正则兜底
+        智能搜索主流程：3 层 LLM 递进检索 + 正则兜底 + 分层采样
 
         每层由 LLM 构建查询，后一层收到前一层失败的查询作为上下文，逐步放宽策略。
+        检索结果经 LLM 相关性+证据质量评分后，按 MTB 证据桶配额分层采样。
 
         Args:
             query: 用户原始查询（自然语言）
             max_results: 最终返回结果数
-            broad_search_count: API 宽搜数量（用于后筛选池）
+            broad_search_count: API 宽搜数量（用于后筛选池），默认 PUBMED_BROAD_SEARCH_COUNT
             skip_filtering: 跳过 LLM 筛选（用于简单查询）
+            year_window: 搜索时间窗口（年数），默认 DEFAULT_YEAR_WINDOW
 
         Returns:
             (筛选后的高相关性文献列表, 实际使用的查询字符串)
         """
-        logger.info(f"[SmartPubMed] 开始搜索: {query[:80]}...")
+        if broad_search_count is None:
+            broad_search_count = PUBMED_BROAD_SEARCH_COUNT
+        if year_window is None:
+            year_window = DEFAULT_YEAR_WINDOW
+
+        logger.info(f"[SmartPubMed] 开始搜索: {query[:80]}... (year_window={year_window})")
 
         failed_queries = []
 
         # Layer 1: 高精度 [tiab]-only 查询
         q1 = self._build_layer_query(1, query, failed_queries)
-        results = self.ncbi_client.search_pubmed(q1, max_results=broad_search_count)
+        results = self.ncbi_client.search_pubmed(q1, max_results=broad_search_count, year_window=year_window)
         if results:
             logger.info(f"[SmartPubMed] Layer 1 命中 {len(results)} 篇")
             return self._finalize_results(query, results, q1, max_results, skip_filtering)
@@ -444,7 +634,7 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
 
         # Layer 2: 扩召回 MeSH+TIAB+同义词
         q2 = self._build_layer_query(2, query, failed_queries)
-        results = self.ncbi_client.search_pubmed(q2, max_results=broad_search_count)
+        results = self.ncbi_client.search_pubmed(q2, max_results=broad_search_count, year_window=year_window)
         if results:
             logger.info(f"[SmartPubMed] Layer 2 命中 {len(results)} 篇")
             return self._finalize_results(query, results, q2, max_results, skip_filtering)
@@ -452,7 +642,7 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
 
         # Layer 3: 兜底 疾病+基因 only
         q3 = self._build_layer_query(3, query, failed_queries)
-        results = self.ncbi_client.search_pubmed(q3, max_results=broad_search_count)
+        results = self.ncbi_client.search_pubmed(q3, max_results=broad_search_count, year_window=year_window)
         if results:
             logger.info(f"[SmartPubMed] Layer 3 命中 {len(results)} 篇")
             return self._finalize_results(query, results, q3, max_results, skip_filtering)
@@ -460,7 +650,7 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
         # Fallback: 最佳单概念（纯正则，无 LLM）
         best_concept = self._extract_best_single_concept(query)
         logger.warning(f"[SmartPubMed] 3 层 LLM 均无结果，正则兜底: {best_concept}")
-        results = self.ncbi_client.search_pubmed(best_concept, max_results=broad_search_count)
+        results = self.ncbi_client.search_pubmed(best_concept, max_results=broad_search_count, year_window=year_window)
         if results:
             logger.info(f"[SmartPubMed] Fallback 命中 {len(results)} 篇")
             return self._finalize_results(query, results, best_concept, max_results, skip_filtering)
@@ -476,14 +666,44 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
         max_results: int,
         skip_filtering: bool
     ) -> Tuple[List[Dict], str]:
-        """对搜索结果进行 LLM 筛选（可选）并返回"""
+        """对搜索结果进行 XML 分桶 + LLM 筛选 + LLM 二次分桶 + 分层采样"""
         logger.info(f"[SmartPubMed] API 返回 {len(results)} 篇文献")
 
-        if skip_filtering:
-            return results[:max_results], used_query
+        # 第一阶段：XML 元数据分桶
+        for article in results:
+            article["mtb_bucket"] = self._classify_publication_bucket(article)
+            article["bucket_source"] = "xml" if article["mtb_bucket"] else None
 
+        xml_classified = sum(1 for a in results if a["mtb_bucket"] is not None)
+        logger.info(f"[SmartPubMed] XML 分桶: {xml_classified}/{len(results)} 篇已分类")
+
+        if skip_filtering:
+            # 无 LLM 可用：未分类文章用 observational 兜底
+            for article in results:
+                if article["mtb_bucket"] is None:
+                    article["mtb_bucket"] = "observational"
+                    article["bucket_source"] = "fallback"
+            return self._stratified_sample(results, max_results), used_query
+
+        # 第二阶段：LLM 相关性+证据质量打分 + study_type 分类
         filtered = self._filter_results(original_query, results)
-        return filtered[:max_results], used_query
+
+        # 合并分桶：XML 优先，None 的用 LLM study_type 补全
+        for article in filtered:
+            if article.get("mtb_bucket") is None:
+                llm_type = article.get("llm_study_type")
+                if llm_type and llm_type in self.MTB_EVIDENCE_BUCKETS:
+                    article["mtb_bucket"] = llm_type
+                    article["bucket_source"] = "llm"
+                else:
+                    article["mtb_bucket"] = "observational"
+                    article["bucket_source"] = "fallback"
+
+        llm_classified = sum(1 for a in filtered if a.get("bucket_source") == "llm")
+        logger.info(f"[SmartPubMed] LLM 二次分桶: {llm_classified} 篇补全")
+
+        # 第三阶段：分层采样
+        return self._stratified_sample(filtered, max_results), used_query
 
 
 # ==================== 全局单例 ====================

@@ -51,16 +51,17 @@ class NCBIClient:
 
     # ==================== PubMed 相关 ====================
 
-    def search_pubmed(self, query: str, max_results: int = 20) -> List[Dict]:
+    def search_pubmed(self, query: str, max_results: int = 20, year_window: int = None) -> List[Dict]:
         """
         搜索 PubMed 文献
 
         Args:
             query: 搜索关键词 (支持布尔运算符)
             max_results: 最大结果数
+            year_window: 搜索时间窗口（年数），如 10 表示最近 10 年
 
         Returns:
-            文献列表 [{pmid, title, authors, journal, year, abstract}]
+            文献列表 [{pmid, title, authors, journal, year, abstract, publication_types}]
         """
         self._rate_limit()
 
@@ -73,6 +74,14 @@ class NCBIClient:
             "retmode": "json",
             "sort": "relevance"
         })
+
+        # 日期范围过滤
+        if year_window and year_window > 0:
+            import datetime
+            current_year = datetime.datetime.now().year
+            params["datetype"] = "pdat"
+            params["mindate"] = str(current_year - year_window)
+            params["maxdate"] = str(current_year)
 
         try:
             logger.debug(f"[NCBI] PubMed 搜索: {query}")
@@ -176,13 +185,22 @@ class NCBIClient:
                 if abstract_elem is not None:
                     abstract = abstract_elem.text or ""
 
+                # 出版类型
+                publication_types = []
+                pub_type_list = article_elem.find("PublicationTypeList")
+                if pub_type_list is not None:
+                    for pt in pub_type_list.findall("PublicationType"):
+                        if pt.text:
+                            publication_types.append(pt.text)
+
                 results.append({
                     "pmid": pmid,
                     "title": title,
                     "authors": authors,  # 返回完整作者列表
                     "journal": journal,
                     "year": year,
-                    "abstract": abstract  # 返回完整摘要
+                    "abstract": abstract,  # 返回完整摘要
+                    "publication_types": publication_types,  # PubMed 出版类型
                 })
 
         except ET.ParseError as e:

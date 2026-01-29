@@ -1,0 +1,84 @@
+====================================================================================================
+SmartPubMed Pipeline Detailed Report
+====================================================================================================
+Query: Fulzerasib cetuximab colorectal cancer IBI351
+Time: 2026-01-29 19:43:36
+
+====================================================================================================
+STEP 1: LLM Query Build (Layer 1)
+====================================================================================================
+Generated: ("colorectal cancer"[tiab] OR "colorectal neoplasm"[tiab] OR "metastatic colorectal cancer"[tiab]) AND ("fulzerasib"[tiab] OR "IBI351"[tiab] OR "GFH925"[tiab]) AND ("cetuximab"[tiab])
+
+====================================================================================================
+STEP 2: PubMed API broad search (broad=200, year_window=10)
+====================================================================================================
+API returned: 0 articles
+
+====================================================================================================
+STEP 1: LLM Query Build (Layer 2)
+====================================================================================================
+Generated: ("Colorectal Neoplasms"[MeSH] OR "colorectal cancer"[tiab] OR "colorectal neoplasm"[tiab] OR "CRC"[tiab]) AND ("fulzerasib"[tiab] OR "IBI351"[tiab] OR "IBI-351"[tiab] OR "GFH925"[tiab] OR "GFH-925"[tiab])
+
+====================================================================================================
+STEP 2: PubMed API broad search (broad=200, year_window=10)
+====================================================================================================
+API returned: 2 articles
+
+====================================================================================================
+STEP 3: XML Metadata Bucketing
+====================================================================================================
+     1. PMID 39587006     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Fulzerasib: First Approval.
+      Journal: Drugs (2024)
+      Abstract: Fulzerasib (Dupert
+     2. PMID 40715048     | XML: rct                  | PubTypes: ['Journal Article', 'Clinical Trial, Phase I']
+      Title: Efficacy and safety of IBI351 (fulzerasib) monotherapy in KRAS
+      Journal: Signal transduction and targeted therapy (2025)
+      Abstract: IBI351 (also known as fulzerasib or GFH925), an irreversible covalent inhibitor of KRAS
+  Summary: XML classified 1/2
+
+====================================================================================================
+STEP 4: LLM Batch Evaluation (raw JSON responses)
+====================================================================================================
+--- Batch 1/1 (2 articles) ---
+PMIDs: ['39587006', '40715048']
+LLM raw response (len=1144):
+  [PASS  ] PMID 39587006     | score= 8 | study_type=systematic_review    | criteria=['Fulzerasib', 'IBI351', 'KRAS G12C', 'Regulatory Approval']
+           findings: Fulzerasib (IBI351) received its first global approval in China for the treatment of adult patients 
+  [PASS  ] PMID 40715048     | score= 8 | study_type=rct                  | criteria=['Fulzerasib', 'IBI351', 'KRAS G12C', 'Colorectal Cancer', 'Clinical Trial']
+           findings: This Phase I study evaluated IBI351 (fulzerasib) monotherapy in patients with KRAS G12C-mutated soli
+
+LLM filter summary: 2 -> 2 (score >= 5)
+
+====================================================================================================
+STEP 5: XML vs LLM Bucket Comparison (Manual Verification Table)
+====================================================================================================
+  No |       PMID   |       XML Bucket |       LLM study_type |     Final Bucket |   Source | Score | Title
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1 |   39587006   |             None |    systematic_review | systematic_review |      llm |     8 | Fulzerasib: First Approval.
+   2 |   40715048   |              rct |                  rct |              rct |      xml |     8 | Efficacy and safety of IBI351 (fulzerasib) monothe
+
+====================================================================================================
+STEP 6: Stratified Sampling
+====================================================================================================
+Quotas: {"guideline": 3, "rct": 6, "systematic_review": 4, "observational": 4, "case_report": 2, "preclinical": 1}
+Input: 2 articles, max_results=20
+  Pre-sample dist:  {"systematic_review": 1, "rct": 1}
+  Post-sample dist: {"rct": 1, "systematic_review": 1}
+  Sampled: 2 -> 2
+
+Final results:
+    1. [rct               ] (src=xml     , score=8) PMID 40715048: Efficacy and safety of IBI351 (fulzerasib) monotherapy in KRAS
+       Journal: Signal transduction and targeted therapy (2025)
+       Authors: Yuan Y, Deng Y, Jin Y, Guo Z, Pan Y et al.
+       Matched: ['Fulzerasib', 'IBI351', 'KRAS G12C', 'Colorectal Cancer', 'Clinical Trial']
+       Findings: This Phase I study evaluated IBI351 (fulzerasib) monotherapy in patients with KRAS G12C-mutated solid tumors, including colorectal cancer. The study reports on safety, tolerability, and preliminary efficacy (ORR, DCR), establishing the foundation for combination therapies like fulzerasib plus cetuximab.
+       Abstract: IBI351 (also known as fulzerasib or GFH925), an irreversible covalent inhibitor of KRAS
+       Link: https://pubmed.ncbi.nlm.nih.gov/40715048/
+    2. [systematic_review ] (src=llm     , score=8) PMID 39587006: Fulzerasib: First Approval.
+       Journal: Drugs (2024)
+       Authors: Lamb YN
+       Matched: ['Fulzerasib', 'IBI351', 'KRAS G12C', 'Regulatory Approval']
+       Findings: Fulzerasib (IBI351) received its first global approval in China for the treatment of adult patients with advanced KRAS G12C-mutated non-small cell lung cancer (NSCLC) who have received at least one systemic therapy. The article summarizes the drug's development, pharmacology, and the clinical data leading to approval.
+       Abstract: Fulzerasib (Dupert
+       Link: https://pubmed.ncbi.nlm.nih.gov/39587006/

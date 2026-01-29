@@ -1,0 +1,869 @@
+====================================================================================================
+SmartPubMed Pipeline Detailed Report
+====================================================================================================
+Query: ATM germline mutation colorectal cancer TMB-H MSS
+Time: 2026-01-29 19:44:11
+
+====================================================================================================
+STEP 1: LLM Query Build (Layer 1)
+====================================================================================================
+Generated: ("colorectal cancer"[tiab] OR "colorectal neoplasm"[tiab] OR "metastatic colorectal cancer"[tiab]) AND ("ATM"[tiab]) AND ("germline"[tiab] OR "mutation"[tiab] OR "variant"[tiab])
+
+====================================================================================================
+STEP 2: PubMed API broad search (broad=200, year_window=10)
+====================================================================================================
+API returned: 112 articles
+
+====================================================================================================
+STEP 3: XML Metadata Bucketing
+====================================================================================================
+     1. PMID 36243179     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Hereditary cancer variants and homologous recombination deficiency in biliary tr
+      Journal: Journal of hepatology (2023)
+      Abstract: The heritability and actionability of variants in homologous recombination-related genes in biliary tract cancers (BTCs) are uncertain. Although associations between BTC and BRCA germline variants hav...
+     2. PMID 27978560     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Prevalence and Spectrum of Germline Cancer Susceptibility Gene Mutations Among P
+      Journal: JAMA oncology (2017)
+      Abstract: Hereditary cancer syndromes infer high cancer risks and require intensive cancer surveillance, yet the prevalence and spectrum of these conditions among unselected patients with early-onset colorectal...
+     3. PMID 32658311     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Germline pathogenic variant spectrum in 25 cancer susceptibility genes in Turkis
+      Journal: International journal of cancer (2021)
+      Abstract: Inherited pathogenic variants account for 5% to 10% of all breast cancer (BC) and colorectal cancer (CRC) cases. Here, we sought to profile the pathogenic variants in 25 cancer susceptibility genes in...
+     4. PMID 33322746     | XML: systematic_review    | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't", 'Review']
+      Title: (no title)
+      Journal: Cells (2020)
+      Abstract: Germline alterations in many genes coding for proteins regulating DNA repair and DNA damage response (DDR) to DNA double-strand breaks (DDSB) have been recognized as pathogenic factors in hereditary c...
+     5. PMID 37852034     | XML: rct                  | PubTypes: ['Clinical Trial, Phase II', 'Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Efficacy of olaparib in advanced cancers with germline or somatic mutations in B
+      Journal: ESMO open (2023)
+      Abstract: The Belgian Precision initiative aims to maximize the implementation of tumor-agnostic next-generation sequencing in patients with advanced cancer and enhance access to molecularly guided treatment op...
+     6. PMID 40223084     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Germline variants in patients from the Iranian hereditary colorectal cancer regi
+      Journal: Cancer cell international (2025)
+      Abstract: Hereditary cancer syndromes account for 6-10% of all colorectal cancer (CRC) cases and 20% of early-onset CRC. Identifying novel pathogenic germline variants can impact genetic testing, counseling, an...
+     7. PMID 29478780     | XML: None(need LLM)       | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural', "Research Support, Non-U.S. Gov't"]
+      Title: Inherited DNA-Repair Defects in Colorectal Cancer.
+      Journal: American journal of human genetics (2018)
+      Abstract: Colorectal cancer (CRC) heritability has been estimated to be around 30%. However, mutations in the known CRC-susceptibility genes explain CRC risk in fewer than 10% of affected individuals. Germline ...
+     8. PMID 41413856     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Genomic characterization of colorectal tumors: insights into significantly mutat
+      Journal: BMC cancer (2025)
+      Abstract: Identifying significantly mutated genes in tumors aids in understanding disease etiology and survival and may aid in the discovery of new drug targets. We aimed to detect and characterize mutated gene...
+     9. PMID 30657113     | XML: systematic_review    | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't", 'Review']
+      Title: A review on role of ATM gene in hereditary transfer of colorectal cancer.
+      Journal: Acta bio-medica : Atenei Parmensis (2019)
+      Abstract: Colorectal cancer found to be the most commonly occurring cancer worldwide which can be prevented by screening and its curable if diagnosed early. Lynch syndrome/HNPCC being an autosomal genetic disea...
+    10. PMID 40020204     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Breast, Colorectal, and Pancreatic Cancer Mortality With Pathogenic Variants in 
+      Journal: Journal of clinical oncology : official journal of the American Society of Clinical Oncology (2025)
+      Abstract: Oncologists encounter patients with pathogenic variants (PVs) in 
+    11. PMID 30814645     | XML: rct                  | PubTypes: ['Clinical Trial', 'Journal Article']
+      Title: Prognostic impact of ATM mutations in patients with metastatic colorectal cancer
+      Journal: Scientific reports (2019)
+      Abstract: Tumors bearing homologous recombination deficiency are extremely sensitive to DNA double strand breaks induced by several chemotherapeutic agents. ATM gene, encoding a protein involved in DNA damage r...
+    12. PMID 34761457     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Survey of germline variants in cancer-associated genes in young adults with colo
+      Journal: Genes, chromosomes & cancer (2022)
+      Abstract: Colorectal cancer (CRC) incidence in young adults is rising. Identifying genetic risk factors is fundamental for the clinical management of patients and their families. This study aimed to identify cl...
+    13. PMID 30850667     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Germline susceptibility variants impact clinical outcome and therapeutic strateg
+      Journal: Scientific reports (2019)
+      Abstract: Although somatic mutations are the main cause of cancer, underlying germline alterations may affect cancer outcome. There is little information on comprehensive analysis of germline genome sequencing ...
+    14. PMID 39025327     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Folate intake and colorectal cancer risk according to genetic subtypes defined b
+      Journal: The American journal of clinical nutrition (2024)
+      Abstract: Folate is involved in multiple genetic, epigenetic, and metabolic processes, and inadequate folate intake has been associated with an increased risk of cancer.
+    15. PMID 38742845     | XML: observational        | PubTypes: ['Journal Article', 'Comparative Study']
+      Title: Molecular characteristics of early-onset compared with late-onset colorectal can
+      Journal: International journal of surgery (London, England) (2024)
+      Abstract: Early-onset colorectal cancer (EOCRC) is associated with a poorer prognosis relative to late-onset colorectal cancer (LOCRC), and its incidence has witnessed a gradual escalation in recent years. This...
+    16. PMID 36356413     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Canonical and uncanonical pathogenic germline variants in colorectal cancer pati
+      Journal: ESMO open (2022)
+      Abstract: Despite increasing use of next-generation sequencing (NGS), data concerning the gain in germline pathogenic variants (PVs) remain scanty, especially with respect to uncanonical ones. We aimed to verif...
+    17. PMID 37059275     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: KRAS mutated colorectal cancers with or without PIK3CA mutations: Clinical and m
+      Journal: Critical reviews in oncology/hematology (2023)
+      Abstract: Colorectal cancer is one of the most prevalent malignancies and its molecular pathogenesis has been intensely investigated for several decades. As a result, great progress has been made and targeted t...
+    18. PMID 39457381     | XML: systematic_review    | PubTypes: ['Journal Article', 'Systematic Review']
+      Title: Molecular Mechanism of Radioresponsiveness in Colorectal Cancer: A Systematic Re
+      Journal: Genes (2024)
+      Abstract: (no abstract)
+    19. PMID 39519399     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Germline Variants in DNA Interstrand-Cross Link Repair Genes May Contribute to I
+      Journal: International journal of molecular sciences (2024)
+      Abstract: Serrated polyposis syndrome (SPS) is characterized by the development of multiple colorectal serrated polyps and increased predisposition to colorectal cancer (CRC). However, the molecular basis of SP...
+    20. PMID 38010635     | XML: None(need LLM)       | PubTypes: ['English Abstract', 'Journal Article']
+      Title: [The structure of pathogenic germline variants in colorectal cancer in Moscow pa
+      Journal: Arkhiv patologii (2023)
+      Abstract: Describe the structure of pathogenic germline variants and clinical and anatomical features in colorectal cancer patients in Moscow.
+    21. PMID 36745477     | XML: None(need LLM)       | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural']
+      Title: Germline Cancer Gene Expression Quantitative Trait Loci Are Associated with Loca
+      Journal: Cancer research (2023)
+      Abstract: Somatic mutations drive cancer development and are relevant to patient responses to treatment. Emerging evidence shows that variations in the somatic genome can be influenced by the germline genetic b...
+    22. PMID 39740007     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Comprehensive characterization of MCL-1 in patients with colorectal cancer: Expr
+      Journal: International journal of cancer (2025)
+      Abstract: Myeloid cell leukemia 1 (MCL-1) is a member of the B-cell lymphoma 2 protein family and has anti-apoptotic functions. Deregulation of MCL-1 has been reported in several cancers, including lung and bre...
+    23. PMID 39822019     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Mutation Analysis of TMB-High Colorectal Cancer: Insights Into Molecular Pathway
+      Journal: Cancer science (2025)
+      Abstract: Colorectal cancer (CRC) is well characterized in terms of genetic mutations and the mechanisms by which they contribute to carcinogenesis. Mutations in APC, TP53, and KRAS are common in CRC, indicatin...
+    24. PMID 35616648     | XML: None(need LLM)       | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural']
+      Title: Cancer Risk C (CR-C), a functional genomics test is a sensitive and rapid test f
+      Journal: Genetics in medicine : official journal of the American College of Medical Genetics (2022)
+      Abstract: Heritable pathogenic variants in the DNA mismatch repair (MMR) pathway cause Lynch syndrome, a condition that significantly increases risk of colorectal and other cancers. At least half of individuals...
+    25. PMID 30062471     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Association Between Fusobacterium nucleatum, Pathway Mutation, and Patient Progn
+      Journal: Annals of surgical oncology (2018)
+      Abstract: There is a close link between Fusobacterium nucleatum and colorectal cancer (CRC) tumorigenesis and chemoresistance. However, the genetic characteristics and clinical significance of CRC related with ...
+    26. PMID 41013697     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Genomic characterization of patients with colorectal cancer.
+      Journal: Hereditary cancer in clinical practice (2025)
+      Abstract: Hereditary colorectal cancer (CRC) predisposition syndromes account for 5-10% of all diagnosed CRC cases. Lynch syndrome (LS), Familial Adenomatous Polyposis (FAP), and MUTYH-associated polyposis (MAP...
+    27. PMID 37096801     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Differences in DNA damage repair gene mutations between left- and right-sided co
+      Journal: Cancer medicine (2023)
+      Abstract: Colorectal cancer (CRC) is the third leading cause of cancer-related deaths worldwide. Studies have shown that the DNA damage response (DDR) mutation is strongly associated with microsatellite instabi...
+    28. PMID 33854094     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Enhancing the landscape of colorectal cancer using targeted deep sequencing.
+      Journal: Scientific reports (2021)
+      Abstract: Targeted next-generation sequencing (NGS) technology detects specific mutations that can provide treatment opportunities for colorectal cancer (CRC) patients. We included 145 CRC patients who underwen...
+    29. PMID 28199979     | XML: preclinical          | PubTypes: ['Journal Article']
+      Title: ATM mutations and E-cadherin expression define sensitivity to EGFR-targeted ther
+      Journal: Oncotarget (2017)
+      Abstract: EGFR-targeted therapy is a key treatment approach in patients with RAS wildtype metastatic colorectal cancers (CRC). Still, also RAS wildtype CRC may be resistant to EGFR-targeted therapy, with few pr...
+    30. PMID 35567913     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Concurrent BRAFV600E and BRCA Mutations in MSS Metastatic Colorectal Cancer: Pre
+      Journal: Cancer treatment and research communications (2022)
+      Abstract: BRAF V600E+ microsatellite stable (MSS) metastatic colorectal cancer (mCRC) patients comprise up to 10% of advanced CRC. They have a poor prognosis with a median survival typically <1 year. Despite us...
+    31. PMID 40118241     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Analysis of germline-somatic mutational connections in colorectal cancer reveals
+      Journal: Cancer letters (2025)
+      Abstract: Colorectal cancer (CRC) genetic testing of regions beyond clinical guidelines has revealed a substantial number of likely pathogenic germline mutations (GMs). It remains largely undetermined whether a...
+    32. PMID 38776551     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: A comprehensive analysis of POLE/POLD1 genomic alterations in colorectal cancer.
+      Journal: The oncologist (2024)
+      Abstract: Pathogenic mutations in POLE/POLD1 lead to decreased fidelity of DNA replication, resulting in a high tumor mutational burden (TMB-H), defined as TMB ≥ 10 mut/Mb, independent of deficient mismatch rep...
+    33. PMID 31127692     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Molecular characterization of colorectal cancer using whole-exome sequencing in 
+      Journal: Cancer medicine (2019)
+      Abstract: Next-generation sequencing (NGS) technology is currently used to establish mutational profiles in many heterogeneous diseases. The aim of this study was to evaluate the mutational spectrum in Taiwanes...
+    34. PMID 29599344     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Racial Disparities in the Molecular Landscape of Cancer.
+      Journal: Anticancer research (2018)
+      Abstract: African Americans (AA) have the highest incidence and mortality of any racial/ethnic group in the US for most cancer types. Heterogeneity in the molecular biology of cancer, as a contributing factor t...
+    35. PMID 33760988     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Disease spectrum of gastric cancer susceptibility genes.
+      Journal: Medical oncology (Northwood, London, England) (2021)
+      Abstract: Pathogenic variants in germline cancer susceptibility genes can increase the risk of a large number of diseases. Our study aims to assess the disease spectrum of gastric cancer susceptibility genes an...
+    36. PMID 33836681     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Multi gene mutation signatures in colorectal cancer patients: predict for the di
+      Journal: BMC cancer (2021)
+      Abstract: Identifying gene mutation signatures will enable a better understanding for the occurrence and development of colorectal cancer (CRC), and provide some potential biomarkers for clinical practice. Curr...
+    37. PMID 35098669     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Molecular characteristics of young-onset colorectal cancer in Vietnamese patient
+      Journal: Asia-Pacific journal of clinical oncology (2022)
+      Abstract: Colorectal cancer (CRC) is one of the most common cancer globally. Understanding the genetic characteristics of CRC is essential for appropriate treatment and genetic counseling.
+    38. PMID 35154239     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Prevalence and Spectrum of Predisposition Genes With Germline Mutations Among Ch
+      Journal: Frontiers in genetics (2021)
+      Abstract: (no abstract)
+    39. PMID 36899918     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: PGNneo: A Proteogenomics-Based Neoantigen Prediction Pipeline in Noncoding Regio
+      Journal: Cells (2023)
+      Abstract: The development of a neoantigen-based personalized vaccine has promise in the hunt for cancer immunotherapy. The challenge in neoantigen vaccine design is the need to rapidly and accurately identify, ...
+    40. PMID 40594815     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Identification of ferroptosis related genes and subtypes in colorectal cancer.
+      Journal: Scientific reports (2025)
+      Abstract: Colorectal cancer (CRC) is the third most common cancer and the second leading cause of cancer-related deaths worldwide. Increasing evidence has shown that ferroptosis plays a significant regulatory r...
+    41. PMID 36309653     | XML: preclinical          | PubTypes: ['Journal Article']
+      Title: ATM kinase inhibitor AZD0156 in combination with irinotecan and 5-fluorouracil i
+      Journal: BMC cancer (2022)
+      Abstract: AZD0156 is an oral inhibitor of ATM, a serine threonine kinase that plays a key role in DNA damage response (DDR) associated with double-strand breaks. Topoisomerase-I inhibitor irinotecan is used cli...
+    42. PMID 35723313     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Multigene Panel Sequencing Reveals Cancer-Specific and Common Somatic Mutations 
+      Journal: Current issues in molecular biology (2022)
+      Abstract: This study aims at identifying common pathogenic somatic mutations at different stages of colorectal carcinogenesis in Egyptian patients. Our cohort included colonoscopic biopsies collected from 120 p...
+    43. PMID 38214010     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Investigations of the novel checkpoint kinase 1 inhibitor SRA737 in non-small ce
+      Journal: Exploration of targeted anti-tumor therapy (2023)
+      Abstract: In response to DNA damage the serine/threonine-specific protein kinase checkpoint kinase 1 (CHK1) is activated allowing cells to enter S phase (S) and G2 phase (G2) cell-cycle arrest. CHK1 inhibitors ...
+    44. PMID 31400926     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Genomic alterations in signet ring and mucinous patterned colorectal carcinoma.
+      Journal: Pathology, research and practice (2019)
+      Abstract: The genetic alterations (GAs) in two specific histological subtypes of colorectal cancer (CRC), signet ring cell colorectal carcinoma (SRC) and mucinous colorectal carcinoma (MC), are not well known. ...
+    45. PMID 36717525     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Characteristics of familial pancreatic cancer families with additional colorecta
+      Journal: Familial cancer (2023)
+      Abstract: Familial pancreatic cancer (FPC) is a rare hereditary tumor entity with broad phenotypic heterogeneity, including colorectal carcinoma (CRC) in some families. The underlying factors for this co-occurr...
+    46. PMID 30042065     | XML: rct                  | PubTypes: ['Clinical Trial, Phase III', 'Journal Article', 'Randomized Controlled Trial', "Research Support, Non-U.S. Gov't"]
+      Title: Mutation burden and other molecular markers of prognosis in colorectal cancer tr
+      Journal: The lancet. Gastroenterology & hepatology (2018)
+      Abstract: Molecular indicators of colorectal cancer prognosis have been assessed in several studies, but most analyses have been restricted to a handful of markers. We aimed to identify prognostic biomarkers fo...
+    47. PMID 28975465     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Expanding the spectrum of germline variants in cancer.
+      Journal: Human genetics (2017)
+      Abstract: Our ability to identify germline variants in hereditary cancer cases remains challenged by the incomplete cataloging of relevant genes and lack of consensus on who should be tested. We designed a pane...
+    48. PMID 32408300     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Genomic Profiling of Stage II Colorectal Cancer Identifies Candidate Genes Assoc
+      Journal: Oncology (2020)
+      Abstract: Identification of high-risk stage II colorectal cancer (CRC) patients, potential candidates for adjuvant chemotherapy, is challenging. Current clinical guidelines rely mainly on histopathological mark...
+    49. PMID 34042312     | XML: preclinical          | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: The effects of ARID1A mutations on colorectal cancer and associations with PD-L1
+      Journal: Cancer reports (Hoboken, N.J.) (2022)
+      Abstract: ARID1A is a component of the SWI/SNF complex, which controls the accessibility of proteins to DNA. ARID1A mutations are frequently observed in colorectal cancers (CRCs) and have been reported to be as...
+    50. PMID 30032112     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: A Novel Inhibitor Targets Both Wnt Signaling and ATM/p53 in Colorectal Cancer.
+      Journal: Cancer research (2018)
+      Abstract: For 2017, the estimated lifetime risk of developing colorectal cancer was 1 in 22. Even though preventative colonoscopy screening and standard-of-care surgery, radiation, and chemotherapy have decreas...
+    51. PMID 33298767     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Mutations in DNA Repair Genes and Clinical Outcomes of Patients With Metastatic 
+      Journal: American journal of clinical oncology (2021)
+      Abstract: First-line regimens in the treatment of metastatic colorectal cancer (mCRC) combine a fluoropyrimidine with oxaliplatin (FOLFOX/XELOX) or irinotecan (FOLFIRI). There is limited efficacy data to guide ...
+    52. PMID 31428572     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Mutation Spectrum of Cancer-Associated Genes in Patients With Early Onset of Col
+      Journal: Frontiers in oncology (2019)
+      Abstract: (no abstract)
+    53. PMID 39452477     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: CDX2-Suppressed Colorectal Cancers Possess Potentially Targetable Alterations in
+      Journal: Diseases (Basel, Switzerland) (2024)
+      Abstract: Colorectal cancer, a prevalent gastrointestinal carcinoma, has a high risk for recurrence when locally advanced and remains lethal when in an advanced stage. Prognostic biomarkers may help in better d...
+    54. PMID 29870526     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: The expression of telomere-related proteins and DNA damage response and their as
+      Journal: PloS one (2018)
+      Abstract: Colorectal cancer is the leading cause of cancer-related deaths in Saudi Arabia. Cancer has a multifactorial nature and can be described as a disease of altered gene expression. The profiling of gene ...
+    55. PMID 26778106     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: The risk for developing cancer in Israeli ATM, BLM, and FANCC heterozygous mutat
+      Journal: Cancer genetics (2016)
+      Abstract: Cancer risks in heterozygous mutation carriers of the ATM, BLM, and FANCC genes are controversial. To shed light on this issue, cancer rates were evaluated by cross referencing asymptomatic Israeli he...
+    56. PMID 37323311     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Identification of Genomic Alterations in Thai Patients With Colorectal Cancer Us
+      Journal: Cureus (2023)
+      Abstract: Introduction Colorectal cancer (CRC) is one of the leading causes of death and illness in the general population. Although the incidence of CRC is steadily decreasing worldwide, it is being diagnosed ...
+    57. PMID 28182994     | XML: preclinical          | PubTypes: ['Journal Article']
+      Title: ATM-Deficient Colorectal Cancer Cells Are Sensitive to the PARP Inhibitor Olapar
+      Journal: Translational oncology (2017)
+      Abstract: The ataxia telangiectasia mutated (ATM) protein kinase plays a central role in the cellular response to DNA damage. Loss or inactivation of both copies of the ATM gene (ATM) leads to ataxia telangiect...
+    58. PMID 33959500     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Genomic Alteration Characterization in Colorectal Cancer Identifies a Prognostic
+      Journal: Frontiers in oncology (2021)
+      Abstract: Genomic alterations constitute crucial elements of colorectal cancer (CRC). However, a comprehensive understanding of CRC genomic alterations from a global perspective is lacking. In this study, a tot...
+    59. PMID 33653301     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Sequential and co-occurring DNA damage response genetic mutations impact surviva
+      Journal: BMC cancer (2021)
+      Abstract: Certain sequences of genomic mutations can lead to cancer formation and affect treatment outcomes and drug resistance. We constructed a cancer evolutionary tree using bulk-targeted deep sequencing to ...
+    60. PMID 41266732     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: PARP inhibitor BMN673 triggers PARylation-mediated ATF4-GDF15 pathway to drive a
+      Journal: Molecular biomedicine (2025)
+      Abstract: Colorectal cancer (CRC) is a serious threat to human health, with an approximate 14% mutation rate in the ataxia telangiectasia-mutated (ATM) gene, which is involved in homologous recombination repair...
+    61. PMID 37516046     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Screening Practices for Breast and Nonbreast Cancers in High-Risk Mutation Carri
+      Journal: The Journal of surgical research (2023)
+      Abstract: Women with breast cancer often undergo genetic testing and may have a pathogenic variant associated with multiple cancers. This study examines the current screening practices for breast and nonbreast ...
+    62. PMID 36077770     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Whole-Exome Sequencing Identifies Pathogenic Germline Variants in Patients with 
+      Journal: Cancers (2022)
+      Abstract: Lynch syndrome (LS) is the most common hereditary colorectal cancer (CRC) syndrome, characterized by germline pathogenic variants in mismatch repair (MMR)-related genes that lead to microsatellite ins...
+    63. PMID 37453313     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Uncommon variants detected via hereditary cancer panel and suggestions for genet
+      Journal: Mutation research (2023)
+      Abstract: Hereditary cancer syndromes constitute 5-10% of all cancers. The development of next-generation sequencing technologies has made it possible to examine many hereditary cancer syndrome-causing genes in...
+    64. PMID 35054819     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Primary Founder Mutations in the 
+      Journal: International journal of molecular sciences (2022)
+      Abstract: The clonal composition of a malignant tumor strongly depends on cellular dynamics influenced by the asynchronized loss of DNA repair mechanisms. Here, our aim was to identify founder mutations leading...
+    65. PMID 29575536     | XML: None(need LLM)       | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural']
+      Title: Mutation analysis of adenomas and carcinomas of the colon: Early and late driver
+      Journal: Genes, chromosomes & cancer (2018)
+      Abstract: Colorectal cancer (CRC) accounts for about 8% of all new cancer cases diagnosed in the US. We used whole exome sequence data from triplet samples (colon carcinoma, colon adenoma, and normal tissue) fr...
+    66. PMID 31632068     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Knockdown Of TRIM31 Enhances Colorectal Cancer Radiosensitivity By Inducing DNA 
+      Journal: OncoTargets and therapy (2019)
+      Abstract: Biomarkers that predict radiosensitivity are essential for personalized radiotherapy. We performed microarray analysis for rectal cancer patients between those with good response and poor response to ...
+    67. PMID 28453695     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Genetic variants of DNA repair-related genes predict efficacy of TAS-102 in pati
+      Journal: Annals of oncology : official journal of the European Society for Medical Oncology (2017)
+      Abstract: Tri-phosphorylated trifluridine (FTD) incorporation into DNA is TAS-102's main anti-tumor action. We tested whether genetic polymorphisms in homologous recombination (HR) and cell cycle checkpoint pat...
+    68. PMID 30730459     | XML: None(need LLM)       | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural']
+      Title: Detection of Pathogenic Germline Variants Among Patients With Advanced Colorecta
+      Journal: Diseases of the colon and rectum (2019)
+      Abstract: Genomic profiling of colorectal cancer aims to identify actionable somatic mutations but can also discover incidental germline findings.
+    69. PMID 31360874     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Germline Pathogenic Variants in Homologous Recombination and DNA Repair Genes in
+      Journal: JNCI cancer spectrum (2018)
+      Abstract: Growing evidence suggests a role for cancer susceptibility genes such as 
+    70. PMID 38567167     | XML: case_report          | PubTypes: ['Case Reports', 'Journal Article']
+      Title: Synchronous Papillary Thyroid Cancer and Colorectal Cancer in a Young Patient wi
+      Journal: Case reports in oncology (2024)
+      Abstract: Mutations of 
+    71. PMID 33294277     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Molecular screening and clinicopathologic characteristics of Lynch-like syndrome
+      Journal: American journal of cancer research (2020)
+      Abstract: Colorectal cancers (CRC) with microsatellite instability (MSI) or mismatch repair-deficiency (dMMR), but without detectable MMR germline mutations are termed Lynch-like syndrome (LLS). We assess the c...
+    72. PMID 33509806     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Germline Pathogenic Variants in the Ataxia Telangiectasia Mutated (
+      Journal: Cancer prevention research (Philadelphia, Pa.) (2021)
+      Abstract: Pathogenic variants (PVs) in 
+    73. PMID 34349242     | XML: preclinical          | PubTypes: ['Journal Article']
+      Title: Wild-type IDH2 protects nuclear DNA from oxidative damage and is a potential the
+      Journal: Oncogene (2021)
+      Abstract: Although the role of isocitrate dehydrogenase (IDH) mutation in promoting cancer development has been well-characterized, the impact of wild-type IDH on cancer cells remains unclear. Here we show that...
+    74. PMID 38773787     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Incidental germline findings during comprehensive genomic profiling of pancreati
+      Journal: Mutagenesis (2025)
+      Abstract: Multidisciplinary molecular tumor boards (MTB) are already well established in many comprehensive cancer centers and play an important role in the individual treatment planning for cancer patients. Co...
+    75. PMID 27756406     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Spatio-temporal mutation profiles of case-matched colorectal carcinomas and thei
+      Journal: Molecular cancer (2016)
+      Abstract: Targeted next generation sequencing (tNGS) has become part of molecular pathology diagnostics for determining RAS mutation status in colorectal cancer (CRC) patients as predictive tool for decision on...
+    76. PMID 36983044     | XML: case_report          | PubTypes: ['Case Reports', 'Journal Article']
+      Title: Germline Variants in MLH1 and ATM Genes in a Young Patient with MSI-H in a Preca
+      Journal: International journal of molecular sciences (2023)
+      Abstract: Lynch syndrome (LS) is an autosomal dominant inherited disorder that primarily predisposes individuals to colorectal and endometrial cancer. It is associated with pathogenic variants in DNA mismatch r...
+    77. PMID 39150041     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Ataxia telangiectasia-mutated rs56009889 and risk of common cancers.
+      Journal: European journal of cancer prevention : the official journal of the European Cancer Prevention Organisation (ECP) (2025)
+      Abstract: A polymorphic variant in the ataxia telangiectasia-mutated ( ATM ) gene, rs56009889, was recently associated with an increased risk of lung cancer. We studied the role of this variant in the etiology ...
+    78. PMID 29048575     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: MicroRNA-binding site polymorphisms in genes involved in colorectal cancer etiop
+      Journal: Mutagenesis (2017)
+      Abstract: According to the Vogelstein's model of colorectal carcinogenesis, genetic variations in highly penetrant genes may be involved in the colorectal cancer (CRC) pathogenesis. Similarly, aberrant function...
+    79. PMID 41424250     | XML: case_report          | PubTypes: ['Journal Article', 'Case Reports']
+      Title: Response to DNA-damaging agents and PARP inhibitors in ATM mutated metastatic co
+      Journal: Chinese clinical oncology (2025)
+      Abstract: The ataxia-telangiectasia mutated (ATM) gene is central to homologous recombination (HR) repair and cell-cycle checkpoint control. Pathogenic ATM mutations are increasingly recognized in metastatic co...
+    80. PMID 40563065     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: The landscape of germline variants in breast and colorectal cancer susceptibilit
+      Journal: Journal of neuro-oncology (2025)
+      Abstract: Heritable genetic contributions to familial and sporadic pituitary tumorigenesis are poorly understood. There is emerging evidence that germline variants in classical cancer susceptibility genes may i...
+    81. PMID 37761360     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: The Genomic Landscape of Colorectal Cancer in the Saudi Arabian Population Using
+      Journal: Diagnostics (Basel, Switzerland) (2023)
+      Abstract: Next-generation sequencing (NGS) technology detects specific mutations that can provide treatment opportunities for colorectal cancer (CRC) patients.
+    82. PMID 40780402     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Whole Exome Sequencing-identified Germline Variants Underlie High Familial Risk 
+      Journal: Clinical gastroenterology and hepatology : the official clinical practice journal of the American Gastroenterological Association (2025)
+      Abstract: Germline genetic factors influence the clinical features of colorectal cancer (CRC); however, these factors remain underexplored in Taiwan. This study aims to evaluate the pathogenicity of germline va...
+    83. PMID 40869938     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Unusual Profile of Germline Genetic Variants in Unselected Colorectal Cancer Pat
+      Journal: Genes (2025)
+      Abstract: The profile of germline genetic variants among colorectal cancer patients in Panama has not yet been explored.
+    84. PMID 34585040     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Underdiagnosis of Hereditary Colorectal Cancers Among Medicare Patients: Genetic
+      Journal: JCO precision oncology (2021)
+      Abstract: Strict clinical criteria used by Medicare for germline testing for Lynch syndrome (LS) could lead to missed diagnoses of hereditary cancer syndromes given variable individual and family phenotypes. Th...
+    85. PMID 41160399     | XML: rct                  | PubTypes: ['Clinical Trial, Phase I', 'Journal Article', 'Multicenter Study']
+      Title: Phase 1 clinical trial of the ataxia telangiectasia and Rad3-related inhibitor b
+      Journal: Cancer (2025)
+      Abstract: Ataxia telangiectasia and Rad3-related (ATR) inhibition with berzosertib potentiates the efficacy of irinotecan in preclinical models. The authors hypothesize that this combination is well tolerated, ...
+    86. PMID 34503238     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Prevalence of Germline Pathogenic Variants in Cancer Predisposing Genes in Czech
+      Journal: Cancers (2021)
+      Abstract: (1) Background: The proportion and spectrum of germline pathogenic variants (PV) associated with an increased risk for pancreatic ductal adenocarcinoma (PDAC) varies among populations. (2) Methods: We...
+    87. PMID 28949453     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Somatic mutation detection using various targeted detection assays in paired sam
+      Journal: Molecular oncology (2016)
+      Abstract: Assessing circulating tumor DNA (ctDNA) is a promising method to evaluate somatic mutations from solid tumors in a minimally-invasive way. In a group of twelve metastatic colorectal cancer (mCRC) pati...
+    88. PMID 40930024     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Impact of DNA damage repair alterations on real-world response to therapy in met
+      Journal: ESMO open (2025)
+      Abstract: Alterations in DNA damage repair (DDR) pathway genes can be exploited by cytotoxic chemotherapy regimens that induce DNA damage. Platinum chemotherapy has been shown to be particularly effective in DD...
+    89. PMID 34083289     | XML: case_report          | PubTypes: ['Case Reports', 'Journal Article']
+      Title: Molecular and Radiological Features of Microsatellite Stable Colorectal Cancer C
+      Journal: Anticancer research (2021)
+      Abstract: The majority of colorectal cancer (CRC) cases, which are microsatellite stable (MSS) and do not harbor mismatch repair deficiency/microsatellite instability, are resistant to immunotherapy. Identifica...
+    90. PMID 37854294     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: The Largest Chinese Cohort Study Indicates Homologous Recombination Pathway Gene
+      Journal: Research (Washington, D.C.) (2023)
+      Abstract: While genetic factors were associated with over 30% of colorectal cancer (CRC) patients, mutations in CRC-susceptibility genes were identified in only 5% to 10% of these patients. Besides, previous st...
+    91. PMID 33630411     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Co-occurrence of germline pathogenic variants for different hereditary cancer sy
+      Journal: Cancer communications (London, England) (2021)
+      Abstract: Lynch syndrome (LS) is a hereditary condition characterized by a high risk of colorectal cancer, endometrial cancer, and other neoplasia associated with germline alterations in DNA mismatch repair gen...
+    92. PMID 32522261     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: A comprehensive custom panel evaluation for routine hereditary cancer testing: i
+      Journal: Journal of translational medicine (2020)
+      Abstract: In the context of our Regional Program of Hereditary Cancer, individuals fulfilling the criteria are tested for germline mutations to subsequently establish the clinical management. Our standard diagn...
+    93. PMID 35740599     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Deep Sequencing of Early T Stage Colorectal Cancers Reveals Disruption of Homolo
+      Journal: Cancers (2022)
+      Abstract: Early T stage colorectal cancers (CRC) that invade lymph nodes (Stage IIIA) are rare and greatly under-represented in large-scale genomic mapping projects. We retrieved 10 Stage IIIA CRC cases, matche...
+    94. PMID 28389531     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: CHK1-targeted therapy to deplete DNA replication-stressed, p53-deficient, hyperd
+      Journal: Gut (2018)
+      Abstract: Cancer stem cells (CSCs) are responsible for tumour formation and spreading, and their targeting is required for tumour eradication. There are limited therapeutic options for advanced colorectal cance...
+    95. PMID 34897210     | XML: None(need LLM)       | PubTypes: ['Journal Article', 'Video-Audio Media']
+      Title: Application of Multigene Panel Testing in Patients With High Risk for Hereditary
+      Journal: Diseases of the colon and rectum (2022)
+      Abstract: The genetic test solely based on the clinical features of hereditary colorectal cancer has limitations in clinical practice.
+    96. PMID 31336886     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Genetic Aberration Analysis in Thai Colorectal Adenoma and Early-Stage Adenocarc
+      Journal: Cancers (2019)
+      Abstract: Colorectal adenomas are precursor lesions of colorectal adenocarcinoma. The transition from adenoma to carcinoma in patients with colorectal cancer (CRC) has been associated with an accumulation of ge...
+    97. PMID 39457514     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Influence of Genetic Polymorphisms on the Age at Cancer Diagnosis in a Homogenou
+      Journal: Biomedicines (2024)
+      Abstract: (no abstract)
+    98. PMID 31876540     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Increased Risk of Acute Myelogenous Leukemia After Early Onset but Not Late-Onse
+      Journal: American journal of clinical oncology (2020)
+      Abstract: Early onset colorectal cancer in persons younger than 50 years is increasingly common. Clinical and molecular characterizations reveal a distinctive disease. Thirty percent of patients have mutations ...
+    99. PMID 34503126     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Comprehensively Exploring the Mutational Landscape and Patterns of Genomic Evolu
+      Journal: Cancers (2021)
+      Abstract: Tumor heterogeneity results in more than 50% of hypermutated cancers failing to respond to standard immunotherapy. There are numerous challenges in terms of drug resistance, therapeutic strategies, an...
+   100. PMID 34695900     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: [Difference analysis of somatic mutations between deficient mismatch repair and 
+      Journal: Zhonghua zhong liu za zhi [Chinese journal of oncology] (2021)
+      Abstract: (no abstract)
+   101. PMID 30927264     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Opportunistic testing of BRCA1, BRCA2 and mismatch repair genes improves the yie
+      Journal: International journal of cancer (2019)
+      Abstract: Multigene panels provide a powerful tool for analyzing several genes simultaneously. We evaluated the frequency of pathogenic variants (PV) in customized predefined panels according to clinical suspic...
+   102. PMID 27568332     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Targeted molecular profiling of rare genetic alterations in colorectal cancer us
+      Journal: Medical oncology (Northwood, London, England) (2016)
+      Abstract: Mutation frequencies of common genetic alterations in colorectal cancer have been in the spotlight for many years. This study highlights few rare somatic mutations, which possess the attributes of a p...
+   103. PMID 32568634     | XML: rct                  | PubTypes: ['Clinical Trial, Phase I', 'Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Phase I Trial of First-in-Class ATR Inhibitor M6620 (VX-970) as Monotherapy or i
+      Journal: Journal of clinical oncology : official journal of the American Society of Clinical Oncology (2020)
+      Abstract: Preclinical studies demonstrated that ATR inhibition can exploit synthetic lethality (eg, in cancer cells with impaired compensatory DNA damage responses through ATM loss) as monotherapy and combined ...
+   104. PMID 31811167     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Results of multigene panel testing in familial cancer cases without genetic caus
+      Journal: Scientific reports (2019)
+      Abstract: We have surveyed 191 prospectively sampled familial cancer patients with no previously detected pathogenic variant in the BRCA1/2, PTEN, TP53 or DNA mismatch repair genes. In all, 138 breast cancer (B...
+   105. PMID 36387226     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Concurrent loss of MLH1, PMS2 and MSH6 immunoexpression in digestive system canc
+      Journal: Frontiers in oncology (2022)
+      Abstract: Immunohistochemical analysis of mismatch repair (MMR) protein expression is widely used to identify tumors with a deficient MMR (dMMR). MMR proteins (MLH1/PMS2 and MSH2/MSH6) work as functional hetero...
+   106. PMID 33437521     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Co-stimulatory and co-inhibitory immune markers in solid tumors with 
+      Journal: Future science OA (2020)
+      Abstract: The implication of 
+   107. PMID 27602502     | XML: preclinical          | PubTypes: ['Journal Article']
+      Title: Phenotypic consequences of somatic mutations in the ataxia-telangiectasia mutate
+      Journal: Oncotarget (2016)
+      Abstract: Mutations in the Ataxia-telangiectasia mutated (ATM) gene are frequently found in human cancers, including non-small cell lung cancer (NSCLC). Loss of ATM function confers sensitivity to ionising radi...
+   108. PMID 35004311     | XML: case_report          | PubTypes: ['Case Reports', 'Journal Article']
+      Title: Case Report: Combination of Olaparib With Chemotherapy in a Patient With ATM-Def
+      Journal: Frontiers in oncology (2021)
+      Abstract: Poly-ADP ribose polymerase (PARP) inhibitors are constantly increasing in their indications for use as anti-cancer treatment in various neoplasms, the majority of which are linked with BRCA deficiency...
+   109. PMID 34747718     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Mutations in DNA damage response pathways as a potential biomarker for immune ch
+      Journal: Aging (2021)
+      Abstract: Recently several studies have demonstrated the implications of mutations in DNA damage response (DDR) pathways for immune checkpoint blockade (ICB) treatment. However, smaller sample sizes, lesser can...
+   110. PMID 39863528     | XML: None(need LLM)       | PubTypes: ['English Abstract', 'Journal Article']
+      Title: [NTRK gene fusion and molecular pathological characteristics of mismatch repair 
+      Journal: Zhonghua bing li xue za zhi = Chinese journal of pathology (2025)
+      Abstract: (no abstract)
+   111. PMID 34140639     | XML: preclinical          | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Combination of chemotherapy with BRAF inhibitors results in effective eradicatio
+      Journal: Oncogene (2021)
+      Abstract: Invasive malignant melanoma (MM) is an aggressive tumor with no curative therapy in advanced stages. Chemotherapy has not demonstrated its efficacy in MM and current treatment for tumors carrying the ...
+   112. PMID 36860317     | XML: case_report          | PubTypes: ['Case Reports', 'Journal Article']
+      Title: Positive response to niraparib in chemo-refractory patients with metastatic appe
+      Journal: Frontiers in oncology (2023)
+      Abstract: Appendiceal mucinous adenocarcinoma, one kind of specific colorectal cancer, is lowly prevalent and rarely diagnosed in clinical practice. In addition, there have been limited standard treatment strat...
+  Summary: XML classified 23/112
+
+====================================================================================================
+STEP 4: LLM Batch Evaluation (raw JSON responses)
+====================================================================================================
+--- Batch 1/6 (19 articles) ---
+PMIDs: ['36243179', '27978560', '32658311', '33322746', '37852034', '40223084', '29478780', '41413856', '30657113', '40020204', '30814645', '34761457', '30850667', '39025327', '38742845', '36356413', '37059275', '39519399', '38010635']
+LLM raw response (len=5143):
+  [REJECT] PMID 36243179     | score= 2 | study_type=observational        | criteria=['ATM germline']
+           findings: Investigates HRD and germline variants in biliary tract cancer, not colorectal cancer.
+  [PASS  ] PMID 27978560     | score= 5 | study_type=observational        | criteria=['colorectal cancer', 'germline mutation']
+           findings: Determines prevalence of germline mutations in early-onset CRC; mentions spectrum of susceptibility 
+  [PASS  ] PMID 32658311     | score= 6 | study_type=observational        | criteria=['ATM germline', 'colorectal cancer']
+           findings: Identified ATM germline variants in high-risk cancer patients; 26.4% of high-risk CRC patients had a
+  [REJECT] PMID 33322746     | score= 4 | study_type=systematic_review    | criteria=['ATM germline']
+           findings: Review of the ATM-CHEK2-p53 axis in DNA damage response and hereditary cancer predisposition.
+  [PASS  ] PMID 37852034     | score= 8 | study_type=rct                  | criteria=['ATM germline', 'ATM somatic', 'treatment']
+           findings: Phase II basket trial evaluating Olaparib efficacy in advanced cancers with ATM/BRCA/CHEK2 mutations
+  [PASS  ] PMID 40223084     | score= 5 | study_type=observational        | criteria=['colorectal cancer', 'germline mutation']
+           findings: Prevalence of germline variants in Iranian hereditary CRC registry.
+  [PASS  ] PMID 29478780     | score= 9 | study_type=observational        | criteria=['ATM germline', 'colorectal cancer', 'actionable']
+           findings: ATM germline mutations significantly enriched in CRC (OR 2.97); biallelic loss of ATM observed in tu
+  [REJECT] PMID 41413856     | score= 4 | study_type=observational        | criteria=['colorectal cancer']
+           findings: Genomic characterization of mutated genes in CRC and survival outcomes.
+  [PASS  ] PMID 30657113     | score= 7 | study_type=systematic_review    | criteria=['ATM germline', 'colorectal cancer']
+           findings: Review of ATM's role in hereditary CRC; loss of ATM expression correlates with worse survival; poten
+  [PASS  ] PMID 40020204     | score= 5 | study_type=observational        | criteria=['ATM germline', 'colorectal cancer']
+           findings: Discusses mortality and clinical management of patients with pathogenic variants in ATM/BRCA/CHEK2.
+  [PASS  ] PMID 30814645     | score= 8 | study_type=rct                  | criteria=['ATM mutation', 'colorectal cancer', 'clinical outcomes']
+           findings: ATM mutations (15% of mCRC) associated with significantly longer overall survival (64.9 vs 34.8 mont
+  [PASS  ] PMID 34761457     | score= 7 | study_type=observational        | criteria=['ATM germline', 'colorectal cancer', 'MSS/dMMR']
+           findings: 15% of young CRC patients had P/LP variants including ATM; evaluated tumor MMR status; 80% of varian
+  [PASS  ] PMID 30850667     | score= 7 | study_type=observational        | criteria=['ATM germline', 'colorectal cancer']
+           findings: Germline ATM variants identified in CRC; germline carriers had better disease-free survival; germlin
+  [REJECT] PMID 39025327     | score= 1 | study_type=observational        | criteria=['colorectal cancer']
+           findings: Focuses on folate intake and CRC risk by genetic subtypes; no specific ATM/TMB-H focus.
+  [PASS  ] PMID 38742845     | score= 5 | study_type=observational        | criteria=['colorectal cancer']
+           findings: Compares molecular landscape of early-onset vs late-onset CRC.
+  [PASS  ] PMID 36356413     | score= 6 | study_type=observational        | criteria=['colorectal cancer', 'germline mutation']
+           findings: Impact of NGS on identifying canonical and uncanonical germline variants in CRC patients.
+  [REJECT] PMID 37059275     | score= 2 | study_type=systematic_review    | criteria=['colorectal cancer']
+           findings: Review of KRAS and PIK3CA mutations in CRC; not focused on ATM or germline.
+  [REJECT] PMID 39519399     | score= 4 | study_type=observational        | criteria=['colorectal cancer', 'germline mutation']
+           findings: Investigates germline variants in DNA repair genes in Serrated Polyposis Syndrome.
+  [REJECT] PMID 38010635     | score= 4 | study_type=observational        | criteria=['colorectal cancer', 'germline mutation']
+           findings: Structure of pathogenic germline variants in a Moscow CRC cohort.
+
+--- Batch 2/6 (19 articles) ---
+PMIDs: ['36745477', '39740007', '39822019', '35616648', '30062471', '41013697', '37096801', '33854094', '28199979', '35567913', '40118241', '38776551', '31127692', '29599344', '33760988', '33836681', '35098669', '36899918', '40594815']
+LLM raw response (len=6055):
+  [JSON PARSE ERROR] Unterminated string starting at: line 204 column 5 (char 6052)
+  Raw response: [
+  {
+    "pmid": "36745477",
+    "is_relevant": true,
+    "relevance_score": 6,
+    "study_type": "observational",
+    "matched_criteria": [
+      "ATM",
+      "germline",
+      "colorectal cancer",
+      "TMB"
+    ],
+    "key_findings": "Germline variants (eQTLs) that upregulate ATM expression are associated with a decreased risk of somatic ATM mutations. EPHA5 eQTLs were specifically associated with TMB in colorectal cancer."
+  },
+  {
+    "pmid": "39740007",
+    "is_relevant": false,
+    "rel
+
+--- Batch 3/6 (19 articles) ---
+PMIDs: ['36309653', '35723313', '38214010', '31400926', '36717525', '30042065', '28975465', '32408300', '34042312', '30032112', '33298767', '39452477', '29870526', '26778106', '37323311', '28182994', '33959500', '33653301', '41266732']
+LLM raw response (len=5986):
+  [REJECT] PMID 36309653     | score= 4 | study_type=preclinical          | criteria=['ATM', 'colorectal cancer', 'treatment']
+           findings: ATM inhibitor AZD0156 enhances cytotoxicity of irinotecan/5FU in CRC cell lines and models.
+  [PASS  ] PMID 35723313     | score= 5 | study_type=observational        | criteria=['colorectal cancer', 'somatic mutations']
+           findings: Identified somatic mutations in Egyptian CRC patients using a 96-gene panel; ATM is mentioned as par
+  [REJECT] PMID 38214010     | score= 3 | study_type=preclinical          | criteria=['ATM', 'colorectal cancer']
+           findings: Investigates CHK1 inhibitor SRA737; notes that cells with intact ATM/p53 signaling can enter cell-cy
+  [PASS  ] PMID 31400926     | score= 5 | study_type=observational        | criteria=['colorectal cancer', 'genomic alterations']
+           findings: Profiles genetic alterations in signet ring and mucinous CRC subtypes compared to conventional CRC.
+  [PASS  ] PMID 36717525     | score= 7 | study_type=observational        | criteria=['ATM', 'germline mutation', 'colorectal cancer']
+           findings: Identified germline ATM mutations in families with co-occurrence of pancreatic and colorectal cancer
+  [PASS  ] PMID 30042065     | score= 8 | study_type=rct                  | criteria=['colorectal cancer', 'mutation burden', 'prognosis']
+           findings: Phase III trial data evaluating mutation burden and driver gene panels as prognostic biomarkers in C
+  [PASS  ] PMID 28975465     | score= 7 | study_type=observational        | criteria=['ATM', 'germline mutation', 'colorectal cancer']
+           findings: Germline ATM variants identified in CRC patients; highlights that many mutation-positive cases lack 
+  [PASS  ] PMID 32408300     | score= 5 | study_type=observational        | criteria=['colorectal cancer', 'genomic profiling']
+           findings: Identified candidate genes associated with recurrence-free survival in stage II CRC.
+  [REJECT] PMID 34042312     | score= 4 | study_type=observational        | criteria=['colorectal cancer', 'TMB-H']
+           findings: ARID1A mutations in CRC are associated with high mutational burden (TMB-H) and PD-L1 expression.
+  [REJECT] PMID 30032112     | score= 3 | study_type=preclinical          | criteria=['ATM', 'colorectal cancer']
+           findings: Development of a small molecule targeting Wnt and ATM/p53 pathways in CRC models.
+  [PASS  ] PMID 33298767     | score= 6 | study_type=observational        | criteria=['colorectal cancer', 'DNA repair genes', 'clinical outcomes']
+           findings: Mutations in DNA damage response (DDR) genes influence response to oxaliplatin vs irinotecan in meta
+  [REJECT] PMID 39452477     | score= 4 | study_type=observational        | criteria=['colorectal cancer', 'biomarkers']
+           findings: CDX2-suppressed CRCs possess targetable alterations in RTK and other pathways.
+  [REJECT] PMID 29870526     | score= 3 | study_type=observational        | criteria=['colorectal cancer', 'DNA damage response']
+           findings: Study of telomere-related proteins and DDR gene expression in Saudi CRC patients.
+  [PASS  ] PMID 26778106     | score= 7 | study_type=observational        | criteria=['ATM', 'germline mutation', 'colorectal cancer']
+           findings: Israeli study found heterozygous ATM mutation carriers did not have a significantly increased risk o
+  [PASS  ] PMID 37323311     | score= 5 | study_type=observational        | criteria=['colorectal cancer', 'genomic alterations']
+           findings: NGS panel testing in Thai CRC patients identified deleterious variants in multiple cancer-associated
+  [REJECT] PMID 28182994     | score= 4 | study_type=preclinical          | criteria=['ATM', 'colorectal cancer', 'treatment']
+           findings: ATM-deficient CRC cells are sensitive to PARP inhibitor olaparib; p53 depletion enhances this sensit
+  [PASS  ] PMID 33959500     | score= 5 | study_type=observational        | criteria=['colorectal cancer', 'TMB-H']
+           findings: Identified mutation signature clusters in CRC; MSC-1 associated with defective DNA mismatch repair a
+  [PASS  ] PMID 33653301     | score= 6 | study_type=observational        | criteria=['colorectal cancer', 'DNA damage response', 'survival']
+           findings: Co-occurring DDR mutations impact survival in stage III CRC patients receiving oxaliplatin-based che
+  [REJECT] PMID 41266732     | score= 4 | study_type=preclinical          | criteria=['ATM', 'colorectal cancer', 'treatment']
+           findings: PARP inhibitor talazoparib (BMN673) induces cell death in ATM-deficient CRC cells via the ATF4-GDF15
+
+--- Batch 4/6 (20 articles) ---
+PMIDs: ['37516046', '36077770', '37453313', '35054819', '29575536', '31632068', '28453695', '30730459', '31360874', '38567167', '33294277', '33509806', '34349242', '38773787', '27756406', '36983044', '39150041', '29048575', '41424250', '40563065']
+LLM raw response (len=6073):
+  [JSON PARSE ERROR] Expecting ',' delimiter: line 203 column 144 (char 6073)
+  Raw response: [
+  {
+    "pmid": "37516046",
+    "is_relevant": false,
+    "relevance_score": 2,
+    "study_type": "observational",
+    "matched_criteria": [
+      "germline mutation"
+    ],
+    "key_findings": "Discusses screening practices for various cancers in mutation carriers generally, but lacks specific focus on ATM in CRC or TMB-H/MSS status."
+  },
+  {
+    "pmid": "36077770",
+    "is_relevant": true,
+    "relevance_score": 6,
+    "study_type": "observational",
+    "matched_criteria": [
+      "colorect
+
+--- Batch 5/6 (18 articles) ---
+PMIDs: ['37761360', '40780402', '40869938', '34585040', '41160399', '34503238', '28949453', '40930024', '34083289', '37854294', '33630411', '32522261', '35740599', '28389531', '34897210', '31336886', '31876540', '34503126']
+LLM raw response (len=5386):
+  [PASS  ] PMID 37761360     | score= 5 | study_type=observational        | criteria=['colorectal cancer', 'genomic landscape']
+           findings: Characterizes the genomic landscape of CRC in Saudi patients using NGS; mentions treatment opportuni
+  [PASS  ] PMID 40780402     | score= 6 | study_type=observational        | criteria=['germline mutation', 'colorectal cancer']
+           findings: Identifies germline variants in early-onset and familial CRC in Taiwan; focuses on pathogenicity and
+  [REJECT] PMID 40869938     | score= 4 | study_type=observational        | criteria=['germline mutation', 'colorectal cancer']
+           findings: Explores germline variant profiles in Panamanian CRC patients; general descriptive study of heredita
+  [PASS  ] PMID 34585040     | score= 5 | study_type=observational        | criteria=['germline mutation', 'colorectal cancer']
+           findings: Discusses underdiagnosis of hereditary CRC and the spectrum of P/LP variants beyond Lynch syndrome g
+  [PASS  ] PMID 41160399     | score= 6 | study_type=rct                  | criteria=['ATM/ATR pathway', 'treatment']
+           findings: Phase 1 trial of ATR inhibitor berzosertib with irinotecan in solid tumors; relevant to DDR-deficien
+  [REJECT] PMID 34503238     | score= 2 | study_type=observational        | criteria=['germline mutation']
+           findings: Focuses on pancreatic ductal adenocarcinoma (PDAC) germline variants, not colorectal cancer.
+  [PASS  ] PMID 28949453     | score= 6 | study_type=observational        | criteria=['ATM', 'colorectal cancer', 'somatic mutation']
+           findings: Detected somatic ATM mutations in ctDNA of mCRC patients; compares NGS sensitivity in liquid vs. tis
+  [PASS  ] PMID 40930024     | score= 7 | study_type=observational        | criteria=['DNA damage repair', 'colorectal cancer', 'treatment response']
+           findings: Evaluates the impact of DDR mutations (including ATM) on real-world response to therapy, specificall
+  [PASS  ] PMID 34083289     | score= 7 | study_type=case_report          | criteria=['MSS', 'colorectal cancer', 'immunotherapy']
+           findings: Investigates MSS CRC cases with dramatic responses to immunotherapy to identify predictive biomarker
+  [PASS  ] PMID 37854294     | score= 8 | study_type=observational        | criteria=['ATM', 'germline mutation', 'colorectal cancer']
+           findings: Identifies Homologous Recombination (HR) gene mutations (including ATM) as a major risk factor in CR
+  [PASS  ] PMID 33630411     | score= 5 | study_type=observational        | criteria=['germline mutation', 'colorectal cancer']
+           findings: Studies co-occurrence of other germline pathogenic variants in Lynch syndrome patients using NGS pan
+  [REJECT] PMID 32522261     | score= 4 | study_type=observational        | criteria=['germline mutation', 'hereditary cancer']
+           findings: Evaluates a custom NGS panel to improve detection yield of germline mutations in hereditary cancer s
+  [PASS  ] PMID 35740599     | score= 8 | study_type=observational        | criteria=['TMB-H', 'MSS', 'colorectal cancer', 'DDR']
+           findings: Identifies a subset of MSS CRC with high TMB (TMB-H) associated with disruption of Homologous Recomb
+  [REJECT] PMID 28389531     | score= 3 | study_type=preclinical          | criteria=['colorectal cancer', 'DNA replication stress']
+           findings: Preclinical study on CHK1-targeted therapy in p53-deficient CRC stem cells; tangentially related to 
+  [PASS  ] PMID 34897210     | score= 5 | study_type=observational        | criteria=['germline mutation', 'colorectal cancer']
+           findings: Descriptive report on genotype-phenotype correlations in hereditary CRC using multigene panel testin
+  [REJECT] PMID 31336886     | score= 4 | study_type=observational        | criteria=['colorectal cancer', 'somatic mutation']
+           findings: WES analysis of Thai patients to identify genetic aberrations in the transition from adenoma to aden
+  [PASS  ] PMID 31876540     | score= 7 | study_type=observational        | criteria=['ATM', 'germline mutation', 'colorectal cancer']
+           findings: Notes that germline ATM mutations are found in early-onset CRC patients and discusses risks of secon
+  [PASS  ] PMID 34503126     | score= 6 | study_type=observational        | criteria=['TMB-H', 'colorectal cancer', 'immunotherapy']
+           findings: Analyzes mutational landscape and evolution in hypermutated (TMB-H) cancers, including CRC, to under
+
+--- Batch 6/6 (11 articles) ---
+PMIDs: ['30927264', '27568332', '32568634', '31811167', '36387226', '33437521', '27602502', '35004311', '34747718', '34140639', '36860317']
+LLM raw response (len=3478):
+  [PASS  ] PMID 30927264     | score= 6 | study_type=observational        | criteria=['ATM', 'germline mutation', 'colorectal cancer', 'MSS']
+           findings: Identified germline ATM mutations in 2/51 (3.9%) patients with MMR-proficient (MSS) colorectal tumor
+  [PASS  ] PMID 27568332     | score= 5 | study_type=observational        | criteria=['ATM', 'colorectal cancer']
+           findings: Somatic ATM mutations were found in 6.3% of CRC patients; ATM mutations significantly coincided with
+  [REJECT] PMID 32568634     | score= 4 | study_type=rct                  | criteria=['ATM loss', 'ATR inhibitor']
+           findings: Phase I trial showing ATR inhibitor M6620 can exploit synthetic lethality in cancers with ATM loss; 
+  [PASS  ] PMID 31811167     | score= 6 | study_type=observational        | criteria=['ATM', 'germline mutation', 'colorectal cancer']
+           findings: Multigene panel testing in familial cancer cases identified pathogenic germline ATM variants in pati
+  [REJECT] PMID 36387226     | score= 2 | study_type=observational        | criteria=['colorectal cancer', 'dMMR']
+           findings: Discusses concurrent loss of multiple MMR proteins (MLH1, PMS2, MSH6) in digestive cancers; does not
+  [REJECT] PMID 33437521     | score= 1 | study_type=observational        | criteria=['solid tumors']
+           findings: Abstract is truncated but appears to discuss immune markers in solid tumors; no specific mention of 
+  [PASS  ] PMID 27602502     | score= 5 | study_type=observational        | criteria=['ATM', 'colorectal cancer']
+           findings: Identified tumoral loss of ATM protein expression in 3.9% of colorectal cancer specimens using immun
+  [PASS  ] PMID 35004311     | score= 7 | study_type=case_report          | criteria=['ATM-deficient', 'colorectal cancer', 'treatment outcome']
+           findings: Case report of an ATM-deficient CRC patient successfully treated with an off-label combination of Ol
+  [PASS  ] PMID 34747718     | score= 6 | study_type=observational        | criteria=['DNA damage response', 'immunotherapy', 'TMB']
+           findings: DDR mutations (including ATM) are associated with prolonged overall survival in patients treated wit
+  [REJECT] PMID 34140639     | score= 3 | study_type=preclinical          | criteria=['ATM', 'colorectal cancer']
+           findings: Preclinical study showing BRAF inhibition prevents ATM-dependent DNA repair in CRC, potentially sens
+  [PASS  ] PMID 36860317     | score= 6 | study_type=case_report          | criteria=['ATM mutation', 'colorectal cancer', 'PARP inhibitor']
+           findings: Case report showing positive response to Niraparib (PARP inhibitor) in a patient with metastatic app
+
+LLM filter summary: 112 -> 43 (score >= 5)
+
+====================================================================================================
+STEP 5: XML vs LLM Bucket Comparison (Manual Verification Table)
+====================================================================================================
+  No |       PMID   |       XML Bucket |       LLM study_type |     Final Bucket |   Source | Score | Title
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1 |   27978560   |             None |        observational |    observational |      llm |     5 | Prevalence and Spectrum of Germline Cancer Suscept
+   2 |   32658311   |             None |        observational |    observational |      llm |     6 | Germline pathogenic variant spectrum in 25 cancer 
+   3 |   37852034   |              rct |                  rct |              rct |      xml |     8 | Efficacy of olaparib in advanced cancers with germ
+   4 |   40223084   |             None |        observational |    observational |      llm |     5 | Germline variants in patients from the Iranian her
+   5 |   29478780   |             None |        observational |    observational |      llm |     9 | Inherited DNA-Repair Defects in Colorectal Cancer.
+   6 |   30657113   | systematic_review |    systematic_review | systematic_review |      xml |     7 | A review on role of ATM gene in hereditary transfe
+   7 |   40020204   |             None |        observational |    observational |      llm |     5 | Breast, Colorectal, and Pancreatic Cancer Mortalit
+   8 |   30814645   |              rct |                  rct |              rct |      xml |     8 | Prognostic impact of ATM mutations in patients wit
+   9 |   34761457   |             None |        observational |    observational |      llm |     7 | Survey of germline variants in cancer-associated g
+  10 |   30850667   |             None |        observational |    observational |      llm |     7 | Germline susceptibility variants impact clinical o
+  11 |   38742845   |    observational |        observational |    observational |      xml |     5 | Molecular characteristics of early-onset compared 
+  12 |   36356413   |             None |        observational |    observational |      llm |     6 | Canonical and uncanonical pathogenic germline vari
+  13 |   35723313   |             None |        observational |    observational |      llm |     5 | Multigene Panel Sequencing Reveals Cancer-Specific
+  14 |   31400926   |             None |        observational |    observational |      llm |     5 | Genomic alterations in signet ring and mucinous pa
+  15 |   36717525   |             None |        observational |    observational |      llm |     7 | Characteristics of familial pancreatic cancer fami
+  16 |   30042065   |              rct |                  rct |              rct |      xml |     8 | Mutation burden and other molecular markers of pro
+  17 |   28975465   |             None |        observational |    observational |      llm |     7 | Expanding the spectrum of germline variants in can
+  18 |   32408300   |             None |        observational |    observational |      llm |     5 | Genomic Profiling of Stage II Colorectal Cancer Id
+  19 |   33298767   |             None |        observational |    observational |      llm |     6 | Mutations in DNA Repair Genes and Clinical Outcome
+  20 |   26778106   |             None |        observational |    observational |      llm |     7 | The risk for developing cancer in Israeli ATM, BLM
+  21 |   37323311   |             None |        observational |    observational |      llm |     5 | Identification of Genomic Alterations in Thai Pati
+  22 |   33959500   |             None |        observational |    observational |      llm |     5 | Genomic Alteration Characterization in Colorectal 
+  23 |   33653301   |             None |        observational |    observational |      llm |     6 | Sequential and co-occurring DNA damage response ge
+  24 |   37761360   |             None |        observational |    observational |      llm |     5 | The Genomic Landscape of Colorectal Cancer in the 
+  25 |   40780402   |             None |        observational |    observational |      llm |     6 | Whole Exome Sequencing-identified Germline Variant
+  26 |   34585040   |             None |        observational |    observational |      llm |     5 | Underdiagnosis of Hereditary Colorectal Cancers Am
+  27 |   41160399   |              rct |                  rct |              rct |      xml |     6 | Phase 1 clinical trial of the ataxia telangiectasi
+  28 |   28949453   |             None |        observational |    observational |      llm |     6 | Somatic mutation detection using various targeted 
+  29 |   40930024   |             None |        observational |    observational |      llm |     7 | Impact of DNA damage repair alterations on real-wo
+  30 |   34083289   |      case_report |          case_report |      case_report |      xml |     7 | Molecular and Radiological Features of Microsatell
+  31 |   37854294   |             None |        observational |    observational |      llm |     8 | The Largest Chinese Cohort Study Indicates Homolog
+  32 |   33630411   |             None |        observational |    observational |      llm |     5 | Co-occurrence of germline pathogenic variants for 
+  33 |   35740599   |             None |        observational |    observational |      llm |     8 | Deep Sequencing of Early T Stage Colorectal Cancer
+  34 |   34897210   |             None |        observational |    observational |      llm |     5 | Application of Multigene Panel Testing in Patients
+  35 |   31876540   |             None |        observational |    observational |      llm |     7 | Increased Risk of Acute Myelogenous Leukemia After
+  36 |   34503126   |             None |        observational |    observational |      llm |     6 | Comprehensively Exploring the Mutational Landscape
+  37 |   30927264   |             None |        observational |    observational |      llm |     6 | Opportunistic testing of BRCA1, BRCA2 and mismatch
+  38 |   27568332   |             None |        observational |    observational |      llm |     5 | Targeted molecular profiling of rare genetic alter
+  39 |   31811167   |             None |        observational |    observational |      llm |     6 | Results of multigene panel testing in familial can
+  40 |   27602502   |      preclinical |        observational |      preclinical |      xml |     5 | Phenotypic consequences of somatic mutations in th
+  41 |   35004311   |      case_report |          case_report |      case_report |      xml |     7 | Case Report: Combination of Olaparib With Chemothe
+  42 |   34747718   |             None |        observational |    observational |      llm |     6 | Mutations in DNA damage response pathways as a pot
+  43 |   36860317   |      case_report |          case_report |      case_report |      xml |     6 | Positive response to niraparib in chemo-refractory
+
+====================================================================================================
+STEP 6: Stratified Sampling
+====================================================================================================
+Quotas: {"guideline": 3, "rct": 6, "systematic_review": 4, "observational": 4, "case_report": 2, "preclinical": 1}
+Input: 43 articles, max_results=20
+  Pre-sample dist:  {"observational": 34, "rct": 4, "systematic_review": 1, "case_report": 3, "preclinical": 1}
+  Post-sample dist: {"rct": 4, "systematic_review": 1, "observational": 12, "case_report": 2, "preclinical": 1}
+  Sampled: 43 -> 20
+
+Final results:
+    1. [rct               ] (src=xml     , score=8) PMID 37852034: Efficacy of olaparib in advanced cancers with germline or somatic mutations in B
+       Journal: ESMO open (2023)
+       Authors: Joris S, Denys H, Collignon J, Rasschaert M, T'Kint de Roodenbeke D et al.
+       Matched: ['ATM germline', 'ATM somatic', 'treatment']
+       Findings: Phase II basket trial evaluating Olaparib efficacy in advanced cancers with ATM/BRCA/CHEK2 mutations.
+       Abstract: The Belgian Precision initiative aims to maximize the implementation of tumor-agnostic next-generation sequencing in patients with advanced cancer and enhance access to molecularly guided treatment options. Academic tumor-agnostic basket phase II studies are part of this initiative. The current investigator-driven trial aimed to investigate the efficacy of olaparib in advanced cancers with a (likely) pathogenic mutation (germline or somatic) in a gene that plays a role in homologous recombination (HR).
+       Link: https://pubmed.ncbi.nlm.nih.gov/37852034/
+    2. [rct               ] (src=xml     , score=8) PMID 30814645: Prognostic impact of ATM mutations in patients with metastatic colorectal cancer
+       Journal: Scientific reports (2019)
+       Authors: Randon G, Fucà G, Rossini D, Raimondi A, Pagani F et al.
+       Matched: ['ATM mutation', 'colorectal cancer', 'clinical outcomes']
+       Findings: ATM mutations (15% of mCRC) associated with significantly longer overall survival (64.9 vs 34.8 months).
+       Abstract: Tumors bearing homologous recombination deficiency are extremely sensitive to DNA double strand breaks induced by several chemotherapeutic agents. ATM gene, encoding a protein involved in DNA damage response, is frequently mutated in colorectal cancer (CRC), but its potential role as predictive and prognostic biomarker has not been fully investigated. We carried out a multicenter effort aimed at defining the prognostic impact of ATM mutational status in metastatic CRC (mCRC) patients. Mutational profiles were obtained by means of next-generation sequencing. Overall, 35 out of 227 samples (15%) carried an ATM mutation. At a median follow-up of 56.6 months, patients with ATM mutated tumors showed a significantly longer median overall survival (OS) versus ATM wild-type ones (64.9 vs 34.8 months; HR, 0.50; 95% CI, 0.29-0.85; P = 0.01). In the multivariable model, ATM mutations confirmed the association with longer OS (HR, 0.57; 95% CI, 0.33-0.98; P = 0.04). The prognostic impact of ATM mutations was independent from TP53 mutational status and primary tumor location. High heterogeneity score for ATM mutations, possibly reflecting the loss of wild-type allele, was associated with excellent prognosis. In conclusion, we showed that ATM mutations are independently associated with longer OS in patients with mCRC.
+       Link: https://pubmed.ncbi.nlm.nih.gov/30814645/
+    3. [rct               ] (src=xml     , score=8) PMID 30042065: Mutation burden and other molecular markers of prognosis in colorectal cancer tr
+       Journal: The lancet. Gastroenterology & hepatology (2018)
+       Authors: Domingo E, Camps C, Kaisaki PJ, Parsons MJ, Mouradov D et al.
+       Matched: ['colorectal cancer', 'mutation burden', 'prognosis']
+       Findings: Phase III trial data evaluating mutation burden and driver gene panels as prognostic biomarkers in CRC.
+       Abstract: Molecular indicators of colorectal cancer prognosis have been assessed in several studies, but most analyses have been restricted to a handful of markers. We aimed to identify prognostic biomarkers for colorectal cancer by sequencing panels of multiple driver genes.
+       Link: https://pubmed.ncbi.nlm.nih.gov/30042065/
+    4. [rct               ] (src=xml     , score=6) PMID 41160399: Phase 1 clinical trial of the ataxia telangiectasia and Rad3-related inhibitor b
+       Journal: Cancer (2025)
+       Authors: Villaruz LC, Jin J, Wang H, Lee JJ, Luke JJ et al.
+       Matched: ['ATM/ATR pathway', 'treatment']
+       Findings: Phase 1 trial of ATR inhibitor berzosertib with irinotecan in solid tumors; relevant to DDR-deficient (like ATM-mutated) tumor strategies.
+       Abstract: Ataxia telangiectasia and Rad3-related (ATR) inhibition with berzosertib potentiates the efficacy of irinotecan in preclinical models. The authors hypothesize that this combination is well tolerated, modulates the DNA damage response to irinotecan, and is associated with clinical activity in advanced solid tumors.
+       Link: https://pubmed.ncbi.nlm.nih.gov/41160399/
+    5. [systematic_review ] (src=xml     , score=7) PMID 30657113: A review on role of ATM gene in hereditary transfer of colorectal cancer.
+       Journal: Acta bio-medica : Atenei Parmensis (2019)
+       Authors: Sriramulu S, Ramachandran M, Subramanian S, Kannan R, Gopinath M et al.
+       Matched: ['ATM germline', 'colorectal cancer']
+       Findings: Review of ATM's role in hereditary CRC; loss of ATM expression correlates with worse survival; potential biomarker.
+       Abstract: Colorectal cancer found to be the most commonly occurring cancer worldwide which can be prevented by screening and its curable if diagnosed early. Lynch syndrome/HNPCC being an autosomal genetic disease and propensity in forming colorectal cancer is inherited wherein genomic instabilities and epigenetic changes are being the characteristic forms in hereditary cancers. It is very important to determine the polymorphism in several DNA repairing genes such as ATM, RAD51, XRCC2, XRCC3 and XRCC9 to study the risk exploring both the prognosis and the developing of colorectal cancer. The role of ATM gene has been studied which involves in the hereditary transfer of colorectal cancer associated with other related cancers such as stomach, lung and breast cancers. ATM found to be the mutation target and also a modifier gene with more risk of developing the disease by its polymorphism in variant of ATM D1853N. It was identified that ATM gene polymorphism did not drastically change HNPCC age of onset. ATM expression levels were studied and it has been concluded that the complete loss of ATM expression resulted in a propensity of worse survival and no better prognosis with increase in mortality rate. This ATM gene might be considered to be a predicted biomarker in colorectal cancer.
+       Link: https://pubmed.ncbi.nlm.nih.gov/30657113/
+    6. [observational     ] (src=llm     , score=9) PMID 29478780: Inherited DNA-Repair Defects in Colorectal Cancer.
+       Journal: American journal of human genetics (2018)
+       Authors: AlDubayan SH, Giannakis M, Moore ND, Han GC, Reardon B et al.
+       Matched: ['ATM germline', 'colorectal cancer', 'actionable']
+       Findings: ATM germline mutations significantly enriched in CRC (OR 2.97); biallelic loss of ATM observed in tumors; suggests PARP inhibitor sensitivity.
+       Abstract: Colorectal cancer (CRC) heritability has been estimated to be around 30%. However, mutations in the known CRC-susceptibility genes explain CRC risk in fewer than 10% of affected individuals. Germline mutations in DNA-repair genes (DRGs) have recently been reported in CRC, but their contribution to CRC risk is largely unknown. We evaluated the gene-level germline mutation enrichment of 40 DRGs in 680 unselected CRC individuals and 27,728 ancestry-matched cancer-free adults. Significant findings were then examined in independent cohorts of 1,661 unselected CRC individuals and 1,456 individuals with early-onset CRC. Of the 680 individuals in the discovery set, 31 (4.56%) individuals harbored germline pathogenic mutations in known CRC-susceptibility genes, and another 33 (4.85%) individuals had DRG mutations that have not been previously associated with CRC risk. Germline pathogenic mutations in ATM and PALB2 were enriched in both the discovery (OR = 2.81 and p = 0.035 for ATM and OR = 4.91 and p = 0.024 for PALB2) and validation (OR = 2.97 and adjusted p = 0.0013 for ATM and OR = 3.42 and adjusted p = 0.034 for PALB2) sets. Biallelic loss of ATM was evident in all individuals with matched tumor profiling. CRC individuals also had higher rates of actionable mutations in the HR pathway, which can substantially increase the risk of developing cancers other than CRC. Our analysis provides evidence for ATM and PALB2 as CRC-risk genes, underscoring the importance of the homologous recombination pathway in CRC. In addition, we identified frequent complete homologous recombination deficiency in CRC tumors, representing a unique opportunity to explore targeted therapeutic interventions such as poly-ADP ribose polymerase inhibitor (PARPi).
+       Link: https://pubmed.ncbi.nlm.nih.gov/29478780/
+    7. [observational     ] (src=llm     , score=8) PMID 37854294: The Largest Chinese Cohort Study Indicates Homologous Recombination Pathway Gene
+       Journal: Research (Washington, D.C.) (2023)
+       Authors: Xu Y, Liu K, Li C, Li M, Liu F et al.
+       Matched: ['ATM', 'germline mutation', 'colorectal cancer']
+       Findings: Identifies Homologous Recombination (HR) gene mutations (including ATM) as a major risk factor in CRC with heterogeneous phenotypes.
+       Abstract: While genetic factors were associated with over 30% of colorectal cancer (CRC) patients, mutations in CRC-susceptibility genes were identified in only 5% to 10% of these patients. Besides, previous studies on hereditary CRC were largely designed to analyze germline mutations in patients with single genetic high-risk factor, which limited understanding of the association between genotype and phenotypes. From January 2015 to December 2018, we retrospectively enrolled 2,181 patients from 8,270 consecutive CRC cases, covering 5 categories of genetic high-risk factors. Leukocyte genomic DNA was analyzed for germline mutations in cancer predisposition genes. The germline mutations under each category were detected and analyzed in association with CRC susceptibility, clinical phenotypes, and prognoses. A total of 462 pathogenic variants were detected in 19.3% of enrolled CRC patients. Mismatch repair gene mutation was identified in 9.1% of patients, most prevalent across all high-risk groups. Homologous recombination (HR) gene mutations were detected in 6.5% of cases, penetrated in early-onset and extra-colonic cancer risk groups. Mutations in HR genes, including 
+       Link: https://pubmed.ncbi.nlm.nih.gov/37854294/
+    8. [observational     ] (src=llm     , score=8) PMID 35740599: Deep Sequencing of Early T Stage Colorectal Cancers Reveals Disruption of Homolo
+       Journal: Cancers (2022)
+       Authors: Li J, Steffen P, Tse BCY, Ahadi MS, Gill AJ et al.
+       Matched: ['TMB-H', 'MSS', 'colorectal cancer', 'DDR']
+       Findings: Identifies a subset of MSS CRC with high TMB (TMB-H) associated with disruption of Homologous Recombination Repair genes.
+       Abstract: Early T stage colorectal cancers (CRC) that invade lymph nodes (Stage IIIA) are rare and greatly under-represented in large-scale genomic mapping projects. We retrieved 10 Stage IIIA CRC cases, matched these to 16 Stage 1 CRC cases (T1 depth without lymph node metastasis) and carried out deep sequencing of 409 genes using the IonTorrent system. Tumour mutational burdens (TMB) ranged from 2.4 to 77.2/Mb sequenced. No stage-related mutational differences were observed, consistent with reanalysis of The Cancer Genome Atlas (TCGA) Stage I and IIIA datasets. We next examined mutational burdens and observed that the top five cancers were microsatellite stable (MSS) genotypes (mean TMB 49.3/Mb), while the other 16 MSS cancers had a mean TMB of 5.9/Mb. To facilitate comparison with TCGA hypermutator CRC, we included four microsatellite instability-high (MSI-H) samples with the high mutation burden MSS cases to form a TMB-High group. Comparison of TMB-High with TMB-Low groups revealed differences in mutational frequency of 
+       Link: https://pubmed.ncbi.nlm.nih.gov/35740599/
+    9. [observational     ] (src=llm     , score=7) PMID 34761457: Survey of germline variants in cancer-associated genes in young adults with colo
+       Journal: Genes, chromosomes & cancer (2022)
+       Authors: Mikaeel RR, Young JP, Li Y, Smith E, Horsnell M et al.
+       Matched: ['ATM germline', 'colorectal cancer', 'MSS/dMMR']
+       Findings: 15% of young CRC patients had P/LP variants including ATM; evaluated tumor MMR status; 80% of variants actionable.
+       Abstract: Colorectal cancer (CRC) incidence in young adults is rising. Identifying genetic risk factors is fundamental for the clinical management of patients and their families. This study aimed to identify clinically significant germline variants among young adults with CRC. Whole-exome sequencing data of blood-derived DNA from 133 unrelated young CRC patients (<55 years of age) underwent a comprehensive analysis of 133 cancer-predisposition/implicated genes. All patient tumors were evaluated for mismatch repair deficiency (dMMR). Among 133 patients (aged 16-54 years), 15% (20/133) had clinically actionable pathogenic or likely pathogenic (P/LP) variants in at least 1 well established cancer-predisposing gene: dMMR genes (6), MUTYH [bi-allelic (2), mono-allelic (3)], RNF43 (1), BMPR1A (1), BRCA2 (4), ATM (1), RAD51C (1), and BRIP1 (1). Five patients (4%) had variants in genes implicated in cancer but where the significance of germline variants in CRC risk is uncertain: GATA2 (1), ERCC2 (mono-allelic) (1), ERCC4 (mono-allelic) (1), CFTR (2). Fourteen (11%) had dMMR tumors. Eighteen (14%) reported a first-degree relative with CRC, but only three of these carried P/LP variants. Three patients with variants in polyposis-associated genes showed no polyposis (one each in MUTYH [bi-allelic], RNF43, and BMPR1A). Approximately one in five young adults in our series carried at least one P/LP variant in a cancer-predisposing/implicated gene; 80% of these variants are currently considered clinically actionable in a familial cancer setting. Family history and phenotype have limitations for genetic risk prediction; therefore multigene panel testing and genetic counseling are warranted for all young adults with CRC regardless of those two factors.
+       Link: https://pubmed.ncbi.nlm.nih.gov/34761457/
+   10. [observational     ] (src=llm     , score=7) PMID 30850667: Germline susceptibility variants impact clinical outcome and therapeutic strateg
+       Journal: Scientific reports (2019)
+       Authors: Lin PC, Yeh YM, Wu PY, Hsu KF, Chang JY et al.
+       Matched: ['ATM germline', 'colorectal cancer']
+       Findings: Germline ATM variants identified in CRC; germline carriers had better disease-free survival; germline status molds somatic landscape.
+       Abstract: Although somatic mutations are the main cause of cancer, underlying germline alterations may affect cancer outcome. There is little information on comprehensive analysis of germline genome sequencing for cancer healthcare strategy. Here we studied the implication of germline cancer-associated variants on cancer counselling and therapeutic strategies by germline whole genome and tumor targeted sequencing. Fifty-five gynecological and 104 colorectal cancer (CRC) patients were enrolled. We identified 22 germline pathogenic variants in 16 cancer-associated genes. Most of them are involved in DNA repair signaling, including MLH1, BRCA1/2, MUTYH, ATM, PMS2, MSH6, BAP1, and FANCA. About 6% of cancer patients presented the secondary findings of germline variants with non-oncogenic impact, mainly on the cardiovascular system which should be carefully monitored during chemotherapy. CRC patients carrying germline susceptibility variants had better disease-free survival than those without variants. Importantly, in the CRC model, the underlying germline alterations mold the tumor somatic alteration landscape. NOTCH1 mutation was the most common somatic mutation in recurrent CRC, implying a potential therapeutic target in adjuvant setting. In conclusion, both tumor genome and germline sequence data have to be analyzed to have a more complete picture of the overall genetic foundation of cancer.
+       Link: https://pubmed.ncbi.nlm.nih.gov/30850667/
+   11. [observational     ] (src=llm     , score=7) PMID 36717525: Characteristics of familial pancreatic cancer families with additional colorecta
+       Journal: Familial cancer (2023)
+       Authors: Lehman B, Matthäi E, Gercke N, Denzer UW, Figiel J et al.
+       Matched: ['ATM', 'germline mutation', 'colorectal cancer']
+       Findings: Identified germline ATM mutations in families with co-occurrence of pancreatic and colorectal cancer.
+       Abstract: Familial pancreatic cancer (FPC) is a rare hereditary tumor entity with broad phenotypic heterogeneity, including colorectal carcinoma (CRC) in some families. The underlying factors for this co-occurrence are still not well evaluated. FPC families in the National Case Collection of Familial Pancreatic Cancer with an additional occurrence of CRC were analyzed regarding the phenotype, genotype and recommendation for a clinical screening program. The total cohort of 272 FPC families included 30 (11%) families with at least one CRC case. The proportion of affected family members with PDAC was 16.1% (73/451) compared to 9.3% of family members with CRC (42/451, p < 0.01). Females were affected with PDAC in 49% (36/73) and CRC in 38% (16/42). The median age of PDAC was 63 compared to 66 years in CRC, whereas 8 (26.6%) of families had an early onset of PDAC and 2 (6.7%) of CRC. Seventeen families had 2 or more affected generations with PDAC and 6 families with CRC. Eleven (9.6%) of affected patients had both PDAC and CRC. Potentially causative germline mutations (2 ATM, 1 CDKN2a, 1 MLH1, 1 PALB2) were detected in 5 of 18 (27.7%) analyzed cases. These findings provide a step forward to include the phenotypic and genotypic characteristics of FPC-CRC families for the genetic counseling and management of these families. Nevertheless, results need to be verified in a larger patient cohort beforehand.
+       Link: https://pubmed.ncbi.nlm.nih.gov/36717525/
+   12. [observational     ] (src=llm     , score=7) PMID 28975465: Expanding the spectrum of germline variants in cancer.
+       Journal: Human genetics (2017)
+       Authors: Siraj AK, Masoodi T, Bu R, Parvathareddy SK, Al-Badawi IA et al.
+       Matched: ['ATM', 'germline mutation', 'colorectal cancer']
+       Findings: Germline ATM variants identified in CRC patients; highlights that many mutation-positive cases lack family history.
+       Abstract: Our ability to identify germline variants in hereditary cancer cases remains challenged by the incomplete cataloging of relevant genes and lack of consensus on who should be tested. We designed a panel [hereditary oncogenesis predisposition evaluation (HOPE)] that encompasses most of the genes known to be associated with cancer development and tested its yield on more than 1300 samples of cancer patients. Pathogenic or likely pathogenic variants in high and intermediate risk genes were identified in 16, 23.9, 9.7 and 2.7%, respectively, of peripheral blood or normal tissue samples taken from patients with breast, ovarian, colorectal and thyroid cancer. To confirm specificity of these findings, we tested an ethnically matched cohort of 816 individuals and only identified pathogenic or likely pathogenic variants in 1.59% (0.98% in high risk and 0.61% in intermediate risk). Remarkably, pathogenic or likely pathogenic alleles in DNA repair/genomic instability genes (other than BRCA2, ATM and PALB2) accounted for at least 16.8, 11.1, 50 and 45.5% of mutation-positive breast, ovarian, thyroid and colorectal cancer patients, respectively. Family history was noticeably lacking in a substantial fraction of mutation-positive cases (63.7, 81.5, 42.4 and 87.5% in breast, ovarian, colorectal and thyroid, respectively). Our results show high contribution of germline mutations to cancer predisposition that extends beyond "classical" hereditary cancer genes. Family history was lacking in 63.5% mutation-positive cases, shows that hereditary cancer need not appear familial and suggests that relaxed selection of cancer patients for hereditary cancer panels should be considered.
+       Link: https://pubmed.ncbi.nlm.nih.gov/28975465/
+   13. [observational     ] (src=llm     , score=7) PMID 26778106: The risk for developing cancer in Israeli ATM, BLM, and FANCC heterozygous mutat
+       Journal: Cancer genetics (2016)
+       Authors: Laitman Y, Boker-Keinan L, Berkenstadt M, Liphsitz I, Weissglas-Volkov D et al.
+       Matched: ['ATM', 'germline mutation', 'colorectal cancer']
+       Findings: Israeli study found heterozygous ATM mutation carriers did not have a significantly increased risk of CRC compared to the general population.
+       Abstract: Cancer risks in heterozygous mutation carriers of the ATM, BLM, and FANCC genes are controversial. To shed light on this issue, cancer rates were evaluated by cross referencing asymptomatic Israeli heterozygous mutation carriers in the ATM, BLM, and FANCC genes with cancer diagnoses registered at the Israeli National Cancer Registry (INCR). Comparison of observed to expected Standardized Incidence Rates (SIR) was performed. Overall, 474 individuals participated in the study: 378 females; 25 Arab and 31 Jewish ATM carriers, 152 BLM carriers, and 170 FANCC carriers (all Ashkenazim). Age range at genotyping was 19-53 years (mean + SD 30.6 + 5 years). In addition, 96 males were included; 5, 34, and 57 ATM, BLM, and FANCC mutation carriers, respectively. Over 5-16 years from genotyping (4721 person/years), 15 new cancers were diagnosed in mutation carriers: 5 breast, 4 cervical, 3 melanomas, and one each bone sarcoma, pancreatic, and colorectal cancer. No single cancer diagnosis was more prevalent then expected in all groups combined or per gene analyzed. Specifically breast cancer SIR was 0.02-0.77. We conclude that Israeli ATM, BLM, and FANCC heterozygous mutation carriers are not at an increased risk for developing cancer.
+       Link: https://pubmed.ncbi.nlm.nih.gov/26778106/
+   14. [observational     ] (src=llm     , score=7) PMID 40930024: Impact of DNA damage repair alterations on real-world response to therapy in met
+       Journal: ESMO open (2025)
+       Authors: Miotke L, Norton C, Rubnitz Z, Florou V, Nevala-Plagemann C et al.
+       Matched: ['DNA damage repair', 'colorectal cancer', 'treatment response']
+       Findings: Evaluates the impact of DDR mutations (including ATM) on real-world response to therapy, specifically platinum-based regimens, in mCRC.
+       Abstract: Alterations in DNA damage repair (DDR) pathway genes can be exploited by cytotoxic chemotherapy regimens that induce DNA damage. Platinum chemotherapy has been shown to be particularly effective in DDR-mutated populations. However, the clinical impact of DDR mutations in metastatic colorectal cancer is still unknown.
+       Link: https://pubmed.ncbi.nlm.nih.gov/40930024/
+   15. [observational     ] (src=llm     , score=7) PMID 31876540: Increased Risk of Acute Myelogenous Leukemia After Early Onset but Not Late-Onse
+       Journal: American journal of clinical oncology (2020)
+       Authors: Lehrer S, Rheinstein PH
+       Matched: ['ATM', 'germline mutation', 'colorectal cancer']
+       Findings: Notes that germline ATM mutations are found in early-onset CRC patients and discusses risks of second primary cancers like AML.
+       Abstract: Early onset colorectal cancer in persons younger than 50 years is increasingly common. Clinical and molecular characterizations reveal a distinctive disease. Thirty percent of patients have mutations of hereditary cancer syndromes, especially Lynch syndrome. A recent analysis, testing germline DNA for mutations in 25 cancer susceptibility genes, showed that some patients younger than 50 years had mutations of high-penetrance colorectal cancer genes such as APC (adenopolyposis coli). Others had mutations in high-penetrance or moderate-penetrance genes not traditionally associated with colorectal cancer, such as ATM (ataxia telangiectasia mutated), whereas still others had low penetrance colorectal cancer genes. In the current study, we examined the incidence of second cancers following early onset (age less than 50 y) colorectal cancer.
+       Link: https://pubmed.ncbi.nlm.nih.gov/31876540/
+   16. [observational     ] (src=llm     , score=6) PMID 32658311: Germline pathogenic variant spectrum in 25 cancer susceptibility genes in Turkis
+       Journal: International journal of cancer (2021)
+       Authors: Akcay IM, Celik E, Agaoglu NB, Alkurt G, Kizilboga Akgun T et al.
+       Matched: ['ATM germline', 'colorectal cancer']
+       Findings: Identified ATM germline variants in high-risk cancer patients; 26.4% of high-risk CRC patients had actionable variants.
+       Abstract: Inherited pathogenic variants account for 5% to 10% of all breast cancer (BC) and colorectal cancer (CRC) cases. Here, we sought to profile the pathogenic variants in 25 cancer susceptibility genes in Turkish population. Germline pathogenic variants were screened in 732 BC patients, 189 CRC patients and 490 cancer-free elderly controls, using next-generation sequencing-based multigene panel testing and multiplex ligation-dependent probe amplification testing. Pathogenic variants were detected in 17.2% of high-risk BC patients and 26.4% of high-risk CRC patients. More than 95% of these variants were clinically actionable. BRCA1/2 and mismatch repair genes (MLH1, MSH2 and MSH6) accounted for two-thirds of all pathogenic variants detected in high-risk BC and CRC patients, respectively. Pathogenic variants in PALB2, CHEK2, ATM and TP53 were also prevalent in high-risk BC patients (4.5%). BRCA1 exons 17-18 deletion and CHEK2 c.592+3A>T were the most common variants predisposing to BC, and they are likely to be founder variants. Three frequent MUTYH pathogenic variants (c.884C>T, c.1437_1439delGGA and c.1187G>A) were responsible for all MUTYH biallelic cases (4.4% of high-risk CRC patients). The total pathogenic variant frequency was very low in controls (2.4%) and in low-risk BC (3.9%) and CRC (6.1%) patients. Our study depicts the pathogenic variant spectrum and prevalence in Turkish BC and CRC patients, guiding clinicians and health authorities for genetic testing applications and variant classification in Turkish population.
+       Link: https://pubmed.ncbi.nlm.nih.gov/32658311/
+   17. [observational     ] (src=llm     , score=6) PMID 36356413: Canonical and uncanonical pathogenic germline variants in colorectal cancer pati
+       Journal: ESMO open (2022)
+       Authors: Poliani L, Greco L, Barile M, Dal Buono A, Bianchi P et al.
+       Matched: ['colorectal cancer', 'germline mutation']
+       Findings: Impact of NGS on identifying canonical and uncanonical germline variants in CRC patients.
+       Abstract: Despite increasing use of next-generation sequencing (NGS), data concerning the gain in germline pathogenic variants (PVs) remain scanty, especially with respect to uncanonical ones. We aimed to verify the impact of different cancer predisposition genes (CPGs) on colorectal cancer (CRC) in patients referred for genetic evaluation.
+       Link: https://pubmed.ncbi.nlm.nih.gov/36356413/
+   18. [case_report       ] (src=xml     , score=7) PMID 34083289: Molecular and Radiological Features of Microsatellite Stable Colorectal Cancer C
+       Journal: Anticancer research (2021)
+       Authors: Keenan BP, VAN Loon K, Khilnani AD, Fidelman N, Behr SC et al.
+       Matched: ['MSS', 'colorectal cancer', 'immunotherapy']
+       Findings: Investigates MSS CRC cases with dramatic responses to immunotherapy to identify predictive biomarkers for this subgroup.
+       Abstract: The majority of colorectal cancer (CRC) cases, which are microsatellite stable (MSS) and do not harbor mismatch repair deficiency/microsatellite instability, are resistant to immunotherapy. Identification of patients with exceptional responses in MSS CRC and predictive biomarkers is an unmet need that needs to be addressed.
+       Link: https://pubmed.ncbi.nlm.nih.gov/34083289/
+   19. [case_report       ] (src=xml     , score=7) PMID 35004311: Case Report: Combination of Olaparib With Chemotherapy in a Patient With ATM-Def
+       Journal: Frontiers in oncology (2021)
+       Authors: Papageorgiou GI, Fergadis E, Skouteris N, Christakos E, Tsakatikas SA et al.
+       Matched: ['ATM-deficient', 'colorectal cancer', 'treatment outcome']
+       Findings: Case report of an ATM-deficient CRC patient successfully treated with an off-label combination of Olaparib (PARP inhibitor) and irinotecan.
+       Abstract: Poly-ADP ribose polymerase (PARP) inhibitors are constantly increasing in their indications for use as anti-cancer treatment in various neoplasms, the majority of which are linked with BRCA deficiency. Preclinical data support the investigation of PARP inhibitors in other neoplasms exhibiting "BRCAness" or homologous recombination deficiency (HRD) as monotherapy as well as in combination with chemotherapy. With the current report we present the case of a heavily pretreated 55-year-old male patient diagnosed with stage IV ATM-deficient CRC, who was effectively treated with an off-label olaparib-irinotecan combination after exhaustion of all available treatment choices; furthermore, we discuss the existing data providing evidence for the use of PARP inhibitors in ATM-deficient CRC and encourage the implementation of next-generation sequencing (NGS) in patients with no other available treatment options.
+       Link: https://pubmed.ncbi.nlm.nih.gov/35004311/
+   20. [preclinical       ] (src=xml     , score=5) PMID 27602502: Phenotypic consequences of somatic mutations in the ataxia-telangiectasia mutate
+       Journal: Oncotarget (2016)
+       Authors: Weber AM, Drobnitzky N, Devery AM, Bokobza SM, Adams RA et al.
+       Matched: ['ATM', 'colorectal cancer']
+       Findings: Identified tumoral loss of ATM protein expression in 3.9% of colorectal cancer specimens using immunohistochemistry.
+       Abstract: Mutations in the Ataxia-telangiectasia mutated (ATM) gene are frequently found in human cancers, including non-small cell lung cancer (NSCLC). Loss of ATM function confers sensitivity to ionising radiation (IR) and topoisomerase inhibitors and may thus define a subset of cancer patients that could get increased benefit from these therapies. In this study, we evaluated the phenotypic consequences of ATM missense changes reported in seven NSCLC cell lines with regard to radiosensitivity and functionality of ATM signalling. Our data demonstrate that only 2/7 NSCLC cell lines (H1395 and H23) harbouring ATM missense mutations show a functional impairment of ATM signalling following IR-exposure. In these two cell lines, the missense mutations caused a significant reduction in ATM protein levels, impairment of ATM signalling and marked radiosensitivity. Of note, only cell lines with homozygous mutations in the ATM gene showed significant impairment of ATM function. Based on these observations, we developed an immunohistochemistry-based assay to identify patients with loss or reduction of ATM protein expression in a clinical setting. In a set of 137 NSCLC and 154 colorectal cancer specimens we identified tumoral loss of ATM protein expression in 9.5% and 3.9% of cases, respectively, demonstrating the potential utility of this method.
+       Link: https://pubmed.ncbi.nlm.nih.gov/27602502/

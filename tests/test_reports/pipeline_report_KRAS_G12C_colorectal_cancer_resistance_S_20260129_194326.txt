@@ -1,0 +1,746 @@
+====================================================================================================
+SmartPubMed Pipeline Detailed Report
+====================================================================================================
+Query: KRAS G12C colorectal cancer resistance SHP2 SOS1 inhibitor China
+Time: 2026-01-29 19:42:24
+
+====================================================================================================
+STEP 1: LLM Query Build (Layer 1)
+====================================================================================================
+Generated: ("colorectal cancer"[tiab] OR "colorectal neoplasm"[tiab] OR "metastatic colorectal cancer"[tiab]) AND ("KRAS G12C"[tiab]) AND ("SHP2"[tiab] OR "SOS1"[tiab] OR "resistance"[tiab])
+
+====================================================================================================
+STEP 2: PubMed API broad search (broad=200, year_window=10)
+====================================================================================================
+API returned: 84 articles
+
+====================================================================================================
+STEP 3: XML Metadata Bucketing
+====================================================================================================
+     1. PMID 34161704     | XML: None(need LLM)       | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural', "Research Support, Non-U.S. Gov't"]
+      Title: Acquired Resistance to KRAS
+      Journal: The New England journal of medicine (2021)
+      Abstract: Clinical trials of the KRAS inhibitors adagrasib and sotorasib have shown promising activity in cancers harboring KRAS glycine-to-cysteine amino acid substitutions at codon 12 (KRAS
+     2. PMID 32430388     | XML: None(need LLM)       | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural', "Research Support, Non-U.S. Gov't"]
+      Title: EGFR Blockade Reverts Resistance to KRAS
+      Journal: Cancer discovery (2020)
+      Abstract: Most patients with 
+     3. PMID 38177853     | XML: rct                  | PubTypes: ['Clinical Trial, Phase I', 'Journal Article', 'Research Support, N.I.H., Extramural', "Research Support, Non-U.S. Gov't"]
+      Title: Sotorasib with panitumumab in chemotherapy-refractory KRAS
+      Journal: Nature medicine (2024)
+      Abstract: The current third-line (and beyond) treatment options for RAS-mutant metastatic colorectal cancer have yielded limited efficacy. At the time of study start, the combination of sotorasib, a KRAS (Kirst...
+     4. PMID 34953682     | XML: systematic_review    | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural', 'Research Support, N.I.H., Intramural', 'Review']
+      Title: Anticancer drug resistance: An update and perspective.
+      Journal: Drug resistance updates : reviews and commentaries in antimicrobial and anticancer chemotherapy (2021)
+      Abstract: Driver mutations promote initiation and progression of cancer. Pharmacological treatment can inhibit the action of the mutant protein; however, drug resistance almost invariably emerges. Multiple stud...
+     5. PMID 37611121     | XML: rct                  | PubTypes: ['Clinical Trial, Phase I', 'Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Single-Agent Divarasib (GDC-6036) in Solid Tumors with a 
+      Journal: The New England journal of medicine (2023)
+      Abstract: Divarasib (GDC-6036) is a covalent KRAS G12C inhibitor that was designed to have high potency and selectivity.
+     6. PMID 39103541     | XML: None(need LLM)       | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural', "Research Support, Non-U.S. Gov't"]
+      Title: Co-targeting SOS1 enhances the antitumor effects of KRAS
+      Journal: Nature cancer (2024)
+      Abstract: Combination approaches are needed to strengthen and extend the clinical response to KRAS
+     7. PMID 38052910     | XML: rct                  | PubTypes: ['Clinical Trial, Phase I', 'Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Divarasib plus cetuximab in KRAS G12C-positive colorectal cancer: a phase 1b tri
+      Journal: Nature medicine (2024)
+      Abstract: KRAS G12C mutation is prevalent in ~4% of colorectal cancer (CRC) and is associated with poor prognosis. Divarasib, a KRAS G12C inhibitor, has shown modest activity as a single agent in KRAS G12C-posi...
+     8. PMID 38756650     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: KRAS G12C inhibitor combination therapies: current evidence and challenge.
+      Journal: Frontiers in oncology (2024)
+      Abstract: Although KRAS G12C inhibitors have proven that KRAS is a "druggable" target of cancer, KRAS G12C inhibitor monotherapies have demonstrated limited clinical efficacy due to primary and acquired resista...
+     9. PMID 39914665     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Genomic landscape of clinically acquired resistance alterations in patients trea
+      Journal: Annals of oncology : official journal of the European Society for Medical Oncology (2025)
+      Abstract: Mutant-selective inhibitors of KRAS
+    10. PMID 38422896     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Current advances in targeted therapy for metastatic colorectal cancer - Clinical
+      Journal: Cancer treatment reviews (2024)
+      Abstract: The last two decades have witnessed major breakthroughs in the development of targeted therapy for patients with metastatic colorectal cancer (mCRC), an achievement which stems largely from advances i...
+    11. PMID 34919824     | XML: rct                  | PubTypes: ['Clinical Trial, Phase II', 'Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Sotorasib for previously treated colorectal cancers with KRAS
+      Journal: The Lancet. Oncology (2022)
+      Abstract: Sotorasib, a specific, irreversible KRAS
+    12. PMID 38171240     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Unveiling the role of KRAS in tumor immune microenvironment.
+      Journal: Biomedicine & pharmacotherapy = Biomedecine & pharmacotherapie (2024)
+      Abstract: Kirsten rats sarcoma viral oncogene (KRAS), the first discovered human oncogene, has long been recognized as "undruggable". KRAS mutations frequently occur in multiple human cancers including non-smal...
+    13. PMID 39558030     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Late-line options for patients with metastatic colorectal cancer: a review and e
+      Journal: Nature reviews. Clinical oncology (2025)
+      Abstract: Over the past few years, several novel systemic treatments have emerged for patients with treatment-refractory metastatic colorectal cancer, thus making selection of the most effective later-line ther...
+    14. PMID 33582927     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Targeting KRAS in Colorectal Cancer.
+      Journal: Current oncology reports (2021)
+      Abstract: Mutations in kirsten rat sarcoma viral oncogene homolog (KRAS) are the most frequently observed genomic alterations in human cancers. No KRAS targeting therapy has been approved despite more than thre...
+    15. PMID 38723697     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review', "Research Support, Non-U.S. Gov't"]
+      Title: Activity and resistance to KRAS
+      Journal: Biochimica et biophysica acta. Reviews on cancer (2024)
+      Abstract: Non-small cell lung cancer (NSCLC) and colorectal cancer (CRC) are associated with a high mortality rate. Mutations in the V-Ki-ras2 Kirsten Rat Sarcoma Viral Oncogene Homolog (KRAS) proto-oncogene GT...
+    16. PMID 38825433     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: KRAS G12C Inhibitors in the Treatment of Metastatic Colorectal Cancer.
+      Journal: Clinical colorectal cancer (2024)
+      Abstract: KRAS mutations contribute substantially to the overall colorectal cancer burden and have long been a focus of drug development efforts. After a lengthy preclinical road, KRAS inhibition via the G12C a...
+    17. PMID 40256920     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Differential Response and Resistance to KRAS-Targeted Therapy.
+      Journal: Molecular carcinogenesis (2025)
+      Abstract: KRAS is the most frequently mutated oncogene. In epithelial malignancies such as lung, colorectal, and pancreatic tumors, KRAS is mutated in 25 to above 90% cases. KRAS was considered undruggable for ...
+    18. PMID 36632627     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Targeting 
+      Journal: Gastroenterology report (2023)
+      Abstract: With the advent of Kirsten rat sarcoma viral oncogene homologue G12C (KRAS G12C) inhibitors, RAS is no longer considered undruggable. For the suppression of RAS, new therapeutic approaches have been s...
+    19. PMID 40153672     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Targeting RAS in gastrointestinal malignancies.
+      Journal: Clinical advances in hematology & oncology : H&O (2025)
+      Abstract: Kirsten rat sarcoma virus (KRAS) is one of the prevalent oncogenic drivers in gastrointestinal (GI) cancers, including pancreatic ductal adenocarcinoma and colorectal cancer. The KRAS protein is a GTP...
+    20. PMID 38978742     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Assessment of KRAS
+      Journal: Frontiers in oncology (2024)
+      Abstract: Colorectal cancer (CRC) is a highly prevalent and lethal cancer worldwide. Approximately 45% of CRC patients harbor a gain-in-function mutation in KRAS. KRAS is the most frequently mutated oncogene ac...
+    21. PMID 40692745     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Targeting KRAS in colorectal cancer (Review).
+      Journal: Molecular and clinical oncology (2025)
+      Abstract: RAS genes play crucial roles in regulating important biological processes such as cell growth, differentiation, and apoptosis in normal cells. When RAS genes undergo mutations or abnormal expression, ...
+    22. PMID 35837349     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Targeting 
+      Journal: OncoTargets and therapy (2022)
+      Abstract: Identifying mutations in the 
+    23. PMID 37212934     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: New Developments in Treating RAS-Mutated Metastatic Colorectal Cancer.
+      Journal: Current treatment options in oncology (2023)
+      Abstract: One of the great challenges in digestive oncology is choosing the optimal therapy for RAS-mutated metastatic colorectal cancer (mCRC). Even though the RAS genes and accompanying pathway were identifie...
+    24. PMID 37790760     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Prognostic and therapeutic impact of the KRAS G12C mutation in colorectal cancer
+      Journal: Frontiers in oncology (2023)
+      Abstract: (no abstract)
+    25. PMID 40361439     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Targeting the KRAS Oncogene for Patients with Metastatic Colorectal Cancer.
+      Journal: Cancers (2025)
+      Abstract: Colorectal cancer (CRC) is one of the most common cancers worldwide, with KRAS mutations occurring in approximately 40% of cases. These mutations drive tumorigenesis through the constitutive activatio...
+    26. PMID 37190303     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: The Therapeutic Landscape for 
+      Journal: Cancers (2023)
+      Abstract: Colorectal cancer is one of the world's most prevalent and lethal cancers. Mutations of the KRAS gene occur in ~40% of metastatic colorectal cancers. While this cohort has historically been difficult ...
+    27. PMID 41344351     | XML: rct                  | PubTypes: ['Journal Article', 'Clinical Trial, Phase II', 'Clinical Trial, Phase I', 'Multicenter Study']
+      Title: Glecirasib with or without cetuximab in previously treated locally advanced or m
+      Journal: The lancet. Gastroenterology & hepatology (2026)
+      Abstract: KRAS
+    28. PMID 40904207     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Personalized therapy in metastatic colorectal cancer: biomarker-driven use of bi
+      Journal: Expert opinion on biological therapy (2025)
+      Abstract: Metastatic colorectal cancer (mCRC) remains a leading cause of cancer mortality worldwide, with limited long-term survival despite therapeutic advances. The increasing understanding of its molecular h...
+    29. PMID 36549128     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Targeting KRAS
+      Journal: ESMO open (2023)
+      Abstract: RAS mutation is considered one of the most relevant oncogenic drivers in human cancers. Unfortunately, for more than three decades, RAS has been considered an undruggable target. Recently, the discove...
+    30. PMID 40141164     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: What Is Next for Refractory Colorectal Cancer CRC? Looking Beyond SUNLIGHT, FRES
+      Journal: International journal of molecular sciences (2025)
+      Abstract: The treatment landscape of metastatic colorectal cancer (mCRC) has undergone significant evolution, with the introduction of targeted therapies and immunotherapy dramatically altering the management o...
+    31. PMID 39956882     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Progress of KRAS G12C inhibitors in the treatment of refractory colorectal cance
+      Journal: Investigational new drugs (2025)
+      Abstract: Colorectal cancer is the third most prevalent cancer in the world. Early screening and detection of tumours, active surgical radical treatment, postoperative adjuvant chemotherapy, targeted therapy, a...
+    32. PMID 36687386     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: New developments in targeted therapy for metastatic colorectal cancer.
+      Journal: Therapeutic advances in medical oncology (2023)
+      Abstract: Colorectal cancer (CRC) is the second most lethal cancer worldwide and the prognosis of metastatic CRC (mCRC) remains poor. Recent advancements in translational research have led to the identification...
+    33. PMID 38542278     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Targeting 
+      Journal: International journal of molecular sciences (2024)
+      Abstract: Kirsten rat sarcoma virus oncogene homolog (
+    34. PMID 38271825     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review', "Research Support, Non-U.S. Gov't"]
+      Title: Multiple medicinal chemistry strategies of targeting KRAS: State-of-the art and 
+      Journal: Bioorganic chemistry (2024)
+      Abstract: KRAS is the most frequently mutated oncogene and drives the development and progression of malignancies, most notably non-small cell lung cancer (NSCLS), pancreatic ductal adenocarcinoma (PDAC) and co...
+    35. PMID 37223497     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Covalent inhibitor targets KRas
+      Journal: Genes & diseases (2023)
+      Abstract: (no abstract)
+    36. PMID 37907934     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: KRAS
+      Journal: Journal of translational medicine (2023)
+      Abstract: KRAS activating mutations are considered the most frequent oncogenic drivers and are correlated with radio-resistance in multiple cancers including non-small cell lung cancer (NSCLC) and colorectal ca...
+    37. PMID 38502113     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Molecular and Clinical Determinants of Acquired Resistance and Treatment Duratio
+      Journal: Clinical cancer research : an official journal of the American Association for Cancer Research (2024)
+      Abstract: Targeted therapies have improved outcomes for patients with metastatic colorectal cancer, but their impact is limited by rapid emergence of resistance. We hypothesized that an understanding of the und...
+    38. PMID 35732135     | XML: None(need LLM)       | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural', "Research Support, Non-U.S. Gov't"]
+      Title: KRAS
+      Journal: Cell reports (2022)
+      Abstract: Although KRAS has long been considered undruggable, direct KRAS
+    39. PMID 39175850     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Combining EGFR and KRAS G12C Inhibitors for KRAS G12C Mutated Advanced Colorecta
+      Journal: Journal of cancer immunology (2024)
+      Abstract: KRAS is a commonly mutated gene in advanced colorectal cancer (CRC). Recently, inhibitors of KRAS G12C were developed and have shown promising efficacy for KRAS G12C mutated non-small cell lung cancer...
+    40. PMID 36747713     | XML: None(need LLM)       | PubTypes: ['Preprint', 'Journal Article']
+      Title: Combined KRAS
+      Journal: bioRxiv : the preprint server for biology (2023)
+      Abstract: Efforts to improve the anti-tumor response to KRAS
+    41. PMID 38775361     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Epidermal growth factor receptor antagonists in colorectal cancer: emerging stra
+      Journal: Expert opinion on investigational drugs (2024)
+      Abstract: The global prevalence of colorectal cancer highlights the need to enhance treatment strategies for improved patient outcomes. The pivotal role of epidermal growth factor receptor (EGFR) signaling in r...
+    42. PMID 38945380     | XML: preclinical          | PubTypes: ['Journal Article']
+      Title: Cyclopeptide RA-V from Rubia yunnanensis restores activity of Adagrasib against 
+      Journal: Pharmacological research (2024)
+      Abstract: Adagrasib (MRTX849), an approved and promising KRAS G12C inhibitor, has shown the promising results for treating patients with advanced non-small cell lung cancer (NSCLC) or colorectal cancer (CRC) ha...
+    43. PMID 40025995     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Identification of Candidate Alterations Mediating KRASG12C Inhibitor Resistance 
+      Journal: Clinical cancer research : an official journal of the American Association for Cancer Research (2025)
+      Abstract: KRAS G12C inhibitors can treat KRASG12C-mutant advanced colorectal cancers and pancreatic ductal adenocarcinomas (PDAC), but alterations in Kirsten rat sarcoma (KRAS), EGFR, BRAF, MAP2K1, and other ge...
+    44. PMID 38739872     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Targeting KRAS Oncogene for Patients With Colorectal Cancer: A New Step Toward P
+      Journal: JCO oncology practice (2024)
+      Abstract: (no abstract)
+    45. PMID 36780229     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Efficacious Combination Drug Treatment for Colorectal Cancer That Overcomes Resi
+      Journal: Molecular cancer therapeutics (2023)
+      Abstract: Recent advances in combinatorial chemistry led to the discovery of inhibitors targeting the KRAS G12C-mutant protein. However, efficacy of its monotherapy on colorectal cancer is limited. Thus, effect...
+    46. PMID 37155942     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Update on Emerging Therapies for Advanced Colorectal Cancer.
+      Journal: American Society of Clinical Oncology educational book. American Society of Clinical Oncology. Annual Meeting (2023)
+      Abstract: Colorectal cancer (CRC) is the third most common malignancy worldwide. It is projected to increase by 3.2 million new cases and account for 1.6 million deaths by 2040. Mortality is largely due to limi...
+    47. PMID 40080361     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: The emerging role of Sotorasib plus Panitumumab combination therapy in colorecta
+      Journal: International journal of clinical oncology (2025)
+      Abstract: Colorectal cancer (CRC) poses a substantial global health challenge, ranking as the third most commonly diagnosed and second most fatal cancer worldwide. With an increasing incidence, particularly in ...
+    48. PMID 41523245     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Targeted therapy for KRAS G12C-mutated colorectal cancer: advances, challenges, 
+      Journal: American journal of cancer research (2025)
+      Abstract: Colorectal cancer (CRC) is among the most prevalent malignancies worldwide, with approximately 40% of the patients carrying KRAS mutations. Among these, the KRAS G12C mutation accounts for approximate...
+    49. PMID 40940900     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: KRAS G12C Inhibition in Solid Tumors: Biological Breakthroughs, Clinical Evidenc
+      Journal: Cancers (2025)
+      Abstract: KRAS is the most frequently mutated oncogene in cancer. Its activating mutations are associated with aggressive tumor behavior and resistance to certain therapies, including anti-EGFR treatments in co...
+    50. PMID 35694189     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Characterizing the 
+      Journal: Therapeutic advances in medical oncology (2022)
+      Abstract: In metastatic colorectal cancer (mCRC), 
+    51. PMID 34064352     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Targeting KRAS in Solid Tumors: Current Challenges and Future Opportunities of N
+      Journal: Pharmaceutics (2021)
+      Abstract: Activating mutations in RAS family proteins are found in ~25% of all human cancers. Different solid tumors are correlated with mutations in certain isoforms of RAS, with Kirsten RAS (KRAS) being the m...
+    52. PMID 36836752     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Integrated Decision-Making in the Treatment of Colon-Rectal Cancer: The Case of 
+      Journal: Life (Basel, Switzerland) (2023)
+      Abstract: In recent years, precision medicine has taken an increasing place in various branches of medical oncology, including colorectal cancer. Among the potentially relevant mutations for this cancer is the ...
+    53. PMID 34250391     | XML: None(need LLM)       | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural', "Research Support, Non-U.S. Gov't"]
+      Title: Comprehensive Clinical and Molecular Characterization of 
+      Journal: JCO precision oncology (2021)
+      Abstract: (no abstract)
+    54. PMID 41338446     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: SRC at the crossroads of KRAS inhibitor resistance: Mechanisms and therapeutic o
+      Journal: Cancer letters (2026)
+      Abstract: Kirsten rat sarcoma (KRAS) mutations are among the most common oncogenic drivers in human cancers, particularly in non-small cell lung cancer (NSCLC), colorectal cancer (CRC), and pancreatic ductal ad...
+    55. PMID 39263881     | XML: None(need LLM)       | PubTypes: ['Editorial']
+      Title: Breaking barriers: the latest insights into KRAS G12C inhibitors.
+      Journal: Future oncology (London, England) (2024)
+      Abstract: (no abstract)
+    56. PMID 38254903     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Cetuximab as a Key Partner in Personalized Targeted Therapy for Metastatic Color
+      Journal: Cancers (2024)
+      Abstract: Cetuximab, a chimeric IgG1 monoclonal antibody targeting the epidermal growth factor receptor (EGFR), has revolutionized personalized treatment of metastatic colorectal cancer (mCRC) patients. This re...
+    57. PMID 41503677     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: An overview of KRAS-targeting therapies for colorectal cancer in phase I and II 
+      Journal: Expert opinion on investigational drugs (2025)
+      Abstract: KRAS mutations are among the most common oncogenic alterations in colorectal cancer (CRC). These mutations play a central role in tumor initiation and progression through activation of the MAPK signal...
+    58. PMID 39941797     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: The Role of KRAS Mutations in Colorectal Cancer: Biological Insights, Clinical I
+      Journal: Cancers (2025)
+      Abstract: (no abstract)
+    59. PMID 35084268     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Novel approaches for the development of direct KRAS inhibitors: structural insig
+      Journal: Expert opinion on drug discovery (2022)
+      Abstract: Hyperactivated RAS signaling is reported in 13% of all human cancers, in which ~80% resulted due to KRAS mutations alone. Direct inhibition of KRAS is an important aspect in treating KRAS-related tumo...
+    60. PMID 40799551     | XML: None(need LLM)       | PubTypes: ['Journal Article', 'Preprint']
+      Title: Concurrent genetic and non-genetic resistance mechanisms to KRAS inhibition in C
+      Journal: bioRxiv : the preprint server for biology (2025)
+      Abstract: KRAS is mutationally activated in 45-50% of colorectal cancer (CRC) cases, and while KRAS-targeted therapies have shown some clinical promise, upfront and acquired resistance limit their efficacy. To ...
+    61. PMID 37336286     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: MEK inhibitor and anti-EGFR antibody overcome sotorasib resistance signals and e
+      Journal: Cancer letters (2023)
+      Abstract: The Kirsten rat sarcoma (KRAS) oncogene was "undruggable" until sotorasib, a KRAS
+    62. PMID 40731832     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: RAS Mutations in Advanced Colorectal Cancer: Mechanisms, Clinical Implications, 
+      Journal: Medicina (Kaunas, Lithuania) (2025)
+      Abstract: Colorectal cancer (CRC) remains a leading cause of cancer-related mortality globally, posing significant treatment challenges, particularly in its metastatic form (mCRC). This review comprehensively e...
+    63. PMID 41290249     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review', 'English Abstract']
+      Title: [Breakthroughs in 
+      Journal: Zhonghua wei chang wai ke za zhi = Chinese journal of gastrointestinal surgery (2025)
+      Abstract: KRAS mutations are major oncogenic drivers in colorectal cancer (CRC), occurring in 35%-49% of cases; of which 3%-4% involve the 
+    64. PMID 36041010     | XML: preclinical          | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural', "Research Support, Non-U.S. Gov't", "Research Support, U.S. Gov't, Non-P.H.S."]
+      Title: The drug efflux pump MDR1 promotes intrinsic and acquired resistance to PROTACs 
+      Journal: Science signaling (2022)
+      Abstract: Proteolysis-targeting chimeras (PROTACs) are a promising new class of drugs that selectively degrade cellular proteins of interest. PROTACs that target oncogene products are avidly being explored for ...
+    65. PMID 38904222     | XML: preclinical          | PubTypes: ['Journal Article']
+      Title: The SOS1 Inhibitor MRTX0902 Blocks KRAS Activation and Demonstrates Antitumor Ac
+      Journal: Molecular cancer therapeutics (2024)
+      Abstract: KRAS is the most frequently mutated oncogene in human cancer and facilitates uncontrolled growth through hyperactivation of the receptor tyrosine kinase (RTK)/mitogen-activated protein kinase (MAPK) p...
+    66. PMID 26959608     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Tumor cells with KRAS or BRAF mutations or ERK5/MAPK7 amplification are not addi
+      Journal: Cell cycle (Georgetown, Tex.) (2016)
+      Abstract: ERK5, encoded by MAPK7, has been proposed to play a role in cell proliferation, thus attracting interest as a cancer therapeutic target. While oncogenic RAS or BRAF cause sustained activation of the M...
+    67. PMID 41060473     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Advances in biomarkers of resistance to KRAS mutation-targeted inhibitors.
+      Journal: Discover oncology (2025)
+      Abstract: KRAS mutations represent the most common driver genetic alterations in multiple malignant tumors, particularly exerting well-defined oncogenic driver roles in non-small cell lung cancer, colorectal ca...
+    68. PMID 38316747     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: A Potent SOS1 PROTAC Degrader with Synergistic Efficacy in Combination with KRAS
+      Journal: Journal of medicinal chemistry (2024)
+      Abstract: AMG510, as the first approved inhibitor for KRAS
+    69. PMID 39694458     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Investigating the Pathogenicity of Uncommon KRAS Mutations and Their Association
+      Journal: The Journal of molecular diagnostics : JMD (2025)
+      Abstract: Kirsten rat sarcoma viral oncogene homolog (KRAS) somatic mutations occur in 30% to 40% of patients with colorectal cancer (CRC). These were thought to equally affect prognosis and resistance to anti-...
+    70. PMID 40555076     | XML: rct                  | PubTypes: ['Journal Article', 'Clinical Trial, Phase II', 'Randomized Controlled Trial']
+      Title: Comprehensive genomic profiling by liquid biopsy in refractory metastatic colore
+      Journal: ESMO open (2025)
+      Abstract: Biomarker-guided therapies are needed for patients with refractory metastatic colorectal cancer (mCRC). Liquid biopsy (LBx) circulating tumor DNA (ctDNA) comprehensive genomic profiling (CGP) could co...
+    71. PMID 41362725     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Unravelling Resistance: Integrating Metabolism, Epigenetics, Immunology, and Pro
+      Journal: International journal of biological sciences (2026)
+      Abstract: Colorectal cancer (CRC) has a high incidence and mortality rate globally, with approximately 40% of patients harboring Kirsten rat sarcoma viral oncogene homolog (
+    72. PMID 27312529     | XML: preclinical          | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural', "Research Support, Non-U.S. Gov't"]
+      Title: Molecular Landscape of Acquired Resistance to Targeted Therapy Combinations in B
+      Journal: Cancer research (2016)
+      Abstract: Although recent clinical trials of BRAF inhibitor combinations have demonstrated improved efficacy in BRAF-mutant colorectal cancer, emergence of acquired resistance limits clinical benefit. Here, we ...
+    73. PMID 33046519     | XML: None(need LLM)       | PubTypes: ['Journal Article', "Research Support, Non-U.S. Gov't"]
+      Title: Combinations with Allosteric SHP2 Inhibitor TNO155 to Block Receptor Tyrosine Ki
+      Journal: Clinical cancer research : an official journal of the American Association for Cancer Research (2021)
+      Abstract: SHP2 inhibitors offer an appealing and novel approach to inhibit receptor tyrosine kinase (RTK) signaling, which is the oncogenic driver in many tumors or is frequently feedback activated in response ...
+    74. PMID 35260176     | XML: None(need LLM)       | PubTypes: ['Letter', 'Research Support, N.I.H., Extramural']
+      Title: BCL-X
+      Journal: Journal of hematology & oncology (2022)
+      Abstract: KRAS mutations are the most common oncogenic drivers. Sotorasib (AMG510), a covalent inhibitor of KRAS
+    75. PMID 41294676     | XML: systematic_review    | PubTypes: ['Journal Article', 'Review']
+      Title: Proteomic Perspectives on KRAS-Driven Cancers and Emerging Therapeutic Approache
+      Journal: Current oncology (Toronto, Ont.) (2025)
+      Abstract: KRAS mutations are implicated in approximately 23% of all human malignancies, with particularly high prevalence in pancreatic ductal adenocarcinoma (PDAC) (~92%), colorectal cancer (CRC) (~49%), and n...
+    76. PMID 38451823     | XML: case_report          | PubTypes: ['Case Reports', 'Journal Article']
+      Title: Twelve-month progression-free survival with sotorasib and panitumumab in KRAS G1
+      Journal: Anti-cancer drugs (2024)
+      Abstract: Colorectal cancer (CRC) ranks third in global cancer prevalence, with 40% presenting as metastatic colorectal cancer (mCRC). KRAS mutations in mCRC patients confer resistance to anti-EGFR treatments. ...
+    77. PMID 34377229     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Kras mutation subtypes distinctly affect colorectal cancer cell sensitivity to F
+      Journal: American journal of translational research (2021)
+      Abstract: Mutation-activated Kras in cancer cells is a well-known challenging treatment-resistant factor that plays a critical role in treatment resistance. Human colorectal cancer (CRC) has four major Kras mut...
+    78. PMID 33853790     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Mechanisms of KRAS Inhibitor Resistance Revealed.
+      Journal: Cancer discovery (2021)
+      Abstract: A recent study revealed diverse mechanisms of acquired resistance in patients with non-small cell lung cancer or colorectal cancer who stop responding to a KRAS
+    79. PMID 32747369     | XML: None(need LLM)       | PubTypes: ['Journal Article', 'Comment']
+      Title: Same Name, Different Game: EGFR Drives Intrinsic KRAS
+      Journal: Cancer discovery (2020)
+      Abstract: The discovery of covalent inhibitors of KRAS
+    80. PMID 34660299     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Retrospective Comparative Analysis of KRAS G12C 
+      Journal: Frontiers in oncology (2021)
+      Abstract: KRAS mutations in metastatic colorectal cancer (mCRC) define a subset of tumors that have primary resistance to anti-EGFR-based therapy. Data concerning whether different KRAS mutations may also have ...
+    81. PMID 38992135     | XML: preclinical          | PubTypes: ['Journal Article', 'Research Support, N.I.H., Extramural', "Research Support, U.S. Gov't, P.H.S."]
+      Title: A first-in-class selective inhibitor of EGFR and PI3K offers a single-molecule a
+      Journal: Nature cancer (2024)
+      Abstract: Despite tremendous progress in precision oncology, adaptive resistance mechanisms limit the long-term effectiveness of molecularly targeted agents. Here we evaluated the pharmacological profile of MTX...
+    82. PMID 41439081     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Molecular Profiling of KRAS, NRAS, and BRAF in Colorectal Cancer: Insights From 
+      Journal: Cureus (2025)
+      Abstract: Introduction Colorectal cancer (CRC) is a significant global health issue with a rising incidence, particularly high in Libya, posing serious public health concerns. This study aimed to determine the ...
+    83. PMID 32602003     | XML: None(need LLM)       | PubTypes: ['Letter']
+      Title: Landscape of RAS Variations in 17,993 Pan-cancer Patients Identified by Next-gen
+      Journal: Pathology oncology research : POR (2020)
+      Abstract: RAS family genes (HRAS, KRAS and NRAS) were frequently observed in several tumors. The expression of constitutively active RAS proteins mediated by RAS variations promote the development of tumors. KR...
+    84. PMID 38183801     | XML: None(need LLM)       | PubTypes: ['Journal Article']
+      Title: Vaccine antibodies against a synthetic epidermal growth factor variant enhance t
+      Journal: Translational oncology (2024)
+      Abstract: The EGFR pathway is involved in intrinsic and acquired resistance to a wide variety of targeted therapies in cancer. Vaccination represents an alternative to the administration of anti-EGFR monoclonal...
+  Summary: XML classified 55/84
+
+====================================================================================================
+STEP 4: LLM Batch Evaluation (raw JSON responses)
+====================================================================================================
+--- Batch 1/5 (20 articles) ---
+PMIDs: ['34161704', '32430388', '38177853', '34953682', '37611121', '39103541', '38052910', '38756650', '39914665', '38422896', '34919824', '38171240', '39558030', '33582927', '38723697', '38825433', '40256920', '36632627', '40153672', '38978742']
+LLM raw response (len=5605):
+  [PASS  ] PMID 34161704     | score= 6 | study_type=systematic_review    | criteria=['KRAS G12C', 'resistance']
+           findings: Discusses acquired resistance mechanisms to adagrasib and sotorasib in KRAS G12C cancers.
+  [REJECT] PMID 32430388     | score= 4 | study_type=systematic_review    | criteria=['KRAS G12C', 'resistance', 'EGFR']
+           findings: Discusses how EGFR blockade can revert resistance to KRAS G12C inhibition.
+  [PASS  ] PMID 38177853     | score= 8 | study_type=rct                  | criteria=['KRAS G12C', 'colorectal cancer', 'resistance', 'panitumumab']
+           findings: Phase 1b trial showing sotorasib plus panitumumab helps overcome resistance in chemotherapy-refracto
+  [REJECT] PMID 34953682     | score= 3 | study_type=systematic_review    | criteria=['KRAS', 'resistance']
+           findings: General update on anticancer drug resistance mechanisms including KRAS.
+  [PASS  ] PMID 37611121     | score= 7 | study_type=rct                  | criteria=['KRAS G12C', 'solid tumors']
+           findings: Phase I trial of divarasib (GDC-6036) showing potency and selectivity in KRAS G12C solid tumors.
+  [PASS  ] PMID 39103541     | score= 5 | study_type=systematic_review    | criteria=['KRAS G12C', 'SOS1', 'resistance']
+           findings: Discusses co-targeting SOS1 to enhance antitumor effects and overcome resistance to KRAS G12C inhibi
+  [PASS  ] PMID 38052910     | score= 8 | study_type=rct                  | criteria=['KRAS G12C', 'colorectal cancer', 'resistance', 'cetuximab']
+           findings: Phase 1b trial of divarasib plus cetuximab in CRC; ORR of 62.5% in inhibitor-naive patients and iden
+  [PASS  ] PMID 38756650     | score= 7 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'SHP2', 'SOS1', 'resistance']
+           findings: Review of combination therapies (SHP2, SOS1, EGFR) to overcome KRAS G12C resistance, specifically hi
+  [PASS  ] PMID 39914665     | score= 5 | study_type=systematic_review    | criteria=['KRAS G12C', 'resistance']
+           findings: Analysis of the genomic landscape of clinically acquired resistance in KRAS G12C treated patients.
+  [PASS  ] PMID 38422896     | score= 6 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: Review of targeted therapies in mCRC, including KRAS G12C/EGFR combinations and ctDNA monitoring for
+  [PASS  ] PMID 34919824     | score= 8 | study_type=rct                  | criteria=['KRAS G12C', 'colorectal cancer']
+           findings: Phase II trial of sotorasib monotherapy in previously treated KRAS G12C colorectal cancer.
+  [PASS  ] PMID 38171240     | score= 5 | study_type=systematic_review    | criteria=['KRAS G12C', 'SHP2', 'resistance']
+           findings: Discusses KRAS G12C inhibitors, resistance, and the potential of SHP2 combinations for immune modula
+  [PASS  ] PMID 39558030     | score= 6 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer']
+           findings: Evidence-based algorithm for late-line mCRC treatment including KRAS G12C targeted options.
+  [REJECT] PMID 33582927     | score= 4 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer']
+           findings: General review of targeting KRAS in colorectal cancer.
+  [PASS  ] PMID 38723697     | score= 5 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: Review of activity and resistance mechanisms for KRAS G12C inhibitors in NSCLC and CRC.
+  [PASS  ] PMID 38825433     | score= 7 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance', 'EGFR']
+           findings: Review focusing on EGFR reactivation as a primary resistance mechanism in CRC and the shift to dual 
+  [PASS  ] PMID 40256920     | score= 6 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: Summarizes intrinsic and acquired resistance mechanisms and combination strategies for KRAS G12C inh
+  [PASS  ] PMID 36632627     | score= 7 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: Review of combination therapies to alleviate resistance in CRC, focusing on genetic alterations and 
+  [PASS  ] PMID 40153672     | score= 5 | study_type=systematic_review    | criteria=['KRAS G12C', 'gastrointestinal cancer', 'resistance']
+           findings: Explores KRAS mutations in GI cancers, current inhibitors, and challenges with resistance.
+  [PASS  ] PMID 38978742     | score= 5 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer']
+           findings: Review of FDA-approved KRAS G12C inhibitors and their application in colorectal cancer.
+
+--- Batch 2/5 (18 articles) ---
+PMIDs: ['40692745', '35837349', '37212934', '40361439', '37190303', '41344351', '40904207', '36549128', '40141164', '39956882', '36687386', '38542278', '38271825', '37907934', '38502113', '35732135', '39175850', '36747713']
+LLM raw response (len=5223):
+  [PASS  ] PMID 40692745     | score= 6 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: KRAS G12C monotherapy has suboptimal efficacy in CRC due to primary resistance; combination with EGF
+  [REJECT] PMID 35837349     | score= 1 | study_type=systematic_review    | criteria=['KRAS']
+           findings: Incomplete abstract; discusses identifying mutations in KRAS.
+  [PASS  ] PMID 37212934     | score= 5 | study_type=systematic_review    | criteria=['RAS-mutated', 'metastatic colorectal cancer']
+           findings: Discusses challenges in treating RAS-mutated mCRC and the emergence of new drugs targeting the pathw
+  [PASS  ] PMID 40361439     | score= 6 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance', 'sotorasib', 'adagrasib']
+           findings: Reviews KRAS G12C inhibitors and resistance mechanisms via compensatory pathway activation; highligh
+  [PASS  ] PMID 37190303     | score= 6 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: Discusses sotorasib and adagrasib; notes that resistance remains an issue and suggests combination t
+  [PASS  ] PMID 41344351     | score= 8 | study_type=rct                  | criteria=['KRAS G12C', 'colorectal cancer', 'Glecirasib', 'China']
+           findings: Phase I/II multicenter study (likely China-based given Glecirasib/JAB-21822 development) evaluating 
+  [REJECT] PMID 40904207     | score= 4 | study_type=systematic_review    | criteria=['metastatic colorectal cancer', 'biomarker-driven']
+           findings: General review of precision medicine and molecular heterogeneity in mCRC.
+  [PASS  ] PMID 36549128     | score= 5 | study_type=systematic_review    | criteria=['KRAS', 'colorectal cancer']
+           findings: Discusses the transition of KRAS from undruggable to a targetable oncogene in CRC.
+  [PASS  ] PMID 40141164     | score= 6 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: Summarizes treatments for refractory mCRC, including KRAS G12C inhibitors and combination regimens t
+  [PASS  ] PMID 39956882     | score= 7 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: Comprehensive review of KRAS G12C inhibitor clinical trials in CRC, resistance mechanisms, and combi
+  [REJECT] PMID 36747713     | score= 3 | study_type=preclinical          | criteria=['KRAS', 'colorectal cancer']
+           findings: Original research (preprint) investigating efforts to improve anti-tumor response to KRAS inhibition
+  [REJECT] PMID 38542278     | score= 1 | study_type=systematic_review    | criteria=['KRAS']
+           findings: Incomplete abstract regarding KRAS targeting.
+  [REJECT] PMID 38271825     | score= 4 | study_type=systematic_review    | criteria=['KRAS', 'colorectal cancer']
+           findings: Medicinal chemistry review of KRAS inhibitors and the discovery of covalent inhibitors for the switc
+  [REJECT] PMID 37907934     | score= 4 | study_type=preclinical          | criteria=['KRAS G12C', 'colorectal cancer', 'MRTX849']
+           findings: Discusses KRAS mutations and radio-resistance; mentions clinical outcomes for adagrasib (MRTX849).
+  [PASS  ] PMID 38502113     | score= 5 | study_type=observational        | criteria=['colorectal cancer', 'acquired resistance']
+           findings: Investigates genetic mechanisms and intrinsic tumor features mediating acquired resistance to target
+  [REJECT] PMID 35732135     | score= 4 | study_type=preclinical          | criteria=['KRAS', 'colorectal cancer']
+           findings: Discusses the development of direct KRAS inhibitors for previously undruggable targets.
+  [PASS  ] PMID 39175850     | score= 8 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance', 'SHP2', 'SOS1']
+           findings: Detailed review of KRAS G12C + EGFR inhibitor combinations; notes ORRs of 26-62.5% and discusses ove
+  [PASS  ] PMID 36687386     | score= 5 | study_type=systematic_review    | criteria=['metastatic colorectal cancer', 'targeted therapy']
+           findings: Reviews new therapeutic targets and improved outcomes for patients with specific mutations in mCRC.
+
+--- Batch 3/5 (16 articles) ---
+PMIDs: ['38775361', '38945380', '40025995', '36780229', '37155942', '40080361', '41523245', '40940900', '35694189', '34064352', '36836752', '41338446', '38254903', '41503677', '35084268', '40799551']
+LLM raw response (len=5462):
+  [REJECT] PMID 38775361     | score= 4 | study_type=systematic_review    | criteria=['colorectal cancer', 'EGFR']
+           findings: Discusses EGFR antagonists and resistance mechanisms in CRC; relevant as EGFR inhibition is a standa
+  [REJECT] PMID 38945380     | score= 4 | study_type=preclinical          | criteria=['KRAS G12C', 'colorectal cancer', 'resistance', 'Adagrasib']
+           findings: Identifies Nrf2/GLS1 axis as a resistance mechanism to Adagrasib in CRC cell lines and suggests RA-V
+  [PASS  ] PMID 40025995     | score= 6 | study_type=observational        | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: Evaluates genetic landscape of primary resistance to KRAS G12C inhibitors, identifying bypass altera
+  [PASS  ] PMID 36780229     | score= 5 | study_type=preclinical          | criteria=['KRAS G12C', 'colorectal cancer', 'SHP2', 'resistance']
+           findings: Preclinical evidence using patient-derived spheroids showing that KRAS G12C + SHP2 or KRAS G12C + EG
+  [REJECT] PMID 37155942     | score= 3 | study_type=systematic_review    | criteria=['colorectal cancer']
+           findings: General update on emerging therapies for advanced CRC; limited specific detail on KRAS G12C in the p
+  [PASS  ] PMID 40080361     | score= 8 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'Sotorasib', 'Panitumumab']
+           findings: Reviews CodeBreak 101 and 300 trials; Sotorasib + Panitumumab shows significant PFS and ORR improvem
+  [PASS  ] PMID 41523245     | score= 7 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance', 'Sotorasib', 'Adagrasib']
+           findings: Comprehensive review of KRAS G12C inhibitors in CRC, focusing on intrinsic/acquired resistance and r
+  [PASS  ] PMID 40940900     | score= 7 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance', 'Sotorasib', 'Adagrasib']
+           findings: Summarizes clinical evidence and biological breakthroughs for KRAS G12C inhibitors; addresses resist
+  [REJECT] PMID 35694189     | score= 2 | study_type=systematic_review    | criteria=['colorectal cancer']
+           findings: Fragmented abstract; mentions metastatic colorectal cancer but lacks specific findings on KRAS G12C 
+  [PASS  ] PMID 34064352     | score= 6 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: Discusses the shift from 'undruggable' KRAS to novel inhibitors; notes that KRAS G12C is less common
+  [PASS  ] PMID 36836752     | score= 6 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: Discusses KRAS G12C as a target in CRC and the need for combination treatments to overcome resistanc
+  [PASS  ] PMID 41338446     | score= 5 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: Focuses on SRC as a mediator of resistance to KRAS inhibitors in NSCLC, CRC, and PDAC.
+  [REJECT] PMID 38254903     | score= 4 | study_type=systematic_review    | criteria=['colorectal cancer', 'EGFR']
+           findings: Highlights Cetuximab (EGFR inhibitor) as a key partner for novel therapies in molecular subgroups of
+  [PASS  ] PMID 41503677     | score= 7 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'Phase I/II']
+           findings: Overview of KRAS-targeting therapies in early clinical development (Phase I/II) for CRC, including a
+  [REJECT] PMID 35084268     | score= 3 | study_type=systematic_review    | criteria=['KRAS']
+           findings: Focuses on drug design and structural insights for direct KRAS inhibitors; less specific to CRC clin
+  [PASS  ] PMID 40799551     | score= 6 | study_type=preclinical          | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: Uses single-cell spatial transcriptomics on patient biopsies to identify concurrent genetic and non-
+
+--- Batch 4/5 (20 articles) ---
+PMIDs: ['37336286', '40731832', '41290249', '36041010', '38904222', '26959608', '41060473', '38316747', '39694458', '40555076', '41362725', '27312529', '33046519', '35260176', '41294676', '38451823', '34377229', '33853790', '32747369', '34660299']
+LLM raw response (len=5798):
+  [REJECT] PMID 37336286     | score= 4 | study_type=preclinical          | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: MEK inhibitors and anti-EGFR antibodies can overcome sotorasib resistance in CRC cell lines by block
+  [PASS  ] PMID 40731832     | score= 7 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer', 'resistance', 'sotorasib', 'adagrasib']
+           findings: Comprehensive review of KRAS G12C inhibitors in mCRC, discussing resistance mechanisms and the need 
+  [PASS  ] PMID 41290249     | score= 6 | study_type=systematic_review    | criteria=['KRAS G12C', 'colorectal cancer']
+           findings: Review of breakthroughs in KRAS G12C mutant colorectal cancer treatment (abstract truncated).
+  [REJECT] PMID 36041010     | score= 2 | study_type=preclinical          | criteria=['resistance']
+           findings: MDR1 efflux pump promotes resistance to PROTACs in cancer cell models; not specific to KRAS G12C or 
+  [PASS  ] PMID 38904222     | score= 5 | study_type=preclinical          | criteria=['KRAS G12C', 'colorectal cancer', 'SOS1 inhibitor', 'resistance']
+           findings: SOS1 inhibitor MRTX0902 synergizes with adagrasib in KRAS G12C CRC models; identifies NF1 and PTEN a
+  [REJECT] PMID 26959608     | score= 1 | study_type=preclinical          | criteria=['KRAS G12C', 'colorectal cancer']
+           findings: ERK5 signaling is not a driver of proliferation or resistance in KRAS/BRAF mutant CRC cells.
+  [PASS  ] PMID 41060473     | score= 7 | study_type=systematic_review    | criteria=['KRAS', 'colorectal cancer', 'resistance']
+           findings: Review of biomarkers of resistance to KRAS-targeted inhibitors in NSCLC, CRC, and PDAC.
+  [REJECT] PMID 38316747     | score= 4 | study_type=preclinical          | criteria=['KRAS G12C', 'SOS1 inhibitor']
+           findings: Development of a SOS1 PROTAC degrader showing synergistic efficacy with KRAS G12C inhibitors.
+  [PASS  ] PMID 39694458     | score= 5 | study_type=observational        | criteria=['KRAS G12C', 'colorectal cancer']
+           findings: NGS profiling of 2427 CRC cases identifies uncommon KRAS variants and confirms KRAS G12C as a target
+  [PASS  ] PMID 40555076     | score= 6 | study_type=rct                  | criteria=['colorectal cancer', 'liquid biopsy', 'resistance']
+           findings: Phase II trial using ctDNA to guide anti-EGFR rechallenge; relevant for understanding clonal evoluti
+  [PASS  ] PMID 41362725     | score= 7 | study_type=systematic_review    | criteria=['KRAS', 'colorectal cancer', 'resistance']
+           findings: Review integrating metabolism, epigenetics, and immunology to understand resistance in KRAS-mutant C
+  [PASS  ] PMID 27312529     | score= 5 | study_type=preclinical          | criteria=['KRAS G12C', 'colorectal cancer', 'resistance']
+           findings: Identified acquired KRAS G12C mutation as a resistance mechanism to BRAF/MEK inhibition in CRC; vert
+  [REJECT] PMID 33046519     | score= 4 | study_type=preclinical          | criteria=['SHP2 inhibitor', 'RTK signaling']
+           findings: SHP2 inhibitor TNO155 blocks feedback activation of RTK signaling, a common resistance mechanism in 
+  [REJECT] PMID 35260176     | score= 3 | study_type=preclinical          | criteria=['KRAS G12C', 'sotorasib']
+           findings: Preclinical study on BCL-X as a factor in KRAS G12C inhibitor response.
+  [PASS  ] PMID 41294676     | score= 7 | study_type=systematic_review    | criteria=['KRAS', 'colorectal cancer', 'therapeutic approaches']
+           findings: Proteomic review of KRAS-driven cancers and emerging therapeutic strategies including G12C inhibitor
+  [PASS  ] PMID 38451823     | score= 6 | study_type=case_report          | criteria=['KRAS G12C', 'colorectal cancer', 'sotorasib']
+           findings: Case report showing 12-month PFS in a KRAS G12C mCRC patient treated with sotorasib and panitumumab.
+  [REJECT] PMID 34377229     | score= 3 | study_type=preclinical          | criteria=['KRAS', 'colorectal cancer']
+           findings: Different KRAS mutation subtypes (including G12C) show varying sensitivity to the novel inhibitor FL
+  [PASS  ] PMID 33853790     | score= 6 | study_type=systematic_review    | criteria=['KRAS inhibitor', 'resistance', 'colorectal cancer']
+           findings: Summary of a study revealing diverse acquired resistance mechanisms in NSCLC and CRC patients treate
+  [REJECT] PMID 32747369     | score= 4 | study_type=preclinical          | criteria=['KRAS G12C', 'EGFR', 'resistance']
+           findings: EGFR signaling drives intrinsic resistance to KRAS G12C inhibitors specifically in colorectal cancer
+  [PASS  ] PMID 34660299     | score= 5 | study_type=observational        | criteria=['KRAS G12C', 'colorectal cancer']
+           findings: Retrospective analysis comparing outcomes of KRAS G12C vs other KRAS variants in mCRC patients treat
+
+--- Batch 5/5 (4 articles) ---
+PMIDs: ['38992135', '41439081', '32602003', '38183801']
+LLM raw response (len=1673):
+  [REJECT] PMID 38992135     | score= 4 | study_type=preclinical          | criteria=['KRAS G12C', 'colorectal cancer', 'adaptive resistance']
+           findings: MTX-531, a dual EGFR/PI3K inhibitor, shows synergy with KRAS G12C inhibitors in colorectal cancer PD
+  [PASS  ] PMID 41439081     | score= 5 | study_type=observational        | criteria=['colorectal cancer', 'KRAS codon 12', 'resistance to anti-EGFR']
+           findings: Retrospective analysis of a Libyan cohort (n=72) found KRAS mutations in 54.2% of CRC patients, pred
+  [PASS  ] PMID 32602003     | score= 6 | study_type=observational        | criteria=['KRAS G12C', 'colorectal cancer', 'China', 'Next-generation Sequencing']
+           findings: Large-scale NGS study of 17,993 Chinese pan-cancer patients identified KRAS G12C mutation frequency 
+  [REJECT] PMID 38183801     | score= 2 | study_type=preclinical          | criteria=['MAPK/ERK pathway', 'resistance']
+           findings: Anti-EGF antibodies generated by vaccination can potentiate drugs targeting ERK/MAPK and PI3K/Akt pa
+
+LLM filter summary: 84 -> 52 (score >= 5)
+
+====================================================================================================
+STEP 5: XML vs LLM Bucket Comparison (Manual Verification Table)
+====================================================================================================
+  No |       PMID   |       XML Bucket |       LLM study_type |     Final Bucket |   Source | Score | Title
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1 |   34161704   |             None |    systematic_review | systematic_review |      llm |     6 | Acquired Resistance to KRAS
+   2 |   38177853   |              rct |                  rct |              rct |      xml |     8 | Sotorasib with panitumumab in chemotherapy-refract
+   3 |   37611121   |              rct |                  rct |              rct |      xml |     7 | Single-Agent Divarasib (GDC-6036) in Solid Tumors 
+   4 |   39103541   |             None |    systematic_review | systematic_review |      llm |     5 | Co-targeting SOS1 enhances the antitumor effects o
+   5 |   38052910   |              rct |                  rct |              rct |      xml |     8 | Divarasib plus cetuximab in KRAS G12C-positive col
+   6 |   38756650   | systematic_review |    systematic_review | systematic_review |      xml |     7 | KRAS G12C inhibitor combination therapies: current
+   7 |   39914665   |             None |    systematic_review | systematic_review |      llm |     5 | Genomic landscape of clinically acquired resistanc
+   8 |   38422896   | systematic_review |    systematic_review | systematic_review |      xml |     6 | Current advances in targeted therapy for metastati
+   9 |   34919824   |              rct |                  rct |              rct |      xml |     8 | Sotorasib for previously treated colorectal cancer
+  10 |   38171240   | systematic_review |    systematic_review | systematic_review |      xml |     5 | Unveiling the role of KRAS in tumor immune microen
+  11 |   39558030   | systematic_review |    systematic_review | systematic_review |      xml |     6 | Late-line options for patients with metastatic col
+  12 |   38723697   | systematic_review |    systematic_review | systematic_review |      xml |     5 | Activity and resistance to KRAS
+  13 |   38825433   | systematic_review |    systematic_review | systematic_review |      xml |     7 | KRAS G12C Inhibitors in the Treatment of Metastati
+  14 |   40256920   | systematic_review |    systematic_review | systematic_review |      xml |     6 | Differential Response and Resistance to KRAS-Targe
+  15 |   36632627   | systematic_review |    systematic_review | systematic_review |      xml |     7 | Targeting 
+  16 |   40153672   | systematic_review |    systematic_review | systematic_review |      xml |     5 | Targeting RAS in gastrointestinal malignancies.
+  17 |   38978742   | systematic_review |    systematic_review | systematic_review |      xml |     5 | Assessment of KRAS
+  18 |   40692745   | systematic_review |    systematic_review | systematic_review |      xml |     6 | Targeting KRAS in colorectal cancer (Review).
+  19 |   37212934   | systematic_review |    systematic_review | systematic_review |      xml |     5 | New Developments in Treating RAS-Mutated Metastati
+  20 |   40361439   | systematic_review |    systematic_review | systematic_review |      xml |     6 | Targeting the KRAS Oncogene for Patients with Meta
+  21 |   37190303   | systematic_review |    systematic_review | systematic_review |      xml |     6 | The Therapeutic Landscape for 
+  22 |   41344351   |              rct |                  rct |              rct |      xml |     8 | Glecirasib with or without cetuximab in previously
+  23 |   36549128   | systematic_review |    systematic_review | systematic_review |      xml |     5 | Targeting KRAS
+  24 |   40141164   | systematic_review |    systematic_review | systematic_review |      xml |     6 | What Is Next for Refractory Colorectal Cancer CRC?
+  25 |   39956882   | systematic_review |    systematic_review | systematic_review |      xml |     7 | Progress of KRAS G12C inhibitors in the treatment 
+  26 |   38502113   |             None |        observational |    observational |      llm |     5 | Molecular and Clinical Determinants of Acquired Re
+  27 |   39175850   |             None |    systematic_review | systematic_review |      llm |     8 | Combining EGFR and KRAS G12C Inhibitors for KRAS G
+  28 |   36687386   | systematic_review |    systematic_review | systematic_review |      xml |     5 | New developments in targeted therapy for metastati
+  29 |   40025995   |             None |        observational |    observational |      llm |     6 | Identification of Candidate Alterations Mediating 
+  30 |   36780229   |             None |          preclinical |      preclinical |      llm |     5 | Efficacious Combination Drug Treatment for Colorec
+  31 |   40080361   | systematic_review |    systematic_review | systematic_review |      xml |     8 | The emerging role of Sotorasib plus Panitumumab co
+  32 |   41523245   | systematic_review |    systematic_review | systematic_review |      xml |     7 | Targeted therapy for KRAS G12C-mutated colorectal 
+  33 |   40940900   | systematic_review |    systematic_review | systematic_review |      xml |     7 | KRAS G12C Inhibition in Solid Tumors: Biological B
+  34 |   34064352   | systematic_review |    systematic_review | systematic_review |      xml |     6 | Targeting KRAS in Solid Tumors: Current Challenges
+  35 |   36836752   | systematic_review |    systematic_review | systematic_review |      xml |     6 | Integrated Decision-Making in the Treatment of Col
+  36 |   41338446   | systematic_review |    systematic_review | systematic_review |      xml |     5 | SRC at the crossroads of KRAS inhibitor resistance
+  37 |   41503677   | systematic_review |    systematic_review | systematic_review |      xml |     7 | An overview of KRAS-targeting therapies for colore
+  38 |   40799551   |             None |          preclinical |      preclinical |      llm |     6 | Concurrent genetic and non-genetic resistance mech
+  39 |   40731832   | systematic_review |    systematic_review | systematic_review |      xml |     7 | RAS Mutations in Advanced Colorectal Cancer: Mecha
+  40 |   41290249   | systematic_review |    systematic_review | systematic_review |      xml |     6 | [Breakthroughs in 
+  41 |   38904222   |      preclinical |          preclinical |      preclinical |      xml |     5 | The SOS1 Inhibitor MRTX0902 Blocks KRAS Activation
+  42 |   41060473   | systematic_review |    systematic_review | systematic_review |      xml |     7 | Advances in biomarkers of resistance to KRAS mutat
+  43 |   39694458   |             None |        observational |    observational |      llm |     5 | Investigating the Pathogenicity of Uncommon KRAS M
+  44 |   40555076   |              rct |                  rct |              rct |      xml |     6 | Comprehensive genomic profiling by liquid biopsy i
+  45 |   41362725   | systematic_review |    systematic_review | systematic_review |      xml |     7 | Unravelling Resistance: Integrating Metabolism, Ep
+  46 |   27312529   |      preclinical |          preclinical |      preclinical |      xml |     5 | Molecular Landscape of Acquired Resistance to Targ
+  47 |   41294676   | systematic_review |    systematic_review | systematic_review |      xml |     7 | Proteomic Perspectives on KRAS-Driven Cancers and 
+  48 |   38451823   |      case_report |          case_report |      case_report |      xml |     6 | Twelve-month progression-free survival with sotora
+  49 |   33853790   |             None |    systematic_review | systematic_review |      llm |     6 | Mechanisms of KRAS Inhibitor Resistance Revealed.
+  50 |   34660299   |             None |        observational |    observational |      llm |     5 | Retrospective Comparative Analysis of KRAS G12C 
+  51 |   41439081   |             None |        observational |    observational |      llm |     5 | Molecular Profiling of KRAS, NRAS, and BRAF in Col
+  52 |   32602003   |             None |        observational |    observational |      llm |     6 | Landscape of RAS Variations in 17,993 Pan-cancer P
+
+====================================================================================================
+STEP 6: Stratified Sampling
+====================================================================================================
+Quotas: {"guideline": 3, "rct": 6, "systematic_review": 4, "observational": 4, "case_report": 2, "preclinical": 1}
+Input: 52 articles, max_results=20
+  Pre-sample dist:  {"systematic_review": 35, "rct": 6, "observational": 6, "preclinical": 4, "case_report": 1}
+  Post-sample dist: {"rct": 6, "systematic_review": 8, "observational": 4, "case_report": 1, "preclinical": 1}
+  Sampled: 52 -> 20
+
+Final results:
+    1. [rct               ] (src=xml     , score=8) PMID 38177853: Sotorasib with panitumumab in chemotherapy-refractory KRAS
+       Journal: Nature medicine (2024)
+       Authors: Kuboki Y, Fakih M, Strickler J, Yaeger R, Masuishi T et al.
+       Matched: ['KRAS G12C', 'colorectal cancer', 'resistance', 'panitumumab']
+       Findings: Phase 1b trial showing sotorasib plus panitumumab helps overcome resistance in chemotherapy-refractory KRAS G12C mCRC.
+       Abstract: The current third-line (and beyond) treatment options for RAS-mutant metastatic colorectal cancer have yielded limited efficacy. At the time of study start, the combination of sotorasib, a KRAS (Kirsten rat sarcoma viral oncogene homolog)-G12C inhibitor, and panitumumab, an epidermal growth factor receptor (EGFR) inhibitor, was hypothesized to overcome treatment-induced resistance. This phase 1b substudy of the CodeBreaK 101 master protocol evaluated sotorasib plus panitumumab in patients with chemotherapy-refractory KRAS
+       Link: https://pubmed.ncbi.nlm.nih.gov/38177853/
+    2. [rct               ] (src=xml     , score=8) PMID 38052910: Divarasib plus cetuximab in KRAS G12C-positive colorectal cancer: a phase 1b tri
+       Journal: Nature medicine (2024)
+       Authors: Desai J, Alonso G, Kim SH, Cervantes A, Karasic T et al.
+       Matched: ['KRAS G12C', 'colorectal cancer', 'resistance', 'cetuximab']
+       Findings: Phase 1b trial of divarasib plus cetuximab in CRC; ORR of 62.5% in inhibitor-naive patients and identification of acquired resistance alterations.
+       Abstract: KRAS G12C mutation is prevalent in ~4% of colorectal cancer (CRC) and is associated with poor prognosis. Divarasib, a KRAS G12C inhibitor, has shown modest activity as a single agent in KRAS G12C-positive CRC at 400 mg. Epidermal growth factor receptor has been recognized as a major upstream activator of RAS-MAPK signaling, a proposed key mechanism of resistance to KRAS G12C inhibition in CRC. Here, we report on divarasib plus cetuximab (epidermal growth factor receptor inhibitor) in patients with KRAS G12C-positive CRC (n = 29) from arm C of an ongoing phase 1b trial. The primary objective was to evaluate safety. Secondary objectives included preliminary antitumor activity. The safety profile of this combination was consistent with those of single-agent divarasib and cetuximab. Treatment-related adverse events led to divarasib dose reductions in four patients (13.8%); there were no treatment withdrawals. The objective response rate was 62.5% (95% confidence interval: 40.6%, 81.2%) in KRAS G12C inhibitor-naive patients (n = 24). The median duration of response was 6.9 months. The median progression-free survival was 8.1 months (95% confidence interval: 5.5, 12.3). As an exploratory objective, we observed a decline in KRAS G12C variant allele frequency associated with response and identified acquired genomic alterations at disease progression that may be associated with resistance. The manageable safety profile and encouraging antitumor activity of divarasib plus cetuximab support the further investigation of this combination in KRAS G12C-positive CRC.ClinicalTrials.gov identifier: NCT04449874.
+       Link: https://pubmed.ncbi.nlm.nih.gov/38052910/
+    3. [rct               ] (src=xml     , score=8) PMID 34919824: Sotorasib for previously treated colorectal cancers with KRAS
+       Journal: The Lancet. Oncology (2022)
+       Authors: Fakih MG, Kopetz S, Kuboki Y, Kim TW, Munster PN et al.
+       Matched: ['KRAS G12C', 'colorectal cancer']
+       Findings: Phase II trial of sotorasib monotherapy in previously treated KRAS G12C colorectal cancer.
+       Abstract: Sotorasib, a specific, irreversible KRAS
+       Link: https://pubmed.ncbi.nlm.nih.gov/34919824/
+    4. [rct               ] (src=xml     , score=8) PMID 41344351: Glecirasib with or without cetuximab in previously treated locally advanced or m
+       Journal: The lancet. Gastroenterology & hepatology (2026)
+       Authors: Li J, Wang Z, Huang J, Ba Y, Cao B et al.
+       Matched: ['KRAS G12C', 'colorectal cancer', 'Glecirasib', 'China']
+       Findings: Phase I/II multicenter study (likely China-based given Glecirasib/JAB-21822 development) evaluating Glecirasib with or without cetuximab in KRAS G12C mCRC.
+       Abstract: KRAS
+       Link: https://pubmed.ncbi.nlm.nih.gov/41344351/
+    5. [rct               ] (src=xml     , score=7) PMID 37611121: Single-Agent Divarasib (GDC-6036) in Solid Tumors with a 
+       Journal: The New England journal of medicine (2023)
+       Authors: Sacher A, LoRusso P, Patel MR, Miller WH, Garralda E et al.
+       Matched: ['KRAS G12C', 'solid tumors']
+       Findings: Phase I trial of divarasib (GDC-6036) showing potency and selectivity in KRAS G12C solid tumors.
+       Abstract: Divarasib (GDC-6036) is a covalent KRAS G12C inhibitor that was designed to have high potency and selectivity.
+       Link: https://pubmed.ncbi.nlm.nih.gov/37611121/
+    6. [rct               ] (src=xml     , score=6) PMID 40555076: Comprehensive genomic profiling by liquid biopsy in refractory metastatic colore
+       Journal: ESMO open (2025)
+       Authors: Ciardiello D, Boscolo Bielo L, Pietrantonio F, Martini G, Troiani T et al.
+       Matched: ['colorectal cancer', 'liquid biopsy', 'resistance']
+       Findings: Phase II trial using ctDNA to guide anti-EGFR rechallenge; relevant for understanding clonal evolution and resistance in mCRC.
+       Abstract: Biomarker-guided therapies are needed for patients with refractory metastatic colorectal cancer (mCRC). Liquid biopsy (LBx) circulating tumor DNA (ctDNA) comprehensive genomic profiling (CGP) could contribute to the clinical tailoring of molecular targeted therapies for these patients.
+       Link: https://pubmed.ncbi.nlm.nih.gov/40555076/
+    7. [systematic_review ] (src=llm     , score=8) PMID 39175850: Combining EGFR and KRAS G12C Inhibitors for KRAS G12C Mutated Advanced Colorecta
+       Journal: Journal of cancer immunology (2024)
+       Authors: Miyashita H, Hong DS
+       Matched: ['KRAS G12C', 'colorectal cancer', 'resistance', 'SHP2', 'SOS1']
+       Findings: Detailed review of KRAS G12C + EGFR inhibitor combinations; notes ORRs of 26-62.5% and discusses overcoming RTK-mediated resistance.
+       Abstract: KRAS is a commonly mutated gene in advanced colorectal cancer (CRC). Recently, inhibitors of KRAS G12C were developed and have shown promising efficacy for KRAS G12C mutated non-small cell lung cancer. However, KRAS G12C inhibitor monotherapy has not demonstrated excellent efficacy for KRAS G12C mutated advanced CRC due to multiple resistance mechanisms, especially receptor tyrosine kinase (RTK) signaling activation. To overcome this resistance mechanism, various combinations of epithelial growth factor receptor (EGFR) and KRAS G12C inhibitors, including panitumumab plus sotorasib, have been investigated in clinical trials. The combination of EGFR and KRAS G12C inhibitors for KRAS G12C mutated CRC demonstrated overall response rates ranging from 26% to 62.5% in seven clinical trials of phase I to III, whose data are available so far. The median progression-free survival in these trials ranged from 3.9 to 8.1 months. These efficacy data suggest that KRAS G12C inhibitor combination with EGFR inhibitors is more effective for KRAS G12C mutated advanced CRC than KRAS G12C inhibitor monotherapy. They also showed reasonable safety of the combination regimen. Based on these results, phase III clinical trials are being conducted to investigate EGFR and KRAS G12C inhibitor combinations as a first or second-line treatment for KRAS G12C mutated advanced CRC. Furthermore, other KRAS G12C inhibitors, KRAS G12D inhibitors, and pan-RAS inhibitors are being developed, which could make more patients with advanced CRC eligible for KRAS inhibition.
+       Link: https://pubmed.ncbi.nlm.nih.gov/39175850/
+    8. [systematic_review ] (src=xml     , score=8) PMID 40080361: The emerging role of Sotorasib plus Panitumumab combination therapy in colorecta
+       Journal: International journal of clinical oncology (2025)
+       Authors: Kokori E, Olatunji G, Ogieuhi IJ, Ajayi YI, Akinmoju O et al.
+       Matched: ['KRAS G12C', 'colorectal cancer', 'Sotorasib', 'Panitumumab']
+       Findings: Reviews CodeBreak 101 and 300 trials; Sotorasib + Panitumumab shows significant PFS and ORR improvements in KRAS G12C mCRC.
+       Abstract: Colorectal cancer (CRC) poses a substantial global health challenge, ranking as the third most commonly diagnosed and second most fatal cancer worldwide. With an increasing incidence, particularly in older populations, CRC demands innovative therapeutic approaches to address the limitations of existing treatments. One critical target in CRC is the KRAS gene, which is frequently mutated and implicated in various cancer-related processes. This narrative review explores the promising role of Sotorasib plus Panitumumab combination therapy in CRC treatment. Combining Sotorasib with Panitumumab, an EGFR antagonist, offers a synergistic approach to comprehensively block KRAS and EGFR pathways, potentially overcoming resistance mechanisms observed in monotherapies. The review discusses the evolution of CRC treatment from traditional chemotherapy to the advent of targeted therapies like Bevacizumab and Cetuximab. It highlights the limitations of existing therapies, including resistance and toxicities, emphasising the urgency for innovative approaches. The CodeBreak clinical trials, specifically CodeBreak 101 and CodeBreak 300, provide a focal point for evaluating the efficacy of Sotorasib plus Panitumumab in patients with refractory KRAS G12C-mutated mCRC. Preliminary results demonstrate significant improvements in progression-free survival (PFS) and objective response rates, suggesting a paradigm shift in CRC treatment. The preliminary findings from the CodeBreak 300 trial signify a transformative impact of Sotorasib plus Panitumumab in refractory KRAS G12C-mutated mCRC. With a notable increase in PFS and objective response rates and a well-tolerated safety profile, this combination therapy emerges as a potential new standard of care. The results present an optimistic outlook for patients resistant to conventional therapies.
+       Link: https://pubmed.ncbi.nlm.nih.gov/40080361/
+    9. [systematic_review ] (src=xml     , score=7) PMID 38756650: KRAS G12C inhibitor combination therapies: current evidence and challenge.
+       Journal: Frontiers in oncology (2024)
+       Authors: Miyashita H, Kato S, Hong DS
+       Matched: ['KRAS G12C', 'colorectal cancer', 'SHP2', 'SOS1', 'resistance']
+       Findings: Review of combination therapies (SHP2, SOS1, EGFR) to overcome KRAS G12C resistance, specifically highlighting CRC efficacy.
+       Abstract: Although KRAS G12C inhibitors have proven that KRAS is a "druggable" target of cancer, KRAS G12C inhibitor monotherapies have demonstrated limited clinical efficacy due to primary and acquired resistance mechanisms. Multiple combinations of KRAS G12C inhibitors with other targeted therapies, such as RTK, SHP2, and MEK inhibitors, have been investigated in clinical trials to overcome the resistance. They have demonstrated promising efficacy especially by combining KRAS G12C and EGFR inhibitors for KRAS G12C-mutated colorectal cancer. Many clinical trials of combinations of KRAS G12C inhibitors with other targeted therapies, such as SOS1, ERK, CDK4/6, and wild-type RAS, are ongoing. Furthermore, preclinical data have suggested additional promising KRAS G12C combinations with YAP/TAZ-TEAD inhibitors, FAK inhibitors, and farnesyltransferase inhibitors. The combinations of KRAS G12C inhibitors with immunotherapies and chemotherapies have also been investigated, and the preliminary results were reported. More recently, KRAS-targeted therapies not limited to KRAS G12C are being developed, potentially broadening the treatment landscape of KRAS-mutated cancers. Rationally combining KRAS inhibitors with other therapeutics is likely to play a significant role in future treatment for KRAS-mutated solid tumors.
+       Link: https://pubmed.ncbi.nlm.nih.gov/38756650/
+   10. [systematic_review ] (src=xml     , score=7) PMID 38825433: KRAS G12C Inhibitors in the Treatment of Metastatic Colorectal Cancer.
+       Journal: Clinical colorectal cancer (2024)
+       Authors: Xiao A, Fakih M
+       Matched: ['KRAS G12C', 'colorectal cancer', 'resistance', 'EGFR']
+       Findings: Review focusing on EGFR reactivation as a primary resistance mechanism in CRC and the shift to dual EGFR/KRAS blockade.
+       Abstract: KRAS mutations contribute substantially to the overall colorectal cancer burden and have long been a focus of drug development efforts. After a lengthy preclinical road, KRAS inhibition via the G12C allele has finally become a therapeutic reality. Unlike in NSCLC, early studies of KRAS inhibitors in CRC struggled to demonstrate single agent activity. Investigation into these tissue-specific treatment differences has led to a deeper understanding of the complexities of MAPK signaling and the diverse adaptive feedback responses to KRAS inhibition. EGFR reactivation has emerged as a principal resistance mechanism to KRAS inhibitor monotherapy. Thus, the field has pivoted to dual EGFR/KRAS blockade with promising efficacy. Despite significant strides in the treatment of KRAS G12C mutated CRC, new challenges are on the horizon. Alternative RTK reactivation and countless acquired molecular resistance mechanisms have shifted the treatment goalpost. This review focuses on the historical and contemporary clinical strategies of targeting KRAS G12C alterations in CRC and highlights future directions to overcome treatment challenges.
+       Link: https://pubmed.ncbi.nlm.nih.gov/38825433/
+   11. [systematic_review ] (src=xml     , score=7) PMID 36632627: Targeting 
+       Journal: Gastroenterology report (2023)
+       Authors: Zhao MH, Wu AW
+       Matched: ['KRAS G12C', 'colorectal cancer', 'resistance']
+       Findings: Review of combination therapies to alleviate resistance in CRC, focusing on genetic alterations and pathway reactivation.
+       Abstract: With the advent of Kirsten rat sarcoma viral oncogene homologue G12C (KRAS G12C) inhibitors, RAS is no longer considered undruggable. For the suppression of RAS, new therapeutic approaches have been suggested. However, current clinical studies have indicated therapeutic resistance after short-lived tumour suppression. According to preclinical studies, this might be associated with acquired genetic alterations, reactivation of downstream pathways, and stimulation for upstream signalling. In this review, we aimed to summarize current approaches for combination therapy to alleviate resistance to KRAS G12C inhibitors in colorectal cancer with a focus on the mechanisms of therapeutic resistance. We also analysed the relationship between various mechanisms and therapeutic resistance.
+       Link: https://pubmed.ncbi.nlm.nih.gov/36632627/
+   12. [systematic_review ] (src=xml     , score=7) PMID 39956882: Progress of KRAS G12C inhibitors in the treatment of refractory colorectal cance
+       Journal: Investigational new drugs (2025)
+       Authors: Yang P, Li Y
+       Matched: ['KRAS G12C', 'colorectal cancer', 'resistance']
+       Findings: Comprehensive review of KRAS G12C inhibitor clinical trials in CRC, resistance mechanisms, and combination strategies.
+       Abstract: Colorectal cancer is the third most prevalent cancer in the world. Early screening and detection of tumours, active surgical radical treatment, postoperative adjuvant chemotherapy, targeted therapy, and immunotherapy are performed based on pathological staging and immunohistochemistry. Even with these measures, the 5-year survival rate of colorectal cancer is only 65%, and a considerable number of patients still experience tumour recurrence or even metastasis. The KRAS G12C mutation accounts for 3 to 4% of refractory colorectal cancer (advanced or metastatic colorectal cancer), and it was once believed that KRAS did not have a drug target until the emergence of KRAS G12C inhibitors provided targeted treatment for KRAS-mutated colorectal cancer. However, KRAS G12C inhibitors only produce moderate efficacy, and resistance occurs after a short remission. The mechanism of drug resistance in tumour cells is complex and diverse, and existing research has limited understanding of it. This review aims to elucidate the clinical trial progress of KRAS G12C inhibitors in refractory colorectal cancer, the research progress of drug resistance mechanisms, and the combined treatment strategies for drug resistance.
+       Link: https://pubmed.ncbi.nlm.nih.gov/39956882/
+   13. [systematic_review ] (src=xml     , score=7) PMID 41523245: Targeted therapy for KRAS G12C-mutated colorectal cancer: advances, challenges, 
+       Journal: American journal of cancer research (2025)
+       Authors: Lin Y, Cheng SH, Wang D, Zhang SH, Li HL
+       Matched: ['KRAS G12C', 'colorectal cancer', 'resistance', 'Sotorasib', 'Adagrasib']
+       Findings: Comprehensive review of KRAS G12C inhibitors in CRC, focusing on intrinsic/acquired resistance and rational combination strategies.
+       Abstract: Colorectal cancer (CRC) is among the most prevalent malignancies worldwide, with approximately 40% of the patients carrying KRAS mutations. Among these, the KRAS G12C mutation accounts for approximately 4% of the cases. This mutation introduces a unique cysteine residue at codon 12, enabling covalent binding and rendering KRAS G12C a tractable therapeutic target. Recently, selective small-molecule inhibitors of KRAS G12C, including sotorasib and adagrasib, have shown encouraging activity in early clinical trials, indicating potential clinical benefits for this subset of patients. However, their translation into routine clinical practice has been challenged by intrinsic and acquired resistance, treatment-related toxicities, and the absence of reliable predictive biomarkers. The aim of this study is to construct a clear knowledge framework that could inform the design of future clinical trials and optimize clinical practice. Future studies should focus on developing more potent next-generation inhibitors, exploring and optimizing rational combination strategies with other targeted agents or immunotherapies, investigating innovative therapeutic methods, and systematically identifying and validating predictive biomarkers. Collectively, with these efforts, we aim to enhance the efficacy, overcome resistance, and advance precision therapy for patients with KRAS G12C-mutant CRC.
+       Link: https://pubmed.ncbi.nlm.nih.gov/41523245/
+   14. [systematic_review ] (src=xml     , score=7) PMID 40940900: KRAS G12C Inhibition in Solid Tumors: Biological Breakthroughs, Clinical Evidenc
+       Journal: Cancers (2025)
+       Authors: Vitiello PP, Valsecchi AA, Duregon E, Di Celle PF, Cassoni P et al.
+       Matched: ['KRAS G12C', 'colorectal cancer', 'resistance', 'Sotorasib', 'Adagrasib']
+       Findings: Summarizes clinical evidence and biological breakthroughs for KRAS G12C inhibitors; addresses resistance and toxicity challenges.
+       Abstract: KRAS is the most frequently mutated oncogene in cancer. Its activating mutations are associated with aggressive tumor behavior and resistance to certain therapies, including anti-EGFR treatments in colorectal cancer. In particular, the KRAS G12C mutation, which accounts for approximately 3-4% of colorectal cancers (CRCs) and 12-14% of non-small cell lung cancers (NSCLCs), involves a cysteine substitution at codon 12. This has provided the opportunity to develop selective covalent inhibitors that trap the mutant protein in its inactive state. The first targeted therapies for KRAS G12C-mutant cancers comprise sotorasib and adagrasib, both of which have been authorized for use in patients with previously treated NSCLC and CRC. Nevertheless, despite the evidence of clinical activity for this class of agents, primary and acquired resistance, dose optimization, and toxicity management remain significant open challenges. In this review, we summarize recent advances in KRASG12C tumor biology and pharmacological targeting. We also provide additional insights to guide future efforts to overcome the limitations of the current approaches and implement the treatment of KRASG12C-mutant cancers.
+       Link: https://pubmed.ncbi.nlm.nih.gov/40940900/
+   15. [observational     ] (src=llm     , score=6) PMID 40025995: Identification of Candidate Alterations Mediating KRASG12C Inhibitor Resistance 
+       Journal: Clinical cancer research : an official journal of the American Association for Cancer Research (2025)
+       Authors: Jazieh K, Tsai J, Solomon S, Zhu M, Sinicrope FA et al.
+       Matched: ['KRAS G12C', 'colorectal cancer', 'resistance']
+       Findings: Evaluates genetic landscape of primary resistance to KRAS G12C inhibitors, identifying bypass alterations in EGFR, BRAF, and MAP2K1.
+       Abstract: KRAS G12C inhibitors can treat KRASG12C-mutant advanced colorectal cancers and pancreatic ductal adenocarcinomas (PDAC), but alterations in Kirsten rat sarcoma (KRAS), EGFR, BRAF, MAP2K1, and other genes bypass KRAS inhibition and reduce therapy efficacy. Our study evaluates the genetic landscape of candidate primary resistance alterations relevant to KRAS targeting in KRASG12C-mutant colorectal cancer and PDAC.
+       Link: https://pubmed.ncbi.nlm.nih.gov/40025995/
+   16. [observational     ] (src=llm     , score=6) PMID 32602003: Landscape of RAS Variations in 17,993 Pan-cancer Patients Identified by Next-gen
+       Journal: Pathology oncology research : POR (2020)
+       Authors: Zhou S, Zhang D, Li J, Zhao J, Wang G et al.
+       Matched: ['KRAS G12C', 'colorectal cancer', 'China', 'Next-generation Sequencing']
+       Findings: Large-scale NGS study of 17,993 Chinese pan-cancer patients identified KRAS G12C mutation frequency at 1.81% overall, occurring most frequently in colorectal, pancreas, and lung cancers.
+       Abstract: RAS family genes (HRAS, KRAS and NRAS) were frequently observed in several tumors. The expression of constitutively active RAS proteins mediated by RAS variations promote the development of tumors. KRAS is an important prognostic and drug resistance biomarker. It would also be a promising drug target. Several trials which evaluating the efficacy of RAS G12C inhibitor in solid tumors are initiated. Herein, we analyzed the alterations status of KRAS/NRAS/HRAS across diverse solid tumors. The sing nucleotide variants (SNV) and copy number variants (CNV) data of 17993 Chinese patients from 22 types of cancer were obtained in our database. Genomic profiling of DNA was performed through a next-generation sequencing on tissue. Only the pathogenic mutations and likely pathogenic mutations in clinical significance were rolled into our analysis. Among 17993 pan-cancer patients, the total RAS variants frequency was 22.58%. KRAS was the most frequently altered, followed by NRAS and HRAS. For the SNV, KRAS were most commonly found in pancreas cancer, intestine cancer and colorectal cancer. Further analysis among KRAS SNV patients showed that the mutation frequency of KRAS G12C, G12D, G12R, and G12V was 1.81%, 6.81%, 0.69% and 4.25%, respectively. A total of 21 in 22 types of solid tumors had KRAS G12C/D/R/V pathogenic or likely pathogenic mutation, which occurred most frequently in colorectal cancer, pancreas cancer and lung cancer. Our results suggested that a variety of solid tumors may harbor KRAS G12C/D/R/V mutation. These patients may benefit from KRAS inhibitors.
+       Link: https://pubmed.ncbi.nlm.nih.gov/32602003/
+   17. [observational     ] (src=llm     , score=5) PMID 38502113: Molecular and Clinical Determinants of Acquired Resistance and Treatment Duratio
+       Journal: Clinical cancer research : an official journal of the American Association for Cancer Research (2024)
+       Authors: Harrold E, Keane F, Walch H, Chou JF, Sinopoli J et al.
+       Matched: ['colorectal cancer', 'acquired resistance']
+       Findings: Investigates genetic mechanisms and intrinsic tumor features mediating acquired resistance to targeted therapies in CRC.
+       Abstract: Targeted therapies have improved outcomes for patients with metastatic colorectal cancer, but their impact is limited by rapid emergence of resistance. We hypothesized that an understanding of the underlying genetic mechanisms and intrinsic tumor features that mediate resistance to therapy will guide new therapeutic strategies and ultimately allow the prevention of resistance.
+       Link: https://pubmed.ncbi.nlm.nih.gov/38502113/
+   18. [observational     ] (src=llm     , score=5) PMID 39694458: Investigating the Pathogenicity of Uncommon KRAS Mutations and Their Association
+       Journal: The Journal of molecular diagnostics : JMD (2025)
+       Authors: Adorisio R, Ciardiello D, Rappa A, Gervaso L, Pelizzari G et al.
+       Matched: ['KRAS G12C', 'colorectal cancer']
+       Findings: NGS profiling of 2427 CRC cases identifies uncommon KRAS variants and confirms KRAS G12C as a target for personalized therapy.
+       Abstract: Kirsten rat sarcoma viral oncogene homolog (KRAS) somatic mutations occur in 30% to 40% of patients with colorectal cancer (CRC). These were thought to equally affect prognosis and resistance to anti-epidermal growth factor receptor agents; however, recent data show the activity of KRAS-G12C and pan-RAS inhibitors. The effects of uncommon KRAS (uKRAS) variants are largely unexplored. The distribution and pathogenicity of uKRAS mutations and their relationship with patients' clinicopathologic features were assessed. A total of 2427 CRCs were profiled for KRAS using next-generation sequencing (NGS). The study and control groups included patients with uKRAS (<1% frequency in CRC data sets on cBioPortal) and canonical KRAS mutations, respectively. In silico protein structure modifications and prediction analyses were performed by using PyMOL, trRosetta, and PolyPhen-2. uKRAS mutations affected 35 cases (1.5%), with G13C (28.6%), G12R (20%), and V14I (8.6%) being most common. Missense mutations (D33E, G12W, G12F, Q22H, Q61L, and L19F) occurred in nine cases (25.7%). Duplications (G10dup and L52_G60dup) affected two cases. Pathogenicity analyses showed that G12W, Q22R, L56V, and A130I mutations are probably damaging, with scores between 0.928 and 1.000. No differences were seen in clinicopathologic features. uKRAS mutants had lower event-free survival but no difference in overall survival compared with controls. Although these data are hypothesis generating and need further confirmation, they highlight the importance of NGS-based profiling to identify CRC patients with uKRAS mutations as candidates for personalized therapy.
+       Link: https://pubmed.ncbi.nlm.nih.gov/39694458/
+   19. [case_report       ] (src=xml     , score=6) PMID 38451823: Twelve-month progression-free survival with sotorasib and panitumumab in KRAS G1
+       Journal: Anti-cancer drugs (2024)
+       Authors: Kavgaci G, Dizdar O, Yalcin S
+       Matched: ['KRAS G12C', 'colorectal cancer', 'sotorasib']
+       Findings: Case report showing 12-month PFS in a KRAS G12C mCRC patient treated with sotorasib and panitumumab.
+       Abstract: Colorectal cancer (CRC) ranks third in global cancer prevalence, with 40% presenting as metastatic colorectal cancer (mCRC). KRAS mutations in mCRC patients confer resistance to anti-EGFR treatments. Promising inhibitors such as sotorasib and adagrasib targeting KRASG12C mutations have demonstrated efficacy. Herein, we present a heavily pretreated mCRC case with a progression-free survival of 12 months with sotorasib and panitumumab. In 2017, a 27-year-old male presented with abdominal pain and received a diagnosis of stage IIIC KRAS G12C mutant CRC. Following surgery and adjuvant chemotherapy, he developed metastases in the liver and lungs in 2020. Treatment with FOLFIRINOX and bevacizumab, and later FOLFIRI and bevacizumab, with surgeries and local interventions resulted in partial responses. Upon disease progression, sotorasib and panitumumab were initiated, achieving a complete metabolic response. After 12 months of progression-free survival, oligoprogressive liver lesions were surgically resected. This case highlights the remarkable outcome of a heavily treated KRAS G12C mutant mCRC patient. The combination of sotorasib and panitumumab, along with multidisciplinary approaches including surgery and local interventions, played an important role in our patient's survival.
+       Link: https://pubmed.ncbi.nlm.nih.gov/38451823/
+   20. [preclinical       ] (src=llm     , score=6) PMID 40799551: Concurrent genetic and non-genetic resistance mechanisms to KRAS inhibition in C
+       Journal: bioRxiv : the preprint server for biology (2025)
+       Authors: Alonso S, Chu K, Parsons MJ, Granowsky E, Gunasinghe H et al.
+       Matched: ['KRAS G12C', 'colorectal cancer', 'resistance']
+       Findings: Uses single-cell spatial transcriptomics on patient biopsies to identify concurrent genetic and non-genetic resistance mechanisms to KRAS inhibition.
+       Abstract: KRAS is mutationally activated in 45-50% of colorectal cancer (CRC) cases, and while KRAS-targeted therapies have shown some clinical promise, upfront and acquired resistance limit their efficacy. To explore the acute response and mechanisms underlying KRAS inhibitor resistance, we used targeted exome sequencing and single-cell spatial transcriptomics to analyze patient-matched pre-treatment, on-treatment, and progression biopsies from patients treated with combined KRAS
+       Link: https://pubmed.ncbi.nlm.nih.gov/40799551/
