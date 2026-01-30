@@ -748,6 +748,7 @@ def _save_detailed_iteration_report(
         # 跟踪每个 tool 已消费的 extraction index
         ext_consumed = {k: 0 for k in ext_by_tool}
 
+        seen_reasoning = set()  # 去重 Gemini thinking tokens（同一 API response 共享 reasoning）
         for i, record in enumerate(tool_records, 1):
             tool_name = record.get("tool_name", "")
             phase_tag = record.get("phase", "")
@@ -757,10 +758,16 @@ def _save_detailed_iteration_report(
 
             reasoning = record.get("reasoning", "")
             if reasoning:
-                lines.append("**Reasoning:**")
-                for line in reasoning.split("\n"):
-                    lines.append(f"> {line}")
-                lines.append("")
+                reasoning_hash = hash(reasoning)
+                if reasoning_hash not in seen_reasoning:
+                    seen_reasoning.add(reasoning_hash)
+                    lines.append("**Reasoning:**")
+                    for line in reasoning.split("\n"):
+                        lines.append(f"> {line}")
+                    lines.append("")
+                else:
+                    lines.append("**Reasoning:** （与上方相同，省略）")
+                    lines.append("")
 
             lines.append("**Parameters:**")
             lines.append("```json")
@@ -843,6 +850,70 @@ def _save_detailed_iteration_report(
                         obs_str = f' — "{edge["observation_statement"]}"' if edge.get("observation_statement") else ""
                         lines.append(f"- `{edge['source']}` → **{edge['predicate']}** → `{edge['target']}`{conf_str}{obs_str}")
                 lines.append("")
+
+        # === Agent 研究输出（summary, direction_updates, needs_deep_research, per_direction_analysis, agent_analysis）===
+        lines.append(f"#### {agent_name} 研究输出")
+        lines.append("")
+
+        # Summary
+        summary = agent_result.get("summary", "")
+        if summary:
+            lines.append(f"**摘要**: {summary}")
+            lines.append("")
+
+        # Direction updates
+        direction_updates = agent_result.get("direction_updates", {})
+        if direction_updates:
+            lines.append("**方向状态判断**:")
+            for d_id, d_status in direction_updates.items():
+                lines.append(f"- {d_id}: {d_status}")
+            lines.append("")
+
+        # Needs deep research
+        needs_deep = agent_result.get("needs_deep_research", [])
+        if needs_deep:
+            lines.append("**标记需深入研究**:")
+            for item in needs_deep:
+                if isinstance(item, dict):
+                    lines.append(f"- [{item.get('direction_id','')}] {item.get('finding','')}")
+                    reason = item.get('reason', '')
+                    if reason:
+                        lines.append(f"  原因: {reason}")
+                else:
+                    lines.append(f"- {item}")
+            lines.append("")
+
+        # Per-direction analysis
+        per_dir_analysis = agent_result.get("per_direction_analysis", {})
+        if per_dir_analysis:
+            lines.append("**各方向研究分析**:")
+            lines.append("")
+            label_map = {
+                "research_question": "研究问题",
+                "tools_used": "使用工具",
+                "what_found": "已找到",
+                "what_not_found": "未找到",
+                "new_questions": "新问题",
+                "conclusion": "结论",
+            }
+            for d_id, analysis in per_dir_analysis.items():
+                if isinstance(analysis, dict):
+                    lines.append(f"##### {d_id}")
+                    for key in ["research_question", "tools_used", "what_found",
+                                "what_not_found", "new_questions", "conclusion"]:
+                        val = analysis.get(key, "")
+                        if val:
+                            label = label_map.get(key, key)
+                            lines.append(f"- **{label}**: {val}")
+                    lines.append("")
+
+        # Agent analysis (JSON 外文本)
+        agent_analysis = agent_result.get("agent_analysis", "")
+        if agent_analysis:
+            lines.append("**Agent 自由分析文本**:")
+            lines.append("")
+            lines.append(agent_analysis)
+            lines.append("")
 
         lines.append("")
 

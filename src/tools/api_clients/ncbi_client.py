@@ -167,9 +167,9 @@ class NCBIClient:
                 if article_elem is None:
                     continue
 
-                # 标题
+                # 标题 — 使用 itertext() 处理内联标签（如 <sup>, <i>）
                 title_elem = article_elem.find("ArticleTitle")
-                title = title_elem.text if title_elem is not None else ""
+                title = ''.join(title_elem.itertext()) if title_elem is not None else ""
 
                 # 作者
                 authors = []
@@ -192,11 +192,21 @@ class NCBIClient:
                 year_elem = article_elem.find(".//PubDate/Year")
                 year = year_elem.text if year_elem is not None else ""
 
-                # 摘要
-                abstract_elem = article_elem.find(".//Abstract/AbstractText")
+                # 摘要 — 处理内联标签（如 <sup>, <i>）和结构化摘要（多个 AbstractText）
+                abstract_sections = article_elem.findall(".//Abstract/AbstractText")
                 abstract = ""
-                if abstract_elem is not None:
-                    abstract = abstract_elem.text or ""
+                if abstract_sections:
+                    parts = []
+                    for section in abstract_sections:
+                        section_text = ''.join(section.itertext()).strip()
+                        if not section_text:
+                            continue
+                        label = section.get("Label")
+                        if label:
+                            parts.append(f"{label}: {section_text}")
+                        else:
+                            parts.append(section_text)
+                    abstract = " ".join(parts)
 
                 # 出版类型
                 publication_types = []

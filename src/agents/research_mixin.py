@@ -125,6 +125,8 @@ class ResearchMixin:
         all_outputs = []
         all_tool_call_reports = []  # 收集每阶段的工具调用报告
         all_tool_call_records = []  # 原始工具调用记录（dict 列表）
+        all_agent_analysis = []     # JSON 外的分析文本
+        all_per_direction_analysis = {}  # 各方向研究分析
 
         # 处理 BFRS 方向
         if bfrs_directions:
@@ -152,6 +154,10 @@ class ResearchMixin:
             all_needs_deep.extend(parsed.get("needs_deep_research", []))
             if parsed.get("summary"):
                 all_summaries.append(f"[BFRS] {parsed['summary']}")
+            bfrs_analysis = parsed.get("agent_analysis", "")
+            if bfrs_analysis:
+                all_agent_analysis.append(f"[BFRS] {bfrs_analysis}")
+            all_per_direction_analysis.update(parsed.get("per_direction_analysis", {}))
 
         # 处理 DFRS 方向
         if dfrs_directions:
@@ -179,6 +185,10 @@ class ResearchMixin:
             all_needs_deep.extend(parsed.get("needs_deep_research", []))
             if parsed.get("summary"):
                 all_summaries.append(f"[DFRS] {parsed['summary']}")
+            dfrs_analysis = parsed.get("agent_analysis", "")
+            if dfrs_analysis:
+                all_agent_analysis.append(f"[DFRS] {dfrs_analysis}")
+            all_per_direction_analysis.update(parsed.get("per_direction_analysis", {}))
 
         # 更新证据图和研究计划（实体中心架构）
         new_entity_ids, updated_plan, extraction_details = self._update_evidence_graph(
@@ -214,7 +224,9 @@ class ResearchMixin:
             "raw_output": "\n---\n".join(all_outputs),
             "tool_call_report": "\n\n".join(all_tool_call_reports),
             "tool_call_records": all_tool_call_records,
-            "extraction_details": extraction_details
+            "extraction_details": extraction_details,
+            "agent_analysis": "\n\n".join(all_agent_analysis),
+            "per_direction_analysis": all_per_direction_analysis,
         }
 
     def _build_bfrs_prompt(
@@ -296,9 +308,28 @@ class ResearchMixin:
             "reason": "为什么需要深入研究"
         }}
     ],
+    "per_direction_analysis": {{
+        "D1": {{
+            "research_question": "本轮需要解决的核心研究问题",
+            "tools_used": "使用了哪些工具和查询关键词",
+            "what_found": "找到了哪些关键证据",
+            "what_not_found": "没找到什么 / 未能解决的问题",
+            "new_questions": "是否产生了新的研究问题",
+            "conclusion": "该方向的当前结论"
+        }}
+    }},
     "research_complete": false
 }}
 ```
+
+**per_direction_analysis 要求**:
+- 必须对每个分配的方向输出分析，即使该方向本轮无新发现
+- research_question: 根据方向的完成标准和已有证据，本轮需解决什么问题
+- tools_used: 具体列出使用的工具名称和查询参数
+- what_found: 找到了什么关键信息（简洁概括）
+- what_not_found: 哪些问题未被解答，或工具返回无结果
+- new_questions: 研究过程中是否产生了需要后续跟进的新问题
+- conclusion: 该方向的当前状态判断（是否需要继续、需要什么类型的后续研究）
 
 **证据等级说明 (CIViC Evidence Level)**:
 - A: Validated - 已验证，多项独立研究或 meta 分析支持
@@ -328,23 +359,41 @@ class ResearchMixin:
         """构建 DFRS 模式提示"""
         agent_role = getattr(self, 'role', 'Agent')
 
-        # 找到需要深入研究的方向
+        # 找到需要深入研究的方向（检查 needs_deep_research 标记或 deep_research_findings 列表）
         depth_items = []
         for d in directions:
-            if d.get('needs_deep_research'):
+            if d.get('needs_deep_research') or d.get('deep_research_findings'):
                 depth_items.append(d)
 
-        # 格式化深入研究项
+        # 格式化深入研究项（含具体待研究问题）
         depth_text = ""
-        for i, item in enumerate(depth_items, 1):  # 处理所有需要深入的方向
+        for i, item in enumerate(depth_items, 1):
+            findings_list = item.get('deep_research_findings', [])
+            findings_text = ""
+            if findings_list:
+                findings_text = "\n" + "\n".join(f"  - {f}" for f in findings_list)
+
+            mode_reason = item.get('mode_reason', '')
+            mode_reason_text = f"\n- PlanAgent 评估指示: {mode_reason}" if mode_reason else ""
+
             depth_text += f"""
 ### 深入研究项 {i}
 - 方向 ID: {item.get('id', '')}
 - 主题: {item.get('topic', '')}
 - 目标模块: {', '.join(item.get('target_modules', []))}
-- 需要深入的原因: {item.get('depth_research_reason', '需要更多证据')}
+- 完成标准: {item.get('completion_criteria', '')}
+- 需要深入的原因: {item.get('depth_research_reason', '需要更多证据')}{mode_reason_text}
+- 具体待研究问题:{findings_text if findings_text else ' 请基于方向主题深入'}
 - 已有证据 ID: {item.get('evidence_ids', [])}
 """
+
+        # 无深入项时的回退（从所有方向的 mode_reason 中提取指示）
+        if not depth_text:
+            reasons = [d.get('mode_reason', '') for d in directions if d.get('mode_reason')]
+            if reasons:
+                depth_text = "### 研究指示\n" + "\n".join(f"- {r}" for r in reasons)
+            else:
+                depth_text = "无特定深入项，请基于现有证据进行深化研究"
 
         # 现有证据摘要
         existing_evidence = graph.summary()
@@ -361,7 +410,7 @@ class ResearchMixin:
 {case_context}
 
 ### 需要深入研究的项目
-{depth_text if depth_text else "无特定深入项，请基于现有证据进行深化研究"}
+{depth_text}
 
 ### DFRS 执行指南
 1. 针对高优先级发现进行多跳推理
@@ -401,9 +450,28 @@ class ResearchMixin:
             "reason": "为什么需要继续深入"
         }}
     ],
+    "per_direction_analysis": {{
+        "D1": {{
+            "research_question": "本轮深入研究需要解决的核心问题",
+            "tools_used": "使用了哪些工具和查询关键词",
+            "what_found": "找到了哪些关键证据",
+            "what_not_found": "没找到什么 / 未能解决的问题",
+            "new_questions": "是否产生了新的研究问题",
+            "conclusion": "该方向的当前结论"
+        }}
+    }},
     "research_complete": true|false
 }}
 ```
+
+**per_direction_analysis 要求**:
+- 必须对每个分配的方向输出分析，即使该方向本轮无新发现
+- research_question: 根据待研究问题列表，本轮需解决什么
+- tools_used: 具体列出使用的工具名称和查询参数
+- what_found: 找到了什么关键信息（简洁概括）
+- what_not_found: 哪些问题未被解答，或工具返回无结果
+- new_questions: 研究过程中是否产生了需要后续跟进的新问题
+- conclusion: 该方向的当前状态判断
 
 **证据等级说明 (CIViC Evidence Level)**:
 - A: Validated - 已验证，多项独立研究或 meta 分析支持
@@ -423,22 +491,33 @@ class ResearchMixin:
 """
 
     def _parse_research_output(self, output: str, mode: ResearchMode) -> Dict[str, Any]:
-        """解析研究输出"""
+        """解析研究输出，同时提取 JSON 和 agent 分析文本"""
         import re
+        agent_analysis = ""
 
-        # 尝试提取 JSON
+        # 尝试提取 ```json ... ``` 格式
         json_match = re.search(r'```json\s*([\s\S]*?)\s*```', output)
         if json_match:
+            before = output[:json_match.start()].strip()
+            after = output[json_match.end():].strip()
+            agent_analysis = f"{before}\n\n{after}".strip()
             try:
-                return json.loads(json_match.group(1).strip())
+                parsed = json.loads(json_match.group(1).strip())
+                parsed["agent_analysis"] = agent_analysis
+                return parsed
             except json.JSONDecodeError:
                 pass
 
-        # 尝试直接解析
+        # 尝试直接解析 { ... } 格式
         brace_match = re.search(r'\{[\s\S]*\}', output)
         if brace_match:
+            before = output[:brace_match.start()].strip()
+            after = output[brace_match.end():].strip()
+            agent_analysis = f"{before}\n\n{after}".strip()
             try:
-                return json.loads(brace_match.group(0))
+                parsed = json.loads(brace_match.group(0))
+                parsed["agent_analysis"] = agent_analysis
+                return parsed
             except json.JSONDecodeError:
                 pass
 
@@ -449,7 +528,9 @@ class ResearchMixin:
             "findings": [],
             "direction_updates": {},
             "needs_deep_research": [],
-            "research_complete": False
+            "per_direction_analysis": {},
+            "research_complete": False,
+            "agent_analysis": output or ""
         }
 
     def _update_evidence_graph(

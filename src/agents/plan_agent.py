@@ -438,6 +438,33 @@ class PlanAgent(BaseAgent):
             plan, graph, set(relevant_stats.keys()), deep_by_direction
         )
 
+        # 构建 DFRS 执行检查信息
+        dfrs_warning_lines = []
+        for d in plan.directions:
+            if d.id not in relevant_stats:
+                continue
+            if d.preferred_mode == "depth_first":
+                deep_items = d.deep_research_findings
+                if deep_items:
+                    dfrs_warning_lines.append(
+                        f"- **{d.id}** ({d.topic}): 待研究 = {'; '.join(deep_items)}"
+                    )
+                elif d.mode_reason:
+                    dfrs_warning_lines.append(
+                        f"- **{d.id}** ({d.topic}): 原因 = {d.mode_reason}"
+                    )
+
+        dfrs_warning_section = ""
+        if dfrs_warning_lines:
+            dfrs_warning_section = f"""
+### DFRS 方向特别注意
+
+以下方向在本轮被指定为 DFRS（深度优先）模式，有待深入研究的具体问题。
+如果当前证据仍未覆盖这些问题，该方向**不应收敛**：
+
+{chr(10).join(dfrs_warning_lines)}
+"""
+
         return f"""## 迭代评估任务
 
 你正在评估 {phase.upper()} 的第 {iteration + 1} 轮迭代结果。
@@ -464,7 +491,7 @@ class PlanAgent(BaseAgent):
 ### 证据冲突
 
 {conflict_descriptions if conflict_descriptions else "无检测到的证据冲突"}
-
+{dfrs_warning_section}
 ### 评估要求
 
 请根据以上信息，对每个研究方向逐一进行综合评估，判断该方向是否可以收敛：
@@ -727,6 +754,33 @@ class PlanAgent(BaseAgent):
                 if "mode_reason" in update:
                     direction.mode_reason = update["mode_reason"]
 
+                # 传播深入研究信息
+                if "needs_deep_research" in update:
+                    direction.needs_deep_research = update["needs_deep_research"]
+                if "deep_research_findings" in update:
+                    direction.deep_research_findings = update["deep_research_findings"]
+
+                # 如果 preferred_mode == depth_first 但未显式设置 deep 字段，
+                # 则从 deep_research_assessment 自动提取
+                if update.get("preferred_mode") == "depth_first" and not direction.needs_deep_research:
+                    deep_assessment = update.get("deep_research_assessment", [])
+                    actionable = [
+                        item.get("item", "")
+                        for item in deep_assessment
+                        if isinstance(item, dict)
+                        and item.get("coverage") in ("uncovered", "partial")
+                        and item.get("impact") in ("critical", "important")
+                    ]
+                    if actionable:
+                        direction.needs_deep_research = True
+                        direction.deep_research_findings = actionable
+                    elif update.get("mode_reason"):
+                        direction.needs_deep_research = True
+                        direction.deep_research_findings = [update["mode_reason"]]
+                elif update.get("preferred_mode") == "skip":
+                    direction.needs_deep_research = False
+                    direction.deep_research_findings = []
+
         return plan
 
     def _create_default_evaluation(
@@ -787,15 +841,6 @@ class PlanAgent(BaseAgent):
                 preferred_mode = "depth_first"
                 mode_reason = f"完成度{completeness:.0f}%，需深入完善证据"
 
-            updated_directions.append({
-                "id": d_id,
-                "status": status,
-                "priority": s["priority"],
-                "completeness": completeness,
-                "preferred_mode": preferred_mode,
-                "mode_reason": mode_reason,
-            })
-
             # 生成默认 direction_assessments（与 LLM 路径格式一致）
             gd = s["grade_distribution"]
             grade_parts = []
@@ -819,6 +864,18 @@ class PlanAgent(BaseAgent):
                         "impact": "important",  # default 路径无法判断，保守标记为 important
                         "justification": f"[{item.get('agent', '')}] {item.get('reason', '待深入研究')}",
                     })
+
+            updated_directions.append({
+                "id": d_id,
+                "status": status,
+                "priority": s["priority"],
+                "completeness": completeness,
+                "preferred_mode": preferred_mode,
+                "mode_reason": mode_reason,
+                "needs_deep_research": bool(dir_deep) or preferred_mode == "depth_first",
+                "deep_research_findings": [item.get("finding", "") for item in dir_deep] if dir_deep else [],
+                "deep_research_assessment": default_deep_assessment,
+            })
 
             direction_assessments[d_id] = {
                 "evidence_assessment": evidence_text,
