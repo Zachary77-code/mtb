@@ -6,6 +6,7 @@ Research Subgraph - 两阶段研究循环子图
 - Phase 2: Oncologist 独立 BFRS/DFRS 循环
 """
 import json
+from collections import OrderedDict
 from typing import List, Literal, Dict, Any, Optional
 from datetime import datetime
 from langgraph.graph import StateGraph, END
@@ -45,6 +46,134 @@ from config.settings import (
 )
 # ConvergenceJudge 已废弃，收敛判断移入 PlanAgent
 # from src.agents.convergence_judge import ConvergenceJudgeAgent
+
+import re
+
+
+# ==================== 迭代报告辅助函数 ====================
+
+def _extract_source_urls(result_text: str) -> List[str]:
+    """从工具返回结果中提取原文链接"""
+    url_pattern = r'https?://[^\s\)\]\}\'\"<>]+'
+    urls = re.findall(url_pattern, result_text)
+    seen = set()
+    unique = []
+    for url in urls:
+        url = url.rstrip('.,;:')
+        if url not in seen:
+            seen.add(url)
+            unique.append(url)
+    return unique
+
+
+def _format_tool_result_for_report(tool_name: str, result_text: str) -> str:
+    """按工具类型格式化结果摘要（用于迭代报告）
+
+    - search_pubmed: 保留搜索摘要头部 + 每篇文章链接
+    - search_nccn / search_nccn_image: 全量输出
+    - 其他工具: 仅提取原文链接
+    """
+    if not result_text:
+        return "(无结果)"
+
+    if tool_name == "search_pubmed":
+        # PubMed: 保留搜索摘要头部（关键词、优化查询、文献数、证据分布）+ 文章链接
+        lines = result_text.split("\n")
+        header_lines = []
+        found_separator = False
+        for line in lines:
+            header_lines.append(line)
+            if line.strip().startswith("---"):
+                found_separator = True
+                break
+        if not found_separator:
+            # 没找到分隔线，取前 10 行作为摘要
+            header_lines = lines[:10]
+        # 提取所有文章链接
+        urls = _extract_source_urls(result_text)
+        output = "\n".join(header_lines)
+        if urls:
+            output += "\n\n**文献链接:**\n"
+            output += "\n".join(f"- {url}" for url in urls)
+        return output
+
+    elif tool_name in ("search_nccn", "search_nccn_image"):
+        # NCCN: 全量输出（多模态 RAG 结果）
+        return result_text
+
+    else:
+        # 其他工具 (CIViC, ClinVar, cBioPortal, ClinicalTrials, FDA, RxNorm):
+        # 仅提取原文链接
+        urls = _extract_source_urls(result_text)
+        if urls:
+            return "**原文链接:**\n" + "\n".join(f"- {url}" for url in urls)
+        return "(无链接)"
+
+
+def _append_agent_research_output(lines: list, agent_name: str, agent_result: Dict[str, Any]):
+    """将 Agent 研究输出（summary, direction_updates 等）追加到报告行列表"""
+    lines.append(f"#### {agent_name} 研究输出")
+    lines.append("")
+
+    # Summary
+    summary = agent_result.get("summary", "")
+    if summary:
+        lines.append(f"**摘要**: {summary}")
+        lines.append("")
+
+    # Direction updates
+    direction_updates = agent_result.get("direction_updates", {})
+    if direction_updates:
+        lines.append("**方向状态判断**:")
+        for d_id, d_status in direction_updates.items():
+            lines.append(f"- {d_id}: {d_status}")
+        lines.append("")
+
+    # Needs deep research
+    needs_deep = agent_result.get("needs_deep_research", [])
+    if needs_deep:
+        lines.append("**标记需深入研究**:")
+        for item in needs_deep:
+            if isinstance(item, dict):
+                lines.append(f"- [{item.get('direction_id','')}] {item.get('finding','')}")
+                reason = item.get('reason', '')
+                if reason:
+                    lines.append(f"  原因: {reason}")
+            else:
+                lines.append(f"- {item}")
+        lines.append("")
+
+    # Per-direction analysis
+    per_dir_analysis = agent_result.get("per_direction_analysis", {})
+    if per_dir_analysis:
+        lines.append("**各方向研究分析**:")
+        lines.append("")
+        label_map = {
+            "research_question": "研究问题",
+            "tools_used": "使用工具",
+            "what_found": "已找到",
+            "what_not_found": "未找到",
+            "new_questions": "新问题",
+            "conclusion": "结论",
+        }
+        for d_id, analysis in per_dir_analysis.items():
+            if isinstance(analysis, dict):
+                lines.append(f"##### {d_id}")
+                for key in ["research_question", "tools_used", "what_found",
+                            "what_not_found", "new_questions", "conclusion"]:
+                    val = analysis.get(key, "")
+                    if val:
+                        label = label_map.get(key, key)
+                        lines.append(f"- **{label}**: {val}")
+                lines.append("")
+
+    # Agent analysis (JSON 外文本)
+    agent_analysis = agent_result.get("agent_analysis", "")
+    if agent_analysis:
+        lines.append("**Agent 自由分析文本**:")
+        lines.append("")
+        lines.append(agent_analysis)
+        lines.append("")
 
 
 # ==================== 研究增强型 Agent ====================
@@ -717,7 +846,7 @@ def _save_detailed_iteration_report(
         lines.append("- 无")
     lines.append("")
 
-    # === 2. 工具执行详情（含实体提取） ===
+    # === 2. 工具执行详情（按方向→轮次结构，含实体提取） ===
     lines.append("## 2. 工具执行详情")
     lines.append("")
 
@@ -738,91 +867,129 @@ def _save_detailed_iteration_report(
             else:
                 lines.append("本轮无工具调用记录")
             lines.append("")
+            # Agent 研究输出仍然保留
+            _append_agent_research_output(lines, agent_name, agent_result)
             continue
 
-        # 按 source_tool 分组 extraction_details，用于按顺序匹配
-        ext_by_tool = {}
+        # --- 按 direction_id 分组 extraction_details ---
+        ext_by_dir_tool: Dict[str, Dict[str, list]] = {}
         for detail in ext_details:
-            tool_key = detail.get("source_tool", "")
-            if tool_key not in ext_by_tool:
-                ext_by_tool[tool_key] = []
-            ext_by_tool[tool_key].append(detail)
-        # 跟踪每个 tool 已消费的 extraction index
-        ext_consumed = {k: 0 for k in ext_by_tool}
+            d_id = detail.get("direction_id", "_unknown")
+            t_key = detail.get("source_tool", "")
+            ext_by_dir_tool.setdefault(d_id, {}).setdefault(t_key, []).append(detail)
+        # 消费计数
+        ext_consumed: Dict[str, Dict[str, int]] = {
+            d_id: {t_key: 0 for t_key in tools}
+            for d_id, tools in ext_by_dir_tool.items()
+        }
 
-        seen_reasoning = set()  # 去重 Gemini thinking tokens（同一 API response 共享 reasoning）
-        for i, record in enumerate(tool_records, 1):
-            tool_name = record.get("tool_name", "")
-            phase_tag = record.get("phase", "")
-            lines.append(f"#### Tool Call {i}: `{tool_name}` [{phase_tag}]")
-            lines.append(f"**Timestamp:** {record.get('timestamp', '')}")
+        # --- 按 direction_id 分组 tool_records ---
+        direction_records: Dict[str, list] = OrderedDict()
+        for record in tool_records:
+            d_id = record.get("direction_id", "_unknown")
+            direction_records.setdefault(d_id, []).append(record)
+
+        # 构建方向 ID → topic 映射
+        direction_topic_map = {}
+        if plan:
+            for d in plan.directions:
+                direction_topic_map[d.id] = d.topic
+
+        # --- 逐方向、逐轮次输出 ---
+        for d_id, records_in_dir in direction_records.items():
+            topic = direction_topic_map.get(d_id, "")
+            phase_tag = records_in_dir[0].get("phase", "") if records_in_dir else ""
+            topic_display = f": {topic}" if topic else ""
+            lines.append(f"#### 方向 {d_id}{topic_display} [{phase_tag}]")
             lines.append("")
 
-            reasoning = record.get("reasoning", "")
-            if reasoning:
-                reasoning_hash = hash(reasoning)
-                if reasoning_hash not in seen_reasoning:
-                    seen_reasoning.add(reasoning_hash)
-                    lines.append("**Reasoning:**")
-                    for line in reasoning.split("\n"):
-                        lines.append(f"> {line}")
+            # 按 round_number 分组
+            rounds: Dict[int, list] = OrderedDict()
+            for record in records_in_dir:
+                rn = record.get("round_number", 0)
+                rounds.setdefault(rn, []).append(record)
+
+            for round_num, round_records in rounds.items():
+                lines.append(f"##### 轮次 {round_num}")
+                lines.append("")
+
+                # Reasoning: 取该轮的 round_content（同一轮共享）
+                round_content = round_records[0].get("round_content", "")
+                if round_content:
+                    lines.append("**Reasoning (模型分析):**")
+                    for rline in round_content.split("\n"):
+                        lines.append(f"> {rline}")
                     lines.append("")
                 else:
-                    lines.append("**Reasoning:** （与上方相同，省略）")
+                    # fallback: 用 reasoning (thinking tokens) 的前 200 字
+                    reasoning = round_records[0].get("reasoning", "")
+                    if reasoning:
+                        excerpt = reasoning[:200] + ("..." if len(reasoning) > 200 else "")
+                        lines.append("**Reasoning (thinking token 摘要):**")
+                        for rline in excerpt.split("\n"):
+                            lines.append(f"> {rline}")
+                        lines.append("")
+
+                # 逐个工具调用
+                for call_idx, record in enumerate(round_records, 1):
+                    tool_name = record.get("tool_name", "")
+                    params = record.get("parameters", {})
+                    result_text = record.get("result", "")
+
+                    lines.append(f"**工具调用 {call_idx}: `{tool_name}`**")
+                    # 参数简洁展示
+                    params_str = json.dumps(params, ensure_ascii=False)
+                    lines.append(f"参数: {params_str}")
                     lines.append("")
 
-            lines.append("**Parameters:**")
-            lines.append("```json")
-            lines.append(json.dumps(record.get("parameters", {}), ensure_ascii=False, indent=2))
-            lines.append("```")
-            lines.append("")
-
-            lines.append("**Result:**")
-            lines.append("```")
-            lines.append(record.get("result", ""))
-            lines.append("```")
-            lines.append("")
-
-            # 插入匹配的 extraction_details（按顺序消费）
-            if tool_name in ext_by_tool and ext_consumed[tool_name] < len(ext_by_tool[tool_name]):
-                detail = ext_by_tool[tool_name][ext_consumed[tool_name]]
-                ext_consumed[tool_name] += 1
-
-                summary = detail.get("finding_summary", "")
-                direction_id = detail.get("direction_id", "")
-                lines.append(f"**证据分解** (→ {direction_id}):")
-                if summary:
-                    lines.append(f"> {summary}")
+                    # 工具结果（按类型格式化）
+                    formatted_result = _format_tool_result_for_report(tool_name, result_text)
+                    lines.append(formatted_result)
                     lines.append("")
 
-                # 实体详情
-                entities_detail = detail.get("entities_detail", [])
-                if entities_detail:
-                    lines.append("**Entities:**")
-                    for ent in entities_detail:
-                        grade_str = f" [{ent['evidence_grade']}]" if ent.get("evidence_grade") else ""
-                        obs_str = f' — "{ent["observation_statement"]}"' if ent.get("observation_statement") else ""
-                        lines.append(f"- `{ent['canonical_id']}` ({ent['type']}){obs_str}{grade_str}")
-                    lines.append("")
+                    # 匹配 extraction_details
+                    dir_ext = ext_by_dir_tool.get(d_id, {})
+                    if tool_name in dir_ext and ext_consumed.get(d_id, {}).get(tool_name, 0) < len(dir_ext[tool_name]):
+                        detail = dir_ext[tool_name][ext_consumed[d_id][tool_name]]
+                        ext_consumed[d_id][tool_name] += 1
 
-                # 边详情
-                edges_detail = detail.get("edges_detail", [])
-                if edges_detail:
-                    lines.append("**Edges:**")
-                    for edge in edges_detail:
-                        conf_str = f" (conf={edge['confidence']:.1f})" if edge.get("confidence") else ""
-                        obs_str = f' — "{edge["observation_statement"]}"' if edge.get("observation_statement") else ""
-                        lines.append(f"- `{edge['source']}` → **{edge['predicate']}** → `{edge['target']}`{conf_str}{obs_str}")
-                    lines.append("")
+                        finding_summary = detail.get("finding_summary", "")
+                        if finding_summary:
+                            lines.append(f"**证据分解** (→ {d_id}):")
+                            lines.append(f"> {finding_summary}")
+                            lines.append("")
 
-                lines.append(f"*统计: {detail.get('new_observations', 0)} obs, {detail.get('new_edges', 0)} edges*")
-                lines.append("")
+                        # 实体详情
+                        entities_detail = detail.get("entities_detail", [])
+                        if entities_detail:
+                            lines.append("**Entities:**")
+                            for ent in entities_detail:
+                                grade_str = f" [{ent['evidence_grade']}]" if ent.get("evidence_grade") else ""
+                                obs_str = f' — "{ent["observation_statement"]}"' if ent.get("observation_statement") else ""
+                                lines.append(f"- `{ent['canonical_id']}` ({ent['type']}){obs_str}{grade_str}")
+                            lines.append("")
+
+                        # 边详情
+                        edges_detail = detail.get("edges_detail", [])
+                        if edges_detail:
+                            lines.append("**Edges:**")
+                            for edge in edges_detail:
+                                conf_str = f" (conf={edge['confidence']:.1f})" if edge.get("confidence") else ""
+                                obs_str = f' — "{edge["observation_statement"]}"' if edge.get("observation_statement") else ""
+                                lines.append(f"- `{edge['source']}` → **{edge['predicate']}** → `{edge['target']}`{conf_str}{obs_str}")
+                            lines.append("")
+
+                        lines.append(f"*统计: {detail.get('new_observations', 0)} obs, {detail.get('new_edges', 0)} edges*")
+                        lines.append("")
+
+                lines.append("")  # 轮次间空行
 
         # 追加未匹配到 tool call 的剩余 extraction_details
         remaining = []
-        for tool_key, details_list in ext_by_tool.items():
-            consumed = ext_consumed.get(tool_key, 0)
-            remaining.extend(details_list[consumed:])
+        for d_id, tools_map in ext_by_dir_tool.items():
+            for t_key, details_list in tools_map.items():
+                consumed = ext_consumed.get(d_id, {}).get(t_key, 0)
+                remaining.extend(details_list[consumed:])
         # 无 source_tool 的 extraction_details
         for detail in ext_details:
             if not detail.get("source_tool"):
@@ -832,12 +999,12 @@ def _save_detailed_iteration_report(
             lines.append("#### 其他证据分解")
             lines.append("")
             for detail in remaining:
-                summary = detail.get("finding_summary", "")
+                finding_summary = detail.get("finding_summary", "")
                 source_tool = detail.get("source_tool", "")
                 direction_id = detail.get("direction_id", "")
                 lines.append(f"**{source_tool}** → {direction_id}")
-                if summary:
-                    lines.append(f"> {summary}")
+                if finding_summary:
+                    lines.append(f"> {finding_summary}")
                     lines.append("")
                 entities_detail = detail.get("entities_detail", [])
                 if entities_detail:
@@ -853,69 +1020,8 @@ def _save_detailed_iteration_report(
                         lines.append(f"- `{edge['source']}` → **{edge['predicate']}** → `{edge['target']}`{conf_str}{obs_str}")
                 lines.append("")
 
-        # === Agent 研究输出（summary, direction_updates, needs_deep_research, per_direction_analysis, agent_analysis）===
-        lines.append(f"#### {agent_name} 研究输出")
-        lines.append("")
-
-        # Summary
-        summary = agent_result.get("summary", "")
-        if summary:
-            lines.append(f"**摘要**: {summary}")
-            lines.append("")
-
-        # Direction updates
-        direction_updates = agent_result.get("direction_updates", {})
-        if direction_updates:
-            lines.append("**方向状态判断**:")
-            for d_id, d_status in direction_updates.items():
-                lines.append(f"- {d_id}: {d_status}")
-            lines.append("")
-
-        # Needs deep research
-        needs_deep = agent_result.get("needs_deep_research", [])
-        if needs_deep:
-            lines.append("**标记需深入研究**:")
-            for item in needs_deep:
-                if isinstance(item, dict):
-                    lines.append(f"- [{item.get('direction_id','')}] {item.get('finding','')}")
-                    reason = item.get('reason', '')
-                    if reason:
-                        lines.append(f"  原因: {reason}")
-                else:
-                    lines.append(f"- {item}")
-            lines.append("")
-
-        # Per-direction analysis
-        per_dir_analysis = agent_result.get("per_direction_analysis", {})
-        if per_dir_analysis:
-            lines.append("**各方向研究分析**:")
-            lines.append("")
-            label_map = {
-                "research_question": "研究问题",
-                "tools_used": "使用工具",
-                "what_found": "已找到",
-                "what_not_found": "未找到",
-                "new_questions": "新问题",
-                "conclusion": "结论",
-            }
-            for d_id, analysis in per_dir_analysis.items():
-                if isinstance(analysis, dict):
-                    lines.append(f"##### {d_id}")
-                    for key in ["research_question", "tools_used", "what_found",
-                                "what_not_found", "new_questions", "conclusion"]:
-                        val = analysis.get(key, "")
-                        if val:
-                            label = label_map.get(key, key)
-                            lines.append(f"- **{label}**: {val}")
-                    lines.append("")
-
-        # Agent analysis (JSON 外文本)
-        agent_analysis = agent_result.get("agent_analysis", "")
-        if agent_analysis:
-            lines.append("**Agent 自由分析文本**:")
-            lines.append("")
-            lines.append(agent_analysis)
-            lines.append("")
+        # === Agent 研究输出 ===
+        _append_agent_research_output(lines, agent_name, agent_result)
 
         lines.append("")
 
@@ -1025,6 +1131,14 @@ def _save_detailed_iteration_report(
             for predicate, count in edges_by_predicate.items():
                 lines.append(f"| {predicate} | {count} |")
             lines.append("")
+
+        # 置信度计算规则说明
+        lines.append("### 边置信度计算规则")
+        lines.append("- LLM 实体提取时为每条 edge 评估置信度 (0.6-1.0)")
+        lines.append("- 评分标准: FDA/指南证据 ≥0.95 | 临床研究 0.85-0.95 | 推断证据 0.7-0.85")
+        lines.append("- 同一条 edge 被多次发现时: 取 max(已有置信度, 新置信度)")
+        lines.append("- 默认值: LLM 未指定时为 0.8")
+        lines.append("")
 
         # 冲突详情
         conflicts = graph.get_conflicts()

@@ -169,6 +169,8 @@ class ResearchMixin:
                     "timestamp": record.timestamp,
                     "phase": phase_label,
                     "direction_id": d_id,
+                    "round_number": record.round_number,
+                    "round_content": record.round_content,
                 })
 
             # 解析输出
@@ -423,7 +425,7 @@ class ResearchMixin:
 
 ### 证据图查询工具 (query_evidence_graph)
 你可以使用 `query_evidence_graph` 工具查询证据图中已知的信息。
-**重要**: 在调用外部工具（PubMed、CIViC 等）之前，先查图里已有信息！
+**重要**: 在调用外部工具（PubMed、CIViC 等）之前，必须先查图里已有信息！
 {'**提示**: BFRS 阶段发现的新实体已入图，可直接查询！' if is_dfrs else ''}
 
 用法:

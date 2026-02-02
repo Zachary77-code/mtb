@@ -34,8 +34,10 @@ class ToolCallRecord:
     """记录单次工具调用的详细信息"""
     tool_name: str
     parameters: Dict[str, Any]
-    reasoning: str  # LLM 调用工具前的推理/说明
+    reasoning: str  # LLM 调用工具前的推理/说明（reasoning_details）
     result: str
+    round_number: int = 0    # API 调用轮次（1-based）
+    round_content: str = ""  # 该轮次模型的 content 文本（结构化推理）
     timestamp: str = field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 
@@ -348,6 +350,8 @@ class BaseAgent:
 
         # 获取 LLM 的推理内容（优先从 reasoning_details 提取）
         reasoning_content = self._extract_reasoning_text(assistant_message)
+        # 获取模型的 content 文本（结构化推理，区别于 reasoning_details 的 thinking tokens）
+        round_content = assistant_message.get("content") or ""
 
         # 执行每个工具调用
         pending_images = []  # 收集本轮多模态工具返回的图片
@@ -389,7 +393,9 @@ class BaseAgent:
                     tool_name=tool_name,
                     parameters=tool_args,
                     reasoning=reasoning_content,
-                    result=tool_text
+                    result=tool_text,
+                    round_number=iteration,
+                    round_content=round_content,
                 ))
 
                 # tool message 只放文本
@@ -408,7 +414,9 @@ class BaseAgent:
                     tool_name=tool_name,
                     parameters=tool_args,
                     reasoning=reasoning_content,
-                    result=tool_result or ""
+                    result=tool_result or "",
+                    round_number=iteration,
+                    round_content=round_content,
                 ))
 
                 messages.append({
