@@ -492,6 +492,22 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 
 ---
 
+## 13. 证据等级说明
+
+**必须包含**此模块，向阅读报告的临床医生解释报告中使用的证据等级标准。
+
+| 等级 | 名称 | 定义 | 典型来源 |
+|------|------|------|----------|
+| **A** | 已验证 (Validated) | 多项独立研究或荟萃分析支持 | 系统综述、荟萃分析、多中心 RCT |
+| **B** | 临床级 (Clinical) | 来自临床试验或大规模临床研究 | Phase II/III 临床试验、NCCN 指南 |
+| **C** | 病例级 (Case Study) | 来自病例报告或小样本研究 | 病例报告、小型回顾性研究 |
+| **D** | 临床前 (Preclinical) | 来自细胞系、动物模型等 | 体外实验、动物模型 |
+| **E** | 推断级 (Inferential) | 间接证据或基于生物学原理推断 | 通路分析、专家意见 |
+
+> 本报告中所有治疗建议和临床证据均标注了对应的证据等级，以帮助临床决策时评估推荐的可靠性。
+
+---
+
 ## 信息完整性要求（Critical!）
 
 **核心原则**：你的职责是**汇总整合**，而非**摘要压缩**。
@@ -582,7 +598,7 @@ If experts disagree:
 - **Evidence conflicts**: Cite higher-quality evidence (Phase III > Phase II > Retrospective)
 
 ### 2. Completeness Check
-**MANDATORY**: Report MUST contain all 12 sections in exact order:
+**MANDATORY**: Report MUST contain all 13 sections in exact order:
 1. 执行摘要
 2. 患者概况
 3. 治疗史回顾
@@ -595,6 +611,7 @@ If experts disagree:
 10. 分子复查建议
 11. 核心建议汇总
 12. 参考文献
+13. 证据等级说明
 
 **If a section is not applicable** (e.g., no trials available), still include the section with: "Not applicable for this case."
 
@@ -857,7 +874,7 @@ KRAS G12C抑制剂联合抗EGFR可提高疗效[[ref:T1;;CodeBreaK 300;;https://c
 3. [ ] **:::roadmap** 标记块展示当前、有效、进展三种情景
 4. [ ] 所有论述均有内联引用 `[[ref:...]]` 格式
 5. [ ] 证据等级标注 `[Evidence A/B/C/D]`
-6. [ ] 12个模块按顺序完整呈现
+6. [ ] 13个模块按顺序完整呈现
 7. [ ] "禁用方案" 章节包含安全警告
 8. [ ] 中国特定信息（NMPA、医保目录 NRDL）已涉及
 

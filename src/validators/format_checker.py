@@ -32,7 +32,8 @@ class FormatChecker:
             "临床试验推荐": ["Clinical Trials", "临床试验", "Trial Recommendations"],
             "局部治疗建议": ["Local Therapy", "局部治疗", "Radiation", "手术"],
             "核心建议汇总": ["Core Recommendations", "建议汇总", "Key Recommendations"],
-            "参考文献": ["References", "引用", "文献"]
+            "参考文献": ["References", "引用", "文献"],
+            "证据等级说明": ["Evidence Grading", "证据等级", "Evidence Level"]
         }
 
     def validate(self, report_text: str) -> Tuple[bool, List[str]]:

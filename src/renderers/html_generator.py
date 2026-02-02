@@ -452,6 +452,9 @@ class HtmlReportGenerator:
         # 2. 解析内联引用（必须在 markdown 转换之前，避免 | 分隔符与表格冲突）
         md_text = self._parse_inline_refs_in_markdown(md_text)
 
+        # 2.5 预转换 Markdown 表格为 HTML（nl2br 会破坏表格换行符，必须在 markdown 前处理）
+        md_text = self._convert_markdown_tables(md_text)
+
         # 3. 标准 Markdown 转换
         html = markdown.markdown(
             md_text,
@@ -741,6 +744,95 @@ class HtmlReportGenerator:
         if self._is_nccn_citation(ref_id, url, title):
             return self._render_nccn_citation(ref_id, tooltip_text)
         return self._render_standard_citation(ref_id, url, tooltip_text)
+
+    def _convert_markdown_tables(self, md_text: str) -> str:
+        """
+        将 Markdown 表格预转换为 HTML <table>，防止 nl2br 扩展破坏表格结构。
+
+        nl2br 会在 tables 扩展之前将换行符转为 <br />，导致表格无法被识别。
+        此方法在 markdown.markdown() 之前运行，直接将表格转为 HTML。
+        """
+        lines = md_text.split('\n')
+        result = []
+        i = 0
+
+        while i < len(lines):
+            stripped = lines[i].strip()
+
+            # 检测表格起始：行以 | 开头且包含多个 |
+            if stripped.startswith('|') and stripped.count('|') >= 3:
+                table_lines = []
+                # 收集连续的表格行
+                while i < len(lines) and lines[i].strip().startswith('|'):
+                    table_lines.append(lines[i].strip())
+                    i += 1
+
+                # 至少需要 2 行（表头 + 分隔符）才算有效表格
+                if len(table_lines) >= 2:
+                    html_table = self._markdown_table_to_html(table_lines)
+                    result.append(html_table)
+                else:
+                    result.extend(table_lines)
+            else:
+                result.append(lines[i])
+                i += 1
+
+        return '\n'.join(result)
+
+    def _markdown_table_to_html(self, table_lines: list) -> str:
+        """将 Markdown 表格行列表转为 HTML <table> 字符串。"""
+
+        def parse_row(line: str) -> list:
+            """解析一行表格，返回单元格列表。"""
+            # 去掉首尾 |，按 | 分割
+            line = line.strip()
+            if line.startswith('|'):
+                line = line[1:]
+            if line.endswith('|'):
+                line = line[:-1]
+            return [cell.strip() for cell in line.split('|')]
+
+        def is_separator(line: str) -> bool:
+            """判断是否为分隔行（如 |---|---|---|）"""
+            cells = parse_row(line)
+            return all(re.match(r'^:?-+:?$', c.strip()) for c in cells if c.strip())
+
+        html_parts = ['<table>']
+
+        # 查找分隔行位置
+        sep_idx = None
+        for idx, line in enumerate(table_lines):
+            if is_separator(line):
+                sep_idx = idx
+                break
+
+        if sep_idx is not None and sep_idx > 0:
+            # 有表头：分隔行之前为 thead，之后为 tbody
+            html_parts.append('<thead>')
+            for h_line in table_lines[:sep_idx]:
+                cells = parse_row(h_line)
+                html_parts.append('<tr>' + ''.join(f'<th>{c}</th>' for c in cells) + '</tr>')
+            html_parts.append('</thead>')
+
+            html_parts.append('<tbody>')
+            for d_line in table_lines[sep_idx + 1:]:
+                if is_separator(d_line):
+                    continue
+                cells = parse_row(d_line)
+                html_parts.append('<tr>' + ''.join(f'<td>{c}</td>' for c in cells) + '</tr>')
+            html_parts.append('</tbody>')
+        else:
+            # 无分隔行：全部为 tbody
+            html_parts.append('<tbody>')
+            for d_line in table_lines:
+                if is_separator(d_line):
+                    continue
+                cells = parse_row(d_line)
+                html_parts.append('<tr>' + ''.join(f'<td>{c}</td>' for c in cells) + '</tr>')
+            html_parts.append('</tbody>')
+
+        html_parts.append('</table>')
+        return '\n'.join(html_parts)
 
     def _parse_inline_refs_in_markdown(self, md_text: str) -> str:
         """
