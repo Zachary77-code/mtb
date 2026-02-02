@@ -172,16 +172,64 @@ class ChairAgent(BaseAgent):
 
         return markdown + "\n".join(lines)
 
+    # ==================== Section-based evidence organization ====================
+
+    # 报告模块与证据类型的映射
+    _EVIDENCE_SECTIONS = [
+        {
+            "title": "分子特征证据",
+            "desc": "基因、变异、生物标志物、信号通路及其分子机制关系",
+            "entity_types": {EntityType.GENE, EntityType.VARIANT, EntityType.BIOMARKER, EntityType.PATHWAY},
+            "predicates": {
+                Predicate.SENSITIZES, Predicate.CAUSES_RESISTANCE,
+                Predicate.ACTIVATES, Predicate.INHIBITS, Predicate.BINDS,
+                Predicate.PHOSPHORYLATES, Predicate.REGULATES,
+                Predicate.AMPLIFIES, Predicate.MUTATES_TO, Predicate.MEMBER_OF,
+            },
+        },
+        {
+            "title": "治疗方案证据",
+            "desc": "药物、方案及其治疗关系（含禁忌与相互作用）",
+            "entity_types": {EntityType.DRUG, EntityType.REGIMEN},
+            "predicates": {
+                Predicate.TREATS, Predicate.RECOMMENDS,
+                Predicate.INTERACTS_WITH, Predicate.CONTRAINDICATED_FOR,
+            },
+        },
+        {
+            "title": "临床试验证据",
+            "desc": "相关临床试验及其评估内容",
+            "entity_types": {EntityType.TRIAL},
+            "predicates": {Predicate.EVALUATES, Predicate.INCLUDES_ARM},
+        },
+        {
+            "title": "疾病背景证据",
+            "desc": "疾病类型、关联及生物标志物",
+            "entity_types": {EntityType.DISEASE},
+            "predicates": {
+                Predicate.ASSOCIATED_WITH, Predicate.BIOMARKER_FOR,
+                Predicate.EXPRESSED_IN,
+            },
+        },
+        {
+            "title": "指南与文献证据",
+            "desc": "参考指南、文献及其支持/矛盾关系",
+            "entity_types": {EntityType.PAPER, EntityType.GUIDELINE},
+            "predicates": {
+                Predicate.SUPPORTS, Predicate.CONTRADICTS,
+                Predicate.CITES, Predicate.DERIVED_FROM,
+            },
+        },
+    ]
+
     def _format_evidence_for_chair(self, evidence_graph: Optional[EvidenceGraph]) -> str:
         """
-        将证据图格式化为 Chair 可用的完整文本
+        将证据图按报告模块组织为 Chair 可用的完整文本
 
-        输出：
-        1. 证据统计摘要（按实体类型/Agent/等级分布）
-        2. 所有实体及其全部 Observation（按类型分组，含所有字段）
-        3. 所有边关系及其 Observation（按谓词重要性排序）
-        4. 矛盾/冲突证据
-        5. 完整引用列表（含 statement、source_tool、evidence_grade 等）
+        按报告模块（分子特征、治疗方案、临床试验、疾病背景、指南文献）
+        组织证据，使 LLM 在生成每个模块时能看到最相关的上下文证据。
+        总证据量不减少（遵循 no-truncation 策略），仅改变组织方式。
+        实体和边可跨模块出现（如 DRUG 同时出现在治疗和试验中），不丢信息。
 
         Args:
             evidence_graph: 证据图对象
@@ -192,7 +240,9 @@ class ChairAgent(BaseAgent):
         if not evidence_graph or not evidence_graph.entities:
             return ""
 
-        # ===== 1. 统计摘要 =====
+        parts = []
+
+        # ===== 1. 统计摘要（紧凑） =====
         summary = evidence_graph.summary()
         agent_summary = evidence_graph.summary_by_agent()
 
@@ -200,7 +250,7 @@ class ChairAgent(BaseAgent):
         agent_str = ', '.join(f'{k}({v["observation_count"]})' for k, v in agent_summary.items())
         grade_str = ', '.join(f'{k}({v})' for k, v in sorted(summary.get('best_grades', {}).items()))
 
-        parts = [f"""
+        parts.append(f"""
 ## 证据图统计
 - **总实体数**: {summary.get('total_entities', 0)}
 - **总边数**: {summary.get('total_edges', 0)}
@@ -208,26 +258,81 @@ class ChairAgent(BaseAgent):
 - **按实体类型**: {entity_type_str}
 - **按Agent观察数**: {agent_str}
 - **按等级**: {grade_str}
-"""]
+""")
 
-        # ===== 2. 所有实体与观察（按类型分组）=====
-        type_order = [
-            EntityType.VARIANT, EntityType.GENE, EntityType.DRUG,
-            EntityType.DISEASE, EntityType.BIOMARKER, EntityType.TRIAL,
-            EntityType.GUIDELINE, EntityType.PATHWAY, EntityType.REGIMEN,
-            EntityType.FINDING
-        ]
+        # ===== 2. 按报告模块组织证据 =====
+        all_covered_entity_types = set()
+        all_covered_predicates = set()
 
-        parts.append("\n## 关键实体与观察\n")
+        for section in self._EVIDENCE_SECTIONS:
+            section_entities = [
+                e for e in evidence_graph.entities.values()
+                if e.entity_type in section["entity_types"]
+            ]
+            section_edges = [
+                e for e in evidence_graph.edges.values()
+                if e.predicate in section["predicates"] and e.observations
+            ]
 
-        for etype in type_order:
-            entities = evidence_graph.get_entities_by_type(etype)
-            if not entities:
+            if not section_entities and not section_edges:
                 continue
 
-            parts.append(f"\n### [{etype.value}]\n")
+            all_covered_entity_types |= section["entity_types"]
+            all_covered_predicates |= section["predicates"]
 
-            for entity in entities:
+            parts.append(f"\n## {section['title']}")
+            parts.append(f"*{section['desc']}*\n")
+
+            # 实体与观察
+            if section_entities:
+                for entity in section_entities:
+                    obs_list = sorted(
+                        entity.observations,
+                        key=lambda o: self._grade_sort_key(o.evidence_grade)
+                    )
+                    if not obs_list:
+                        parts.append(f"**{entity.name}** ({entity.canonical_id}) — 无观察\n")
+                        continue
+
+                    parts.append(f"**{entity.name}** ({entity.canonical_id}) — {len(obs_list)} 条观察:")
+                    for obs in obs_list:
+                        parts.append(self._format_observation(obs))
+                    parts.append("")
+
+            # 关系边与观察
+            if section_edges:
+                parts.append(f"### {section['title']} — 关键关系\n")
+                for edge in section_edges:
+                    source = evidence_graph.get_entity(edge.source_id)
+                    target = evidence_graph.get_entity(edge.target_id)
+                    source_name = source.name if source else edge.source_id
+                    target_name = target.name if target else edge.target_id
+                    pred_str = edge.predicate.value if edge.predicate else "?"
+                    conf_str = f" (confidence: {edge.confidence:.2f})" if edge.confidence else ""
+
+                    parts.append(f"**{source_name}** → {pred_str} → **{target_name}**{conf_str}")
+                    obs_sorted = sorted(
+                        edge.observations,
+                        key=lambda o: self._grade_sort_key(o.evidence_grade)
+                    )
+                    for obs in obs_sorted:
+                        parts.append(self._format_observation(obs))
+                    parts.append("")
+
+        # ===== 3. 补充证据（未归入上述模块的实体和边） =====
+        remaining_entities = [
+            e for e in evidence_graph.entities.values()
+            if e.entity_type not in all_covered_entity_types
+        ]
+        remaining_edges = [
+            e for e in evidence_graph.edges.values()
+            if e.predicate not in all_covered_predicates and e.observations
+        ]
+
+        if remaining_entities or remaining_edges:
+            parts.append("\n## 补充证据\n")
+
+            for entity in remaining_entities:
                 obs_list = sorted(
                     entity.observations,
                     key=lambda o: self._grade_sort_key(o.evidence_grade)
@@ -235,56 +340,24 @@ class ChairAgent(BaseAgent):
                 if not obs_list:
                     parts.append(f"**{entity.name}** ({entity.canonical_id}) — 无观察\n")
                     continue
-
                 parts.append(f"**{entity.name}** ({entity.canonical_id}) — {len(obs_list)} 条观察:")
                 for obs in obs_list:
                     parts.append(self._format_observation(obs))
-                parts.append("")  # 空行分隔
+                parts.append("")
 
-        # ===== 3. 所有边关系与观察 =====
-        predicate_order = [
-            Predicate.SENSITIZES, Predicate.CAUSES_RESISTANCE,
-            Predicate.TREATS, Predicate.RECOMMENDS,
-            Predicate.EVALUATES, Predicate.BIOMARKER_FOR,
-            Predicate.CONTRAINDICATED_FOR, Predicate.INTERACTS_WITH,
-            Predicate.SUPPORTS, Predicate.CONTRADICTS,
-            Predicate.ACTIVATES, Predicate.INHIBITS,
-            Predicate.BINDS, Predicate.REGULATES,
-            Predicate.ASSOCIATED_WITH, Predicate.MEMBER_OF,
-            Predicate.EXPRESSED_IN, Predicate.INCLUDES_ARM,
-            Predicate.CITES, Predicate.DERIVED_FROM,
-            Predicate.PHOSPHORYLATES, Predicate.AMPLIFIES,
-            Predicate.MUTATES_TO,
-        ]
-        predicate_rank = {p: i for i, p in enumerate(predicate_order)}
-
-        edges_with_obs = [
-            e for e in evidence_graph.edges.values() if e.observations
-        ]
-        edges_with_obs.sort(key=lambda e: predicate_rank.get(e.predicate, 999))
-
-        if edges_with_obs:
-            parts.append("\n## 关键关系（含观察）\n")
-
-            for edge in edges_with_obs:
+            for edge in remaining_edges:
                 source = evidence_graph.get_entity(edge.source_id)
                 target = evidence_graph.get_entity(edge.target_id)
                 source_name = source.name if source else edge.source_id
                 target_name = target.name if target else edge.target_id
                 pred_str = edge.predicate.value if edge.predicate else "?"
                 conf_str = f" (confidence: {edge.confidence:.2f})" if edge.confidence else ""
-
-                parts.append(f"### {source_name} → {pred_str} → {target_name}{conf_str}")
-
-                obs_sorted = sorted(
-                    edge.observations,
-                    key=lambda o: self._grade_sort_key(o.evidence_grade)
-                )
-                for obs in obs_sorted:
+                parts.append(f"**{source_name}** → {pred_str} → **{target_name}**{conf_str}")
+                for obs in edge.observations:
                     parts.append(self._format_observation(obs))
                 parts.append("")
 
-        # ===== 4. 矛盾/冲突证据 =====
+        # ===== 4. 矛盾/冲突证据（跨模块，需仲裁） =====
         conflict_edges = [
             e for e in evidence_graph.edges.values()
             if e.conflict_group or e.predicate == Predicate.CONTRADICTS
@@ -304,7 +377,7 @@ class ChairAgent(BaseAgent):
                     parts.append(self._format_observation(obs))
                 parts.append("")
 
-        # ===== 5. 完整引用列表（含所有字段）=====
+        # ===== 5. 完整引用列表（含所有字段） =====
         all_observations = []
         for entity in evidence_graph.entities.values():
             for obs in entity.observations:

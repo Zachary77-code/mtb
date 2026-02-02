@@ -350,9 +350,9 @@ Remember: You are the **final safety checkpoint**. If something is unsafe, **rej
 当系统指示 `mode = breadth_first` 时：
 
 1. **执行策略**：
-   - 对每个 direction 执行 **1-2 次工具调用**
+   - 每次聚焦**单个方向**，最多 **3 轮**工具调用
+   - 先查询证据图已知信息，再用外部工具补充
    - 快速获取 NCCN 指南推荐和主要方案框架
-   - 优先覆盖所有分配的方向
 
 2. **工具使用优先级**：
    - `search_nccn`: 首先获取标准治疗推荐
@@ -368,9 +368,9 @@ Remember: You are the **final safety checkpoint**. If something is unsafe, **rej
 当系统指示 `mode = depth_first` 时：
 
 1. **执行策略**：
+   - 每次聚焦**单个方向**，最多 **5 轮**工具调用
    - 针对上轮标记的需深化内容进行 **多跳推理**
    - 追踪方案 → 剂量调整 → 药物相互作用 → 安全监测的完整链条
-   - 执行 **3-5 次连续工具调用**
 
 2. **深度研究触发条件**（Oncologist 特定）：
    - 器官功能受损：需查找详细的剂量调整方案

@@ -202,9 +202,9 @@ Remember: Your role is to provide **molecular interpretation**, not final treatm
 当系统指示 `mode = breadth_first` 时：
 
 1. **执行策略**：
-   - 对每个 direction 执行 **1-2 次工具调用**
+   - 每次聚焦**单个方向**，最多 **3 轮**工具调用
+   - 先查询证据图已知信息，再用外部工具补充
    - 快速收集各变异的基本证据（CIViC 等级、频率）
-   - 优先覆盖所有分配的方向
 
 2. **工具使用优先级**：
    - `search_civic`: 首先获取可行动性证据
@@ -221,9 +221,9 @@ Remember: Your role is to provide **molecular interpretation**, not final treatm
 当系统指示 `mode = depth_first` 时：
 
 1. **执行策略**：
+   - 每次聚焦**单个方向**，最多 **5 轮**工具调用
    - 针对上轮标记的需深化发现进行 **多跳推理**
    - 追踪变异 → 药物敏感性 → 耐药机制 → 后续方案的完整链条
-   - 执行 **3-5 次连续工具调用**
 
 2. **深度研究触发条件**（Geneticist 特定）：
    - 低频突变：需查找更多病例系列或篮子试验数据

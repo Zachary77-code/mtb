@@ -690,6 +690,443 @@ class EvidenceGraph:
 
         return results
 
+    # ==================== 子图检索 (retrieve_from_graph) ====================
+
+    def get_neighborhood(
+        self,
+        entity_id: str,
+        max_hops: int = 2,
+        max_entities: int = 50,
+        predicate_filter: Optional[List[Predicate]] = None,
+        entity_type_filter: Optional[List[EntityType]] = None,
+    ) -> Dict[str, Any]:
+        """
+        BFS traversal from an anchor entity, returning local neighborhood.
+
+        Args:
+            entity_id: Starting entity canonical_id
+            max_hops: Maximum BFS depth (default 2)
+            max_entities: Maximum entities to return (safety cap)
+            predicate_filter: Only traverse edges with these predicates
+            entity_type_filter: Only include entities of these types
+
+        Returns:
+            {
+                "anchor": entity_id,
+                "entities": [Entity, ...],
+                "edges": [Edge, ...],
+                "hop_map": {canonical_id: hop_distance, ...}
+            }
+        """
+        if entity_id not in self.entities:
+            return {"anchor": entity_id, "entities": [], "edges": [], "hop_map": {}}
+
+        visited: Set[str] = {entity_id}
+        hop_map: Dict[str, int] = {entity_id: 0}
+        collected_edges: Dict[str, Edge] = {}  # edge_id -> Edge (dedup)
+        queue: List[Tuple[str, int]] = [(entity_id, 0)]
+
+        while queue:
+            current_id, current_hop = queue.pop(0)
+
+            if current_hop >= max_hops:
+                continue
+            if len(visited) >= max_entities:
+                break
+
+            # Get all edges for current entity
+            edges = self.get_entity_edges(current_id, direction="both")
+
+            for edge in edges:
+                # Apply predicate filter
+                if predicate_filter and edge.predicate not in predicate_filter:
+                    continue
+
+                # Determine neighbor
+                neighbor_id = edge.target_id if edge.source_id == current_id else edge.source_id
+                neighbor = self.entities.get(neighbor_id)
+
+                if not neighbor:
+                    continue
+
+                # Apply entity type filter
+                if entity_type_filter and neighbor.entity_type not in entity_type_filter:
+                    continue
+
+                # Collect edge
+                collected_edges[edge.id] = edge
+
+                # BFS expansion
+                if neighbor_id not in visited:
+                    visited.add(neighbor_id)
+                    hop_map[neighbor_id] = current_hop + 1
+                    queue.append((neighbor_id, current_hop + 1))
+
+                    if len(visited) >= max_entities:
+                        break
+
+        # Collect entities
+        entities = [self.entities[eid] for eid in visited if eid in self.entities]
+
+        return {
+            "anchor": entity_id,
+            "entities": entities,
+            "edges": list(collected_edges.values()),
+            "hop_map": hop_map,
+        }
+
+    def retrieve_subgraph(
+        self,
+        anchor_ids: List[str],
+        max_hops: int = 2,
+        max_entities: int = 100,
+        predicate_filter: Optional[List[Predicate]] = None,
+        entity_type_filter: Optional[List[EntityType]] = None,
+        include_observations: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Extract a subgraph around multiple anchor nodes (merges neighborhoods).
+
+        Args:
+            anchor_ids: List of anchor entity canonical_ids
+            max_hops: Maximum BFS hops per anchor (default 2)
+            max_entities: Maximum total entities (default 100)
+            predicate_filter: Only traverse edges with these predicates
+            entity_type_filter: Only include entities of these types
+            include_observations: If False, omit observation details (just counts)
+
+        Returns:
+            {
+                "entities": [{canonical_id, name, type, observation_count, best_grade, aliases, observations?}, ...],
+                "edges": [{source_id, target_id, predicate, confidence, observation_count, observations?}, ...],
+                "stats": {total_entities, total_edges, total_observations}
+            }
+        """
+        all_entity_ids: Set[str] = set()
+        all_edges: Dict[str, Edge] = {}  # edge_id -> Edge
+        all_hop_map: Dict[str, int] = {}
+
+        for anchor_id in anchor_ids:
+            if anchor_id not in self.entities:
+                continue
+
+            per_anchor_limit = max(10, max_entities // max(1, len(anchor_ids)))
+            neighborhood = self.get_neighborhood(
+                entity_id=anchor_id,
+                max_hops=max_hops,
+                max_entities=per_anchor_limit,
+                predicate_filter=predicate_filter,
+                entity_type_filter=entity_type_filter,
+            )
+
+            for e in neighborhood["entities"]:
+                all_entity_ids.add(e.canonical_id)
+
+            for edge in neighborhood["edges"]:
+                all_edges[edge.id] = edge
+
+            # Merge hop maps (keep shortest distance)
+            for eid, dist in neighborhood["hop_map"].items():
+                if eid not in all_hop_map or dist < all_hop_map[eid]:
+                    all_hop_map[eid] = dist
+
+            if len(all_entity_ids) >= max_entities:
+                break
+
+        # Build serializable result
+        entities_out = []
+        total_observations = 0
+        for eid in all_entity_ids:
+            entity = self.entities.get(eid)
+            if not entity:
+                continue
+
+            obs_count = len(entity.observations)
+            total_observations += obs_count
+            best_grade = entity.get_best_grade()
+
+            entry = {
+                "canonical_id": entity.canonical_id,
+                "name": entity.name,
+                "type": entity.entity_type.value,
+                "observation_count": obs_count,
+                "best_grade": best_grade.value if best_grade else None,
+                "aliases": entity.aliases,
+                "hop_distance": all_hop_map.get(eid, -1),
+            }
+
+            if include_observations and entity.observations:
+                entry["observations"] = [
+                    {
+                        "statement": obs.statement,
+                        "evidence_grade": obs.evidence_grade.value if obs.evidence_grade else None,
+                        "source_agent": obs.source_agent,
+                        "source_tool": obs.source_tool,
+                        "provenance": obs.provenance,
+                    }
+                    for obs in entity.observations
+                ]
+
+            entities_out.append(entry)
+
+        edges_out = []
+        for edge in all_edges.values():
+            obs_count = len(edge.observations)
+            total_observations += obs_count
+
+            entry = {
+                "source_id": edge.source_id,
+                "target_id": edge.target_id,
+                "predicate": edge.predicate.value,
+                "confidence": edge.confidence,
+                "observation_count": obs_count,
+            }
+
+            if include_observations and edge.observations:
+                entry["observations"] = [
+                    {
+                        "statement": obs.statement,
+                        "evidence_grade": obs.evidence_grade.value if obs.evidence_grade else None,
+                        "provenance": obs.provenance,
+                    }
+                    for obs in edge.observations
+                ]
+
+            edges_out.append(entry)
+
+        return {
+            "entities": entities_out,
+            "edges": edges_out,
+            "stats": {
+                "total_entities": len(entities_out),
+                "total_edges": len(edges_out),
+                "total_observations": total_observations,
+            },
+        }
+
+    def search_entities(
+        self,
+        query: str,
+        entity_types: Optional[List[EntityType]] = None,
+        limit: int = 20,
+    ) -> List[Dict[str, Any]]:
+        """
+        Search entities by name/alias with substring matching and relevance scoring.
+
+        Scoring: exact match=100, prefix=80, substring=60, alias match=40
+
+        Args:
+            query: Search query string
+            entity_types: Optional filter by entity types
+            limit: Maximum results to return
+
+        Returns:
+            List of {canonical_id, name, type, aliases, observation_count, best_grade, score}
+        """
+        if not query:
+            return []
+
+        query_upper = query.upper().strip()
+        results = []
+
+        for entity in self.entities.values():
+            if entity_types and entity.entity_type not in entity_types:
+                continue
+
+            score = 0
+
+            # Check canonical_id exact match
+            if entity.canonical_id.upper() == query_upper:
+                score = 100
+            # Check name exact match
+            elif entity.name.upper() == query_upper:
+                score = 100
+            # Check name prefix
+            elif entity.name.upper().startswith(query_upper):
+                score = 80
+            # Check canonical_id prefix
+            elif entity.canonical_id.upper().startswith(query_upper):
+                score = 75
+            # Check name substring
+            elif query_upper in entity.name.upper():
+                score = 60
+            # Check canonical_id substring
+            elif query_upper in entity.canonical_id.upper():
+                score = 55
+            # Check aliases
+            else:
+                for alias in entity.aliases:
+                    if alias.upper() == query_upper:
+                        score = 50
+                        break
+                    elif query_upper in alias.upper():
+                        score = 40
+                        break
+
+            if score > 0:
+                best_grade = entity.get_best_grade()
+                results.append({
+                    "canonical_id": entity.canonical_id,
+                    "name": entity.name,
+                    "type": entity.entity_type.value,
+                    "aliases": entity.aliases,
+                    "observation_count": len(entity.observations),
+                    "best_grade": best_grade.value if best_grade else None,
+                    "score": score,
+                })
+
+        # Sort by score descending, then by observation_count descending
+        results.sort(key=lambda r: (-r["score"], -r["observation_count"]))
+
+        return results[:limit]
+
+    def get_entity_detail(self, canonical_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get full detail for a single entity including all observations and connected edges.
+
+        Args:
+            canonical_id: Entity canonical_id
+
+        Returns:
+            {
+                "entity": {canonical_id, name, type, aliases, observations: [...]},
+                "edges": [{source_id, target_id, predicate, confidence, observations: [...]}, ...],
+                "connected_entities": [{canonical_id, name, type}, ...]
+            }
+            or None if entity not found
+        """
+        entity = self.entities.get(canonical_id)
+        if not entity:
+            return None
+
+        # Format entity with all observations
+        entity_out = {
+            "canonical_id": entity.canonical_id,
+            "name": entity.name,
+            "type": entity.entity_type.value,
+            "aliases": entity.aliases,
+            "observations": [
+                {
+                    "id": obs.id,
+                    "statement": obs.statement,
+                    "evidence_grade": obs.evidence_grade.value if obs.evidence_grade else None,
+                    "civic_type": obs.civic_type.value if obs.civic_type else None,
+                    "source_agent": obs.source_agent,
+                    "source_tool": obs.source_tool,
+                    "provenance": obs.provenance,
+                    "source_url": obs.source_url,
+                    "iteration": obs.iteration,
+                }
+                for obs in entity.observations
+            ],
+        }
+
+        # Collect connected edges
+        edges = self.get_entity_edges(canonical_id, direction="both")
+        edges_out = []
+        connected_out = []
+        seen_connected = set()
+
+        for edge in edges:
+            edge_entry = {
+                "source_id": edge.source_id,
+                "target_id": edge.target_id,
+                "predicate": edge.predicate.value,
+                "confidence": edge.confidence,
+                "observations": [
+                    {
+                        "statement": obs.statement,
+                        "evidence_grade": obs.evidence_grade.value if obs.evidence_grade else None,
+                        "provenance": obs.provenance,
+                    }
+                    for obs in edge.observations
+                ],
+            }
+            edges_out.append(edge_entry)
+
+            # Connected entity
+            neighbor_id = edge.target_id if edge.source_id == canonical_id else edge.source_id
+            if neighbor_id not in seen_connected:
+                seen_connected.add(neighbor_id)
+                neighbor = self.entities.get(neighbor_id)
+                if neighbor:
+                    connected_out.append({
+                        "canonical_id": neighbor.canonical_id,
+                        "name": neighbor.name,
+                        "type": neighbor.entity_type.value,
+                    })
+
+        return {
+            "entity": entity_out,
+            "edges": edges_out,
+            "connected_entities": connected_out,
+        }
+
+    def filter_observations(
+        self,
+        entity_id: str,
+        min_grade: Optional[EvidenceGrade] = None,
+        source_agent: Optional[str] = None,
+        source_tool: Optional[str] = None,
+        civic_type: Optional['CivicEvidenceType'] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Filter observations on an entity with precise criteria.
+        Addresses the 'can't do p-value filtering with LLM eyeballing' problem.
+
+        Args:
+            entity_id: Entity canonical_id
+            min_grade: Minimum evidence grade (A is best, E is worst)
+            source_agent: Filter by source agent name
+            source_tool: Filter by source tool name
+            civic_type: Filter by CIViC evidence type
+
+        Returns:
+            Filtered observation list as dicts
+        """
+        entity = self.entities.get(entity_id)
+        if not entity:
+            return []
+
+        grade_order = {
+            EvidenceGrade.A: 0, EvidenceGrade.B: 1, EvidenceGrade.C: 2,
+            EvidenceGrade.D: 3, EvidenceGrade.E: 4
+        }
+        min_grade_rank = grade_order.get(min_grade, 999) if min_grade else 999
+
+        results = []
+        for obs in entity.observations:
+            # Grade filter
+            if min_grade:
+                obs_rank = grade_order.get(obs.evidence_grade, 5) if obs.evidence_grade else 5
+                if obs_rank > min_grade_rank:
+                    continue
+
+            # Agent filter
+            if source_agent and obs.source_agent != source_agent:
+                continue
+
+            # Tool filter
+            if source_tool and obs.source_tool != source_tool:
+                continue
+
+            # CIViC type filter
+            if civic_type and obs.civic_type != civic_type:
+                continue
+
+            results.append({
+                "id": obs.id,
+                "statement": obs.statement,
+                "evidence_grade": obs.evidence_grade.value if obs.evidence_grade else None,
+                "civic_type": obs.civic_type.value if obs.civic_type else None,
+                "source_agent": obs.source_agent,
+                "source_tool": obs.source_tool,
+                "provenance": obs.provenance,
+                "source_url": obs.source_url,
+            })
+
+        return results
+
     # ==================== 冲突处理 ====================
 
     def mark_conflict_group(self, edge_ids: List[str], group_id: str) -> int:

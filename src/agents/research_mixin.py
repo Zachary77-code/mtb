@@ -117,6 +117,12 @@ class ResearchMixin:
                 "tool_call_report": ""
             }
 
+        # NEW: Create and inject GraphQueryTool with current graph reference
+        from src.tools.graph_query_tool import GraphQueryTool
+        graph_tool = GraphQueryTool()
+        graph_tool.set_graph(graph)
+        self._inject_graph_tool(graph_tool)
+
         # 收集所有结果
         all_findings = []
         all_direction_updates = {}
@@ -127,16 +133,33 @@ class ResearchMixin:
         all_tool_call_records = []  # 原始工具调用记录（dict 列表）
         all_agent_analysis = []     # JSON 外的分析文本
         all_per_direction_analysis = {}  # 各方向研究分析
+        all_new_entity_ids = []         # 两阶段合并的新实体 ID
+        all_extraction_details = []     # 两阶段合并的提取详情
 
-        # 处理 BFRS 方向
-        if bfrs_directions:
-            logger.info(f"[{agent_role}] 执行 BFRS 广度研究: {len(bfrs_directions)} 个方向")
-            prompt = self._build_bfrs_prompt(bfrs_directions, graph, iteration, max_iterations, case_context)
-            result = self.invoke(prompt)  # type: ignore
-            bfrs_tool_report = self.get_tool_call_report()  # type: ignore  # 在下次 invoke() 重置前捕获
-            if bfrs_tool_report:
-                all_tool_call_reports.append(f"### BFRS 工具调用\n{bfrs_tool_report}")
-            # 捕获原始 tool call records（标记 phase）
+        # 逐方向处理：每个方向独享工具调用预算，完成后立即提取实体入图
+        def _process_direction(direction: Dict[str, Any], dir_mode: str, phase_label: str, research_mode: ResearchMode, max_tool_rounds: int):
+            """处理单个方向的研究迭代"""
+            d_id = direction.get('id', '?')
+            d_topic = direction.get('topic', '?')
+            logger.info(f"[{agent_role}] {phase_label} 方向 {d_id}: {d_topic} (max {max_tool_rounds} 轮)")
+
+            prompt = self._build_direction_prompt(
+                direction=direction,
+                mode=dir_mode,
+                all_directions=directions,
+                graph=graph,
+                iteration=iteration,
+                max_iterations=max_iterations,
+                case_context=case_context
+            )
+            result = self.invoke(prompt, max_tool_iterations=max_tool_rounds)  # type: ignore
+
+            # 捕获工具调用报告
+            tool_report = self.get_tool_call_report()  # type: ignore
+            if tool_report:
+                all_tool_call_reports.append(f"### {phase_label} {d_id} 工具调用\n{tool_report}")
+
+            # 捕获原始 tool call records（标记 phase + direction_id）
             for record in getattr(self, 'tool_call_history', []):
                 all_tool_call_records.append({
                     "tool_name": record.tool_name,
@@ -144,66 +167,51 @@ class ResearchMixin:
                     "reasoning": record.reasoning,
                     "result": record.result,
                     "timestamp": record.timestamp,
-                    "phase": "BFRS",
+                    "phase": phase_label,
+                    "direction_id": d_id,
                 })
+
+            # 解析输出
             output = result.get("output", "")
             all_outputs.append(output)
-            parsed = self._parse_research_output(output, ResearchMode.BREADTH_FIRST)
-            all_findings.extend(parsed.get("findings", []))
+            parsed = self._parse_research_output(output, research_mode)
+            parsed_findings = parsed.get("findings", [])
+            all_findings.extend(parsed_findings)
             all_direction_updates.update(parsed.get("direction_updates", {}))
             all_needs_deep.extend(parsed.get("needs_deep_research", []))
             if parsed.get("summary"):
-                all_summaries.append(f"[BFRS] {parsed['summary']}")
-            bfrs_analysis = parsed.get("agent_analysis", "")
-            if bfrs_analysis:
-                all_agent_analysis.append(f"[BFRS] {bfrs_analysis}")
+                all_summaries.append(f"[{phase_label} {d_id}] {parsed['summary']}")
+            analysis = parsed.get("agent_analysis", "")
+            if analysis:
+                all_agent_analysis.append(f"[{phase_label} {d_id}] {analysis}")
             all_per_direction_analysis.update(parsed.get("per_direction_analysis", {}))
 
-        # 处理 DFRS 方向
-        if dfrs_directions:
-            logger.info(f"[{agent_role}] 执行 DFRS 深度研究: {len(dfrs_directions)} 个方向")
-            prompt = self._build_dfrs_prompt(dfrs_directions, graph, iteration, max_iterations, case_context)
-            result = self.invoke(prompt)  # type: ignore
-            dfrs_tool_report = self.get_tool_call_report()  # type: ignore  # 捕获 DFRS 工具调用报告
-            if dfrs_tool_report:
-                all_tool_call_reports.append(f"### DFRS 工具调用\n{dfrs_tool_report}")
-            # 捕获原始 tool call records（标记 phase）
-            for record in getattr(self, 'tool_call_history', []):
-                all_tool_call_records.append({
-                    "tool_name": record.tool_name,
-                    "parameters": record.parameters,
-                    "reasoning": record.reasoning,
-                    "result": record.result,
-                    "timestamp": record.timestamp,
-                    "phase": "DFRS",
-                })
-            output = result.get("output", "")
-            all_outputs.append(output)
-            parsed = self._parse_research_output(output, ResearchMode.DEPTH_FIRST)
-            all_findings.extend(parsed.get("findings", []))
-            all_direction_updates.update(parsed.get("direction_updates", {}))
-            all_needs_deep.extend(parsed.get("needs_deep_research", []))
-            if parsed.get("summary"):
-                all_summaries.append(f"[DFRS] {parsed['summary']}")
-            dfrs_analysis = parsed.get("agent_analysis", "")
-            if dfrs_analysis:
-                all_agent_analysis.append(f"[DFRS] {dfrs_analysis}")
-            all_per_direction_analysis.update(parsed.get("per_direction_analysis", {}))
+            # 立即实体提取 → 后续方向可查到本方向新发现
+            if parsed_findings:
+                nonlocal plan
+                entity_ids, plan, extraction = self._update_evidence_graph(
+                    graph=graph, findings=parsed_findings,
+                    agent_role=agent_role, iteration=iteration, mode=mode, plan=plan
+                )
+                all_new_entity_ids.extend(entity_ids)
+                all_extraction_details.extend(extraction)
+                logger.info(f"[{agent_role}] {phase_label} {d_id}: {len(entity_ids)} 新实体入图")
 
-        # 更新证据图和研究计划（实体中心架构）
-        new_entity_ids, updated_plan, extraction_details = self._update_evidence_graph(
-            graph=graph,
-            findings=all_findings,
-            agent_role=agent_role,
-            iteration=iteration,
-            mode=mode,
-            plan=plan
-        )
+        # BFRS 方向：逐方向执行，每方向 3 轮
+        for direction in bfrs_directions:
+            _process_direction(direction, "bfrs", "BFRS", ResearchMode.BREADTH_FIRST, max_tool_rounds=3)
+
+        # DFRS 方向：逐方向执行，每方向 5 轮
+        for direction in dfrs_directions:
+            _process_direction(direction, "dfrs", "DFRS", ResearchMode.DEPTH_FIRST, max_tool_rounds=5)
+
+        # 恢复原始工具列表（移除 GraphQueryTool）
+        self._restore_original_tools()
 
         # 增强结果日志
         logger.info(f"[{agent_role}] 迭代完成:")
         logger.info(f"[{agent_role}]   发现数: {len(all_findings)}")
-        logger.info(f"[{agent_role}]   新实体: {len(new_entity_ids)}")
+        logger.info(f"[{agent_role}]   新实体: {len(all_new_entity_ids)}")
         if all_direction_updates:
             logger.info(f"[{agent_role}]   方向更新: {all_direction_updates}")
         if all_needs_deep:
@@ -215,8 +223,8 @@ class ResearchMixin:
 
         return {
             "evidence_graph": graph.to_dict(),
-            "research_plan": updated_plan.to_dict() if updated_plan else None,
-            "new_evidence_ids": new_entity_ids,
+            "research_plan": plan.to_dict() if plan else None,
+            "new_evidence_ids": all_new_entity_ids,
             "direction_updates": all_direction_updates,
             "research_complete": len(bfrs_directions) == 0 and len(dfrs_directions) == 0,
             "needs_deep_research": all_needs_deep,
@@ -224,67 +232,222 @@ class ResearchMixin:
             "raw_output": "\n---\n".join(all_outputs),
             "tool_call_report": "\n\n".join(all_tool_call_reports),
             "tool_call_records": all_tool_call_records,
-            "extraction_details": extraction_details,
+            "extraction_details": all_extraction_details,
             "agent_analysis": "\n\n".join(all_agent_analysis),
             "per_direction_analysis": all_per_direction_analysis,
         }
 
-    def _build_bfrs_prompt(
+    def _inject_graph_tool(self, graph_tool):
+        """将 GraphQueryTool 注入到 Agent 的工具列表中"""
+        # 清理上一次可能未恢复的状态（防止异常后残留）
+        self._restore_original_tools()
+
+        self._original_tools = list(self.tools)
+        self._original_tool_registry = dict(self.tool_registry)
+        self.tools = list(self.tools) + [graph_tool]
+        self.tool_registry = dict(self.tool_registry)
+        self.tool_registry[graph_tool.name] = graph_tool
+        logger.debug(f"[{getattr(self, 'role', '?')}] GraphQueryTool 已注入")
+
+    def _restore_original_tools(self):
+        """恢复原始工具列表（移除 GraphQueryTool）"""
+        if hasattr(self, '_original_tools'):
+            self.tools = self._original_tools
+            self.tool_registry = self._original_tool_registry
+            del self._original_tools
+            del self._original_tool_registry
+            logger.debug(f"[{getattr(self, 'role', '?')}] 已恢复原始工具列表")
+
+    def _build_direction_anchor_context(
         self,
         directions: List[Dict[str, Any]],
+        graph: EvidenceGraph
+    ) -> str:
+        """为每个方向构建锚节点上下文（含实体+关系边，无截断）"""
+        sections = []
+        for d in directions:
+            evidence_ids = d.get('evidence_ids', [])
+            dir_id = d.get('id', '?')
+            topic = d.get('topic', '未命名')
+
+            if not evidence_ids:
+                sections.append(f"### {dir_id} ({topic})\n尚无已知实体")
+                continue
+
+            subgraph = graph.retrieve_subgraph(
+                anchor_ids=evidence_ids,
+                max_hops=2,
+                include_observations=False
+            )
+
+            entities = subgraph.get('entities', [])
+            edges = subgraph.get('edges', [])
+
+            if not entities:
+                sections.append(f"### {dir_id} ({topic})\n尚无已知实体")
+                continue
+
+            # 实体行: 全量，含等级
+            entity_strs = [
+                f"{e['canonical_id']}({e['observation_count']}obs"
+                + (f",{e['best_grade']}" if e.get('best_grade') else "")
+                + ")"
+                for e in entities
+            ]
+            entity_line = f"实体 ({len(entities)}): {', '.join(entity_strs)}"
+
+            # 关系边行: 全量，含 confidence
+            dir_lines = [f"### {dir_id} ({topic})", entity_line]
+            if edges:
+                edge_strs = []
+                for e in edges:
+                    conf = f" ({e['confidence']:.2f})" if e.get('confidence') else ""
+                    edge_strs.append(
+                        f"  {e['source_id']} → {e['predicate']} → {e['target_id']}{conf}"
+                    )
+                dir_lines.append(f"关系 ({len(edges)}):")
+                dir_lines.extend(edge_strs)
+
+            sections.append("\n".join(dir_lines))
+
+        return "\n\n".join(sections) if sections else "尚无已知实体信息"
+
+    def _build_other_directions_summary(
+        self,
+        current_direction_id: str,
+        all_directions: List[Dict[str, Any]],
+    ) -> str:
+        """为非当前方向生成一行摘要（防重复研究）"""
+        lines = []
+        for d in all_directions:
+            if d.get('id') == current_direction_id:
+                continue
+            topic = d.get('topic', '?')
+            status = d.get('status', 'pending')
+            preferred_mode = d.get('preferred_mode', 'breadth_first')
+            evidence_count = len(d.get('evidence_ids', []))
+            lines.append(f"- {d.get('id')} ({topic}): {evidence_count} 实体, mode={preferred_mode}, status={status}")
+        return "\n".join(lines) if lines else "（无其他方向）"
+
+    def _build_direction_prompt(
+        self,
+        direction: Dict[str, Any],
+        mode: str,  # "bfrs" or "dfrs"
+        all_directions: List[Dict[str, Any]],
         graph: EvidenceGraph,
         iteration: int,
         max_iterations: int,
         case_context: str
     ) -> str:
-        """构建 BFRS 模式提示"""
+        """
+        构建单方向研究提示（统一 BFRS/DFRS）
+
+        Args:
+            direction: 当前聚焦的研究方向
+            mode: "bfrs" 或 "dfrs"
+            all_directions: 所有方向（用于生成其他方向概况）
+            graph: 当前证据图
+            iteration: 当前迭代轮次
+            max_iterations: 最大迭代次数
+            case_context: 病例上下文
+        """
         agent_role = getattr(self, 'role', 'Agent')
+        dir_id = direction.get('id', '?')
+        is_dfrs = (mode == "dfrs")
+        mode_label = "DFRS (深度优先研究)" if is_dfrs else "BFRS (广度优先研究)"
+        tool_rounds = 5 if is_dfrs else 3
+        tool_rounds_hint = "3-5" if is_dfrs else "2-3"
 
-        # 格式化方向列表
-        directions_text = ""
-        for i, d in enumerate(directions, 1):
-            directions_text += f"""
-### 方向 {i}: {d.get('topic', '未命名')}
-- ID: {d.get('id', '')}
-- 目标模块: {', '.join(d.get('target_modules', []))}
-- 优先级: {d.get('priority', 3)}
-- 建议查询: {', '.join(d.get('queries', []))}
-- 完成标准: {d.get('completion_criteria', '')}
-- 当前状态: {d.get('status', 'pending')}
-"""
+        # 本方向详情
+        direction_detail = f"""### 方向 {dir_id}: {direction.get('topic', '未命名')}
+- 目标模块: {', '.join(direction.get('target_modules', []))}
+- 优先级: {direction.get('priority', 3)}
+- 建议查询: {', '.join(direction.get('queries', []))}
+- 完成标准: {direction.get('completion_criteria', '')}
+- 当前状态: {direction.get('status', 'pending')}"""
 
-        # 现有证据摘要
-        existing_evidence = graph.summary()
+        # DFRS 额外信息：深入研究原因和具体问题
+        dfrs_section = ""
+        if is_dfrs:
+            findings_list = direction.get('deep_research_findings', [])
+            findings_text = ""
+            if findings_list:
+                findings_text = "\n" + "\n".join(f"  - {f}" for f in findings_list)
 
-        return f"""## 研究模式: BFRS (广度优先研究)
+            mode_reason = direction.get('mode_reason', '')
+            mode_reason_text = f"\n- PlanAgent 评估指示: {mode_reason}" if mode_reason else ""
+
+            dfrs_section = f"""
+- 需要深入的原因: {direction.get('depth_research_reason', '需要更多证据')}{mode_reason_text}
+- 具体待研究问题:{findings_text if findings_text else ' 请基于方向主题深入'}
+- 已有证据 ID: {direction.get('evidence_ids', [])}"""
+
+        # 本方向锚节点上下文
+        anchor_context = self._build_direction_anchor_context([direction], graph)
+
+        # 其他方向概况
+        other_summary = self._build_other_directions_summary(dir_id, all_directions)
+
+        total_entities = len(graph.entities) if graph.entities else 0
+        total_edges = len(graph.edges) if graph.edges else 0
+
+        # 执行指南（BFRS vs DFRS）
+        if is_dfrs:
+            guide = f"""### DFRS 执行指南
+1. 你有 **{tool_rounds} 轮工具调用预算**（建议 {tool_rounds_hint} 轮），深入追踪证据链
+2. 针对高优先级发现进行多跳推理
+3. 追踪引用链、相关研究、机制解释
+4. 寻找更高级别的证据支持（A > B > C > D > E）"""
+        else:
+            guide = f"""### BFRS 执行指南
+1. 你有 **{tool_rounds} 轮工具调用预算**（建议 {tool_rounds_hint} 轮），请高效利用
+2. 收集广泛的初步证据，不深入追踪单个发现
+3. 为方向标记状态: pending（需继续）/ completed（已充分）
+4. 标记需要深入研究的重要发现"""
+
+        return f"""## 研究模式: {mode_label}
 
 ### 当前迭代信息
 - 迭代轮次: {iteration + 1} / {max_iterations}
 - 你的角色: {agent_role}
-- 现有实体: {existing_evidence.get('total_entities', 0)} 个
-- 现有边: {existing_evidence.get('total_edges', 0)} 条
+- 证据图概况: {total_entities} 个实体, {total_edges} 条关系
+
+### 你的研究方向（本次聚焦）
+{direction_detail}{dfrs_section}
+
+### 本方向已知信息
+{anchor_context}
+
+### 其他方向概况（仅供参考，避免重复工作）
+{other_summary}
+
+### 证据图查询工具 (query_evidence_graph)
+你可以使用 `query_evidence_graph` 工具查询证据图中已知的信息。
+**重要**: 在调用外部工具（PubMed、CIViC 等）之前，先查图里已有信息！
+{'**提示**: BFRS 阶段发现的新实体已入图，可直接查询！' if is_dfrs else ''}
+
+用法:
+- `search_entities`: 搜索图中实体（基因、药物、变异等）
+- `get_entity_detail`: 查看某实体的完整观察和关系
+- `get_neighborhood`: 从锚点实体出发 BFS 探索邻域
+- `get_treatment_evidence`: 查看治疗相关证据
+
+如果返回 "Not found"，说明图中尚无此信息 → 转用外部工具搜索。
 
 ### 病例背景
 {case_context}
 
-### 分配给你的研究方向
-{directions_text}
-
-### BFRS 执行指南
-1. 对每个研究方向执行 1-2 次工具调用
-2. 收集广泛的初步证据，不深入追踪单个发现
-3. 为每个方向标记状态: pending（需继续）/ completed（已充分）
-4. 标记需要深入研究的重要发现
+{guide}
 
 ### 输出格式
-请以 JSON 格式输出研究结果:
+请以 JSON 格式输出研究结果（direction_id 固定为 "{dir_id}"）:
 
 ```json
-{{
+{{{{
     "summary": "本轮研究摘要",
     "findings": [
-        {{
-            "direction_id": "D1",
+        {{{{
+            "direction_id": "{dir_id}",
             "content": "发现内容（完整详细，不限长度）",
             "evidence_type": "molecular|clinical|literature|trial|guideline|drug|pathology|imaging",
             "grade": "A|B|C|D|E",
@@ -294,42 +457,33 @@ class ResearchMixin:
             "variant": "变异名（如有）",
             "drug": "药物名（如有）",
             "pmid": "PubMed ID（如有）",
-            "nct_id": "NCT ID（如有）"
-        }}
+            "nct_id": "NCT ID（如有）"{"," if is_dfrs else ""}
+            {"\"depth_chain\": [\"引用1\", \"引用2\", \"推理步骤\"]" if is_dfrs else ""}
+        }}}}
     ],
-    "direction_updates": {{
-        "D1": "pending|completed",
-        "D2": "pending|completed"
-    }},
+    "direction_updates": {{{{
+        "{dir_id}": "pending|completed"
+    }}}},
     "needs_deep_research": [
-        {{
-            "direction_id": "D1",
+        {{{{
+            "direction_id": "{dir_id}",
             "finding": "需要深入的发现描述",
             "reason": "为什么需要深入研究"
-        }}
+        }}}}
     ],
-    "per_direction_analysis": {{
-        "D1": {{
+    "per_direction_analysis": {{{{
+        "{dir_id}": {{{{
             "research_question": "本轮需要解决的核心研究问题",
             "tools_used": "使用了哪些工具和查询关键词",
             "what_found": "找到了哪些关键证据",
             "what_not_found": "没找到什么 / 未能解决的问题",
             "new_questions": "是否产生了新的研究问题",
             "conclusion": "该方向的当前结论"
-        }}
+        }}}}
     }},
     "research_complete": false
-}}
+}}}}
 ```
-
-**per_direction_analysis 要求**:
-- 必须对每个分配的方向输出分析，即使该方向本轮无新发现
-- research_question: 根据方向的完成标准和已有证据，本轮需解决什么问题
-- tools_used: 具体列出使用的工具名称和查询参数
-- what_found: 找到了什么关键信息（简洁概括）
-- what_not_found: 哪些问题未被解答，或工具返回无结果
-- new_questions: 研究过程中是否产生了需要后续跟进的新问题
-- conclusion: 该方向的当前状态判断（是否需要继续、需要什么类型的后续研究）
 
 **证据等级说明 (CIViC Evidence Level)**:
 - A: Validated - 已验证，多项独立研究或 meta 分析支持
@@ -345,149 +499,7 @@ class ResearchMixin:
 - predisposing: 易感性 - 与癌症风险相关
 - oncogenic: 致癌性 - 变异的致癌功能
 
-请开始执行广度优先研究。
-"""
-
-    def _build_dfrs_prompt(
-        self,
-        directions: List[Dict[str, Any]],
-        graph: EvidenceGraph,
-        iteration: int,
-        max_iterations: int,
-        case_context: str
-    ) -> str:
-        """构建 DFRS 模式提示"""
-        agent_role = getattr(self, 'role', 'Agent')
-
-        # 找到需要深入研究的方向（检查 needs_deep_research 标记或 deep_research_findings 列表）
-        depth_items = []
-        for d in directions:
-            if d.get('needs_deep_research') or d.get('deep_research_findings'):
-                depth_items.append(d)
-
-        # 格式化深入研究项（含具体待研究问题）
-        depth_text = ""
-        for i, item in enumerate(depth_items, 1):
-            findings_list = item.get('deep_research_findings', [])
-            findings_text = ""
-            if findings_list:
-                findings_text = "\n" + "\n".join(f"  - {f}" for f in findings_list)
-
-            mode_reason = item.get('mode_reason', '')
-            mode_reason_text = f"\n- PlanAgent 评估指示: {mode_reason}" if mode_reason else ""
-
-            depth_text += f"""
-### 深入研究项 {i}
-- 方向 ID: {item.get('id', '')}
-- 主题: {item.get('topic', '')}
-- 目标模块: {', '.join(item.get('target_modules', []))}
-- 完成标准: {item.get('completion_criteria', '')}
-- 需要深入的原因: {item.get('depth_research_reason', '需要更多证据')}{mode_reason_text}
-- 具体待研究问题:{findings_text if findings_text else ' 请基于方向主题深入'}
-- 已有证据 ID: {item.get('evidence_ids', [])}
-"""
-
-        # 无深入项时的回退（从所有方向的 mode_reason 中提取指示）
-        if not depth_text:
-            reasons = [d.get('mode_reason', '') for d in directions if d.get('mode_reason')]
-            if reasons:
-                depth_text = "### 研究指示\n" + "\n".join(f"- {r}" for r in reasons)
-            else:
-                depth_text = "无特定深入项，请基于现有证据进行深化研究"
-
-        # 现有证据摘要
-        existing_evidence = graph.summary()
-
-        return f"""## 研究模式: DFRS (深度优先研究)
-
-### 当前迭代信息
-- 迭代轮次: {iteration + 1} / {max_iterations}
-- 你的角色: {agent_role}
-- 现有实体: {existing_evidence.get('total_entities', 0)} 个
-- 现有边: {existing_evidence.get('total_edges', 0)} 条
-
-### 病例背景
-{case_context}
-
-### 需要深入研究的项目
-{depth_text}
-
-### DFRS 执行指南
-1. 针对高优先级发现进行多跳推理
-2. 追踪引用链、相关研究、机制解释
-3. 最多执行 3-5 次连续工具调用
-4. 寻找更高级别的证据支持
-
-### 输出格式
-请以 JSON 格式输出研究结果:
-
-```json
-{{
-    "summary": "深入研究摘要",
-    "findings": [
-        {{
-            "direction_id": "D1",
-            "content": "深入发现内容（完整详细，不限长度）",
-            "evidence_type": "molecular|clinical|literature|trial|guideline|drug|pathology|imaging",
-            "grade": "A|B|C|D|E",
-            "civic_type": "predictive|diagnostic|prognostic|predisposing|oncogenic",
-            "source_tool": "工具名称",
-            "gene": "基因名（如有）",
-            "variant": "变异名（如有）",
-            "drug": "药物名（如有）",
-            "pmid": "PubMed ID（如有）",
-            "nct_id": "NCT ID（如有）",
-            "depth_chain": ["引用1", "引用2", "推理步骤"]
-        }}
-    ],
-    "direction_updates": {{
-        "D1": "pending|completed"
-    }},
-    "needs_deep_research": [
-        {{
-            "direction_id": "D1",
-            "finding": "仍需深入的发现描述",
-            "reason": "为什么需要继续深入"
-        }}
-    ],
-    "per_direction_analysis": {{
-        "D1": {{
-            "research_question": "本轮深入研究需要解决的核心问题",
-            "tools_used": "使用了哪些工具和查询关键词",
-            "what_found": "找到了哪些关键证据",
-            "what_not_found": "没找到什么 / 未能解决的问题",
-            "new_questions": "是否产生了新的研究问题",
-            "conclusion": "该方向的当前结论"
-        }}
-    }},
-    "research_complete": true|false
-}}
-```
-
-**per_direction_analysis 要求**:
-- 必须对每个分配的方向输出分析，即使该方向本轮无新发现
-- research_question: 根据待研究问题列表，本轮需解决什么
-- tools_used: 具体列出使用的工具名称和查询参数
-- what_found: 找到了什么关键信息（简洁概括）
-- what_not_found: 哪些问题未被解答，或工具返回无结果
-- new_questions: 研究过程中是否产生了需要后续跟进的新问题
-- conclusion: 该方向的当前状态判断
-
-**证据等级说明 (CIViC Evidence Level)**:
-- A: Validated - 已验证，多项独立研究或 meta 分析支持
-- B: Clinical - 临床证据，来自临床试验或大规模临床研究
-- C: Case Study - 病例研究，来自个案报道或小规模病例系列
-- D: Preclinical - 临床前证据，来自细胞系、动物模型等实验
-- E: Inferential - 推断性证据，间接证据或基于生物学原理的推断
-
-**CIViC 证据类型说明**:
-- predictive: 预测性 - 预测对某种治疗的反应
-- diagnostic: 诊断性 - 用于疾病诊断
-- prognostic: 预后性 - 与疾病预后相关
-- predisposing: 易感性 - 与癌症风险相关
-- oncogenic: 致癌性 - 变异的致癌功能
-
-请开始执行深度优先研究。
+请开始执行{'深度优先' if is_dfrs else '广度优先'}研究。
 """
 
     def _parse_research_output(self, output: str, mode: ResearchMode) -> Dict[str, Any]:

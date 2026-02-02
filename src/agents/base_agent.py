@@ -216,13 +216,14 @@ class BaseAgent:
         logger.debug(f"[{self.role}] API 响应成功")
         return response.json()
 
-    def invoke(self, user_message: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def invoke(self, user_message: str, context: Optional[Dict[str, Any]] = None, max_tool_iterations: int = 5) -> Dict[str, Any]:
         """
         调用 Agent
 
         Args:
             user_message: 用户消息/任务描述
             context: 额外上下文信息（如 structured_case）
+            max_tool_iterations: 最大工具调用轮次（默认 5）
 
         Returns:
             包含 output 和 references 的字典
@@ -261,7 +262,7 @@ class BaseAgent:
         tool_calls = message.get("tool_calls")
         if tool_calls:
             logger.info(f"[{self.role}] 检测到工具调用: {len(tool_calls)} 个")
-            return self._handle_tool_calls(message, messages)
+            return self._handle_tool_calls(message, messages, max_iterations=max_tool_iterations)
 
         # 直接返回文本响应
         content = message.get("content", "")

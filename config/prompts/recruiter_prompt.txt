@@ -235,9 +235,9 @@ Remember: Your role is to **open doors**, not to guarantee enrollment. Final eli
 当系统指示 `mode = breadth_first` 时：
 
 1. **执行策略**：
-   - 对每个 direction 执行 **1-2 次工具调用**
+   - 每次聚焦**单个方向**，最多 **3 轮**工具调用
+   - 先查询证据图已知信息，再用外部工具补充
    - 快速筛选相关试验（NCT 编号、Phase、招募状态）
-   - 优先覆盖所有分配的方向
 
 2. **工具使用优先级**：
    - `search_clinical_trials`: 首先搜索 ClinicalTrials.gov
@@ -253,9 +253,9 @@ Remember: Your role is to **open doors**, not to guarantee enrollment. Final eli
 当系统指示 `mode = depth_first` 时：
 
 1. **执行策略**：
+   - 每次聚焦**单个方向**，最多 **5 轮**工具调用
    - 针对上轮标记的高优先级试验进行 **详细可行性评估**
    - 追踪试验设计 → 入排标准 → 患者匹配度的完整链条
-   - 执行 **3-5 次连续工具调用**
 
 2. **深度研究触发条件**（Recruiter 特定）：
    - 入排标准模糊：需查找更详细的 Protocol 信息

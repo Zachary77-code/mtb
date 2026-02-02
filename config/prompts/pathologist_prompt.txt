@@ -251,9 +251,9 @@ Input: 70-year-old male, sigmoid colon adenocarcinoma, moderately differentiated
 当系统指示 `mode = breadth_first` 时：
 
 1. **执行策略**：
-   - 对每个 direction 执行 **1-2 次工具调用**
+   - 每次聚焦**单个方向**，最多 **3 轮**工具调用
+   - 先查询证据图已知信息，再用外部工具补充
    - 收集广泛初步证据，不深入单个发现
-   - 优先覆盖所有分配的方向
 
 2. **工具使用**：
    - `search_pubmed`: 快速查询关键病理特征的预后意义
@@ -268,9 +268,9 @@ Input: 70-year-old male, sigmoid colon adenocarcinoma, moderately differentiated
 当系统指示 `mode = depth_first` 时：
 
 1. **执行策略**：
+   - 每次聚焦**单个方向**，最多 **5 轮**工具调用
    - 针对上轮标记的需深化发现进行 **多跳推理**
    - 追踪病理特征 → 临床意义 → 预后影响的完整证据链
-   - 执行 **3-5 次连续工具调用**
 
 2. **深度研究触发条件**（Pathologist 特定）：
    - 罕见病理表现：需查找更多文献支持
