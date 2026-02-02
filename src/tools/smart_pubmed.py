@@ -232,7 +232,7 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
         self.ncbi_client = get_ncbi_client()
         self.model = SUBGRAPH_MODEL
 
-    def _call_llm(self, prompt: str, max_tokens: int = 500) -> str:
+    def _call_llm(self, prompt: str, max_tokens: int = None) -> str:
         """Call LLM (using flash model to reduce cost)"""
         headers = {
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
@@ -241,18 +241,23 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
         payload = {
             "model": self.model,
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": max_tokens,
             "temperature": 0.1  # 低温度确保稳定输出
         }
+        if max_tokens is not None:
+            payload["max_tokens"] = max_tokens
         try:
             response = requests.post(
                 OPENROUTER_BASE_URL,
                 headers=headers,
                 json=payload,
-                timeout=30
+                timeout=60
             )
             response.raise_for_status()
-            content = response.json()["choices"][0]["message"]["content"].strip()
+            result = response.json()
+            finish_reason = result["choices"][0].get("finish_reason", "unknown")
+            if finish_reason == "length":
+                logger.warning(f"[SmartPubMed] LLM 响应被截断 (finish_reason=length, max_tokens={max_tokens})")
+            content = result["choices"][0]["message"]["content"].strip()
             # Clean potential markdown code blocks
             if content.startswith("```"):
                 content = re.sub(r'^```\w*\n?', '', content)
@@ -407,6 +412,26 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
 
         return best_bucket
 
+    @staticmethod
+    def _repair_truncated_json_array(text: str) -> Optional[List[Dict]]:
+        """尝试从截断的 JSON 数组中恢复已完成的条目"""
+        last_complete = text.rfind('},')
+        if last_complete == -1:
+            last_complete = text.rfind('}')
+        if last_complete == -1:
+            return None
+        truncated = text[:last_complete + 1]
+        start = truncated.find('[')
+        if start == -1:
+            return None
+        try:
+            result = json.loads(truncated[start:] + ']')
+            if isinstance(result, list) and len(result) > 0:
+                return result
+            return None
+        except json.JSONDecodeError:
+            return None
+
     def _filter_batch(self, original_query: str, batch: List[Dict], batch_idx: int) -> List[Dict]:
         """
         评估一批文章的相关性（单次 LLM 调用评估多篇）
@@ -444,8 +469,8 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
             articles_json=json.dumps(articles_for_eval, ensure_ascii=False)
         )
 
-        # 调用 LLM（增加 max_tokens 以容纳批量输出）
-        response = self._call_llm(prompt, max_tokens=2000)
+        # 调用 LLM（不限制 max_tokens，让模型完整输出所有文章评估）
+        response = self._call_llm(prompt)
 
         # 解析返回的 JSON 数组
         filtered = []
@@ -473,12 +498,31 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
             logger.debug(f"[SmartPubMed] 批次 {batch_idx}: {len(articles_for_eval)} -> {len(filtered)} 篇相关")
 
         except json.JSONDecodeError as e:
-            logger.warning(f"[SmartPubMed] 批次 {batch_idx} JSON 解析失败: {e}")
-            # 回退：尝试提取 is_relevant: true 的 PMID
-            for pmid, article in pmid_to_article.items():
-                if f'"{pmid}"' in response and '"is_relevant": true' in response.lower():
-                    article["relevance_score"] = 5
-                    filtered.append(article)
+            logger.warning(f"[SmartPubMed] 批次 {batch_idx} JSON 解析失败: {e}, 尝试修复截断 JSON")
+            # 尝试修复截断的 JSON 数组：找到最后一个完整对象，闭合数组
+            repaired = self._repair_truncated_json_array(response)
+            if repaired:
+                for eval_result in repaired:
+                    pmid = str(eval_result.get("pmid", ""))
+                    is_relevant = eval_result.get("is_relevant", False)
+                    score = eval_result.get("relevance_score", 0)
+                    if pmid in pmid_to_article and is_relevant and score >= 5:
+                        article = pmid_to_article[pmid]
+                        article["relevance_score"] = score
+                        article["matched_criteria"] = eval_result.get("matched_criteria", [])
+                        article["key_findings"] = eval_result.get("key_findings", "")
+                        llm_study_type = eval_result.get("study_type", "")
+                        if llm_study_type in self.MTB_EVIDENCE_BUCKETS:
+                            article["llm_study_type"] = llm_study_type
+                        filtered.append(article)
+                logger.info(f"[SmartPubMed] 批次 {batch_idx} JSON 修复成功, 恢复 {len(filtered)} 篇")
+            else:
+                # 最终回退：正则提取 is_relevant: true 的 PMID
+                for pmid, article in pmid_to_article.items():
+                    if f'"{pmid}"' in response and '"is_relevant": true' in response.lower():
+                        article["relevance_score"] = 5
+                        filtered.append(article)
+                logger.info(f"[SmartPubMed] 批次 {batch_idx} 正则回退恢复 {len(filtered)} 篇")
 
         return filtered
 

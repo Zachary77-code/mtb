@@ -1034,7 +1034,7 @@ class PlanAgent(BaseAgent):
 
 ---
 
-请基于以上 Phase 1 完整报告，生成针对性的 Oncologist 研究方向。
+请基于以上 Phase 1 完整报告和原始病历，生成针对性的 Oncologist 研究方向。注意：研究方向不限于 Phase 1 发现，也应覆盖原始病历中的患者临床特征和标准临床实践需求。
 """
 
     def _parse_phase2_output(self, output: str) -> List[Dict[str, Any]]:

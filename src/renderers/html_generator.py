@@ -5,7 +5,8 @@ HTML 报告生成器
 - :::exec-summary ... ::: 执行摘要块
 - :::timeline ... ::: 治疗时间线
 - :::roadmap ... ::: 治疗路线图
-- [[ref:ID;;Title;;URL;;Note]] 内联引用（兼容旧 | 分隔符）
+- [[ref:ID;;Title;;URL;;Note]] 内联引用 4字段（兼容旧 | 分隔符）
+- [[ref:ID;;Title;;URL]] 内联引用 3字段（无 Note）
 """
 import os
 import re
@@ -442,7 +443,8 @@ class HtmlReportGenerator:
         - :::exec-summary ... ::: 执行摘要
         - :::timeline ... ::: 治疗时间线
         - :::roadmap ... ::: 治疗路线图
-        - [[ref:ID;;Title;;URL;;Note]] 内联引用（兼容旧 | 分隔符）
+        - [[ref:ID;;Title;;URL;;Note]] 内联引用（4字段，兼容旧 | 分隔符）
+        - [[ref:ID;;Title;;URL]] 内联引用（3字段，无 Note）
         """
         # 1. 先解析自定义块标记
         md_text = self._parse_custom_blocks(md_text)
@@ -698,11 +700,13 @@ class HtmlReportGenerator:
                self._observation_index.get(url) or
                self._observation_index.get(title))
         if obs and obs.get("statement"):
+            # 去除 HTML 标签，防止嵌套 tooltip
+            statement = re.sub(r'<[^>]+>', '', obs['statement'])
             grade = obs.get("grade")
             grade_str = f" [{grade}]" if grade else ""
             tool = obs.get("source_tool") or ""
             tool_str = f" ({tool})" if tool else ""
-            return f"{obs['statement']}{grade_str}{tool_str}"
+            return f"{statement}{grade_str}{tool_str}"
 
         # 回退：使用 citation 自带的 title + note
         if title and note:
@@ -745,18 +749,28 @@ class HtmlReportGenerator:
         必须在 markdown.markdown() 之前运行，避免 markdown 表格解析器
         将 | 分隔符误认为表格列分隔符。
 
-        支持两种分隔符：
-        - 新格式: [[ref:ID;;Title;;URL;;Note]]
+        支持格式（按优先级）：
+        - 4字段: [[ref:ID;;Title;;URL;;Note]]
+        - 3字段: [[ref:ID;;Title;;URL]]（无 Note）
         - 旧格式: [[ref:ID|Title|URL|Note]]（向后兼容）
         """
-        # 新格式：;; 分隔符
-        pattern_new = r'\[\[ref:([^;]+);;([^;]+);;([^;]+);;([^\]]+)\]\]'
+        # 4字段格式：;; 分隔符（优先匹配，避免3字段模式吞掉4字段的前3组）
+        pattern_4field = r'\[\[ref:([^;]+);;([^;]+);;([^;]+);;([^\]]+)\]\]'
 
-        def replacer_new(m):
+        def replacer_4field(m):
             ref_id, title, url, note = [s.strip() for s in m.groups()]
             return self._render_citation(ref_id, title, url, note)
 
-        md_text = re.sub(pattern_new, replacer_new, md_text)
+        md_text = re.sub(pattern_4field, replacer_4field, md_text)
+
+        # 3字段格式：;; 分隔符，无 Note（Chair LLM 常生成此格式）
+        pattern_3field = r'\[\[ref:([^;]+);;([^;]+);;([^\]]+)\]\]'
+
+        def replacer_3field(m):
+            ref_id, title, url = [s.strip() for s in m.groups()]
+            return self._render_citation(ref_id, title, url, "")
+
+        md_text = re.sub(pattern_3field, replacer_3field, md_text)
 
         # 旧格式：| 分隔符（向后兼容，仅在非表格行中匹配）
         # 使用更严格的匹配：要求 URL 以 http 开头
@@ -777,18 +791,27 @@ class HtmlReportGenerator:
         注意：主要解析已移至 _parse_inline_refs_in_markdown()（在 markdown 转换前执行）。
         此方法作为兜底，处理可能遗漏的引用。
         """
-        # 新格式 ;; 分隔符
-        pattern_new = r'\[\[ref:([^;]+);;([^;]+);;([^;]+);;([^\]]+)\]\]'
+        # 4字段格式 ;; 分隔符
+        pattern_4field = r'\[\[ref:([^;]+);;([^;]+);;([^;]+);;([^\]]+)\]\]'
 
-        def replacer(m):
+        def replacer_4field(m):
             ref_id, title, url, note = [s.strip() for s in m.groups()]
             return self._render_citation(ref_id, title, url, note)
 
-        html = re.sub(pattern_new, replacer, html)
+        html = re.sub(pattern_4field, replacer_4field, html)
+
+        # 3字段格式 ;; 分隔符（无 Note）
+        pattern_3field = r'\[\[ref:([^;]+);;([^;]+);;([^\]]+)\]\]'
+
+        def replacer_3field(m):
+            ref_id, title, url = [s.strip() for s in m.groups()]
+            return self._render_citation(ref_id, title, url, "")
+
+        html = re.sub(pattern_3field, replacer_3field, html)
 
         # 旧格式 | 分隔符（兜底）
         pattern_legacy = r'\[\[ref:([^|]+)\|([^|]+)\|([^|]+)\|([^\]]+)\]\]'
-        html = re.sub(pattern_legacy, replacer, html)
+        html = re.sub(pattern_legacy, replacer_4field, html)
 
         return html
 
@@ -936,8 +959,12 @@ class HtmlReportGenerator:
         lines = text.split('\n')
 
         for line in lines:
-            if '⚠️' in line or '❌' in line:
-                clean = line.strip().lstrip('#').strip()
+            stripped = line.strip()
+            # 跳过 markdown 表格行（以 | 开头），避免将表格内容误提取为警告
+            if stripped.startswith('|'):
+                continue
+            if '⚠️' in stripped or '❌' in stripped:
+                clean = stripped.lstrip('#').strip()
                 if clean and clean not in warnings:
                     warnings.append(clean)
 

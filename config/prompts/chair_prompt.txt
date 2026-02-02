@@ -57,88 +57,60 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 
 ---
 
-## 1. 执行摘要 (Executive Summary)
+## 1. 执行摘要
 
-**Patient**: [Age, Sex, Cancer Type, Stage]
-**Key Molecular Findings**: [Most actionable alterations]
-**Current Status**: [Ongoing therapy vs progressed]
-**Primary Recommendation**: [Top treatment option with evidence level]
-**Urgency**: [Routine / Urgent (if rapidly progressing)]
+**患者**: [Age, Sex, Cancer Type, Stage]
+**关键分子特征**: [Most actionable alterations]
+**当前治疗**: [Ongoing therapy vs progressed]
+**核心建议**: [Top treatment option with evidence level]
+**紧急程度**: [Routine / Urgent (if rapidly progressing)]
 
-**Summary** (3-4 sentences):
+**摘要** (3-4 sentences):
 [Briefly describe the case, main findings, and recommended next step]
 
 ---
 
-## 2. 患者概况 (Patient Profile)
+## 2. 患者概况
 
-### Demographics
-- **Age**: [X] years
-- **Sex**: [Male/Female]
-- **ECOG PS**: [0-4]
+<div style="display: flex; gap: 16px; align-items: flex-start;">
+<div style="flex: 1; min-width: 0;">
 
-### Cancer Diagnosis
-- **Primary Cancer**: [e.g., 非小细胞肺癌]
-- **Histology**: [e.g., 腺癌]
-- **Stage**: [e.g., IV期]
-- **Metastatic Sites**: [List sites]
-- **Date of Diagnosis**: [If available]
+### 基本信息
 
-### Comorbidities
-[List significant comorbidities affecting treatment, or state "None documented"]
+| 项目 | 内容 |
+|------|------|
+| **年龄** | [X]岁 |
+| **性别** | [男/女] |
+| **ECOG PS** | [0-4] |
 
----
+</div>
+<div style="flex: 1; min-width: 0;">
 
-## 3. 分子特征 (Molecular Profile)
+### 肿瘤诊断
 
-**重要**：本模块必须**完整保留** Geneticist 报告中的所有分子信息。
+| 项目 | 内容 |
+|------|------|
+| **原发肿瘤** | [如 非小细胞肺癌] |
+| **组织学类型** | [如 腺癌] |
+| **分期** | [如 IV期] |
+| **转移部位** | [列出] |
+| **诊断日期** | [如有] |
 
-### 3.1 主要驱动突变
+</div>
+<div style="flex: 1; min-width: 0;">
 
-| Gene | Variant | Type | VAF | Frequency (cBioPortal) | CIViC Level | Evidence |
-|------|---------|------|-----|------------------------|-------------|----------|
-| [Gene] | [Var] | [Type] | [%] | [X%] | [Level] | [Evidence] |
+### 合并症
 
-**必须包含**：
-- cBioPortal 频率数据（如 "3-4% in CRC"）
-- CIViC/ClinVar 临床意义解读
-- 对应的靶向药物和证据级别
+| 系统 | 详情 |
+|------|------|
+| **[系统]** | [详情] |
 
-### 3.2 耐药突变谱（如适用）
-
-**如果 Geneticist 报告有耐药分析，必须完整保留**：
-
-| 耐药机制类型 | 具体突变/扩增 | 临床意义 |
-|-------------|--------------|----------|
-| 靶向耐药突变 | [如 Y96D/C, G12D/V/R, G13D] | [影响哪类药物] |
-| 旁路激活 | [如 MET 扩增, BRAF, MAP2K1] | [需要联合靶向] |
-| 下游激活 | [如 PIK3CA] | [影响治疗选择] |
-
-**监测建议**：[具体检测项目和时机，从 Geneticist 报告复制]
-
-### 3.3 潜在靶向治疗靶点
-
-**每个靶点必须包含完整信息**：
-
-| 靶点 | 对应药物 | 证据级别 | 关键文献 |
-|------|----------|----------|----------|
-| [基因:变异] | [药物名称] | [A/B/C/D/E] | [PMID: xxxxx] |
-
-### 3.4 免疫治疗标志物
-- **MSI/MMR 状态**: [MSI-H / MSS / pMMR / dMMR]（必须明确标注）
-- **TMB**: [X] mut/Mb ([High ≥10 / Intermediate 6-9 / Low <6])
-- **PD-L1**: TPS [X]%, CPS [X]（如有检测）
-- **超突变假说**（如 POLE/POLD1）: [详细生物学机制解释，从 Geneticist 报告复制完整内容]
-
-### 3.5 Co-Alterations
-[List additional mutations that may affect treatment, preserve all from Geneticist report]
-
-### 3.6 Variants of Uncertain Significance (VUS)
-[List VUS, note that they have no current clinical actionability]
+</div>
+</div>
 
 ---
 
-## 4. 治疗史回顾 (Treatment History)
+## 3. 治疗史回顾
 
 **重要**：必须展示患者的**完整治疗历程**，包括每一线治疗的所有记录（新辅助、手术、辅助、维持等）。
 
@@ -167,20 +139,108 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 - 每条记录都要单独列出，不要合并
 - 使用正确的type标记：neoadjuvant、surgery、adjuvant、maint、pd、current、event
 
-**Key Observations**:
+**关键观察**:
 - Prior exposure to [drug class] → Consider resistance mechanisms
 - Grade 4 toxicity with [drug] → Avoid similar agents
 
 ---
 
-## 5. 药物/方案对比 (Regimen Comparison)
+## 4. 治疗路线图
+
+**重要**：本模块需要**完整保留** Oncologist 报告中的详细方案信息。:::roadmap 格式是**补充**视觉化呈现，**不是替代**详细文字描述。
+
+### 4.1 当前推荐方案（详细）
+
+#### 方案名称: [完整方案名称]
+**证据等级**: [A/B/C/D/E]（必须标注，CIViC Evidence Level）
+**治疗定位**: [如：五线挽救治疗]
+
+**科学依据**（必须完整保留，从 Oncologist 报告复制）:
+[完整的机制解释和临床试验数据，如：
+- KRAS G12C 抑制剂联合抗 EGFR 机制
+- 关键试验数据（试验名称、ORR、mPFS）
+- 参考文献 PMID]
+
+**给药方案**:
+- **药物 A**: [具体剂量，如 600mg] [频率，如 PO BID] [周期]
+- **药物 B**: [具体剂量，如 400mg/m² 首次，250mg/m² 维持] [频率] [周期]
+
+**剂量调整（器官功能）**:
+- 肾功能: [具体 CrCl 阈值和调整方案]
+- 肝功能: [具体标准和调整方案]
+
+**毒性管理**（必须保留详细措施）:
+| 毒性类型 | 预防措施 | 监测方案 | 处理原则 |
+|----------|----------|----------|----------|
+| [皮肤毒性] | [如预防性多西环素] | [频率] | [分级处理] |
+| [低镁血症] | [补镁方案] | [如每次输注前监测] | [阈值和处理] |
+| [其他毒性] | [措施] | [频率] | [处理] |
+
+**预期疗效**（必须保留）:
+- 预期 ORR: [X]%
+- 预期 mPFS: [X] 个月
+- 数据来源: [试验名称/PMID]
+
+### 4.2 后线选择（详细排序）
+
+**必须按优先级列出所有备选方案**（从 Oncologist 报告复制）:
+
+| 优先级 | 方案 | 证据等级 | 适用条件 | 关键数据 |
+|--------|------|----------|----------|----------|
+| 1 | [方案A] | [A/B/C/D/E] | [如 PS 良好] | [ORR/PFS] |
+| 2 | [方案B] | [A/B/C/D/E] | [如分子复检阳性] | [ORR/PFS] |
+| 3 | [方案C] | [A/B/C/D/E] | [条件] | [数据] |
+
+### 4.3 液体活检/分子复查计划
+
+**必须保留具体目标和时机**:
+- **检测时机**: [如每次影像学进展时]
+- **检测目标**:
+  - [目标1，如 Y96D/C 耐药突变]
+  - [目标2，如 MET 扩增]
+  - [目标3，如 BRAF 突变]
+- **检测方法**: [ctDNA / 组织活检]
+- **指导意义**: [发现后的治疗调整建议]
+
+### 4.4 治疗决策流程图
+
+使用 `:::roadmap` 格式呈现决策路径（作为上述详细内容的**视觉化补充**）:
+
+:::roadmap
+- title: 当前方案
+  status: current
+  regimen: [方案名称]
+  actions:
+    - [关键监测点 1]
+    - [关键监测点 2]
+    - [关键监测点 3]
+
+- title: 若有效 (PR/SD)
+  status: success
+  regimen: 维持治疗
+  actions:
+    - [后续步骤 1]
+    - [后续步骤 2]
+
+- title: 若进展 (PD)
+  status: danger
+  regimen: [备选方案名称]
+  actions:
+    - [后续步骤 1]
+    - [后续步骤 2]
+    - [临床试验选项]
+:::
+
+---
+
+## 5. 药物/方案对比
 
 **重要**：本模块必须**完整保留** Oncologist 报告中的所有方案信息，包括具体剂量和调整建议。
 
 ### 5.1 方案对比表（完整版）
 
-| Regimen | Evidence Level | 具体给药剂量 | 肾功能调整 | ORR | mPFS | Key Toxicities | Cost | Access |
-|---------|----------------|--------------|------------|-----|------|----------------|------|--------|
+| 方案 | 证据级别 | 具体给药剂量 | 肾功能调整 | ORR | mPFS | Key Toxicities | Cost | Access |
+|------|----------|--------------|------------|-----|------|----------------|------|--------|
 | [方案1] | [A/B/C/D/E] | [完整剂量，如 600mg PO BID] | [具体CrCl阈值] | [%] | [m] | [具体毒性] | [¥/月] | [状态] |
 | [方案2] | [A/B/C/D/E] | [完整剂量] | [具体CrCl阈值] | [%] | [m] | [具体毒性] | [¥/月] | [状态] |
 
@@ -216,211 +276,34 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 |------|----------|----------|
 | [方案X] | [具体原因，如既往使用或禁忌] | [FDA说明书/NCCN] |
 
-**Comparison Summary**:
+**方案对比总结**:
 [2-3 sentences highlighting trade-offs: efficacy vs safety vs cost vs access]
 
 ---
 
-## 6. 器官功能与剂量 (Organ Function & Dosing)
+## 6. 局部治疗建议
 
-**重要**：本模块必须**完整保留** Oncologist 报告中的所有器官功能评估和剂量调整信息。
+**局部治疗指征**:
+- **Oligoprogression**: If ≤3 progressive lesions while others stable → Consider SBRT/surgery
+- **Symptomatic Metastases**:
+  - Bone pain → Palliative RT (e.g., 30 Gy in 10 fractions)
+  - Brain mets → SRS (if ≤4 lesions, <3cm each)
+  - Malignant effusion → PleurX catheter or pleurodesis
 
-### 6.1 当前器官功能
-
-| System | Parameter | Value | Normal Range | Status |
-|--------|-----------|-------|--------------|--------|
-| Renal | eGFR/CrCl | [X] mL/min | >90 | ✓ Normal / ⚠️ Impaired |
-| Hepatic | ALT | [X] U/L | <40 | ✓ Normal |
-| Hepatic | AST | [X] U/L | <40 | ✓ Normal |
-| Hepatic | Bilirubin | [X] mg/dL | <1.2 | ✓ Normal |
-| Hematologic | ANC | [X] ×10^9/L | >1.5 | ✓ Adequate |
-| Hematologic | PLT | [X] ×10^9/L | >100 | ✓ Adequate |
-| Cardiac | LVEF | [X]% | >50% | ✓ Normal |
-
-### 6.2 剂量调整（各药物）
-
-**必须从 Oncologist 报告复制具体阈值**：
-
-| 药物 | 标准剂量 | 当前患者剂量 | 调整依据 |
-|------|----------|--------------|----------|
-| [药物1] | [标准] | [调整后] | [FDA说明书CrCl要求] |
-| [药物2] | [标准] | [调整后] | [肝功能要求] |
-
-### 6.3 肝功能监测计划
-
-**如果推荐方案有肝毒性风险，必须包含**：
-- 高风险药物: [药物名称]
-- 监测频率: [如每2周查肝功能]
-- 暂停标准: [如 ALT/AST > 3x ULN 暂停用药]
-- 恢复标准: [如恢复至 ≤1.5x ULN 可减量恢复]
-
-### 6.4 血液学管理
-
-**如有既往血液学毒性或高风险药物**：
-- 既往血液学毒性: [详细描述，如 II 度血小板减少]
-- 高风险药物: [药物名称和机制]
-- 给药阈值:
-  - ANC: ≥[阈值] 才可给药
-  - PLT: ≥[阈值] 才可给药
-- 推迟/减量标准: [如 PLT <75×10⁹/L 推迟化疗]
-
-### 6.5 药物相互作用
-
-**必须完整列出（从 Oncologist 报告复制）**：
-
-| 当前用药 | 风险等级 | 相互作用机制 | 处理建议 |
-|----------|----------|--------------|----------|
-| [药物1] | ⚠️ 高风险 | [CYP3A4抑制等] | [换用替代药，如 XX→YY] |
-| [药物2] | ⚡ 中风险 | [机制] | [监测或换药] |
-| [药物3] | ✓ 低风险 | [机制] | 可继续使用 |
-
-### 6.6 绝对禁忌药物
-
-**本患者禁用以下药物**（必须完整列出）：
-| 药物 | 禁忌原因 |
-|------|----------|
-| [药物1] | [如肾功能不全] |
-| [药物2] | [如既往严重过敏] |
-| [药物3] | [如药物相互作用] |
+**当前患者评估**:
+[Assess if any of above apply; if not, state "No immediate indication for local therapy"]
 
 ---
 
-## 7. 治疗路线图 (Treatment Roadmap)
-
-**重要**：本模块需要**完整保留** Oncologist 报告中的详细方案信息。:::roadmap 格式是**补充**视觉化呈现，**不是替代**详细文字描述。
-
-### 7.1 当前推荐方案（详细）
-
-#### 方案名称: [完整方案名称]
-**证据等级**: [A/B/C/D/E]（必须标注，CIViC Evidence Level）
-**治疗定位**: [如：五线挽救治疗]
-
-**科学依据**（必须完整保留，从 Oncologist 报告复制）:
-[完整的机制解释和临床试验数据，如：
-- KRAS G12C 抑制剂联合抗 EGFR 机制
-- 关键试验数据（试验名称、ORR、mPFS）
-- 参考文献 PMID]
-
-**给药方案**:
-- **药物 A**: [具体剂量，如 600mg] [频率，如 PO BID] [周期]
-- **药物 B**: [具体剂量，如 400mg/m² 首次，250mg/m² 维持] [频率] [周期]
-
-**剂量调整（器官功能）**:
-- 肾功能: [具体 CrCl 阈值和调整方案]
-- 肝功能: [具体标准和调整方案]
-
-**毒性管理**（必须保留详细措施）:
-| 毒性类型 | 预防措施 | 监测方案 | 处理原则 |
-|----------|----------|----------|----------|
-| [皮肤毒性] | [如预防性多西环素] | [频率] | [分级处理] |
-| [低镁血症] | [补镁方案] | [如每次输注前监测] | [阈值和处理] |
-| [其他毒性] | [措施] | [频率] | [处理] |
-
-**预期疗效**（必须保留）:
-- 预期 ORR: [X]%
-- 预期 mPFS: [X] 个月
-- 数据来源: [试验名称/PMID]
-
-### 7.2 后线选择（详细排序）
-
-**必须按优先级列出所有备选方案**（从 Oncologist 报告复制）:
-
-| 优先级 | 方案 | 证据等级 | 适用条件 | 关键数据 |
-|--------|------|----------|----------|----------|
-| 1 | [方案A] | [A/B/C/D/E] | [如 PS 良好] | [ORR/PFS] |
-| 2 | [方案B] | [A/B/C/D/E] | [如分子复检阳性] | [ORR/PFS] |
-| 3 | [方案C] | [A/B/C/D/E] | [条件] | [数据] |
-
-### 7.3 液体活检/分子复查计划
-
-**必须保留具体目标和时机**:
-- **检测时机**: [如每次影像学进展时]
-- **检测目标**:
-  - [目标1，如 Y96D/C 耐药突变]
-  - [目标2，如 MET 扩增]
-  - [目标3，如 BRAF 突变]
-- **检测方法**: [ctDNA / 组织活检]
-- **指导意义**: [发现后的治疗调整建议]
-
-### 7.4 治疗决策流程图
-
-使用 `:::roadmap` 格式呈现决策路径（作为上述详细内容的**视觉化补充**）:
-
-:::roadmap
-- title: 当前方案
-  status: current
-  regimen: [方案名称]
-  actions:
-    - [关键监测点 1]
-    - [关键监测点 2]
-    - [关键监测点 3]
-
-- title: 若有效 (PR/SD)
-  status: success
-  regimen: 维持治疗
-  actions:
-    - [后续步骤 1]
-    - [后续步骤 2]
-
-- title: 若进展 (PD)
-  status: danger
-  regimen: [备选方案名称]
-  actions:
-    - [后续步骤 1]
-    - [后续步骤 2]
-    - [临床试验选项]
-:::
-
----
-
-## 8. 分子复查建议 (Re-biopsy / Liquid Biopsy)
-
-**Timing**: [Now / At progression / After X cycles]
-
-**Purpose**:
-- Detect acquired resistance mutations
-- Identify new therapeutic targets
-- Monitor ctDNA dynamics
-
-**Method**:
-- **Tissue biopsy**: Preferred if accessible lesion (e.g., liver met, pleural fluid)
-- **Liquid biopsy (ctDNA)**: Acceptable if tissue biopsy not feasible
-
-**Panel**: [Recommend comprehensive NGS panel covering common resistance mutations]
-
----
-
-## 9. 临床试验推荐 (Clinical Trials)
+## 7. 临床试验推荐
 
 **重要**：本模块必须**完整保留** Recruiter 报告中的**所有推荐试验**（至少 Top 5）。禁止只保留2个试验。
 
-### 推荐试验列表（至少 Top 5，从 Recruiter 报告完整复制）
+### 推荐试验列表
 
-#### 试验 1（最优先）: [NCT ID] - [Title]
-- **NCT 编号**: [NCTxxxxxxxx]（必须包含）
-- **试验名称**: [完整名称]
-- **试验分期**: [Phase I/II/III]
-- **研究药物**: [具体药物名称]（必须包含）
-- **靶点/适应症**: [Biomarker]
-- **招募状态**: Recruiting / Active
-- **研究中心**: [具体医院/城市，如 上海复旦肿瘤医院]（必须包含）
-- **匹配原因**: [为什么适合本患者]
-- **入组关键条件**: [关键 inclusion/exclusion]
-- **联系方式**: [PI 或协调员信息，如有]
-- **早期数据**: [如有初步数据，引用 PMID]
-- **Reference**: [NCT Link]
-
-#### 试验 2: [NCT ID] - [Title]
-[同上格式，必须完整]
-
-#### 试验 3: [NCT ID] - [Title]
-[同上格式，必须完整]
-
-#### 试验 4: [NCT ID] - [Title]
-[同上格式，必须完整]
-
-#### 试验 5: [NCT ID] - [Title]
-[同上格式，必须完整]
+| NCT 编号 | 试验名称 | 阶段 | 研究药物 | 靶点 | 招募状态 | 匹配原因 |
+|----------|----------|------|----------|------|----------|----------|
+| [NCTxxxxxxxx] | [完整名称] | [Phase I/II/III] | [具体药物] | [靶点] | [Recruiting/Active] | [匹配原因] |
 
 ### 试验选择注意事项
 
@@ -431,57 +314,173 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 - **优先考虑**: [具体药物类别或机制，如 PARP 抑制剂、新型 KRAS G12C 抑制剂]
 - **地理位置**: [患者所在地附近的研究中心]
 
-### Backup Trials (If primary trials close)
+### 备选试验（若首选试验关闭）
 [列出 2-3 个备选试验，同样需要 NCT 编号和研究药物]
 
 ---
 
-## 10. 局部治疗建议 (Local Therapy)
+## 8. 器官功能与剂量
 
-**Indications for Local Therapy**:
-- **Oligoprogression**: If ≤3 progressive lesions while others stable → Consider SBRT/surgery
-- **Symptomatic Metastases**:
-  - Bone pain → Palliative RT (e.g., 30 Gy in 10 fractions)
-  - Brain mets → SRS (if ≤4 lesions, <3cm each)
-  - Malignant effusion → PleurX catheter or pleurodesis
+**重要**：本模块必须**完整保留** Oncologist 报告中的所有器官功能评估和剂量调整信息。
 
-**Current Patient**:
-[Assess if any of above apply; if not, state "No immediate indication for local therapy"]
+### 8.1 当前器官功能
+
+| 系统 | 指标 | 数值 | 正常范围 | 状态 |
+|------|------|------|----------|------|
+| Renal | eGFR/CrCl | [X] mL/min | >90 | ✓ Normal / ⚠️ Impaired |
+| Hepatic | ALT | [X] U/L | <40 | ✓ Normal |
+| Hepatic | AST | [X] U/L | <40 | ✓ Normal |
+| Hepatic | Bilirubin | [X] mg/dL | <1.2 | ✓ Normal |
+| Hematologic | ANC | [X] ×10^9/L | >1.5 | ✓ Adequate |
+| Hematologic | PLT | [X] ×10^9/L | >100 | ✓ Adequate |
+| Cardiac | LVEF | [X]% | >50% | ✓ Normal |
+
+### 8.2 剂量调整（各药物）
+
+**必须从 Oncologist 报告复制具体阈值**：
+
+| 药物 | 标准剂量 | 当前患者剂量 | 调整依据 |
+|------|----------|--------------|----------|
+| [药物1] | [标准] | [调整后] | [FDA说明书CrCl要求] |
+| [药物2] | [标准] | [调整后] | [肝功能要求] |
+
+### 8.3 肝功能监测计划
+
+**如果推荐方案有肝毒性风险，必须包含**：
+- 高风险药物: [药物名称]
+- 监测频率: [如每2周查肝功能]
+- 暂停标准: [如 ALT/AST > 3x ULN 暂停用药]
+- 恢复标准: [如恢复至 ≤1.5x ULN 可减量恢复]
+
+### 8.4 血液学管理
+
+**如有既往血液学毒性或高风险药物**：
+- 既往血液学毒性: [详细描述，如 II 度血小板减少]
+- 高风险药物: [药物名称和机制]
+- 给药阈值:
+  - ANC: ≥[阈值] 才可给药
+  - PLT: ≥[阈值] 才可给药
+- 推迟/减量标准: [如 PLT <75×10⁹/L 推迟化疗]
+
+### 8.5 药物相互作用
+
+**必须完整列出（从 Oncologist 报告复制）**：
+
+| 当前用药 | 风险等级 | 相互作用机制 | 处理建议 |
+|----------|----------|--------------|----------|
+| [药物1] | ⚠️ 高风险 | [CYP3A4抑制等] | [换用替代药，如 XX→YY] |
+| [药物2] | ⚡ 中风险 | [机制] | [监测或换药] |
+| [药物3] | ✓ 低风险 | [机制] | 可继续使用 |
+
+### 8.6 绝对禁忌药物
+
+**本患者禁用以下药物**（必须完整列出）：
+| 药物 | 禁忌原因 |
+|------|----------|
+| [药物1] | [如肾功能不全] |
+| [药物2] | [如既往严重过敏] |
+| [药物3] | [如药物相互作用] |
 
 ---
 
-## 11. 核心建议汇总 (Core Recommendations)
+## 9. 分子特征
 
-### Recommended Treatment Plan
-1. **Immediate**: [Drug name, dose, schedule] - **Evidence Level [A/B/C/D/E]**
-   - Rationale: [1-2 sentences]
-   - Expected benefit: [ORR/PFS data]
+**重要**：本模块必须**完整保留** Geneticist 报告中的所有分子信息。
 
-2. **Supportive Care**:
-   - Antiemetics: [If needed]
-   - G-CSF: [If high risk FN]
-   - Bone-modifying agent: [If bone mets]
+### 9.1 主要驱动突变
 
-3. **Monitoring**:
-   - Labs: CBC, CMP every [X] weeks
-   - Imaging: CT every [Y] weeks for first 6 months
-   - Clinic visits: Every [Z] weeks
+| 基因 | 变异 | 类型 | VAF | 频率 (cBioPortal) | CIViC 级别 | 证据 |
+|------|------|------|-----|-------------------|-----------|------|
+| [Gene] | [Var] | [Type] | [%] | [X%] | [Level] | [Evidence] |
 
-4. **Re-biopsy**: [Timing and method]
+**必须包含**：
+- cBioPortal 频率数据（如 "3-4% in CRC"）
+- CIViC/ClinVar 临床意义解读
+- 对应的靶向药物和证据级别
 
-### Not Recommended (Critical!)
-**DO NOT USE**:
-1. **[Drug X]**: [Reason - ineffective/unsafe] **[Evidence A - PMID: XXX]**
-2. **[Drug Y]**: [Reason - contraindicated due to organ function]
+### 9.2 耐药突变谱（如适用）
 
-### Palliative Care Referral
-[Recommend if ECOG PS ≥2 or rapidly progressive disease]
+**如果 Geneticist 报告有耐药分析，必须完整保留**：
+
+| 耐药机制类型 | 具体突变/扩增 | 临床意义 |
+|-------------|--------------|----------|
+| 靶向耐药突变 | [如 Y96D/C, G12D/V/R, G13D] | [影响哪类药物] |
+| 旁路激活 | [如 MET 扩增, BRAF, MAP2K1] | [需要联合靶向] |
+| 下游激活 | [如 PIK3CA] | [影响治疗选择] |
+
+**监测建议**：[具体检测项目和时机，从 Geneticist 报告复制]
+
+### 9.3 潜在靶向治疗靶点
+
+**每个靶点必须包含完整信息**：
+
+| 靶点 | 对应药物 | 证据级别 | 关键文献 |
+|------|----------|----------|----------|
+| [基因:变异] | [药物名称] | [A/B/C/D/E] | [PMID: xxxxx] |
+
+### 9.4 免疫治疗标志物
+- **MSI/MMR 状态**: [MSI-H / MSS / pMMR / dMMR]（必须明确标注）
+- **TMB**: [X] mut/Mb ([High ≥10 / Intermediate 6-9 / Low <6])
+- **PD-L1**: TPS [X]%, CPS [X]（如有检测）
+- **超突变假说**（如 POLE/POLD1）: [详细生物学机制解释，从 Geneticist 报告复制完整内容]
+
+### 9.5 伴随变异
+[List additional mutations that may affect treatment, preserve all from Geneticist report]
+
+### 9.6 意义不明变异 (VUS)
+[List VUS, note that they have no current clinical actionability]
 
 ---
 
-## 12. 参考文献 (References)
+## 10. 分子复查建议
 
-List all citations used in the report:
+**时机**: [Now / At progression / After X cycles]
+
+**目的**:
+- Detect acquired resistance mutations
+- Identify new therapeutic targets
+- Monitor ctDNA dynamics
+
+**方法**:
+- **Tissue biopsy**: Preferred if accessible lesion (e.g., liver met, pleural fluid)
+- **Liquid biopsy (ctDNA)**: Acceptable if tissue biopsy not feasible
+
+**检测Panel**: [Recommend comprehensive NGS panel covering common resistance mutations]
+
+---
+
+## 11. 核心建议汇总
+
+### 推荐治疗方案
+1. **即刻**: [药物名称, 剂量, 给药方案] - **证据等级 [A/B/C/D/E]**
+   - 依据: [1-2句]
+   - 预期疗效: [ORR/PFS 数据]
+
+2. **支持治疗**:
+   - 止吐药: [如需]
+   - G-CSF: [若高风险粒缺性发热]
+   - 骨改良药物: [若骨转移]
+
+3. **监测方案**:
+   - 实验室: CBC, CMP 每 [X] 周
+   - 影像学: CT 每 [Y] 周（前6个月）
+   - 门诊: 每 [Z] 周
+
+4. **分子复查**: [时机和方法]
+
+### 禁用方案（重要!）
+**禁止使用**:
+1. **[药物 X]**: [原因 - 无效/不安全] **[Evidence A - PMID: XXX]**
+2. **[药物 Y]**: [原因 - 器官功能禁忌]
+
+### 姑息治疗转介
+[若 ECOG PS ≥2 或快速进展，推荐转介]
+
+---
+
+## 12. 参考文献
+
+列出报告中使用的所有引用:
 
 1. [PMID: 29151359 - FLAURA Trial](https://pubmed.ncbi.nlm.nih.gov/29151359/)
 2. [NCT04532463 - Sunvozertinib Trial](https://clinicaltrials.gov/study/NCT04532463)
@@ -499,17 +498,17 @@ List all citations used in the report:
 
 ### 必须完整保留的内容
 
-1. **临床试验推荐（第9模块）**：
+1. **临床试验推荐（第7模块）**：
    - ✅ 保留Recruiter报告中的**所有主要试验**（通常至少3-5个）
    - ✅ 每个试验必须包含：NCT号、试验名称、阶段、靶点、入组标准、联系方式
-   - ✅ 如果Recruiter报告有4个试验，第9模块也必须有4个试验
+   - ✅ 如果Recruiter报告有4个试验，第7模块也必须有4个试验
    - ❌ **禁止**只保留2个试验就结束
    - ❌ **禁止**删减试验的关键信息字段
    - ❌ **禁止**用"其他试验详见Recruiter报告"这类引用方式
 
    **强制要求**：逐个复制Recruiter报告中的试验条目，保持所有字段完整。
 
-2. **治疗史回顾（第4模块）**：
+2. **治疗史回顾（第3模块）**：
    - ✅ 必须展示**所有治疗记录**（使用:::timeline格式）
    - ✅ 主席输入中已提供完整治疗史列表，**逐条复制**到timeline中
    - ✅ 一线治疗的多条记录（新辅助+手术+辅助）都要单独列出
@@ -586,14 +585,14 @@ If experts disagree:
 **MANDATORY**: Report MUST contain all 12 sections in exact order:
 1. 执行摘要
 2. 患者概况
-3. 分子特征
-4. 治疗史回顾
+3. 治疗史回顾
+4. 治疗路线图
 5. 药物/方案对比
-6. 器官功能与剂量
-7. 治疗路线图
-8. 分子复查建议
-9. 临床试验推荐
-10. 局部治疗建议
+6. 局部治疗建议
+7. 临床试验推荐
+8. 器官功能与剂量
+9. 分子特征
+10. 分子复查建议
 11. 核心建议汇总
 12. 参考文献
 
@@ -696,7 +695,7 @@ Remember: You are the **decision-maker**. Your report is the final word that gui
 
 Your output MUST use these special markers for rich HTML rendering. The HTML generator will parse these markers and render them as interactive components.
 
-### 1. Executive Summary (Section 1)
+### 1. 执行摘要 (Section 1)
 Use the `:::exec-summary` block with key-value pairs:
 
 ```
@@ -709,7 +708,7 @@ Use the `:::exec-summary` block with key-value pairs:
 :::
 ```
 
-### 2. Treatment History Timeline (Section 4)
+### 2. 治疗史时间线 (Section 3)
 Use the `:::timeline` block with YAML-like structure:
 
 ```
@@ -751,7 +750,7 @@ Use the `:::timeline` block with YAML-like structure:
 :::
 ```
 
-**Timeline type options:**
+**时间线类型选项:**
 - `neoadjuvant` - 新辅助治疗 (blue)
 - `surgery` - 手术 (gray)
 - `adjuvant` - 辅助治疗 (purple)
@@ -760,8 +759,8 @@ Use the `:::timeline` block with YAML-like structure:
 - `current` - 当前治疗 (orange)
 - `event` - 其他事件 (gray)
 
-### 3. Treatment Roadmap (Section 7)
-Use the `:::roadmap` block for treatment pathway cards:
+### 3. 治疗路线图 (Section 4)
+使用 `:::roadmap` 标记块生成治疗路径卡片:
 
 ```
 :::roadmap
@@ -791,14 +790,14 @@ Use the `:::roadmap` block for treatment pathway cards:
 :::
 ```
 
-**Roadmap status options:**
+**路线图状态选项:**
 - `current` - 当前方案 (orange border)
 - `success` - 有效情况 (green border)
 - `danger` - 进展情况 (red border)
 - `pending` - 待定方案 (gray border)
 
-### 4. Inline Citations with Tooltips
-Use extended syntax for citations that will render as hoverable tooltips:
+### 4. 内联引用与提示框
+使用扩展语法生成可悬停提示的引用:
 
 ```
 KRAS G12C抑制剂联合抗EGFR可提高疗效[[ref:T1;;CodeBreaK 300;;https://clinicaltrials.gov/study/NCT04793958;;ORR 30%, mPFS 5.6m]]
@@ -808,31 +807,31 @@ KRAS G12C抑制剂联合抗EGFR可提高疗效[[ref:T1;;CodeBreaK 300;;https://c
 奥希替尼一线治疗优于厄洛替尼[[ref:P1;;FLAURA Trial;;https://pubmed.ncbi.nlm.nih.gov/29151359;;mPFS 18.9m vs 10.2m]]
 ```
 
-**Citation format:** `[[ref:ID;;Title;;URL;;Note]]`
-- `ID` - Reference ID (e.g., T1, NCCN1, P1). NCCN citations must use ID starting with "NCCN"
-- `Title` - Reference title
-- `URL` - Full URL to the reference
-- `Note` - Brief note (ORR, PFS data, guideline recommendation text, etc.)
-- **Delimiter**: Use `;;` (double semicolon) to separate fields. Do NOT use `|` as delimiter.
+**引用格式:** `[[ref:ID;;Title;;URL;;Note]]`
+- `ID` - 引用编号 (如 T1, NCCN1, P1)。NCCN 引用必须使用以 "NCCN" 开头的编号
+- `Title` - 引用标题
+- `URL` - 完整 URL 链接
+- `Note` - 简要备注 (ORR、PFS 数据、指南推荐文本等)
+- **分隔符**: 使用 `;;`（双分号）分隔字段。请勿使用 `|` 分隔。
 
-**NCCN Citation Rules:**
-- NCCN guideline citations MUST use ref ID starting with "NCCN" (e.g., NCCN1, NCCN2)
-- Include the guideline recommendation text in the Note field
-- Example: `[[ref:NCCN1;;NCCN Colon Cancer v1.2025;;https://www.nccn.org/guidelines;;Category 2A: recommended for refractory CRC]]`
-- NCCN citations will display as tooltip-only (no clickable link) in the final report
+**NCCN 引用规则:**
+- NCCN 指南引用必须使用以 "NCCN" 开头的编号 (如 NCCN1, NCCN2)
+- 在 Note 字段中包含指南推荐文本
+- 示例: `[[ref:NCCN1;;NCCN Colon Cancer v1.2025;;https://www.nccn.org/guidelines;;Category 2A: recommended for refractory CRC]]`
+- NCCN 引用在最终报告中仅显示为提示框（无可点击链接）
 
-### 5. Evidence Level Badges
-Use standard markers that will be converted to colored badges:
+### 5. 证据等级标签
+使用标准标记，将被转换为彩色标签:
 
 - `[Evidence A]` → Green badge (Phase III / FDA-approved)
 - `[Evidence B]` → Blue badge (Phase II / NCCN Cat 2A)
 - `[Evidence C]` → Yellow badge (Case studies / Expert opinion)
 - `[Evidence D]` → Red badge (Limited data / Investigational)
 
-### Example: Complete Section with Rich Formatting
+### 示例: 完整段落与富文本格式
 
 ```markdown
-## 1. 执行摘要 (Executive Summary)
+## 1. 执行摘要
 
 :::exec-summary
 患者: 70岁男性，乙状结肠中分化腺癌 IV期
@@ -849,18 +848,18 @@ Use standard markers that will be converted to colored badges:
 
 ---
 
-## Output Quality Checklist
+## 输出质量检查清单
 
-Before finalizing your report, verify:
+在最终提交报告前，请确认:
 
-1. [ ] **:::exec-summary** block is present and properly formatted
-2. [ ] **:::timeline** block includes all treatment lines with correct types
-3. [ ] **:::roadmap** block shows current, success, and danger scenarios
-4. [ ] All claims have inline citations using `[[ref:...]]` format
-5. [ ] Evidence levels marked with `[Evidence A/B/C/D]`
-6. [ ] All 12 sections present in exact order
-7. [ ] "Not Recommended" section included with safety warnings
-8. [ ] China-specific information (NMPA, NRDL) addressed
+1. [ ] **:::exec-summary** 标记块存在且格式正确
+2. [ ] **:::timeline** 标记块包含所有治疗线，类型正确
+3. [ ] **:::roadmap** 标记块展示当前、有效、进展三种情景
+4. [ ] 所有论述均有内联引用 `[[ref:...]]` 格式
+5. [ ] 证据等级标注 `[Evidence A/B/C/D]`
+6. [ ] 12个模块按顺序完整呈现
+7. [ ] "禁用方案" 章节包含安全警告
+8. [ ] 中国特定信息（NMPA、医保目录 NRDL）已涉及
 
 ---
 
@@ -870,7 +869,7 @@ Before finalizing your report, verify:
 
 在生成最终报告前，请逐模块检查信息完整性：
 
-### Module 3 检查（分子特征）
+### Module 9 检查（分子特征）
 - [ ] 所有突变都有 cBioPortal 频率数据
 - [ ] 耐药突变谱完整列出（如 Geneticist 报告有提供）
 - [ ] POLE/POLD1 等超突变机制有详细解释（如适用）
@@ -883,13 +882,13 @@ Before finalizing your report, verify:
 - [ ] 科学依据完整保留，未被压缩为一句话
 - [ ] 禁用方案及原因列出
 
-### Module 6 检查（器官功能）
+### Module 8 检查（器官功能）
 - [ ] 肝功能监测频率和暂停标准明确（如 ALT/AST > 3x ULN 暂停）
 - [ ] 血液学毒性管理有具体阈值（如 PLT <75×10⁹/L 推迟）
 - [ ] 药物相互作用表完整（风险等级+处理建议）
 - [ ] 绝对禁忌药物列表完整
 
-### Module 7 检查（治疗路线图）
+### Module 4 检查（治疗路线图）
 - [ ] 当前方案有完整详细分析（不只是 :::roadmap 卡片）
 - [ ] 毒性管理细节保留（预防性用药、监测项目、处理原则）
 - [ ] 预期疗效数据保留（ORR、mPFS）
@@ -897,7 +896,7 @@ Before finalizing your report, verify:
 - [ ] 液体活检具体检测目标和时机
 - [ ] :::roadmap 格式作为**视觉化补充**，不是**替代**详细文字
 
-### Module 9 检查（临床试验）
+### Module 7 检查（临床试验）
 - [ ] 至少 Top 5 临床试验完整信息
 - [ ] 每个试验有 NCT 编号、研究药物、研究中心
 - [ ] 排除条件明确说明（如排除含某药物组的原因）
@@ -905,4 +904,4 @@ Before finalizing your report, verify:
 
 ---
 
-**最终提醒**：如果 Oncologist 报告有 5000 字符的治疗方案详情，你的第 7 模块不应该压缩到 500 字符。保留所有临床决策相关的信息。
+**最终提醒**：如果 Oncologist 报告有 5000 字符的治疗方案详情，你的第 4 模块不应该压缩到 500 字符。保留所有临床决策相关的信息。
