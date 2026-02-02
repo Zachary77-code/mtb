@@ -1,12 +1,14 @@
 """
 Chair Agent（MTB 主席）
 """
+import re
 from typing import Dict, Any, List, Optional
 
 from src.agents.base_agent import BaseAgent
 from src.tools.guideline_tools import NCCNTool, FDALabelTool
 from src.tools.literature_tools import PubMedTool
 from src.models.evidence_graph import EvidenceGraph, EntityType, Predicate, EvidenceGrade
+from src.models.evidence_graph import construct_provenance_url, format_provenance_citation
 from config.settings import CHAIR_PROMPT_FILE, REQUIRED_SECTIONS
 
 
@@ -52,6 +54,123 @@ class ChairAgent(BaseAgent):
             f"url: {obs.source_url or '-'} | civic_type: {civic_str} | "
             f"iteration: {obs.iteration}"
         )
+
+    def _inject_missing_citations(self, markdown: str, evidence_graph: Optional[EvidenceGraph]) -> str:
+        """
+        扫描 Chair LLM 输出的 markdown，找出未引用的 evidence graph provenance，
+        在末尾追加完整证据引用列表。
+
+        Args:
+            markdown: Chair LLM 生成的 markdown 报告
+            evidence_graph: 完整证据图
+
+        Returns:
+            追加了缺失引用的 markdown
+        """
+        if not evidence_graph or not evidence_graph.entities:
+            return markdown
+
+        # 1. 提取 markdown 中已引用的 provenance key（归一化：去空格、统一大写）
+        cited_keys = set()
+
+        # PMID 模式
+        for m in re.finditer(r'PMID[:\s]*(\d+)', markdown):
+            cited_keys.add(f"PMID:{m.group(1)}")
+
+        # NCT 模式
+        for m in re.finditer(r'(NCT\d+)', markdown):
+            cited_keys.add(m.group(1).upper())
+
+        # cBioPortal 模式
+        for m in re.finditer(r'cBioPortal[:\s]*([^\]\s,|]+)', markdown, re.IGNORECASE):
+            cited_keys.add(f"CBIOPORTAL:{m.group(1).strip().upper()}")
+
+        # NCCN 模式
+        for m in re.finditer(r'NCCN[:\s]*([^\]\s|]+)', markdown, re.IGNORECASE):
+            cited_keys.add(f"NCCN:{m.group(1).strip().upper()}")
+
+        # CIViC 模式
+        for m in re.finditer(r'CIViC[:\s]*([^\]\s|]+)', markdown, re.IGNORECASE):
+            cited_keys.add(f"CIVIC:{m.group(1).strip().upper()}")
+
+        # 2. 收集 evidence graph 全部 provenance + observation（去重，保留最高 grade）
+        all_observations = []
+        for entity in evidence_graph.entities.values():
+            for obs in entity.observations:
+                if obs.provenance:
+                    all_observations.append(obs)
+        for edge in evidence_graph.edges.values():
+            for obs in edge.observations:
+                if obs.provenance:
+                    all_observations.append(obs)
+
+        seen_prov = {}
+        for obs in all_observations:
+            key = obs.provenance
+            if key not in seen_prov or self._grade_sort_key(obs.evidence_grade) < self._grade_sort_key(seen_prov[key].evidence_grade):
+                seen_prov[key] = obs
+
+        # 3. 归一化 evidence graph provenance key 并匹配
+        def normalize_prov(prov: str) -> set:
+            """将一个 provenance 归一化为可能的 key 集合"""
+            keys = set()
+            prov_clean = prov.strip()
+
+            if prov_clean.upper().startswith("PMID"):
+                pmid = prov_clean.split(":")[-1].strip()
+                # 处理多 PMID 的情况，如 "PMID:12345678, PMID:23456789"
+                for part in pmid.split(","):
+                    part = part.strip()
+                    if part.upper().startswith("PMID"):
+                        part = part.split(":")[-1].strip()
+                    if part.isdigit():
+                        keys.add(f"PMID:{part}")
+            elif prov_clean.upper().startswith("NCT"):
+                for part in prov_clean.split(","):
+                    part = part.strip()
+                    if part.upper().startswith("NCT"):
+                        keys.add(part.upper())
+            elif prov_clean.lower().startswith("cbioportal"):
+                study = prov_clean.split(":")[-1].strip()
+                keys.add(f"CBIOPORTAL:{study.upper()}")
+            elif prov_clean.upper().startswith("NCCN"):
+                label = prov_clean.split(":")[-1].strip()
+                keys.add(f"NCCN:{label.upper()}")
+            elif prov_clean.lower().startswith("civic"):
+                label = prov_clean.split(":")[-1].strip()
+                keys.add(f"CIVIC:{label.upper()}")
+            else:
+                keys.add(prov_clean.upper())
+
+            return keys
+
+        missing = []
+        for prov, obs in sorted(seen_prov.items()):
+            norm_keys = normalize_prov(prov)
+            if not norm_keys.intersection(cited_keys):
+                missing.append((prov, obs))
+
+        if not missing:
+            return markdown
+
+        # 4. 追加缺失引用表格
+        lines = [
+            "\n\n---\n",
+            "## 完整证据引用列表\n",
+            "以下证据来源已被纳入本次分析参考，此处汇总列出以确保引用完整性：\n",
+            "| # | 引用 | 证据等级 | 来源Agent | 工具 | 证据陈述 |",
+            "|---|------|----------|-----------|------|----------|",
+        ]
+
+        for i, (prov, obs) in enumerate(missing, 1):
+            citation = format_provenance_citation(prov, obs.source_url or "")
+            grade = obs.evidence_grade.value if obs.evidence_grade else "?"
+            agent = obs.source_agent or "-"
+            tool = obs.source_tool or "-"
+            stmt = (obs.statement or "-").replace("|", "\\|")
+            lines.append(f"| {i} | {citation} | {grade} | {agent} | {tool} | {stmt} |")
+
+        return markdown + "\n".join(lines)
 
     def _format_evidence_for_chair(self, evidence_graph: Optional[EvidenceGraph]) -> str:
         """
@@ -321,6 +440,9 @@ class ChairAgent(BaseAgent):
 
         result = self.invoke(task_prompt)
 
+        # 程序化补充 LLM 未引用的 evidence graph 证据
+        enriched_output = self._inject_missing_citations(result["output"], evidence_graph)
+
         # 合并所有引用（Chair 生成的 + 证据图中的）
         all_references = result["references"] or []
 
@@ -340,12 +462,12 @@ class ChairAgent(BaseAgent):
 
         # 生成完整报告（含工具调用详情和引用）
         full_report = self.generate_full_report(
-            main_content=result["output"],
+            main_content=enriched_output,
             title="MTB Chair Final Synthesis Report"
         )
 
         return {
-            "synthesis": result["output"],
+            "synthesis": enriched_output,
             "references": all_references,
             "full_report_md": full_report
         }

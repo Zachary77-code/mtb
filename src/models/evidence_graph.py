@@ -1171,6 +1171,87 @@ def load_evidence_graph(data: Dict[str, Any]) -> EvidenceGraph:
     return EvidenceGraph.from_dict(data)
 
 
+# ==================== Provenance 格式化工具 ====================
+
+
+def construct_provenance_url(provenance: str) -> str:
+    """
+    根据 provenance 字符串构造 URL
+
+    Args:
+        provenance: 出处标识，如 "PMID:12345678", "NCT04123456" 等
+
+    Returns:
+        对应的 URL，无法构造时返回空字符串
+    """
+    if not provenance:
+        return ""
+    prov = provenance.strip()
+
+    # PMID:12345678 or PMID: 12345678
+    if prov.upper().startswith("PMID"):
+        pmid = prov.split(":")[-1].strip()
+        if pmid.isdigit():
+            return f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+
+    # NCT04123456
+    if prov.upper().startswith("NCT"):
+        nct_id = prov.split(",")[0].strip()
+        return f"https://clinicaltrials.gov/study/{nct_id}"
+
+    # cBioPortal: COADREAD
+    if prov.lower().startswith("cbioportal"):
+        study_id = prov.split(":")[-1].strip()
+        return f"https://www.cbioportal.org/study/summary?id={study_id.lower()}"
+
+    # CIViC
+    if prov.lower().startswith("civic"):
+        return "https://civicdb.org/"
+
+    # NCCN
+    if prov.upper().startswith("NCCN"):
+        return "https://www.nccn.org/guidelines"
+
+    return ""
+
+
+def format_provenance_citation(provenance: str, url: str = "") -> str:
+    """
+    将 provenance 格式化为 markdown 内联引用
+
+    Args:
+        provenance: 出处标识
+        url: URL（可选，若为空则自动构造）
+
+    Returns:
+        markdown 格式引用，如 [PMID: 12345678](url)
+    """
+    if not provenance:
+        return ""
+    prov = provenance.strip()
+    if not url:
+        url = construct_provenance_url(prov)
+
+    # PMID 格式化为 [PMID: xxx](url)
+    if prov.upper().startswith("PMID"):
+        pmid = prov.split(":")[-1].strip()
+        if url:
+            return f"[PMID: {pmid}]({url})"
+        return f"PMID: {pmid}"
+
+    # NCT 格式化为 [NCTxxx](url)
+    if prov.upper().startswith("NCT"):
+        nct_id = prov.split(",")[0].strip()
+        if url:
+            return f"[{nct_id}]({url})"
+        return nct_id
+
+    # 其他：[provenance](url) 或 provenance
+    if url:
+        return f"[{prov}]({url})"
+    return prov
+
+
 # ==================== 测试 ====================
 
 if __name__ == "__main__":

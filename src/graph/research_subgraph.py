@@ -16,6 +16,8 @@ from src.models.evidence_graph import (
     load_evidence_graph,
     Entity,
     Edge,
+    construct_provenance_url,
+    format_provenance_citation,
 )
 from src.models.research_plan import (
     load_research_plan,
@@ -1080,9 +1082,15 @@ def _save_detailed_iteration_report(
 
 # ==================== Phase 1 报告生成辅助函数 ====================
 
+
 def _format_evidence_table(entities: List[Entity], edges: List[Edge], agent_name: str) -> str:
     """
     从 agent 的 entities + edges 生成结构化 markdown 证据表格
+
+    输出三张表：
+    1. 证据汇总表 — 按 provenance 去重，每条独立证据一行
+    2. 实体观察表 — 所有实体上的观察（含重复）
+    3. 关系边表 — 所有边上的观察（含重复）
 
     Args:
         entities: 包含该 agent 观察的实体列表
@@ -1094,8 +1102,54 @@ def _format_evidence_table(entities: List[Entity], edges: List[Edge], agent_name
     """
     lines = []
 
-    # === 实体观察表 ===
     grade_order = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
+
+    # === 0. 证据汇总表（按 provenance 去重）===
+    all_agent_obs = []
+    for entity in entities:
+        for obs in entity.observations:
+            if obs.source_agent == agent_name and obs.provenance:
+                all_agent_obs.append(obs)
+    for edge in edges:
+        for obs in edge.observations:
+            if obs.source_agent == agent_name and obs.provenance:
+                all_agent_obs.append(obs)
+
+    # 按 provenance 去重，保留最高 grade
+    seen_prov = {}
+    for obs in all_agent_obs:
+        key = obs.provenance
+        if key not in seen_prov or grade_order.get(
+            obs.evidence_grade.value if obs.evidence_grade else "E", 5
+        ) < grade_order.get(
+            seen_prov[key].evidence_grade.value if seen_prov[key].evidence_grade else "E", 5
+        ):
+            seen_prov[key] = obs
+
+    if seen_prov:
+        # 按 grade 排序
+        sorted_evidence = sorted(
+            seen_prov.items(),
+            key=lambda x: grade_order.get(
+                x[1].evidence_grade.value if x[1].evidence_grade else "E", 5
+            )
+        )
+
+        lines.append(f"### 证据汇总表（共 {len(sorted_evidence)} 条独立证据）\n")
+        lines.append("| # | 引用 | 证据等级 | CIViC类型 | 来源工具 | 证据陈述 |")
+        lines.append("|---|------|----------|-----------|----------|----------|")
+
+        for i, (prov, obs) in enumerate(sorted_evidence, 1):
+            citation = format_provenance_citation(prov, obs.source_url or "")
+            grade = obs.evidence_grade.value if obs.evidence_grade else "N/A"
+            civic = obs.civic_type.value if obs.civic_type else ""
+            tool = obs.source_tool or ""
+            stmt = (obs.statement or "").replace("|", "\\|")
+            lines.append(f"| {i} | {citation} | {grade} | {civic} | {tool} | {stmt} |")
+
+        lines.append("")
+
+    # === 1. 实体观察表 ===
 
     # 收集所有 agent 的实体观察
     entity_rows = []

@@ -405,13 +405,27 @@ class HtmlReportGenerator:
         # 从原始文本提取患者信息
         patient_id, cancer_type = self._extract_patient_info(raw_pdf_text, chair_synthesis)
 
+        # 用 observation 索引丰富 reference 元数据
+        enriched_references = []
+        for ref in (references or []):
+            ref_copy = dict(ref)
+            ref_id = ref.get("id", "")
+            ref_url = ref.get("url", "")
+            obs_data = (self._observation_index.get(ref_id) or
+                        self._observation_index.get(ref_url))
+            if obs_data:
+                ref_copy.setdefault("grade", obs_data.get("grade", ""))
+                ref_copy.setdefault("source_agent", obs_data.get("source_agent", ""))
+                ref_copy.setdefault("source_tool", obs_data.get("source_tool", ""))
+            enriched_references.append(ref_copy)
+
         # 准备上下文
         context = {
             "patient_id": patient_id,
             "cancer_type": cancer_type,
             "generation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "report_content": html_content,
-            "references": references,
+            "references": enriched_references,
             "warnings": warnings
         }
 

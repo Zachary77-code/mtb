@@ -525,6 +525,40 @@
         </ul>
       </div>
       {% endif %}
+
+      {% if references %}
+      <div class="section" id="full-references">
+        <div class="section-title">完整引用列表 (Full References)</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:30px">#</th>
+              <th>引用标识</th>
+              <th>证据等级</th>
+              <th>来源</th>
+              <th>链接</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for ref in references %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ ref.id or '-' }}</td>
+              <td>{{ ref.grade or '-' }}</td>
+              <td>{{ ref.source_agent or '-' }}</td>
+              <td>
+                {% if ref.url %}
+                  <a href="{{ ref.url }}" target="_blank" class="reference">{{ ref.url | truncate(60) }}</a>
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
     </div>
 
     <footer>
