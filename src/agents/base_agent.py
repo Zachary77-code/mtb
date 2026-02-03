@@ -202,21 +202,45 @@ class BaseAgent:
             payload["tools"] = self._get_tools_schema()
             payload["tool_choice"] = "auto"
 
-        response = requests.post(
-            url=self.api_url,
-            headers=headers,
-            data=json.dumps(payload, ensure_ascii=False),
-            timeout=AGENT_TIMEOUT
-        )
+        # 重试逻辑（网络错误、API 错误都重试）
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    url=self.api_url,
+                    headers=headers,
+                    data=json.dumps(payload, ensure_ascii=False),
+                    timeout=AGENT_TIMEOUT
+                )
 
-        # 检查 HTTP 状态
-        if response.status_code != 200:
-            error_detail = response.text
-            logger.error(f"[{self.role}] API 错误 (HTTP {response.status_code}): {error_detail[:200]}")
-            raise Exception(f"API 调用失败 (HTTP {response.status_code}): {error_detail}")
+                # 检查 HTTP 状态
+                if response.status_code != 200:
+                    error_detail = response.text
+                    raise Exception(f"HTTP {response.status_code}: {error_detail[:200]}")
 
-        logger.debug(f"[{self.role}] API 响应成功")
-        return response.json()
+                result = response.json()
+
+                # 检查 API 错误响应（HTTP 200 但返回错误）
+                if "error" in result:
+                    error_msg = result.get("error", {})
+                    error_code = error_msg.get("code", "unknown") if isinstance(error_msg, dict) else "unknown"
+                    raise Exception(f"API error (code={error_code}): {error_msg}")
+
+                logger.debug(f"[{self.role}] API 响应成功")
+                return result
+
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"[{self.role}] API 请求失败 ({type(e).__name__})，重试 ({attempt + 1}/{max_retries - 1})...")
+                else:
+                    logger.error(f"[{self.role}] API 请求失败，重试已用尽: {e}")
+                    raise
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"[{self.role}] API 错误，重试 ({attempt + 1}/{max_retries - 1}): {e}")
+                else:
+                    logger.error(f"[{self.role}] API 错误，重试已用尽: {e}")
+                    raise
 
     def invoke(self, user_message: str, context: Optional[Dict[str, Any]] = None, max_tool_iterations: int = 5) -> Dict[str, Any]:
         """

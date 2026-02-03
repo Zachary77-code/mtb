@@ -245,27 +245,46 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
         }
         if max_tokens is not None:
             payload["max_tokens"] = max_tokens
-        try:
-            response = requests.post(
-                OPENROUTER_BASE_URL,
-                headers=headers,
-                json=payload,
-                timeout=60
-            )
-            response.raise_for_status()
-            result = response.json()
-            finish_reason = result["choices"][0].get("finish_reason", "unknown")
-            if finish_reason == "length":
-                logger.warning(f"[SmartPubMed] LLM 响应被截断 (finish_reason=length, max_tokens={max_tokens})")
-            content = result["choices"][0]["message"]["content"].strip()
-            # Clean potential markdown code blocks
-            if content.startswith("```"):
-                content = re.sub(r'^```\w*\n?', '', content)
-                content = re.sub(r'\n?```$', '', content)
-            return content
-        except Exception as e:
-            logger.error(f"[SmartPubMed] LLM 调用失败: {e}")
-            return ""
+
+        # 重试逻辑
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    OPENROUTER_BASE_URL,
+                    headers=headers,
+                    json=payload,
+                    timeout=60
+                )
+                response.raise_for_status()
+                result = response.json()
+
+                # 检查响应格式
+                if "choices" not in result:
+                    raise ValueError(f"API 错误: {result.get('error', result)}")
+
+                finish_reason = result["choices"][0].get("finish_reason", "unknown")
+                if finish_reason == "length":
+                    logger.warning(f"[SmartPubMed] LLM 响应被截断 (finish_reason=length, max_tokens={max_tokens})")
+                content = result["choices"][0]["message"]["content"].strip()
+                # Clean potential markdown code blocks
+                if content.startswith("```"):
+                    content = re.sub(r'^```\w*\n?', '', content)
+                    content = re.sub(r'\n?```$', '', content)
+                return content
+
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"[SmartPubMed] LLM 请求失败 ({type(e).__name__})，重试 ({attempt + 1}/{max_retries - 1})...")
+                else:
+                    logger.error(f"[SmartPubMed] LLM 请求失败，重试已用尽: {e}")
+                    raise
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"[SmartPubMed] LLM 调用失败，重试 ({attempt + 1}/{max_retries - 1}): {e}")
+                else:
+                    logger.error(f"[SmartPubMed] LLM 调用失败，重试已用尽: {e}")
+                    raise
 
     def _build_layer_query(self, layer: int, query: str, failed_queries: List[str]) -> str:
         """
@@ -412,26 +431,6 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
 
         return best_bucket
 
-    @staticmethod
-    def _repair_truncated_json_array(text: str) -> Optional[List[Dict]]:
-        """尝试从截断的 JSON 数组中恢复已完成的条目"""
-        last_complete = text.rfind('},')
-        if last_complete == -1:
-            last_complete = text.rfind('}')
-        if last_complete == -1:
-            return None
-        truncated = text[:last_complete + 1]
-        start = truncated.find('[')
-        if start == -1:
-            return None
-        try:
-            result = json.loads(truncated[start:] + ']')
-            if isinstance(result, list) and len(result) > 0:
-                return result
-            return None
-        except json.JSONDecodeError:
-            return None
-
     def _filter_batch(self, original_query: str, batch: List[Dict], batch_idx: int) -> List[Dict]:
         """
         评估一批文章的相关性（单次 LLM 调用评估多篇）
@@ -498,31 +497,9 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
             logger.debug(f"[SmartPubMed] 批次 {batch_idx}: {len(articles_for_eval)} -> {len(filtered)} 篇相关")
 
         except json.JSONDecodeError as e:
-            logger.warning(f"[SmartPubMed] 批次 {batch_idx} JSON 解析失败: {e}, 尝试修复截断 JSON")
-            # 尝试修复截断的 JSON 数组：找到最后一个完整对象，闭合数组
-            repaired = self._repair_truncated_json_array(response)
-            if repaired:
-                for eval_result in repaired:
-                    pmid = str(eval_result.get("pmid", ""))
-                    is_relevant = eval_result.get("is_relevant", False)
-                    score = eval_result.get("relevance_score", 0)
-                    if pmid in pmid_to_article and is_relevant and score >= 5:
-                        article = pmid_to_article[pmid]
-                        article["relevance_score"] = score
-                        article["matched_criteria"] = eval_result.get("matched_criteria", [])
-                        article["key_findings"] = eval_result.get("key_findings", "")
-                        llm_study_type = eval_result.get("study_type", "")
-                        if llm_study_type in self.MTB_EVIDENCE_BUCKETS:
-                            article["llm_study_type"] = llm_study_type
-                        filtered.append(article)
-                logger.info(f"[SmartPubMed] 批次 {batch_idx} JSON 修复成功, 恢复 {len(filtered)} 篇")
-            else:
-                # 最终回退：正则提取 is_relevant: true 的 PMID
-                for pmid, article in pmid_to_article.items():
-                    if f'"{pmid}"' in response and '"is_relevant": true' in response.lower():
-                        article["relevance_score"] = 5
-                        filtered.append(article)
-                logger.info(f"[SmartPubMed] 批次 {batch_idx} 正则回退恢复 {len(filtered)} 篇")
+            logger.error(f"[SmartPubMed] 批次 {batch_idx} JSON 解析失败: {e}")
+            logger.error(f"[SmartPubMed] 原始响应: {response[:500]}...")
+            raise ValueError(f"LLM 返回无效 JSON: {e}")
 
         return filtered
 
@@ -559,6 +536,7 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
                     filtered.extend(batch_results)
                 except Exception as e:
                     logger.error(f"[SmartPubMed] 批次 {batch_idx} 执行失败: {e}")
+                    raise
 
         # 按相关性排序
         filtered.sort(key=lambda x: x.get("relevance_score", 0), reverse=True)

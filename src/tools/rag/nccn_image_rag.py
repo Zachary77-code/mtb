@@ -580,50 +580,51 @@ Language: Respond in the same language as the user's question."""
             f"{len(images)} 页图片"
         )
 
-        try:
-            response = requests.post(
-                url=self.api_url,
-                headers=headers,
-                data=json.dumps(payload, ensure_ascii=False),
-                timeout=self.reader_timeout
-            )
-
-            if response.status_code != 200:
-                logger.error(
-                    f"[ImageRAG] 多模态 LLM API 错误 "
-                    f"(HTTP {response.status_code}): {response.text[:300]}"
-                )
-                return None
-
-            result = response.json()
-
-            if "choices" not in result or len(result["choices"]) == 0:
-                logger.error(f"[ImageRAG] API 响应格式异常: {result}")
-                return None
-
-            content = result["choices"][0].get("message", {}).get("content", "")
-
-            # 记录 token 用量
-            usage = result.get("usage", {})
-            if usage:
-                logger.info(
-                    f"[ImageRAG] 多模态 LLM token 用量 - "
-                    f"prompt: {usage.get('prompt_tokens', '?')}, "
-                    f"completion: {usage.get('completion_tokens', '?')}"
+        # 重试逻辑
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    url=self.api_url,
+                    headers=headers,
+                    data=json.dumps(payload, ensure_ascii=False),
+                    timeout=self.reader_timeout
                 )
 
-            logger.info(f"[ImageRAG] 多模态 LLM 响应: {len(content)} 字符")
-            return content
+                if response.status_code != 200:
+                    raise Exception(f"HTTP {response.status_code}: {response.text[:300]}")
 
-        except requests.exceptions.Timeout:
-            logger.error(
-                f"[ImageRAG] 多模态 LLM 调用超时 "
-                f"({self.reader_timeout}s)"
-            )
-            return None
-        except Exception as e:
-            logger.error(f"[ImageRAG] 多模态 LLM 调用失败: {e}")
-            return None
+                result = response.json()
+
+                if "choices" not in result or len(result["choices"]) == 0:
+                    raise Exception(f"API 响应格式异常: {result}")
+
+                content = result["choices"][0].get("message", {}).get("content", "")
+
+                # 记录 token 用量
+                usage = result.get("usage", {})
+                if usage:
+                    logger.info(
+                        f"[ImageRAG] 多模态 LLM token 用量 - "
+                        f"prompt: {usage.get('prompt_tokens', '?')}, "
+                        f"completion: {usage.get('completion_tokens', '?')}"
+                    )
+
+                logger.info(f"[ImageRAG] 多模态 LLM 响应: {len(content)} 字符")
+                return content
+
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"[ImageRAG] LLM 请求失败 ({type(e).__name__})，重试 ({attempt + 1}/{max_retries - 1})...")
+                else:
+                    logger.error(f"[ImageRAG] LLM 请求失败，重试已用尽: {e}")
+                    return None
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"[ImageRAG] LLM 调用失败，重试 ({attempt + 1}/{max_retries - 1}): {e}")
+                else:
+                    logger.error(f"[ImageRAG] LLM 调用失败，重试已用尽: {e}")
+                    return None
 
     # ==================== 结果格式化 ====================
 

@@ -56,7 +56,7 @@ NCCN_INDEX_CANCER_TYPES = [
 
 # ==================== Agent 配置 ====================
 AGENT_TEMPERATURE = float(os.getenv("AGENT_TEMPERATURE", "0.2"))
-AGENT_TIMEOUT = int(os.getenv("AGENT_TIMEOUT", "120"))
+AGENT_TIMEOUT = int(os.getenv("AGENT_TIMEOUT", "240"))
 MAX_RETRY_ITERATIONS = int(os.getenv("MAX_RETRY_ITERATIONS", "2"))
 
 # ==================== DeepEvidence 模型配置 ====================
