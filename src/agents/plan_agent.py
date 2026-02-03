@@ -261,17 +261,30 @@ class PlanAgent(BaseAgent):
         # 计算各方向的证据质量统计
         direction_stats = self._calculate_direction_stats(plan, graph)
 
-        # 提取 needs_deep_research（Research Agent 标记的待深入研究项）
+        # 提取 Research Agent 的自述字段
         if phase == "phase1":
             agent_keys = ["pathologist_research_result", "geneticist_research_result", "recruiter_research_result"]
         else:
             agent_keys = ["oncologist_research_result"]
 
         all_needs_deep = []  # List[Dict]: {agent, direction_id, finding, reason}
+        all_agent_summaries = {}  # {agent_name: {summary, per_direction_analysis, agent_analysis, needs_deep_research}}
+
         for key in agent_keys:
-            items = state.get(key, {}).get("needs_deep_research", [])
+            result = state.get(key, {})
+            agent_name = key.replace("_research_result", "").capitalize()
+
+            # 收集所有自述字段
+            all_agent_summaries[agent_name] = {
+                "summary": result.get("summary", ""),
+                "per_direction_analysis": result.get("per_direction_analysis", {}),
+                "agent_analysis": result.get("agent_analysis", ""),
+                "needs_deep_research": result.get("needs_deep_research", []),
+            }
+
+            # 提取 needs_deep_research 到扁平列表（向后兼容）
+            items = result.get("needs_deep_research", [])
             if items:
-                agent_name = key.replace("_research_result", "").capitalize()
                 for item in items:
                     if isinstance(item, dict):
                         all_needs_deep.append({
@@ -288,10 +301,11 @@ class PlanAgent(BaseAgent):
                             "reason": "",
                         })
 
-        # 构建评估提示
+        # 构建评估提示（包含 agent 自述）
         eval_prompt = self._build_evaluation_prompt(
             state, phase, iteration, plan, graph, direction_stats,
-            needs_deep_research=all_needs_deep
+            needs_deep_research=all_needs_deep,
+            agent_summaries=all_agent_summaries
         )
 
         # 调用 LLM 进行评估
@@ -395,9 +409,15 @@ class PlanAgent(BaseAgent):
         plan: ResearchPlan,
         graph,
         direction_stats: Dict[str, Dict[str, Any]],
-        needs_deep_research: List[Dict[str, str]] = None
+        needs_deep_research: List[Dict[str, str]] = None,
+        agent_summaries: Dict[str, Dict[str, Any]] = None
     ) -> str:
-        """构建迭代评估提示"""
+        """构建迭代评估提示
+
+        Args:
+            agent_summaries: Agent 自述字段，格式为:
+                {agent_name: {summary, per_direction_analysis, agent_analysis, needs_deep_research}}
+        """
 
         # 汇总证据质量
         total_evidence = sum(s["evidence_count"] for s in direction_stats.values())
@@ -478,7 +498,11 @@ class PlanAgent(BaseAgent):
 
 {self._format_direction_stats(relevant_stats)}
 
-### 各方向证据内容
+### Agent 研究自述
+
+{self._format_agent_summaries(agent_summaries)}
+
+### 各方向证据子图（Ground Truth）
 
 {evidence_details}
 
@@ -496,10 +520,18 @@ class PlanAgent(BaseAgent):
 
 请根据以上信息，对每个研究方向逐一进行综合评估，判断该方向是否可以收敛：
 
+**关键原则**：Agent 自述仅为参考，证据子图为 Ground Truth。必须交叉验证。
+
+0. **Agent 自述验证**（首先进行）：
+   - 阅读各 Agent 的研究自述（what_found, what_not_found, conclusion）
+   - 对比证据子图中的实际数据，验证自述的准确性
+   - 特别注意 what_not_found — 这些信息在证据图中确实不存在
+   - 如需查看具体 observation 内容，可调用 query_evidence_graph 工具的 get_node_observations 或 get_edge_observations action
+
 1. **证据充分性评估**（每个方向）：
-   - 对比「完成标准」与「核心观察」，判断研究问题是否已被充分回答
-   - 即使完成度数值较高，如果核心观察未覆盖完成标准的关键问题，仍应标记为未完成
-   - 即使完成度数值较低，如果核心观察已充分回答研究问题，可标记为完成
+   - 对比「完成标准」与证据子图中的实体和关系，判断研究问题是否已被充分回答
+   - 即使完成度数值较高，如果子图未覆盖完成标准的关键问题，仍应标记为未完成
+   - 即使完成度数值较低，如果子图已充分回答研究问题，可标记为完成
 
 2. **待深入研究项评估**（每个方向，如有「待深入研究项」则必须逐条评估）：
    - 逐条评估该方向的每个「待深入研究项」
@@ -603,11 +635,113 @@ class PlanAgent(BaseAgent):
 - 如无待深入研究项，输出空数组 []
 """
 
+    def _format_agent_summaries(self, agent_summaries: Dict[str, Dict[str, Any]]) -> str:
+        """格式化 agent 自述为 prompt 文本
+
+        Args:
+            agent_summaries: {agent_name: {summary, per_direction_analysis, agent_analysis, needs_deep_research}}
+
+        Returns:
+            格式化的自述文本
+        """
+        if not agent_summaries:
+            return "（无 Agent 自述）"
+
+        sections = []
+        for agent_name, data in agent_summaries.items():
+            lines = [f"#### {agent_name}"]
+
+            # Agent 整体分析
+            if data.get("agent_analysis"):
+                lines.append(f"**整体分析**: {data['agent_analysis']}")
+
+            # 摘要
+            if data.get("summary"):
+                summary = data['summary']
+                lines.append(f"**摘要**: {summary}")
+
+            # 每个方向的分析
+            pda = data.get("per_direction_analysis", {})
+            if pda:
+                lines.append("**各方向分析**:")
+                for d_id, analysis in pda.items():
+                    what_found = analysis.get('what_found', 'N/A')
+                    what_not_found = analysis.get('what_not_found', 'N/A')
+                    conclusion = analysis.get('conclusion', 'N/A')
+                    lines.append(f"  - **{d_id}**:")
+                    lines.append(f"    - 已找到: {what_found}")
+                    lines.append(f"    - 未找到: {what_not_found}")
+                    lines.append(f"    - 结论: {conclusion}")
+
+            sections.append("\n".join(lines))
+
+        return "\n\n".join(sections)
+
+    def _build_direction_subgraph_context(
+        self,
+        direction: ResearchDirection,
+        graph
+    ) -> str:
+        """为单个方向生成锚点+子图上下文（仅结构，无 observation 文本）
+
+        与 ResearchMixin 的 _build_direction_anchor_context() 保持一致，
+        不包含 observation 文本，需通过工具按需查询。
+        """
+        evidence_ids = direction.evidence_ids
+        if not evidence_ids:
+            return f"### {direction.id} ({direction.topic})\n暂无证据"
+
+        logger.info(f"[PLAN_SUBGRAPH] 方向 {direction.id}: 锚点数={len(evidence_ids)}")
+
+        subgraph = graph.retrieve_subgraph(
+            anchor_ids=evidence_ids,
+            max_hops=2,
+            include_observations=False
+        )
+
+        entities = subgraph.get('entities', [])
+        edges = subgraph.get('edges', [])
+
+        logger.info(f"[PLAN_SUBGRAPH] 方向 {direction.id}: entities={len(entities)}, edges={len(edges)}")
+
+        # 日志：hop 分布
+        hop_map = subgraph.get('hop_map', {})
+        hop_dist = {}
+        for _, hop in hop_map.items():
+            hop_dist[hop] = hop_dist.get(hop, 0) + 1
+        logger.debug(f"[PLAN_SUBGRAPH] 方向 {direction.id}: hop分布={hop_dist}")
+
+        if not entities:
+            return f"### {direction.id} ({direction.topic})\n暂无证据"
+
+        # 实体行（含统计：observation_count + best_grade）
+        entity_strs = [
+            f"{e['canonical_id']}({e['observation_count']}obs"
+            + (f",{e['best_grade']}" if e.get('best_grade') else "")
+            + ")"
+            for e in entities
+        ]
+
+        lines = [
+            f"### {direction.id}: {direction.topic}",
+            f"**完成标准**: {direction.completion_criteria}",
+            f"**实体** ({len(entities)}): {', '.join(entity_strs)}",
+        ]
+
+        # 关系边（图结构）
+        if edges:
+            lines.append(f"**关系** ({len(edges)}):")
+            for e in edges:
+                conf = f" ({e['confidence']:.2f})" if e.get('confidence') else ""
+                lines.append(f"  {e['source_id']} → {e['predicate']} → {e['target_id']}{conf}")
+
+        return "\n".join(lines)
+
     def _build_direction_evidence_details(
         self, plan: ResearchPlan, graph, relevant_direction_ids: set,
         deep_by_direction: Dict[str, List[Dict[str, str]]] = None
     ) -> str:
-        """为每个方向生成证据内容详情（含完成标准 + 实体 + 观察 + 待深入研究项）"""
+        """为每个方向生成证据子图详情（锚点+子图结构，无 observation 文本）"""
         if not graph:
             return "无证据图谱数据"
 
@@ -619,8 +753,9 @@ class PlanAgent(BaseAgent):
             if direction.id not in relevant_direction_ids:
                 continue
 
-            sections.append(f"#### {direction.id}: {direction.topic}")
-            sections.append(f"**完成标准**: {direction.completion_criteria}")
+            # 使用锚点+子图方案（替换原来的 get_direction_evidence_summary）
+            subgraph_context = self._build_direction_subgraph_context(direction, graph)
+            sections.append(subgraph_context)
             sections.append("")
 
             # 该方向的待深入研究项
@@ -637,10 +772,6 @@ class PlanAgent(BaseAgent):
                     reason_str = f" — {reason}" if reason else ""
                     sections.append(f"- [{agent}] {finding}{reason_str}")
                 sections.append("")
-
-            summary = graph.get_direction_evidence_summary(direction.evidence_ids)
-            sections.append(summary)
-            sections.append("")
 
         # 显示未关联到方向的待深入研究项
         unassigned = deep_by_direction.get("", [])

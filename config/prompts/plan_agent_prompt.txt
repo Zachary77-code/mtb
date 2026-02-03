@@ -309,6 +309,31 @@ Evidence Graph
 | guideline | 方案对比, 治疗路线图 | Oncologist |
 | disease | 患者概况 | Pathologist |
 
+### 证据图按需查询工具
+
+迭代评估时，你会收到各方向的证据子图（仅实体和边结构），**不包含详细 observation 文本**。
+
+如果你需要查看具体证据内容（如验证某个关系的证据等级、确认某个发现的来源），可使用以下工具：
+
+```
+# 查询某个实体的所有 observations
+action: get_node_observations
+entity_id: "EGFR_L858R"
+
+# 查询某条边的所有 observations
+action: get_edge_observations
+source_id: "EGFR_L858R"
+target_id: "DRUG:OSIMERTINIB"
+predicate: "sensitizes"
+```
+
+**使用时机**：
+- 当你需要验证子图中某个关系的具体证据内容时
+- 当你需要确认证据等级（A/B/C/D/E）和来源（PMID、NCT）时
+- 当你发现 Agent 自述与子图结构有疑问，需要核实时
+
+**不要**每次评估都查询所有 observations — 根据需要按需查询。
+
 ---
 
 ## 迭代评估模式

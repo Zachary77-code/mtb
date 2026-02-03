@@ -43,8 +43,9 @@ class GraphQueryTool(BaseTool):
                 "Query the evidence graph to explore known entities, relationships, "
                 "and observations. Use this BEFORE calling external tools to check "
                 "what is already known. Actions: search_entities, get_entity_detail, "
-                "get_neighborhood, retrieve_subgraph, get_drug_sensitivity, "
-                "get_treatment_evidence, get_conflicts, get_stats."
+                "get_neighborhood, retrieve_subgraph, get_node_observations, "
+                "get_edge_observations, get_drug_sensitivity, get_treatment_evidence, "
+                "get_conflicts, get_stats."
             ),
         )
         self._graph: Optional[EvidenceGraph] = None
@@ -70,6 +71,8 @@ class GraphQueryTool(BaseTool):
                         "get_entity_detail",
                         "get_neighborhood",
                         "retrieve_subgraph",
+                        "get_node_observations",
+                        "get_edge_observations",
                         "get_drug_sensitivity",
                         "get_treatment_evidence",
                         "get_conflicts",
@@ -80,7 +83,9 @@ class GraphQueryTool(BaseTool):
                         "Use search_entities to find entities by name; "
                         "get_entity_detail for full info on one entity; "
                         "get_neighborhood for BFS exploration from an anchor; "
-                        "retrieve_subgraph for multi-anchor subgraph extraction."
+                        "retrieve_subgraph for multi-anchor subgraph extraction; "
+                        "get_node_observations for all observations of an entity; "
+                        "get_edge_observations for all observations of an edge."
                     ),
                 },
                 "entity_id": {
@@ -118,6 +123,18 @@ class GraphQueryTool(BaseTool):
                     "type": "string",
                     "description": "Minimum evidence grade filter: A, B, C, D, or E",
                 },
+                "source_id": {
+                    "type": "string",
+                    "description": "Source entity canonical_id for edge observations query",
+                },
+                "target_id": {
+                    "type": "string",
+                    "description": "Target entity canonical_id for edge observations query",
+                },
+                "predicate": {
+                    "type": "string",
+                    "description": "Edge predicate for edge observations query (e.g. sensitizes, treats, causes_resistance)",
+                },
             },
             "required": ["action"],
         }
@@ -138,6 +155,8 @@ class GraphQueryTool(BaseTool):
             "get_entity_detail": self._handle_get_entity_detail,
             "get_neighborhood": self._handle_get_neighborhood,
             "retrieve_subgraph": self._handle_retrieve_subgraph,
+            "get_node_observations": self._handle_get_node_observations,
+            "get_edge_observations": self._handle_get_edge_observations,
             "get_drug_sensitivity": self._handle_get_drug_sensitivity,
             "get_treatment_evidence": self._handle_get_treatment_evidence,
             "get_conflicts": self._handle_get_conflicts,
@@ -389,6 +408,101 @@ class GraphQueryTool(BaseTool):
                 pred = edge["predicate"]
                 conf = f" (conf={edge['confidence']:.2f})" if edge.get("confidence") else ""
                 lines.append(f"- {edge['source_id']} → **{pred}** → {edge['target_id']}{conf}")
+
+        return "\n".join(lines)
+
+    def _handle_get_node_observations(self, kwargs: Dict) -> str:
+        """返回指定实体的所有 observation（含完整 statement、grade、source）"""
+        entity_id = kwargs.get("entity_id", "")
+        if not entity_id:
+            return "Error: 'entity_id' parameter is required for get_node_observations."
+
+        entity = self._graph.get_entity(entity_id)
+        if not entity:
+            return self._not_found_hint(f"entity '{entity_id}'")
+
+        observations = entity.observations
+        if not observations:
+            return f"Entity '{entity_id}' has no observations recorded."
+
+        lines = [f"## Observations for **{entity_id}** ({len(observations)} total)", ""]
+
+        # 按证据等级排序 (A > B > C > D > E)
+        grade_order = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
+        sorted_obs = sorted(
+            observations,
+            key=lambda o: grade_order.get(o.evidence_grade.value if o.evidence_grade else "E", 5)
+        )
+
+        for obs in sorted_obs:
+            grade = f"[{obs.evidence_grade.value}]" if obs.evidence_grade else "[ungraded]"
+            source = f" ({obs.source_tool})" if obs.source_tool else ""
+            agent = f" [{obs.source_agent}]" if obs.source_agent else ""
+            prov = f" — {obs.provenance}" if obs.provenance else ""
+            url = f" <{obs.source_url}>" if obs.source_url else ""
+            lines.append(f"- {grade}{agent}{source} {obs.statement}{prov}{url}")
+
+        return "\n".join(lines)
+
+    def _handle_get_edge_observations(self, kwargs: Dict) -> str:
+        """返回指定边的所有 observation"""
+        source_id = kwargs.get("source_id", "")
+        target_id = kwargs.get("target_id", "")
+        predicate_str = kwargs.get("predicate", "")
+
+        if not source_id or not target_id:
+            return "Error: 'source_id' and 'target_id' parameters are required for get_edge_observations."
+
+        # 查找匹配的边
+        matching_edges = []
+        for edge in self._graph.edges.values():
+            if edge.source_id == source_id and edge.target_id == target_id:
+                if predicate_str:
+                    try:
+                        pred = Predicate(predicate_str.lower())
+                        if edge.predicate == pred:
+                            matching_edges.append(edge)
+                    except ValueError:
+                        pass
+                else:
+                    matching_edges.append(edge)
+
+        if not matching_edges:
+            # 尝试反向查找
+            for edge in self._graph.edges.values():
+                if edge.source_id == target_id and edge.target_id == source_id:
+                    if predicate_str:
+                        try:
+                            pred = Predicate(predicate_str.lower())
+                            if edge.predicate == pred:
+                                matching_edges.append(edge)
+                        except ValueError:
+                            pass
+                    else:
+                        matching_edges.append(edge)
+
+        if not matching_edges:
+            return self._not_found_hint(
+                f"edge between '{source_id}' and '{target_id}'"
+                + (f" with predicate '{predicate_str}'" if predicate_str else "")
+            )
+
+        lines = [f"## Edge Observations ({len(matching_edges)} edges found)", ""]
+
+        for edge in matching_edges:
+            pred = edge.predicate.value
+            conf = f" (confidence={edge.confidence:.2f})" if edge.confidence else ""
+            lines.append(f"### {edge.source_id} → **{pred}** → {edge.target_id}{conf}")
+
+            if edge.observations:
+                for obs in edge.observations:
+                    grade = f"[{obs.evidence_grade.value}]" if obs.evidence_grade else "[ungraded]"
+                    source = f" ({obs.source_tool})" if obs.source_tool else ""
+                    prov = f" — {obs.provenance}" if obs.provenance else ""
+                    lines.append(f"- {grade}{source} {obs.statement}{prov}")
+            else:
+                lines.append("- No observations on this edge.")
+            lines.append("")
 
         return "\n".join(lines)
 

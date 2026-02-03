@@ -233,9 +233,18 @@ class ResearchMixin:
     def _build_direction_anchor_context(
         self,
         directions: List[Dict[str, Any]],
-        graph: EvidenceGraph
+        graph: EvidenceGraph,
+        mode: str = "bfrs"
     ) -> str:
-        """为每个方向构建锚节点上下文（含实体+关系边，无截断）"""
+        """为每个方向构建锚节点上下文（含实体+关系边，无截断）
+
+        Args:
+            directions: 方向列表
+            graph: 证据图
+            mode: 研究模式，"bfrs" 或 "dfrs"。DFRS 使用 3 hop 扩展，BFRS 使用 2 hop
+        """
+        max_hops = 3 if mode == "dfrs" else 2
+
         sections = []
         for d in directions:
             evidence_ids = d.get('evidence_ids', [])
@@ -246,14 +255,25 @@ class ResearchMixin:
                 sections.append(f"### {dir_id} ({topic})\n尚无已知实体")
                 continue
 
+            logger.info(f"[SUBGRAPH] 方向 {dir_id}: 锚点数={len(evidence_ids)}, max_hops={max_hops}, mode={mode}")
+
             subgraph = graph.retrieve_subgraph(
                 anchor_ids=evidence_ids,
-                max_hops=2,
+                max_hops=max_hops,
                 include_observations=False
             )
 
             entities = subgraph.get('entities', [])
             edges = subgraph.get('edges', [])
+
+            logger.info(f"[SUBGRAPH] 方向 {dir_id}: 扩展结果 entities={len(entities)}, edges={len(edges)}")
+
+            # 日志：hop 分布
+            hop_map = subgraph.get('hop_map', {})
+            hop_dist = {}
+            for _, hop in hop_map.items():
+                hop_dist[hop] = hop_dist.get(hop, 0) + 1
+            logger.debug(f"[SUBGRAPH] 方向 {dir_id}: hop分布={hop_dist}")
 
             if not entities:
                 sections.append(f"### {dir_id} ({topic})\n尚无已知实体")
@@ -354,8 +374,8 @@ class ResearchMixin:
 - 具体待研究问题:{findings_text if findings_text else ' 请基于方向主题深入'}
 - 已有证据 ID: {direction.get('evidence_ids', [])}"""
 
-        # 本方向锚节点上下文
-        anchor_context = self._build_direction_anchor_context([direction], graph)
+        # 本方向锚节点上下文（DFRS 用 3 hop，BFRS 用 2 hop）
+        anchor_context = self._build_direction_anchor_context([direction], graph, mode=mode)
 
         # 其他方向概况
         other_summary = self._build_other_directions_summary(dir_id, all_directions)

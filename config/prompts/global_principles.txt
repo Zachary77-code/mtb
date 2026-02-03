@@ -116,3 +116,46 @@ When collecting evidence, identify these relationships:
 - **Preserve context**: Always include species, study type, and sample size when available
 - **Cite sources**: Every observation must have provenance (PMID, NCT, NCCN, etc.)
 - **Mark conflicts**: If evidence contradicts, note the conflict group
+
+## 8. Evidence Graph Query Strategy
+
+When working with the evidence graph, follow this query strategy:
+
+### Graph Structure First, Details On-Demand
+
+1. **First**: Use `get_neighborhood` or `retrieve_subgraph` to obtain the subgraph structure around anchor entities
+   - This shows entities and their relationships (edges) without detailed observation text
+   - Provides a quick overview of what evidence exists
+
+2. **Then**: If you need specific evidence content for a particular entity or relationship, use:
+   - `get_node_observations(entity_id)` — View all observations for a specific entity
+   - `get_edge_observations(source_id, target_id, predicate)` — View all observations for a specific relationship
+
+3. **Avoid**: Do not query all observations for every entity — this wastes tokens and context space
+
+### When to Query Observations
+
+Query observations when you need to:
+- Verify the actual content supporting a relationship (not just that it exists)
+- Check evidence grades and sources for a specific finding
+- Resolve apparent conflicts between entities
+- Prepare detailed citations for the final report
+
+### Query Examples
+
+```
+# Step 1: Get subgraph structure
+action: retrieve_subgraph
+anchor_ids: ["EGFR_L858R", "DRUG:OSIMERTINIB"]
+max_hops: 2
+
+# Step 2: Drill into specific entity (if needed)
+action: get_node_observations
+entity_id: "EGFR_L858R"
+
+# Step 3: Drill into specific edge (if needed)
+action: get_edge_observations
+source_id: "EGFR_L858R"
+target_id: "DRUG:OSIMERTINIB"
+predicate: "sensitizes"
+```
