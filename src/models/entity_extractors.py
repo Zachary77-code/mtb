@@ -334,7 +334,22 @@ class EntityExtractor:
         # 获取全局观察文本
         observation_text = data.get("observation", "")
 
-        # 解析实体
+        # 一个 finding 只生成一个共享的 observation（修复重复创建 bug）
+        shared_obs = None
+        if observation_text:
+            shared_obs = Observation(
+                id=Observation.generate_id(source_tool),
+                statement=observation_text,
+                source_agent=source_agent,
+                source_tool=source_tool,
+                provenance=provenance,
+                source_url=source_url,
+                evidence_grade=self._extract_grade(finding),
+                civic_type=self._extract_civic_type(finding),
+                iteration=iteration,
+            )
+
+        # 解析实体 - 所有实体共享同一个 observation
         for entity_data in data.get("entities", []):
             try:
                 canonical_id = entity_data.get("canonical_id", "").upper()
@@ -351,34 +366,19 @@ class EntityExtractor:
                 except ValueError:
                     entity_type = EntityType.FINDING
 
-                # 为实体创建观察
-                entity_obs = None
-                if observation_text:
-                    entity_obs = Observation(
-                        id=Observation.generate_id(source_tool),
-                        statement=observation_text,
-                        source_agent=source_agent,
-                        source_tool=source_tool,
-                        provenance=provenance,
-                        source_url=source_url,
-                        evidence_grade=self._extract_grade(finding),
-                        civic_type=self._extract_civic_type(finding),
-                        iteration=iteration,
-                    )
-
                 entities.append(ExtractedEntity(
                     canonical_id=canonical_id,
                     entity_type=entity_type,
                     name=name,
                     aliases=aliases,
-                    observation=entity_obs,
+                    observation=shared_obs,  # 共享引用
                 ))
 
             except Exception as e:
                 logger.debug(f"[EntityExtractor] Entity parse error: {e}")
                 continue
 
-        # 解析边
+        # 解析边 - 所有边也共享同一个 observation
         for edge_data in data.get("edges", []):
             try:
                 source_id = edge_data.get("source_id", "").upper()
@@ -395,26 +395,11 @@ class EntityExtractor:
                 except ValueError:
                     predicate = Predicate.ASSOCIATED_WITH
 
-                # 为边创建观察
-                edge_obs = None
-                if observation_text:
-                    edge_obs = Observation(
-                        id=Observation.generate_id(source_tool),
-                        statement=observation_text,
-                        source_agent=source_agent,
-                        source_tool=source_tool,
-                        provenance=provenance,
-                        source_url=source_url,
-                        evidence_grade=self._extract_grade(finding),
-                        civic_type=self._extract_civic_type(finding),
-                        iteration=iteration,
-                    )
-
                 edges.append(ExtractedEdge(
                     source_id=source_id,
                     target_id=target_id,
                     predicate=predicate,
-                    observation=edge_obs,
+                    observation=shared_obs,  # 共享引用
                     confidence=confidence,
                 ))
 

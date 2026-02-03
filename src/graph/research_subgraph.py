@@ -1050,6 +1050,15 @@ def _save_detailed_iteration_report(
         lines.append("- 默认值: LLM 未指定时为 0.8")
         lines.append("")
 
+        # 方向完成度计算规则说明
+        lines.append("### 方向完成度计算规则")
+        lines.append("- **证据数**: 方向关联的 Entity 数量（`len(evidence_ids)`）")
+        lines.append("- **等级分布**: 每个 Entity 按其最佳等级（best_grade）计数")
+        lines.append("- **完成度权重**: A=5, B=3, C=2, D=1.5, E=1")
+        lines.append("- **完成度公式**: `min(100%, 加权分数 / 50 × 100%)`")
+        lines.append("- **示例**: A=3 B=12 C=7 → 3×5 + 12×3 + 7×2 = 65 → 65/50 = 130% → 封顶 100%")
+        lines.append("")
+
         # 冲突详情
         conflicts = graph.get_conflicts()
         if conflicts:
