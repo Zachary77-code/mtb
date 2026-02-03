@@ -854,7 +854,6 @@ def _save_detailed_iteration_report(
         result_key = f"{agent_name.lower()}_research_result"
         agent_result = state.get(result_key, {})
         tool_records = agent_result.get("tool_call_records", [])
-        ext_details = agent_result.get("extraction_details", [])
 
         lines.append(f"### {agent_name}")
         lines.append("")
@@ -870,18 +869,6 @@ def _save_detailed_iteration_report(
             # Agent 研究输出仍然保留
             _append_agent_research_output(lines, agent_name, agent_result)
             continue
-
-        # --- 按 direction_id 分组 extraction_details ---
-        ext_by_dir_tool: Dict[str, Dict[str, list]] = {}
-        for detail in ext_details:
-            d_id = detail.get("direction_id", "_unknown")
-            t_key = detail.get("source_tool", "")
-            ext_by_dir_tool.setdefault(d_id, {}).setdefault(t_key, []).append(detail)
-        # 消费计数
-        ext_consumed: Dict[str, Dict[str, int]] = {
-            d_id: {t_key: 0 for t_key in tools}
-            for d_id, tools in ext_by_dir_tool.items()
-        }
 
         # --- 按 direction_id 分组 tool_records ---
         direction_records: Dict[str, list] = OrderedDict()
@@ -913,22 +900,16 @@ def _save_detailed_iteration_report(
                 lines.append(f"##### 轮次 {round_num}")
                 lines.append("")
 
-                # Reasoning: 取该轮的 round_content（同一轮共享）
+                # Reasoning: 优先展示 reasoning (thinking tokens)，其次 round_content，均完整不截断
+                reasoning = round_records[0].get("reasoning", "")
                 round_content = round_records[0].get("round_content", "")
-                if round_content:
-                    lines.append("**Reasoning (模型分析):**")
-                    for rline in round_content.split("\n"):
+                display_text = reasoning or round_content
+                if display_text:
+                    label = "Reasoning" if reasoning else "Reasoning (content)"
+                    lines.append(f"**{label}:**")
+                    for rline in display_text.split("\n"):
                         lines.append(f"> {rline}")
                     lines.append("")
-                else:
-                    # fallback: 用 reasoning (thinking tokens) 的前 200 字
-                    reasoning = round_records[0].get("reasoning", "")
-                    if reasoning:
-                        excerpt = reasoning[:200] + ("..." if len(reasoning) > 200 else "")
-                        lines.append("**Reasoning (thinking token 摘要):**")
-                        for rline in excerpt.split("\n"):
-                            lines.append(f"> {rline}")
-                        lines.append("")
 
                 # 逐个工具调用
                 for call_idx, record in enumerate(round_records, 1):
@@ -947,78 +928,7 @@ def _save_detailed_iteration_report(
                     lines.append(formatted_result)
                     lines.append("")
 
-                    # 匹配 extraction_details
-                    dir_ext = ext_by_dir_tool.get(d_id, {})
-                    if tool_name in dir_ext and ext_consumed.get(d_id, {}).get(tool_name, 0) < len(dir_ext[tool_name]):
-                        detail = dir_ext[tool_name][ext_consumed[d_id][tool_name]]
-                        ext_consumed[d_id][tool_name] += 1
-
-                        finding_summary = detail.get("finding_summary", "")
-                        if finding_summary:
-                            lines.append(f"**证据分解** (→ {d_id}):")
-                            lines.append(f"> {finding_summary}")
-                            lines.append("")
-
-                        # 实体详情
-                        entities_detail = detail.get("entities_detail", [])
-                        if entities_detail:
-                            lines.append("**Entities:**")
-                            for ent in entities_detail:
-                                grade_str = f" [{ent['evidence_grade']}]" if ent.get("evidence_grade") else ""
-                                obs_str = f' — "{ent["observation_statement"]}"' if ent.get("observation_statement") else ""
-                                lines.append(f"- `{ent['canonical_id']}` ({ent['type']}){obs_str}{grade_str}")
-                            lines.append("")
-
-                        # 边详情
-                        edges_detail = detail.get("edges_detail", [])
-                        if edges_detail:
-                            lines.append("**Edges:**")
-                            for edge in edges_detail:
-                                conf_str = f" (conf={edge['confidence']:.1f})" if edge.get("confidence") else ""
-                                obs_str = f' — "{edge["observation_statement"]}"' if edge.get("observation_statement") else ""
-                                lines.append(f"- `{edge['source']}` → **{edge['predicate']}** → `{edge['target']}`{conf_str}{obs_str}")
-                            lines.append("")
-
-                        lines.append(f"*统计: {detail.get('new_observations', 0)} obs, {detail.get('new_edges', 0)} edges*")
-                        lines.append("")
-
                 lines.append("")  # 轮次间空行
-
-        # 追加未匹配到 tool call 的剩余 extraction_details
-        remaining = []
-        for d_id, tools_map in ext_by_dir_tool.items():
-            for t_key, details_list in tools_map.items():
-                consumed = ext_consumed.get(d_id, {}).get(t_key, 0)
-                remaining.extend(details_list[consumed:])
-        # 无 source_tool 的 extraction_details
-        for detail in ext_details:
-            if not detail.get("source_tool"):
-                remaining.append(detail)
-
-        if remaining:
-            lines.append("#### 其他证据分解")
-            lines.append("")
-            for detail in remaining:
-                finding_summary = detail.get("finding_summary", "")
-                source_tool = detail.get("source_tool", "")
-                direction_id = detail.get("direction_id", "")
-                lines.append(f"**{source_tool}** → {direction_id}")
-                if finding_summary:
-                    lines.append(f"> {finding_summary}")
-                    lines.append("")
-                entities_detail = detail.get("entities_detail", [])
-                if entities_detail:
-                    for ent in entities_detail:
-                        grade_str = f" [{ent['evidence_grade']}]" if ent.get("evidence_grade") else ""
-                        obs_str = f' — "{ent["observation_statement"]}"' if ent.get("observation_statement") else ""
-                        lines.append(f"- `{ent['canonical_id']}` ({ent['type']}){obs_str}{grade_str}")
-                edges_detail = detail.get("edges_detail", [])
-                if edges_detail:
-                    for edge in edges_detail:
-                        conf_str = f" (conf={edge['confidence']:.1f})" if edge.get("confidence") else ""
-                        obs_str = f' — "{edge["observation_statement"]}"' if edge.get("observation_statement") else ""
-                        lines.append(f"- `{edge['source']}` → **{edge['predicate']}** → `{edge['target']}`{conf_str}{obs_str}")
-                lines.append("")
 
         # === Agent 研究输出 ===
         _append_agent_research_output(lines, agent_name, agent_result)
@@ -1161,15 +1071,15 @@ def _save_detailed_iteration_report(
             lines.append("### 药物敏感性/耐药性关系")
             lines.append("")
             count = 0
-            for drug, relations in drug_sensitivity.items():
+            for variant_id, relations in drug_sensitivity.items():
                 if count >= 10:
                     break
-                lines.append(f"**{drug}**:")
+                lines.append(f"**{variant_id}**:")
                 for rel in relations:
                     predicate = rel.get("predicate", "?")
-                    variant = rel.get("variant", "?")
-                    confidence = rel.get("confidence", 0.0)
-                    lines.append(f"  - {variant} → {predicate} (置信度: {confidence:.2f})")
+                    drug_name = rel["drug"].canonical_id if rel.get("drug") else "?"
+                    confidence = rel["edge"].confidence if rel.get("edge") else 0.0
+                    lines.append(f"  - {drug_name} → {predicate} (置信度: {confidence:.2f})")
                 count += 1
             lines.append("")
 
@@ -1453,8 +1363,7 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
 2. 保留所有引用（PMID、NCT 等）
 3. 明确标注证据等级 [Evidence A/B/C/D/E]
 4. 重点突出对治疗决策有指导意义的发现
-5. **报告末尾必须包含「完整证据清单」模块**，以表格形式列出上述所有证据，
-   每条证据附带你的分析结论（该证据对治疗决策的意义）。这不是综述，是逐条证据分析。
+5. 不要在报告中生成证据清单表格，系统会自动追加完整的 Evidence Graph 证据清单。
 """
 
         try:
@@ -1599,8 +1508,7 @@ def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
 3. 明确标注证据等级 [Evidence A/B/C/D/E]
 4. 重点突出治疗方案选择、用药建议、安全性考量
 5. 包含治疗路线图和分子复查建议
-6. **报告末尾必须包含「完整证据清单」模块**，以表格形式列出上述所有证据，
-   每条证据附带你的分析结论（该证据对治疗决策的意义）。这不是综述，是逐条证据分析。
+6. 不要在报告中生成证据清单表格，系统会自动追加完整的 Evidence Graph 证据清单。
 """
 
     try:

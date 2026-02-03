@@ -117,12 +117,6 @@ class ResearchMixin:
                 "tool_call_report": ""
             }
 
-        # NEW: Create and inject GraphQueryTool with current graph reference
-        from src.tools.graph_query_tool import GraphQueryTool
-        graph_tool = GraphQueryTool()
-        graph_tool.set_graph(graph)
-        self._inject_graph_tool(graph_tool)
-
         # 收集所有结果
         all_findings = []
         all_direction_updates = {}
@@ -207,9 +201,6 @@ class ResearchMixin:
         for direction in dfrs_directions:
             _process_direction(direction, "dfrs", "DFRS", ResearchMode.DEPTH_FIRST, max_tool_rounds=5)
 
-        # 恢复原始工具列表（移除 GraphQueryTool）
-        self._restore_original_tools()
-
         # 增强结果日志
         logger.info(f"[{agent_role}] 迭代完成:")
         logger.info(f"[{agent_role}]   发现数: {len(all_findings)}")
@@ -238,27 +229,6 @@ class ResearchMixin:
             "agent_analysis": "\n\n".join(all_agent_analysis),
             "per_direction_analysis": all_per_direction_analysis,
         }
-
-    def _inject_graph_tool(self, graph_tool):
-        """将 GraphQueryTool 注入到 Agent 的工具列表中"""
-        # 清理上一次可能未恢复的状态（防止异常后残留）
-        self._restore_original_tools()
-
-        self._original_tools = list(self.tools)
-        self._original_tool_registry = dict(self.tool_registry)
-        self.tools = list(self.tools) + [graph_tool]
-        self.tool_registry = dict(self.tool_registry)
-        self.tool_registry[graph_tool.name] = graph_tool
-        logger.debug(f"[{getattr(self, 'role', '?')}] GraphQueryTool 已注入")
-
-    def _restore_original_tools(self):
-        """恢复原始工具列表（移除 GraphQueryTool）"""
-        if hasattr(self, '_original_tools'):
-            self.tools = self._original_tools
-            self.tool_registry = self._original_tool_registry
-            del self._original_tools
-            del self._original_tool_registry
-            logger.debug(f"[{getattr(self, 'role', '?')}] 已恢复原始工具列表")
 
     def _build_direction_anchor_context(
         self,
