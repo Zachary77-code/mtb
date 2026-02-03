@@ -18,7 +18,6 @@ from src.models.evidence_graph import (
     Entity,
     Edge,
     construct_provenance_url,
-    format_provenance_citation,
 )
 from src.models.research_plan import (
     load_research_plan,
@@ -1053,7 +1052,7 @@ def _save_detailed_iteration_report(
         # 方向完成度计算规则说明
         lines.append("### 方向完成度计算规则")
         lines.append("- **证据数**: 方向关联的 Entity 数量（`len(entity_ids)`）")
-        lines.append("- **等级分布**: 每个 Entity 按其最佳等级（best_grade）计数")
+        lines.append("- **等级分布**: 每个 Observation 按其 evidence_grade 计数（按 obs.id 去重）")
         lines.append("- **完成度权重**: A=5, B=3, C=2, D=1.5, E=1")
         lines.append("- **完成度公式**: `min(100%, 加权分数 / 50 × 100%)`")
         lines.append("- **示例**: A=3 B=12 C=7 → 3×5 + 12×3 + 7×2 = 65 → 65/50 = 130% → 封顶 100%")
@@ -1126,12 +1125,10 @@ def _save_detailed_iteration_report(
 
 def _format_evidence_table(entities: List[Entity], edges: List[Edge], agent_name: str) -> str:
     """
-    从 agent 的 entities + edges 生成结构化 markdown 证据表格
+    从 agent 的 entities + edges 生成按 observation ID 去重的证据清单
 
-    输出三张表：
-    1. 证据汇总表 — 按 provenance 去重，每条独立证据一行
-    2. 实体观察表 — 所有实体上的观察（含重复）
-    3. 关系边表 — 所有边上的观察（含重复）
+    一次工具调用可能生成多条 Observation，每条 Observation 有唯一 ID。
+    同一 Observation 可能被关联到多个 Entity/Edge，因此需按 obs.id 去重。
 
     Args:
         entities: 包含该 agent 观察的实体列表
@@ -1139,124 +1136,50 @@ def _format_evidence_table(entities: List[Entity], edges: List[Edge], agent_name
         agent_name: Agent 名称，用于筛选观察
 
     Returns:
-        markdown 格式的证据表格字符串
+        markdown 格式的证据清单字符串
     """
     lines = []
-
     grade_order = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
 
-    # === 0. 证据汇总表（按 provenance 去重）===
-    all_agent_obs = []
+    # 收集所有 agent 的 observations，按 obs.id 去重
+    seen_obs_ids = set()
+    unique_obs = []
+
     for entity in entities:
         for obs in entity.observations:
-            if obs.source_agent == agent_name and obs.provenance:
-                all_agent_obs.append(obs)
+            if obs.source_agent == agent_name and obs.id not in seen_obs_ids:
+                seen_obs_ids.add(obs.id)
+                unique_obs.append(obs)
+
     for edge in edges:
         for obs in edge.observations:
-            if obs.source_agent == agent_name and obs.provenance:
-                all_agent_obs.append(obs)
+            if obs.source_agent == agent_name and obs.id not in seen_obs_ids:
+                seen_obs_ids.add(obs.id)
+                unique_obs.append(obs)
 
-    # 按 provenance 去重，保留最高 grade
-    seen_prov = {}
-    for obs in all_agent_obs:
-        key = obs.provenance
-        if key not in seen_prov or grade_order.get(
-            obs.evidence_grade.value if obs.evidence_grade else "E", 5
-        ) < grade_order.get(
-            seen_prov[key].evidence_grade.value if seen_prov[key].evidence_grade else "E", 5
-        ):
-            seen_prov[key] = obs
+    # 按等级排序
+    unique_obs.sort(
+        key=lambda o: grade_order.get(o.evidence_grade.value if o.evidence_grade else "E", 5)
+    )
 
-    if seen_prov:
-        # 按 grade 排序
-        sorted_evidence = sorted(
-            seen_prov.items(),
-            key=lambda x: grade_order.get(
-                x[1].evidence_grade.value if x[1].evidence_grade else "E", 5
-            )
-        )
+    if unique_obs:
+        lines.append(f"### 证据清单（共 {len(unique_obs)} 条）\n")
+        lines.append("| # | 证据陈述 | 等级 | CIViC类型 | 来源工具 | 出处 |")
+        lines.append("|---|----------|------|-----------|----------|------|")
 
-        lines.append(f"### 证据汇总表（共 {len(sorted_evidence)} 条独立证据）\n")
-        lines.append("| # | 引用 | 证据等级 | CIViC类型 | 来源工具 | 证据陈述 |")
-        lines.append("|---|------|----------|-----------|----------|----------|")
-
-        for i, (prov, obs) in enumerate(sorted_evidence, 1):
-            citation = format_provenance_citation(prov, obs.source_url or "")
+        for i, obs in enumerate(unique_obs, 1):
             grade = obs.evidence_grade.value if obs.evidence_grade else "N/A"
             civic = obs.civic_type.value if obs.civic_type else ""
             tool = obs.source_tool or ""
+            prov = obs.provenance or ""
             stmt = (obs.statement or "").replace("|", "\\|")
-            lines.append(f"| {i} | {citation} | {grade} | {civic} | {tool} | {stmt} |")
+            # 如果有 URL，生成链接
+            if obs.source_url and prov:
+                prov = f"[{prov}]({obs.source_url})"
+            lines.append(f"| {i} | {stmt} | {grade} | {civic} | {tool} | {prov} |")
 
         lines.append("")
-
-    # === 1. 实体观察表 ===
-
-    # 收集所有 agent 的实体观察
-    entity_rows = []
-    for entity in entities:
-        agent_obs = [obs for obs in entity.observations if obs.source_agent == agent_name]
-        for obs in agent_obs:
-            grade = obs.evidence_grade.value if obs.evidence_grade else "N/A"
-            civic = obs.civic_type.value if obs.civic_type else ""
-            tool = obs.source_tool or ""
-            provenance = obs.provenance or ""
-            entity_rows.append({
-                "entity": entity.canonical_id,
-                "type": entity.entity_type.value,
-                "statement": obs.statement,
-                "grade": grade,
-                "civic_type": civic,
-                "tool": tool,
-                "provenance": provenance,
-                "sort_key": grade_order.get(grade, 5),
-            })
-
-    # 按证据等级排序
-    entity_rows.sort(key=lambda r: r["sort_key"])
-
-    if entity_rows:
-        lines.append(f"### 实体观察表（共 {len(entity_rows)} 条）\n")
-        lines.append("| # | 实体 | 类型 | 观察陈述 | 等级 | CIViC类型 | 来源工具 | 出处 |")
-        lines.append("|---|------|------|----------|------|-----------|----------|------|")
-        for i, row in enumerate(entity_rows, 1):
-            # 转义管道符
-            stmt = row["statement"].replace("|", "\\|")
-            lines.append(
-                f"| {i} | {row['entity']} | {row['type']} | {stmt} | {row['grade']} | {row['civic_type']} | {row['tool']} | {row['provenance']} |"
-            )
-        lines.append("")
-
-    # === 关系边表 ===
-    edge_rows = []
-    for edge in edges:
-        agent_obs = [obs for obs in edge.observations if obs.source_agent == agent_name]
-        for obs in agent_obs:
-            grade = obs.evidence_grade.value if obs.evidence_grade else "N/A"
-            edge_rows.append({
-                "source": edge.source_id,
-                "predicate": edge.predicate.value,
-                "target": edge.target_id,
-                "statement": obs.statement,
-                "grade": grade,
-                "confidence": edge.confidence,
-                "sort_key": grade_order.get(grade, 5),
-            })
-
-    edge_rows.sort(key=lambda r: r["sort_key"])
-
-    if edge_rows:
-        lines.append(f"### 关系边表（共 {len(edge_rows)} 条）\n")
-        lines.append("| # | 源实体 | 关系 | 目标实体 | 观察陈述 | 等级 | 置信度 |")
-        lines.append("|---|--------|------|----------|----------|------|--------|")
-        for i, row in enumerate(edge_rows, 1):
-            stmt = row["statement"].replace("|", "\\|")
-            lines.append(
-                f"| {i} | {row['source']} | {row['predicate']} | {row['target']} | {stmt} | {row['grade']} | {row['confidence']:.1f} |"
-            )
-        lines.append("")
-
-    if not entity_rows and not edge_rows:
+    else:
         lines.append("暂无结构化证据数据。\n")
 
     return "\n".join(lines)
