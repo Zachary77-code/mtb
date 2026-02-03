@@ -36,7 +36,7 @@ class ResearchDirection:
     queries: List[str]                 # 建议查询
     status: DirectionStatus            # 状态
     completion_criteria: str           # 完成标准描述
-    evidence_ids: List[str]            # 已收集的证据 ID
+    entity_ids: List[str]            # 已收集的实体 canonical_id
 
     # 目标模块映射（对应 Chair 的 12 模块）
     target_modules: List[str] = field(default_factory=list)  # 目标模块列表
@@ -64,7 +64,7 @@ class ResearchDirection:
             "queries": self.queries,
             "status": self.status.value,
             "completion_criteria": self.completion_criteria,
-            "evidence_ids": self.evidence_ids,
+            "entity_ids": self.entity_ids,
             "iterations_spent": self.iterations_spent,
             "last_iteration": self.last_iteration,
             "needs_deep_research": self.needs_deep_research,
@@ -84,7 +84,7 @@ class ResearchDirection:
             queries=data.get("queries", []),
             status=DirectionStatus(data.get("status", "pending")),
             completion_criteria=data.get("completion_criteria", ""),
-            evidence_ids=data.get("evidence_ids", []),
+            entity_ids=data.get("entity_ids", []),
             target_modules=data.get("target_modules", []),
             iterations_spent=data.get("iterations_spent", 0),
             last_iteration=data.get("last_iteration", 0),
@@ -104,10 +104,10 @@ class ResearchDirection:
         self.last_iteration = iteration
         self.iterations_spent += 1
 
-    def add_evidence(self, evidence_id: str):
-        """添加证据"""
-        if evidence_id not in self.evidence_ids:
-            self.evidence_ids.append(evidence_id)
+    def add_entity_id(self, entity_id: str):
+        """添加实体 ID"""
+        if entity_id not in self.entity_ids:
+            self.entity_ids.append(entity_id)
 
 
 @dataclass
@@ -210,8 +210,8 @@ class ResearchPlan:
             a = d.target_agent
             agent_counts[a] = agent_counts.get(a, 0) + 1
 
-        # 统计每个方向的证据数
-        evidence_counts = {d.id: len(d.evidence_ids) for d in self.directions}
+        # 统计每个方向的实体数
+        entity_counts = {d.id: len(d.entity_ids) for d in self.directions}
 
         return {
             "total_directions": len(self.directions),
@@ -220,7 +220,7 @@ class ResearchPlan:
             "directions_by_agent": agent_counts,
             "pending_count": len(self.get_pending_directions()),
             "depth_required_count": len(self.get_directions_requiring_depth()),
-            "evidence_per_direction": evidence_counts,
+            "entity_per_direction": entity_counts,
         }
 
 
@@ -258,7 +258,7 @@ def create_research_plan(
             queries=d.get("queries", []),
             status=DirectionStatus.PENDING,
             completion_criteria=d.get("completion_criteria", "收集到相关证据"),
-            evidence_ids=[],
+            entity_ids=[],
             target_modules=d.get("target_modules", []),
         ))
 

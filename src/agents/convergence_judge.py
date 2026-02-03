@@ -356,16 +356,16 @@ class ConvergenceJudgeAgent(BaseAgent):
         # 按模块汇总
         module_evidence = {}
         for d in agent_directions:
-            evidence_count = len(d.evidence_ids)
+            entity_count = len(d.entity_ids)
             for module in d.target_modules:
                 if module not in module_evidence:
-                    module_evidence[module] = {"directions": [], "total_evidence": 0}
+                    module_evidence[module] = {"directions": [], "total_entity": 0}
                 module_evidence[module]["directions"].append(d.id)
-                module_evidence[module]["total_evidence"] += evidence_count
+                module_evidence[module]["total_entity"] += entity_count
 
         for module, data in module_evidence.items():
             status = "✓" if data["total_evidence"] > 0 else "✗"
-            lines.append(f"- [{status}] {module}: {data['total_evidence']} 条证据 ({len(data['directions'])} 个方向)")
+            lines.append(f"- [{status}] {module}: {data['total_entity']} 条证据 ({len(data['directions'])} 个方向)")
 
         return "\n".join(lines)
 
@@ -401,9 +401,9 @@ class ConvergenceJudgeAgent(BaseAgent):
 
         for d in directions[:10]:  # 最多显示 10 个
             status_icon = "✓" if d.status.value == "completed" else "○"
-            evidence_count = len(d.evidence_ids)
+            entity_count = len(d.entity_ids)
             modules = ", ".join(d.target_modules[:2])
-            lines.append(f"  {status_icon} [P{d.priority}] {d.topic[:40]}... (证据: {evidence_count}, 模块: {modules})")
+            lines.append(f"  {status_icon} [P{d.priority}] {d.topic[:40]}... (实体: {entity_count}, 模块: {modules})")
 
         if len(directions) > 10:
             lines.append(f"  ... 还有 {len(directions) - 10} 个方向")

@@ -230,7 +230,7 @@ class MtbState(TypedDict):
     #     "iteration": 1,
     #     "timestamp": "2024-01-23T10:30:00",
     #     "agent_findings": {
-    #       "Pathologist": {"count": 5, "evidence_ids": [...]},
+    #       "Pathologist": {"count": 5, "entity_ids": [...]},
     #       ...
     #     },
     #     "total_new_findings": 12,

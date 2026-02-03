@@ -335,7 +335,8 @@ class PlanAgent(BaseAgent):
         Returns:
             {
                 "D1": {
-                    "evidence_count": 5,
+                    "evidence_count": 5,  # 证据数 = 去重后的 observation 数量
+                    "entity_count": 3,    # 实体数 = entity_ids 数量
                     "grade_distribution": {"A": 1, "B": 2, "C": 1, "D": 0, "E": 1},
                     "weighted_score": 12.0,
                     "completeness": 100.0,
@@ -349,14 +350,18 @@ class PlanAgent(BaseAgent):
 
         for direction in plan.directions:
             d_id = direction.id
-            evidence_ids = direction.evidence_ids
+            entity_ids = direction.entity_ids
+            entity_id_set = set(entity_ids)
 
-            # 统计证据等级分布
+            # 统计证据等级分布（按实体的 best_grade 计数）
             grade_dist = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0}
             weighted_score = 0.0
 
-            for eid in evidence_ids:
-                # 新模型：evidence_ids 是 entity canonical_id
+            # 收集去重后的 observation IDs（证据数 = observation 数量）
+            obs_ids = set()
+
+            for eid in entity_ids:
+                # entity_ids 存储的是实体 canonical_id
                 entity = graph.get_entity(eid) if graph else None
                 if entity:
                     best_grade = entity.get_best_grade()
@@ -368,10 +373,22 @@ class PlanAgent(BaseAgent):
                         # 无等级的证据按 E 级计算
                         grade_dist["E"] = grade_dist.get("E", 0) + 1
                         weighted_score += 1.0
+                    # 收集实体上的 observation IDs
+                    for obs in entity.observations:
+                        if hasattr(obs, 'id') and obs.id:
+                            obs_ids.add(obs.id)
                 else:
                     # 实体未找到，按 E 级计算
                     grade_dist["E"] = grade_dist.get("E", 0) + 1
                     weighted_score += 1.0
+
+            # 收集关联边上的 observation IDs
+            if graph:
+                for edge in graph.edges.values():
+                    if edge.source_id in entity_id_set or edge.target_id in entity_id_set:
+                        for obs in edge.observations:
+                            if hasattr(obs, 'id') and obs.id:
+                                obs_ids.add(obs.id)
 
             # 计算完成度
             completeness = min(100.0, (weighted_score / TARGET_COMPLETENESS_SCORE) * 100)
@@ -386,7 +403,8 @@ class PlanAgent(BaseAgent):
             )
 
             stats[d_id] = {
-                "evidence_count": len(evidence_ids),
+                "evidence_count": len(obs_ids),  # 证据数 = 去重后的 observation 数量
+                "entity_count": len(entity_ids),  # 实体数 = entity_ids 数量
                 "grade_distribution": grade_dist,
                 "weighted_score": weighted_score,
                 "completeness": completeness,
@@ -687,14 +705,14 @@ class PlanAgent(BaseAgent):
         与 ResearchMixin 的 _build_direction_anchor_context() 保持一致，
         不包含 observation 文本，需通过工具按需查询。
         """
-        evidence_ids = direction.evidence_ids
-        if not evidence_ids:
+        entity_ids = direction.entity_ids
+        if not entity_ids:
             return f"### {direction.id} ({direction.topic})\n暂无证据"
 
-        logger.info(f"[PLAN_SUBGRAPH] 方向 {direction.id}: 锚点数={len(evidence_ids)}")
+        logger.info(f"[PLAN_SUBGRAPH] 方向 {direction.id}: 锚点数={len(entity_ids)}")
 
         subgraph = graph.retrieve_subgraph(
-            anchor_ids=evidence_ids,
+            anchor_ids=entity_ids,
             max_hops=2,
             include_observations=False
         )
@@ -823,6 +841,26 @@ class PlanAgent(BaseAgent):
 
             # 更新研究计划（包括每个方向的 preferred_mode）
             updated_directions = data.get("updated_directions", [])
+
+            # 应用待深入研究项惩罚（与 fallback 路径一致）
+            deep_by_direction = {}
+            if needs_deep_research:
+                for item in needs_deep_research:
+                    d_id = item.get("direction_id", "")
+                    if d_id not in deep_by_direction:
+                        deep_by_direction[d_id] = []
+                    deep_by_direction[d_id].append(item)
+
+            for u in updated_directions:
+                d_id = u.get("id", "")
+                if not d_id:
+                    continue
+                dir_deep = deep_by_direction.get(d_id, [])
+                if dir_deep:
+                    original_completeness = u.get("completeness", 0)
+                    deep_penalty = len(dir_deep) * 10
+                    u["completeness"] = max(original_completeness - deep_penalty, 0)
+
             updated_plan = self._apply_direction_updates(plan, updated_directions)
 
             # 提取各方向证据评估 + 待深入研究项评估（用于报告展示）
@@ -1248,7 +1286,7 @@ class PlanAgent(BaseAgent):
                 queries=d_data.get("queries", []),
                 status=DirectionStatus.PENDING,
                 completion_criteria=d_data.get("completion_criteria", ""),
-                evidence_ids=[],
+                entity_ids=[],
                 preferred_mode="breadth_first",
                 mode_reason="Phase 2 新方向，需要广度收集证据"
             )

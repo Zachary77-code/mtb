@@ -601,7 +601,7 @@ class ResearchMixin:
             dfrs_findings = self._parse_research_output(dfrs_response)
 
         # 4. 更新证据图
-        new_evidence_ids = self._update_evidence_graph(
+        new_entity_ids = self._update_evidence_graph(
             evidence_graph,
             bfrs_findings + dfrs_findings
         )
@@ -610,7 +610,7 @@ class ResearchMixin:
         return {
             "evidence_graph": evidence_graph,
             "research_plan": updated_plan,
-            "new_evidence_ids": new_evidence_ids,
+            "new_entity_ids": new_entity_ids,
             "direction_updates": direction_status_updates,
             "research_complete": all_complete,
             "needs_deep_research": needs_deep_items,
@@ -770,7 +770,8 @@ TARGET_COMPLETENESS_SCORE = 10.0  # 相当于 2 个 A 级或 10 个 E 级
 
 ```python
 stats[direction_id] = {
-    "evidence_count": len(evidence_ids),
+    "evidence_count": len(obs_ids),  # 证据数 = 去重后的 observation 数量
+    "entity_count": len(entity_ids), # 实体数 = entity_ids 数量
     "grade_distribution": {"A": 1, "B": 2, "C": 0, "D": 1, "E": 1},
     "weighted_score": 12.0,      # 所有证据 GRADE_WEIGHTS 之和
     "completeness": 100.0,       # min(100, weighted_score/TARGET × 100)
@@ -829,7 +830,7 @@ iteration_record = {
     "agent_findings": {
         "AgentName": {
             "count": int,
-            "evidence_ids": [...]
+            "entity_ids": [...]
         }
     },
     "total_new_findings": int,
@@ -1111,7 +1112,7 @@ class ResearchDirection:
     queries: List[str]               # 建议的搜索查询
     status: str                      # "pending" | "in_progress" | "completed"
     completion_criteria: str         # 完成标准
-    evidence_ids: List[str]          # 收集的证据 ID
+    entity_ids: List[str]          # 收集的证据 ID
     target_modules: List[str]        # 目标模块 (如 ["分子特征", "治疗路线图"])
     iterations_spent: int            # 已用迭代次数
     last_iteration: int              # 最后迭代编号
@@ -1683,7 +1684,7 @@ result = agent.research_iterate(
 # 返回: {
 #     "evidence_graph": Dict,
 #     "research_plan": Dict,
-#     "new_evidence_ids": List[str],
+#     "new_entity_ids": List[str],
 #     "direction_updates": Dict,
 #     "research_complete": bool,
 #     "needs_deep_research": List,

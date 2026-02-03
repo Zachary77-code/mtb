@@ -199,7 +199,7 @@ class NCCNImageRag:
         logger.debug(f"[ImageRAG] 返回 {len(formatted)} 个结果")
         return formatted
 
-    def query(self, question: str, top_k: int = 10) -> str:
+    def query(self, question: str, top_k: int = 5) -> str:
         """
         查询并返回分析结果
 
@@ -247,7 +247,7 @@ class NCCNImageRag:
         # Fallback: 仅返回页码
         return self._format_results(question, results)
 
-    def retrieve(self, question: str, top_k: int = 10) -> Dict[str, Any]:
+    def retrieve(self, question: str, top_k: int = 5) -> Dict[str, Any]:
         """
         检索 NCCN 指南页面并返回原始图片（不经过多模态 LLM 读图）
 

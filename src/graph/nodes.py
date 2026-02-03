@@ -379,12 +379,12 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
     # state 中存储的是 dict 格式，需要转换为 EvidenceGraph 对象
     evidence_graph_dict = state.get("evidence_graph")
     evidence_graph = load_evidence_graph(evidence_graph_dict) if evidence_graph_dict else None
-    evidence_count = len(evidence_graph.entities) if evidence_graph else 0
+    entity_count = len(evidence_graph.entities) if evidence_graph else 0
 
     # 计算总输入量
     total_input = (len(raw_pdf_text) + len(pathologist_report) +
                    len(geneticist_report) + len(recruiter_report) + len(oncologist_plan))
-    logger.info(f"[CHAIR] 输入总量: {total_input} 字符, 证据图实体数: {evidence_count}")
+    logger.info(f"[CHAIR] 输入总量: {total_input} 字符, 证据图实体数: {entity_count}")
 
     input_summary = f"""**迭代次数**: {iteration + 1}
 **缺失模块**: {missing if missing else '无'}
@@ -395,7 +395,7 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
 - 分子分析报告: {len(geneticist_report)} 字符
 - 临床试验推荐: {len(recruiter_report)} 字符
 - 治疗方案: {len(oncologist_plan)} 字符
-- 证据图实体数: {evidence_count}"""
+- 证据图实体数: {entity_count}"""
     _print_section("[CHAIR] 输入", input_summary)
 
     agent = ChairAgent()

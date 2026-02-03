@@ -157,7 +157,7 @@ Two-phase research loop implementing BFRS/DFRS research modes ([src/graph/resear
 {
     "evidence_graph": Dict,        # Updated evidence graph
     "research_plan": Dict,         # Updated research plan
-    "new_evidence_ids": List[str], # Newly added evidence IDs
+    "new_entity_ids": List[str],   # Newly added entity canonical IDs
     "direction_updates": Dict,     # Direction status updates {id: "pending"|"completed"}
     "needs_deep_research": List,   # Findings requiring deep research
     "summary": str

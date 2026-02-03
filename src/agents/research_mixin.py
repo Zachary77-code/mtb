@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 class ResearchResult:
     """单次研究迭代的结果"""
     findings: List[Dict[str, Any]]      # 发现列表
-    evidence_ids: List[str]             # 添加到图中的实体 canonical_id 列表
+    entity_ids: List[str]             # 添加到图中的实体 canonical_id 列表
     directions_updated: List[str]       # 更新状态的方向 ID
     research_complete: bool             # 是否完成研究
     needs_deep_research: List[str]      # 需要深入研究的发现
@@ -108,7 +108,7 @@ class ResearchMixin:
             return {
                 "evidence_graph": graph.to_dict(),
                 "research_plan": plan.to_dict() if plan else None,
-                "new_evidence_ids": [],
+                "new_entity_ids": [],
                 "direction_updates": {},
                 "research_complete": True,
                 "needs_deep_research": [],
@@ -217,7 +217,7 @@ class ResearchMixin:
         return {
             "evidence_graph": graph.to_dict(),
             "research_plan": plan.to_dict() if plan else None,
-            "new_evidence_ids": all_new_entity_ids,
+            "new_entity_ids": all_new_entity_ids,
             "direction_updates": all_direction_updates,
             "research_complete": len(bfrs_directions) == 0 and len(dfrs_directions) == 0,
             "needs_deep_research": all_needs_deep,
@@ -247,18 +247,18 @@ class ResearchMixin:
 
         sections = []
         for d in directions:
-            evidence_ids = d.get('evidence_ids', [])
+            entity_ids = d.get('entity_ids', [])
             dir_id = d.get('id', '?')
             topic = d.get('topic', '未命名')
 
-            if not evidence_ids:
+            if not entity_ids:
                 sections.append(f"### {dir_id} ({topic})\n尚无已知实体")
                 continue
 
-            logger.info(f"[SUBGRAPH] 方向 {dir_id}: 锚点数={len(evidence_ids)}, max_hops={max_hops}, mode={mode}")
+            logger.info(f"[SUBGRAPH] 方向 {dir_id}: 锚点数={len(entity_ids)}, max_hops={max_hops}, mode={mode}")
 
             subgraph = graph.retrieve_subgraph(
-                anchor_ids=evidence_ids,
+                anchor_ids=entity_ids,
                 max_hops=max_hops,
                 include_observations=False
             )
@@ -317,8 +317,8 @@ class ResearchMixin:
             topic = d.get('topic', '?')
             status = d.get('status', 'pending')
             preferred_mode = d.get('preferred_mode', 'breadth_first')
-            evidence_count = len(d.get('evidence_ids', []))
-            lines.append(f"- {d.get('id')} ({topic}): {evidence_count} 实体, mode={preferred_mode}, status={status}")
+            entity_count = len(d.get('entity_ids', []))
+            lines.append(f"- {d.get('id')} ({topic}): {entity_count} 实体, mode={preferred_mode}, status={status}")
         return "\n".join(lines) if lines else "（无其他方向）"
 
     def _build_direction_prompt(
@@ -372,7 +372,7 @@ class ResearchMixin:
             dfrs_section = f"""
 - 需要深入的原因: {direction.get('depth_research_reason', '需要更多证据')}{mode_reason_text}
 - 具体待研究问题:{findings_text if findings_text else ' 请基于方向主题深入'}
-- 已有证据 ID: {direction.get('evidence_ids', [])}"""
+- 已有证据 ID: {direction.get('entity_ids', [])}"""
 
         # 本方向锚节点上下文（DFRS 用 3 hop，BFRS 用 2 hop）
         anchor_context = self._build_direction_anchor_context([direction], graph, mode=mode)
@@ -661,7 +661,7 @@ class ResearchMixin:
                 if direction:
                     # 关联所有新实体到方向
                     for entity_id in new_entity_ids:
-                        direction.add_evidence(entity_id)
+                        direction.add_entity_id(entity_id)
 
             # 更新实体索引，让后续 finding 的 LLM 提取看到新增实体
             existing_entities = graph.get_entity_index()

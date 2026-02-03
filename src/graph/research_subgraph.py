@@ -263,9 +263,9 @@ def check_direction_evidence_sufficiency(state: MtbState, agent_names: list[str]
         directions_to_check = [d for d in plan.directions if d.target_agent in agent_names]
 
     for direction in directions_to_check:
-        evidence_count = len(direction.evidence_ids)
-        if evidence_count < MIN_EVIDENCE_PER_DIRECTION:
-            insufficient.append(f"{direction.id}:{direction.topic[:20]}({evidence_count}/{MIN_EVIDENCE_PER_DIRECTION})")
+        entity_count = len(direction.entity_ids)
+        if entity_count < MIN_EVIDENCE_PER_DIRECTION:
+            insufficient.append(f"{direction.id}:{direction.topic[:20]}({entity_count}/{MIN_EVIDENCE_PER_DIRECTION})")
 
     if insufficient:
         logger.warning(f"[DIRECTION_EVIDENCE] 证据不足的方向: {insufficient}")
@@ -324,7 +324,7 @@ def check_agent_module_coverage(state: MtbState, agent_names: list[str]) -> tupl
         if direction.target_agent not in agent_names:
             continue
         # 检查该方向的target_modules是否有证据
-        if len(direction.evidence_ids) == 0:
+        if len(direction.entity_ids) == 0:
             uncovered.extend(direction.target_modules)
 
     uncovered = list(set(uncovered))  # 去重
@@ -391,7 +391,7 @@ def _save_iteration_report(
         state: MtbState 状态
         phase: 阶段名称 "PHASE1" 或 "PHASE2"
         iteration: 迭代轮次
-        agent_findings: Agent 发现详情 {Agent名: {count: N, evidence_ids: [...]}}
+        agent_findings: Agent 发现详情 {Agent名: {count: N, entity_ids: [...]}}
         convergence_details: 收敛检查详情
         final_decision: 最终决策 "continue" 或 "converged"
     """
@@ -419,11 +419,11 @@ def _save_iteration_report(
     lines.append("")
     for agent_name, findings in agent_findings.items():
         count = findings.get("count", 0)
-        evidence_ids = findings.get("evidence_ids", [])
+        entity_ids = findings.get("entity_ids", [])
         lines.append(f"### {agent_name}: {count} 条")
-        if graph and evidence_ids:
-            for eid in evidence_ids:
-                # 新模型：evidence_ids 是 entity canonical_id
+        if graph and entity_ids:
+            for eid in entity_ids:
+                # 新模型：entity_ids 是 entity canonical_id
                 entity = graph.get_entity(eid)
                 if entity:
                     best_grade = entity.get_best_grade()
@@ -608,20 +608,20 @@ def _save_detailed_iteration_report(
                     topic_short = d.topic
                     # 计算 observation 数和 entity 数（只计算本 agent 的观察，含实体+边）
                     target_agent = d.target_agent
-                    entity_count = len(d.evidence_ids)
-                    evidence_id_set = set(d.evidence_ids)
+                    entity_count = len(d.entity_ids)
+                    entity_id_set = set(d.entity_ids)
                     # 实体观察数（仅本 agent）
                     entity_obs_count = sum(
                         sum(1 for obs in graph.get_entity(eid).observations
                             if obs.source_agent == target_agent)
-                        for eid in d.evidence_ids
+                        for eid in d.entity_ids
                         if graph and graph.get_entity(eid)
                     )
-                    # 边观察数（仅本 agent，且边的端点在该方向的 evidence_ids 中）
+                    # 边观察数（仅本 agent，且边的端点在该方向的 entity_ids 中）
                     edge_obs_count = 0
                     if graph:
                         for edge in graph.edges.values():
-                            if edge.source_id in evidence_id_set or edge.target_id in evidence_id_set:
+                            if edge.source_id in entity_id_set or edge.target_id in entity_id_set:
                                 edge_obs_count += sum(
                                     1 for obs in edge.observations
                                     if obs.source_agent == target_agent
@@ -942,18 +942,18 @@ def _save_detailed_iteration_report(
     for agent_name in agent_names:
         result_key = f"{agent_name.lower()}_research_result"
         agent_result = state.get(result_key, {})
-        new_evidence_ids = agent_result.get("new_evidence_ids", [])
+        new_entity_ids = agent_result.get("new_entity_ids", [])
 
-        lines.append(f"### {agent_name}: {len(new_evidence_ids)} 条")
+        lines.append(f"### {agent_name}: {len(new_entity_ids)} 条")
         lines.append("")
 
-        if not new_evidence_ids:
+        if not new_entity_ids:
             lines.append("本轮无新增证据")
             lines.append("")
             continue
 
-        for eid in new_evidence_ids:
-            # 新模型：evidence_ids 是 entity canonical_id
+        for eid in new_entity_ids:
+            # 新模型：entity_ids 是 entity canonical_id
             entity = graph.get_entity(eid) if graph else None
             if not entity:
                 lines.append(f"#### 实体 {eid}")
@@ -1052,11 +1052,19 @@ def _save_detailed_iteration_report(
 
         # 方向完成度计算规则说明
         lines.append("### 方向完成度计算规则")
-        lines.append("- **证据数**: 方向关联的 Entity 数量（`len(evidence_ids)`）")
+        lines.append("- **证据数**: 方向关联的 Entity 数量（`len(entity_ids)`）")
         lines.append("- **等级分布**: 每个 Entity 按其最佳等级（best_grade）计数")
         lines.append("- **完成度权重**: A=5, B=3, C=2, D=1.5, E=1")
         lines.append("- **完成度公式**: `min(100%, 加权分数 / 50 × 100%)`")
         lines.append("- **示例**: A=3 B=12 C=7 → 3×5 + 12×3 + 7×2 = 65 → 65/50 = 130% → 封顶 100%")
+        lines.append("")
+
+        # 待深入研究项惩罚规则
+        lines.append("### 待深入研究项惩罚规则")
+        lines.append("- **惩罚逻辑**: 每个方向的「待深入研究项」会降低其完成度")
+        lines.append("- **惩罚公式**: `有效完成度 = 原始完成度 - (待深入研究项数 × 10%)`")
+        lines.append("- **最低值**: 惩罚后完成度最低为 0%")
+        lines.append("- **示例**: 原始完成度 85%，有 3 项待深入研究 → 85% - 30% = 55%")
         lines.append("")
 
         # 冲突详情
@@ -1676,10 +1684,10 @@ def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict
     )
 
     # 显示执行结果
-    new_evidence_ids = result.get('new_evidence_ids', [])
+    new_entity_ids = result.get('new_entity_ids', [])
     direction_updates = result.get('direction_updates', {})
     logger.info(f"[{tag}] 完成:")
-    logger.info(f"[{tag}]   新证据: {len(new_evidence_ids)}")
+    logger.info(f"[{tag}]   新证据: {len(new_entity_ids)}")
     if direction_updates:
         logger.info(f"[{tag}]   方向更新: {direction_updates}")
     if result.get('needs_deep_research'):
@@ -1716,12 +1724,12 @@ def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
     new_findings = 0
     agent_findings_detail = {}
     for agent_name, result in agent_results.items():
-        evidence_ids = result.get("new_evidence_ids", [])
-        count = len(evidence_ids)
+        entity_ids = result.get("new_entity_ids", [])
+        count = len(entity_ids)
         new_findings += count
         agent_findings_detail[agent_name] = {
             "count": count,
-            "evidence_ids": evidence_ids
+            "entity_ids": entity_ids
         }
         logger.info(f"[PHASE1]   {agent_name}: {count} 条新证据")
 
@@ -1974,8 +1982,8 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
     )
 
     # 更新迭代计数
-    new_evidence_ids = result.get("new_evidence_ids", [])
-    new_findings = len(new_evidence_ids)
+    new_entity_ids = result.get("new_entity_ids", [])
+    new_findings = len(new_entity_ids)
     new_iteration = iteration + 1
 
     logger.info(f"[PHASE2_ONCOLOGIST] 完成, 新证据: {new_findings}")
@@ -1991,7 +1999,7 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
         "agent_findings": {
             "Oncologist": {
                 "count": new_findings,
-                "evidence_ids": new_evidence_ids
+                "entity_ids": new_entity_ids
             }
         },
         "total_new_findings": new_findings,
