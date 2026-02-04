@@ -1271,6 +1271,29 @@ def _format_evidence_for_report(entity_list: List[Entity], agent_name: str = Non
     return "\n".join(lines)
 
 
+def _format_hypotheses_for_report(state: MtbState, agent_name: str) -> str:
+    """格式化假设验证记录供报告追加"""
+    hypotheses_history = state.get("hypotheses_history", {})
+    agent_hypotheses = hypotheses_history.get(agent_name, [])
+    if not agent_hypotheses:
+        return ""
+
+    lines = ["## 研究假设验证记录\n"]
+    lines.append("| 迭代 | 方向 | 假设 | 验证工具 | 结果 | 详情 |")
+    lines.append("|------|------|------|----------|------|------|")
+    for h in agent_hypotheses:
+        iteration = h.get("iteration", "?")
+        dir_id = h.get("direction_id", "?")
+        hypothesis = (h.get("hypothesis", "") or "").replace("|", "\\|")
+        tool = (h.get("validation_tool", "") or "").replace("|", "\\|")
+        result = h.get("result", "?")
+        result_display = {"validated": "✓", "refuted": "✗", "inconclusive": "?"}.get(result, result)
+        detail = (h.get("detail", "") or "").replace("|", "\\|")
+        lines.append(f"| {iteration} | {dir_id} | {hypothesis} | {tool} | {result_display} | {detail} |")
+
+    return "\n".join(lines)
+
+
 def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
     """
     Phase 1 收敛后，各专家基于 evidence_graph 生成领域综合报告
@@ -1349,6 +1372,11 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
 
                 # 程序化追加完整证据清单（确保不遗漏）
                 report += f"\n\n---\n\n## 完整证据清单（Evidence Graph）\n\n{evidence_table}"
+
+                # 程序化追加假设验证记录
+                hypotheses_section = _format_hypotheses_for_report(state, agent_name)
+                if hypotheses_section:
+                    report += f"\n\n---\n\n{hypotheses_section}"
 
                 reports[report_key] = report
                 logger.info(f"[PHASE1_REPORTS]   {agent_name} 报告生成成功: {len(report)} 字符")
@@ -1494,6 +1522,11 @@ def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
 
             # 程序化追加完整证据清单（确保不遗漏）
             report += f"\n\n---\n\n## 完整证据清单（Evidence Graph）\n\n{evidence_table}"
+
+            # 程序化追加假设验证记录
+            hypotheses_section = _format_hypotheses_for_report(state, "Oncologist")
+            if hypotheses_section:
+                report += f"\n\n---\n\n{hypotheses_section}"
 
             logger.info(f"[PHASE2_REPORTS] Oncologist 报告生成成功: {len(report)} 字符")
             # 保存到文件
@@ -1718,10 +1751,30 @@ def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
 
     # 详细迭代报告由 plan_agent_evaluate_phase1() 保存
 
+    # 收集各 Agent 本轮假设验证记录
+    hypotheses_history = dict(state.get("hypotheses_history", {}))
+    for agent_name, result in agent_results.items():
+        pda = result.get("per_direction_analysis", {})
+        for dir_id, analysis in pda.items():
+            if not isinstance(analysis, dict):
+                continue
+            hypotheses = analysis.get("hypotheses_explored", [])
+            if hypotheses:
+                if agent_name not in hypotheses_history:
+                    hypotheses_history[agent_name] = []
+                for h in hypotheses:
+                    if isinstance(h, dict):
+                        hypotheses_history[agent_name].append({
+                            "iteration": new_iteration,
+                            "direction_id": dir_id,
+                            **h
+                        })
+
     return {
         "phase1_iteration": new_iteration,
         "phase1_new_findings": new_findings,
         "iteration_history": history,
+        "hypotheses_history": hypotheses_history,
     }
 
 
@@ -1972,12 +2025,31 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
 
     # 详细迭代报告由 plan_agent_evaluate_phase2() 保存
 
+    # 收集 Oncologist 本轮假设验证记录
+    hypotheses_history = dict(state.get("hypotheses_history", {}))
+    pda = result.get("per_direction_analysis", {})
+    for dir_id, analysis in pda.items():
+        if not isinstance(analysis, dict):
+            continue
+        hypotheses = analysis.get("hypotheses_explored", [])
+        if hypotheses:
+            if "Oncologist" not in hypotheses_history:
+                hypotheses_history["Oncologist"] = []
+            for h in hypotheses:
+                if isinstance(h, dict):
+                    hypotheses_history["Oncologist"].append({
+                        "iteration": new_iteration,
+                        "direction_id": dir_id,
+                        **h
+                    })
+
     return_dict = {
         "evidence_graph": updated_evidence_graph,
         "oncologist_research_result": result,
         "phase2_iteration": new_iteration,
         "phase2_new_findings": new_findings,
         "iteration_history": history,
+        "hypotheses_history": hypotheses_history,
     }
     # 如果有更新的研究计划，也返回
     if result.get("research_plan"):

@@ -242,6 +242,17 @@ class MtbState(TypedDict):
     # 研究进度报告（Markdown 格式）
     research_progress_report: NotRequired[str]
 
+    # 假设验证历史（跨迭代累积，由 aggregator 收集）
+    # 结构: {
+    #     "Pathologist": [
+    #         {"iteration": 1, "direction_id": "D1", "hypothesis": "...",
+    #          "validation_tool": "...", "result": "validated|refuted|inconclusive", "detail": "..."},
+    #     ],
+    #     "Geneticist": [...],
+    #     ...
+    # }
+    hypotheses_history: NotRequired[Dict[str, List[Dict[str, Any]]]]
+
 
 # ==================== 辅助函数 ====================
 def create_initial_state(input_text: str) -> MtbState:
