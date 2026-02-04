@@ -684,6 +684,15 @@ class PlanAgent(BaseAgent):
                     lines.append(f"    - 已找到: {what_found}")
                     lines.append(f"    - 未找到: {what_not_found}")
                     lines.append(f"    - 结论: {conclusion}")
+                    # 展示假设验证过程
+                    hypotheses = analysis.get('hypotheses_explored', [])
+                    if hypotheses:
+                        lines.append(f"    - 假设验证:")
+                        for h in hypotheses:
+                            if isinstance(h, dict):
+                                hyp = h.get('hypothesis', '')
+                                result = h.get('result', '')
+                                lines.append(f"      - [{result}] {hyp}")
 
             sections.append("\n".join(lines))
 

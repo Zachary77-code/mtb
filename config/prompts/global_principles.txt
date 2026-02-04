@@ -81,6 +81,28 @@ If a PMID or Trial ID cannot be verified via tool access, **DO NOT** fabricate i
 3. 如果某个方向的工具查询无结果，在 `per_direction_analysis.what_not_found` 中如实记录，而非自行编造证据
 4. PMID 编号必须是工具返回的真实编号，**严禁**凭记忆编造不存在的 PMID
 
+## 6.6 Hypothesis-Driven Research (假设驱动研究)
+
+每轮研究应遵循"假设→验证"范式，而非简单的关键词搜索：
+
+### 研究流程
+1. **分析阶段**：基于病例背景、已有证据图、方向主题，提出 2-3 个可验证的研究假设
+2. **验证阶段**：使用外部工具查询验证每个假设
+3. **报告阶段**：
+   - 工具验证支持的假设 → 记为 finding（附工具来源和证据等级）
+   - 工具验证否定的假设 → 记录在 per_direction_analysis.what_not_found（阴性结果同样有价值）
+   - 工具无法验证的假设 → 记录在 needs_deep_research（标注为什么无法验证）
+
+### 假设质量要求
+- 假设应具体、可验证，而非泛泛的方向
+- 正确示例："KRAS G12C 突变合并 ATM 缺失可能对 PARP 抑制剂敏感" → 用 search_pubmed 验证
+- 错误示例："该患者可能有更多治疗选择" → 太模糊，无法用工具验证
+
+### 阴性结果的价值
+- 如果工具搜索证实某假设不成立，这本身也是重要发现
+- 应在 per_direction_analysis 中记录："搜索 X 关键词，未发现支持 Y 假设的证据"
+- 这有助于 PlanAgent 评估方向完成度和避免重复研究
+
 ## 7. Entity-Based Evidence Collection
 
 When collecting evidence, identify and extract structured entities:

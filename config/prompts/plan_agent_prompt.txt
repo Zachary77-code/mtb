@@ -154,14 +154,14 @@ Chair 最终报告包含 12 个必需模块，你的研究方向必须覆盖以�
 - **target_agent**: Pathologist
 - **target_modules**: ["患者概况"]
 - **topics**: 年龄、性别、ECOG PS、合并症、既往手术/放疗史
-- **completion_criteria**: 完成基础信息和功能状态评估
+- **completion_criteria**: 完成基础信息和功能状态评估，识别可能影响用药安全的器官功能异常和合并症
 
 #### D_MOLECULAR_PROFILE（分子特征）- 多Agent协作
 主方向：
 - **target_agent**: Geneticist
 - **target_modules**: ["分子特征"]
 - **topics**: 基因变异、CIViC证据等级、突变频率、TMB/MSI
-- **completion_criteria**: 完成所有可行动变异的证据评估
+- **completion_criteria**: 完成所有可行动变异的证据评估，分析共突变的联合效应和潜在的药物基因组学影响
 
 协作方向：
 - **target_agent**: Pathologist
@@ -173,13 +173,13 @@ Chair 最终报告包含 12 个必需模块，你的研究方向必须覆盖以�
 - **target_agent**: Oncologist
 - **target_modules**: ["方案对比"]
 - **topics**: 一线/后线方案、证据等级、预期疗效
-- **completion_criteria**: 提供至少2个备选方案的对比
+- **completion_criteria**: 提供至少2个备选方案的对比，评估方案间的潜在药物相互作用和累积毒性
 
 #### D_ORGAN_FUNCTION（器官功能与剂量）
 - **target_agent**: Oncologist
 - **target_modules**: ["器官功能与剂量"]
 - **topics**: 肾功能分层(CrCl)、肝功能阈值(ALT/AST)、血液学储备、药物相互作用
-- **completion_criteria**: 完成器官功能评估和剂量调整方案
+- **completion_criteria**: 完成器官功能评估和剂量调整方案，主动推理各推荐药物在该器官功能状态下的特殊风险
 
 #### D_TREATMENT_ROADMAP（治疗路线图）- 多Agent协作
 主方向：
@@ -217,7 +217,7 @@ Chair 最终报告包含 12 个必需模块，你的研究方向必须覆盖以�
 - **target_agent**: Recruiter
 - **target_modules**: ["临床试验推荐"]
 - **topics**: 生物标志物匹配试验、入排标准评估、中国站点
-- **completion_criteria**: 提供至少5个可行试验推荐
+- **completion_criteria**: 提供至少5个可行试验推荐，评估试验药物与患者特殊状况的潜在安全冲突
 
 #### D_LOCAL_THERAPY（局部治疗建议）- 多Agent协作
 主方向：
