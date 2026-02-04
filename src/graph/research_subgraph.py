@@ -1356,10 +1356,15 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
 ## 输出要求
 请生成一份完整的 Markdown 格式的领域分析报告。注意：
 1. 整合所有证据，给出综合分析结论
-2. 保留所有引用（PMID、NCT 等）
-3. 明确标注证据等级 [Evidence A/B/C/D/E]
+2. **内联引用格式**：每个数据点必须使用以下格式之一进行内联引用：
+   - PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
+   - 临床试验: `[NCT04123456](https://clinicaltrials.gov/study/NCT04123456)`
+   - cBioPortal: `[cBioPortal: study](url)`
+   - CIViC: `[CIViC: variant](url)`
+   - 禁止只在末尾列出引用而正文无内联引用
+3. 每条建议必须标注证据等级 `[Evidence A/B/C/D/E]`，且紧邻相关引用
 4. 重点突出对治疗决策有指导意义的发现
-5. 不要在报告中生成证据清单表格，系统会自动追加完整的 Evidence Graph 证据清单。
+5. 不要在报告中生成证据清单表格，系统会自动追加完整的 Evidence Graph 证据清单
 """
 
         try:
@@ -1505,11 +1510,18 @@ def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
 ## 输出要求
 请生成一份完整的 Markdown 格式的肿瘤学治疗方案分析报告。注意：
 1. 整合所有证据和上游报告信息，给出综合治疗建议
-2. 保留所有引用（PMID、NCT 等）
-3. 明确标注证据等级 [Evidence A/B/C/D/E]
+2. **内联引用格式**：每个数据点必须使用以下格式之一进行内联引用：
+   - PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
+   - 临床试验: `[NCT04123456](https://clinicaltrials.gov/study/NCT04123456)`
+   - cBioPortal: `[cBioPortal: study](url)`
+   - CIViC: `[CIViC: variant](url)`
+   - NCCN: `[NCCN: guideline](url)`
+   - FDA: `[FDA: label](url)`
+   - 禁止只在末尾列出引用而正文无内联引用
+3. 每条建议必须标注证据等级 `[Evidence A/B/C/D/E]`，且紧邻相关引用
 4. 重点突出治疗方案选择、用药建议、安全性考量
 5. 包含治疗路线图和分子复查建议
-6. 不要在报告中生成证据清单表格，系统会自动追加完整的 Evidence Graph 证据清单。
+6. 不要在报告中生成证据清单表格，系统会自动追加完整的 Evidence Graph 证据清单
 """
 
     try:

@@ -145,8 +145,7 @@ class MtbState(TypedDict):
     oncologist_safety_warnings: NotRequired[List[str]]  # 安全警告列表
 
     # Chair 输出
-    chair_synthesis: NotRequired[str]  # Markdown 格式的最终综合报告
-    chair_final_references: NotRequired[List[Dict[str, str]]]  # 最终引用列表
+    chair_synthesis: NotRequired[str]  # Markdown 格式的最终综合报告（含完整证据引用列表）
 
     # ==================== 阶段 3: 格式验证 ====================
     is_compliant: NotRequired[bool]  # 是否通过格式验证

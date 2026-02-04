@@ -478,17 +478,11 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 
 ---
 
-## 12. 参考文献
+## 12. 完整证据引用列表
 
-列出报告中使用的所有引用:
-
-1. [PMID: 29151359 - FLAURA Trial](https://pubmed.ncbi.nlm.nih.gov/29151359/)
-2. [NCT04532463 - Sunvozertinib Trial](https://clinicaltrials.gov/study/NCT04532463)
-3. [NCCN Guidelines for NSCLC v5.2024](https://www.nccn.org/guidelines/guidelines-detail?category=1&id=1450)
-4. [CIViC - EGFR L858R](https://civicdb.org/variants/33)
-5. [FDA Label - Osimertinib](https://www.accessdata.fda.gov/drugsatfda_docs/label/2020/208065s014lbl.pdf)
-
-[List all references in numbered format]
+（本模块由系统从 Evidence Graph 自动生成，你不需要生成此模块。）
+系统将自动从证据图中提取所有观察（按 obs.id 去重），展示证据陈述、等级、来源 Agent 和链接。
+你只需确保模块 1-11 和 13 的内容完整。
 
 ---
 
@@ -610,7 +604,7 @@ If experts disagree:
 9. 分子特征
 10. 分子复查建议
 11. 核心建议汇总
-12. 参考文献
+12. 完整证据引用列表（系统自动生成，你不需要生成）
 13. 证据等级说明
 
 **If a section is not applicable** (e.g., no trials available), still include the section with: "Not applicable for this case."

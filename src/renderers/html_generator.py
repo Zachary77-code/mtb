@@ -372,7 +372,6 @@ class HtmlReportGenerator:
         self,
         raw_pdf_text: str,
         chair_synthesis: str,
-        references: List[Dict[str, str]],
         run_folder: str = None,
         evidence_graph_data: Dict[str, Any] = None
     ) -> str:
@@ -381,8 +380,7 @@ class HtmlReportGenerator:
 
         Args:
             raw_pdf_text: 原始病历文本（用于提取患者信息）
-            chair_synthesis: Chair 综合报告（Markdown）
-            references: 引用列表
+            chair_synthesis: Chair 综合报告（Markdown，含完整证据引用列表）
             run_folder: 本次运行的报告文件夹路径（可选，若不提供则使用默认目录）
             evidence_graph_data: 序列化的证据图字典（可选，用于 observation tooltip）
 
@@ -408,27 +406,12 @@ class HtmlReportGenerator:
         # 从原始文本提取患者信息
         patient_id, cancer_type = self._extract_patient_info(raw_pdf_text, chair_synthesis)
 
-        # 用 observation 索引丰富 reference 元数据
-        enriched_references = []
-        for ref in (references or []):
-            ref_copy = dict(ref)
-            ref_id = ref.get("id", "")
-            ref_url = ref.get("url", "")
-            obs_data = (self._observation_index.get(ref_id) or
-                        self._observation_index.get(ref_url))
-            if obs_data:
-                ref_copy.setdefault("grade", obs_data.get("grade", ""))
-                ref_copy.setdefault("source_agent", obs_data.get("source_agent", ""))
-                ref_copy.setdefault("source_tool", obs_data.get("source_tool", ""))
-            enriched_references.append(ref_copy)
-
         # 准备上下文
         context = {
             "patient_id": patient_id,
             "cancer_type": cancer_type,
             "generation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "report_content": html_content,
-            "references": enriched_references,
             "warnings": warnings
         }
 

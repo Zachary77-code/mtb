@@ -410,8 +410,7 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
     )
 
     synthesis_len = len(result["synthesis"]) if result["synthesis"] else 0
-    ref_count = len(result["references"]) if result["references"] else 0
-    logger.info(f"[CHAIR] 完成，综合报告长度: {synthesis_len} 字符，引用数: {ref_count}")
+    logger.info(f"[CHAIR] 完成，综合报告长度: {synthesis_len} 字符")
 
     # 保存完整 Markdown 报告
     run_folder = state.get("run_folder")
@@ -428,8 +427,7 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
     _print_section("[CHAIR] 输出 - 最终综合报告", result["synthesis"] or "无报告")
 
     return {
-        "chair_synthesis": result["synthesis"],
-        "chair_final_references": result["references"]
+        "chair_synthesis": result["synthesis"]
     }
 
 
@@ -491,7 +489,6 @@ def webpage_generator_node(state: MtbState) -> Dict[str, Any]:
     output_path = generator.generate(
         raw_pdf_text=state.get("raw_pdf_text", ""),
         chair_synthesis=state.get("chair_synthesis", ""),
-        references=state.get("chair_final_references", []),
         run_folder=state.get("run_folder"),  # 传递运行文件夹路径
         evidence_graph_data=state.get("evidence_graph")  # 传递证据图用于 observation tooltip
     )
@@ -501,8 +498,7 @@ def webpage_generator_node(state: MtbState) -> Dict[str, Any]:
     result_summary = f"""HTML 报告已生成！
 报告文件夹: {run_folder}
 HTML 路径: {output_path}
-综合报告长度: {len(state.get('chair_synthesis', ''))} 字符
-引用数: {len(state.get('chair_final_references', []))}"""
+综合报告长度: {len(state.get('chair_synthesis', ''))} 字符"""
     _print_section("[HTML] 生成完成", result_summary, max_len=500)
 
     logger.info(f"[HTML] 报告已保存: {output_path}")

@@ -32,7 +32,7 @@ class FormatChecker:
             "临床试验推荐": ["Clinical Trials", "临床试验", "Trial Recommendations"],
             "局部治疗建议": ["Local Therapy", "局部治疗", "Radiation", "手术"],
             "核心建议汇总": ["Core Recommendations", "建议汇总", "Key Recommendations"],
-            "参考文献": ["References", "引用", "文献"],
+            "完整证据引用列表": ["Evidence Reference List", "证据引用", "完整引用列表", "References", "参考文献"],
             "证据等级说明": ["Evidence Grading", "证据等级", "Evidence Level"]
         }
 
@@ -166,10 +166,10 @@ class FormatChecker:
 ## 2. 患者概况
 [内容]
 
-...（共 12 个章节）
+...（共 13 个章节）
 
-## 12. 参考文献
-[引用列表]
+## 12. 完整证据引用列表
+[由系统自动生成]
 """
         return feedback
 

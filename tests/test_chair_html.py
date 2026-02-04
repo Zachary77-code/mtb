@@ -380,40 +380,61 @@ class TestChairEvidenceFormatting:
         assert "Geneticist" in text
         assert "PubMed" in text
 
-    def test_inject_missing_citations_adds_table(self, chair, evidence_graph):
-        # Markdown that does NOT cite PMID:29151359 or NCT04487080
-        md = "## 报告\n引用了 [PMID: 28854312] 但没有其他引用。\n"
-        result = chair._inject_missing_citations(md, evidence_graph)
+    def test_generate_evidence_reference_list(self, chair, evidence_graph):
+        """Test that _generate_evidence_reference_list deduplicates by obs.id and includes all observations."""
+        result = chair._generate_evidence_reference_list(evidence_graph)
         assert "完整证据引用列表" in result
-        # Should contain the missing provenances
-        assert "29151359" in result or "NCT04487080" in result
+        # All 4 observations should appear (obs_test0001..obs_test0004)
+        assert "28854312" in result  # obs1 and edge_obs share same PMID but different obs.id
+        assert "29151359" in result  # obs2
+        assert "NCT04487080" in result  # obs3
+        # Should be a markdown table
+        assert "| 证据陈述 |" in result
+        assert "| # |" in result or "# |" in result
 
-    def test_inject_missing_citations_no_duplicates(self, chair, evidence_graph):
-        # Markdown that already cites ALL provenances
-        md = (
-            "## 报告\n"
-            "引用了 [PMID: 28854312] 和 [PMID: 29151359]。\n"
-            "临床试验 [NCT04487080] 也已纳入。\n"
-        )
-        result = chair._inject_missing_citations(md, evidence_graph)
-        assert "完整证据引用列表" not in result, "No missing citations should be appended"
+    def test_generate_evidence_reference_list_dedup(self, chair, evidence_graph):
+        """Observations with same obs.id should not appear twice."""
+        result = chair._generate_evidence_reference_list(evidence_graph)
+        # Count unique observation rows (lines starting with |, excluding header/separator)
+        rows = [line for line in result.split("\n") if line.startswith("| ") and "---" not in line and "证据陈述" not in line]
+        assert len(rows) == 4, f"Expected 4 unique observations, got {len(rows)}"
 
-    def test_inject_missing_citations_empty_graph(self, chair):
+    def test_generate_evidence_reference_list_empty_graph(self, chair):
         empty_graph = EvidenceGraph()
-        md = "## 报告\n内容\n"
-        result = chair._inject_missing_citations(md, empty_graph)
-        assert result == md, "Empty graph should return markdown unchanged"
+        result = chair._generate_evidence_reference_list(empty_graph)
+        assert "完整证据引用列表" in result
+        assert "暂无证据数据" in result
 
-    def test_inject_missing_citations_none_graph(self, chair):
-        md = "## 报告\n内容\n"
-        result = chair._inject_missing_citations(md, None)
-        assert result == md
+    def test_generate_evidence_reference_list_none_graph(self, chair):
+        result = chair._generate_evidence_reference_list(None)
+        assert "完整证据引用列表" in result
+        assert "暂无证据数据" in result
 
-    def test_inject_missing_nct(self, chair, evidence_graph):
-        # Cite PMIDs but not NCT
-        md = "引用了 [PMID: 28854312] 和 [PMID: 29151359]。\n"
-        result = chair._inject_missing_citations(md, evidence_graph)
-        assert "NCT04487080" in result
+    def test_generate_evidence_reference_list_sorted_by_grade(self, chair, evidence_graph):
+        """Observations should be sorted by evidence grade (A first, then B, C, etc)."""
+        result = chair._generate_evidence_reference_list(evidence_graph)
+        lines = result.split("\n")
+        data_rows = [line for line in lines if line.startswith("| ") and "---" not in line and "证据陈述" not in line]
+        # First rows should be grade A, then B, then C
+        assert "| A |" in data_rows[0] or "| A |" in data_rows[1]  # Two grade A obs
+
+    def test_format_obs_link_pmid(self, chair):
+        link = chair._format_obs_link("PMID:28854312", "https://pubmed.ncbi.nlm.nih.gov/28854312/")
+        assert "[PMID:28854312]" in link
+        assert "28854312" in link
+
+    def test_format_obs_link_nct(self, chair):
+        link = chair._format_obs_link("NCT04487080", "https://clinicaltrials.gov/study/NCT04487080")
+        assert "[NCT04487080]" in link
+
+    def test_format_obs_link_no_data(self, chair):
+        link = chair._format_obs_link("", "")
+        assert link == "-"
+
+    def test_format_obs_link_provenance_only(self, chair):
+        link = chair._format_obs_link("PMID:12345678", "")
+        assert "PMID:12345678" in link
+        assert "pubmed" in link  # Should construct URL from provenance
 
     def test_format_evidence_for_chair_sections(self, chair, evidence_graph):
         text = chair._format_evidence_for_chair(evidence_graph)
