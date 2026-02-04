@@ -208,14 +208,14 @@
     /* Treatment Timeline */
     .treatment-timeline {
       position: relative;
-      padding-left: 60px;
+      padding-left: 80px;
       margin: 20px 0;
     }
 
     .treatment-timeline::before {
       content: '';
       position: absolute;
-      left: 24px;
+      left: 30px;
       top: 0;
       bottom: 0;
       width: 2px;
@@ -231,17 +231,19 @@
 
     .treatment-marker {
       position: absolute;
-      left: -60px;
-      width: 48px;
+      left: -80px;
+      min-width: 48px;
       height: 48px;
+      padding: 0 6px;
       background: var(--primary);
       color: white;
-      border-radius: 50%;
+      border-radius: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 12px;
+      white-space: nowrap;
       z-index: 1;
     }
 

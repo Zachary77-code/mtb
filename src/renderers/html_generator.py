@@ -464,15 +464,26 @@ class HtmlReportGenerator:
         - [[ref:ID;;Title;;URL]] 内联引用（3字段，无 Note）
 
         Pipeline:
-        1. 解析自定义块标记 (:::exec-summary, :::timeline, :::roadmap) → HTML
-        2. 注入 markdown="1" 到 <div> 标签，使 md_in_html 处理其内部 markdown
+        1. 解析自定义块标记 → HTML，用占位符保护（防止 markdown 转义内部 HTML）
+        2. 注入 markdown="1" 到用户编写的 <div> 标签（自定义块已被替换为占位符，不受影响）
         3. 标准 markdown 转换（tables 扩展原生处理表格，含单元格内 **bold** 等）
-        4. 解析 [[ref:...]] 内联引用（在 markdown 转换之后，避免生成的 HTML 干扰表格解析）
+        4. 恢复自定义块 HTML
+        5. 解析 [[ref:...]] 内联引用（在 markdown 转换之后，避免生成的 HTML 干扰表格解析）
         """
-        # 1. 先解析自定义块标记
-        md_text = self._parse_custom_blocks(md_text)
+        # 1. 解析自定义块标记，输出的 HTML 用占位符保护
+        #    防止 _inject_markdown_attr_to_divs 和 markdown 处理器破坏已渲染的 HTML
+        _protected_blocks = {}
+        _block_counter = [0]
 
-        # 2. 注入 markdown="1" 到 <div> 标签
+        def _protect_block(html_block):
+            key = f'\x00CUSTOMBLOCK{_block_counter[0]}\x00'
+            _block_counter[0] += 1
+            _protected_blocks[key] = html_block
+            return key
+
+        md_text = self._parse_custom_blocks(md_text, protect_fn=_protect_block)
+
+        # 2. 注入 markdown="1" 到用户编写的 <div> 标签（自定义块已为占位符，不受影响）
         md_text = self._inject_markdown_attr_to_divs(md_text)
 
         # 3. 标准 Markdown 转换
@@ -490,7 +501,11 @@ class HtmlReportGenerator:
             ]
         )
 
-        # 4. 解析 [[ref:...]] 内联引用（post-markdown，避免 HTML 片段干扰表格解析）
+        # 4. 恢复自定义块 HTML
+        for key, value in _protected_blocks.items():
+            html = html.replace(key, value)
+
+        # 5. 解析 [[ref:...]] 内联引用（post-markdown，避免 HTML 片段干扰表格解析）
         html = self._parse_inline_refs(html)
 
         return html
@@ -510,31 +525,42 @@ class HtmlReportGenerator:
 
         return re.sub(r'<div\b[^>]*>', add_markdown_attr, md_text)
 
-    def _parse_custom_blocks(self, text: str) -> str:
-        """解析自定义块标记为 HTML"""
+    def _parse_custom_blocks(self, text: str, protect_fn=None) -> str:
+        """
+        解析自定义块标记为 HTML。
+
+        Args:
+            text: 包含 ::: 块标记的 markdown 文本
+            protect_fn: 可选回调函数。若提供，渲染后的 HTML 会传入此函数，
+                        返回占位符字符串（防止后续 markdown 处理器破坏已渲染的 HTML）。
+        """
+        def _wrap(renderer):
+            """包装渲染器，若有 protect_fn 则保护输出"""
+            def replacer(m):
+                html = renderer(m.group(1))
+                return protect_fn(html) if protect_fn else html
+            return replacer
+
         # 解析 :::exec-summary 块
-        # Fix: Make trailing newline before ::: optional with \n?
         text = re.sub(
             r':::exec-summary\s*\n(.*?)\n?:::',
-            lambda m: self._render_exec_summary(m.group(1)),
+            _wrap(self._render_exec_summary),
             text,
             flags=re.DOTALL
         )
 
         # 解析 :::timeline 块
-        # Fix: Make trailing newline before ::: optional with \n?
         text = re.sub(
             r':::timeline\s*\n(.*?)\n?:::',
-            lambda m: self._render_timeline(m.group(1)),
+            _wrap(self._render_timeline),
             text,
             flags=re.DOTALL
         )
 
         # 解析 :::roadmap 块
-        # Fix: Make trailing newline before ::: optional with \n?
         text = re.sub(
             r':::roadmap\s*\n(.*?)\n?:::',
-            lambda m: self._render_roadmap(m.group(1)),
+            _wrap(self._render_roadmap),
             text,
             flags=re.DOTALL
         )
@@ -1002,19 +1028,19 @@ class HtmlReportGenerator:
         - 裸 [NCCN: xxx] → NCCN tooltip（仅 hover）
         - markdown 生成的 <a> 引用链接 → 上标 tooltip
         """
-        # 0. 保护已有 ref-text span 内容，防止嵌套 tooltip
+        # 0. 保护已有 ref-tooltip span 整体内容，防止嵌套 tooltip
         _protected_spans = {}
         _protect_counter = [0]
 
-        def _protect_ref_text(m):
-            key = f'\x00REFTEXT{_protect_counter[0]}\x00'
+        def _protect_ref_tooltip(m):
+            key = f'\x00REFTOOLTIP{_protect_counter[0]}\x00'
             _protect_counter[0] += 1
             _protected_spans[key] = m.group(0)
             return key
 
         html = re.sub(
-            r'<span class="ref-text">.*?</span>',
-            _protect_ref_text,
+            r'<span class="ref-tooltip[^"]*">.*?</span>\s*</span>',
+            _protect_ref_tooltip,
             html,
             flags=re.DOTALL
         )
@@ -1095,7 +1121,7 @@ class HtmlReportGenerator:
             html
         )
 
-        # 5. 恢复被保护的 ref-text span 内容
+        # 5. 恢复被保护的 ref-tooltip span 内容
         for key, value in _protected_spans.items():
             html = html.replace(key, value)
 
