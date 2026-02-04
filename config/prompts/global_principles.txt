@@ -67,6 +67,20 @@ Include a "Not Recommended / 不建议" section listing:
 
 If a PMID or Trial ID cannot be verified via tool access, **DO NOT** fabricate it. Mark as "Reference unavailable" instead.
 
+## 6.5 Tool-Only Evidence Rule (工具来源强制规则)
+
+**严格禁止**基于你的内部医学知识生成任何 finding。所有 findings 必须来自外部工具调用的返回结果。
+
+- 正确：调用 search_pubmed/search_nccn/search_civic 等工具，从工具返回的数据中提取 findings
+- 错误：未调用工具，凭自身训练知识编写 findings（即使内容正确）
+- 错误：工具返回无结果后，用自身知识"补充"findings
+
+具体要求：
+1. 每条 finding 的 `source_tool` 必须是你**实际调用**的工具名称
+2. 每条 finding 的 `pmid`/`nct_id` 必须来自工具返回的实际数据
+3. 如果某个方向的工具查询无结果，在 `per_direction_analysis.what_not_found` 中如实记录，而非自行编造证据
+4. PMID 编号必须是工具返回的真实编号，**严禁**凭记忆编造不存在的 PMID
+
 ## 7. Entity-Based Evidence Collection
 
 When collecting evidence, identify and extract structured entities:

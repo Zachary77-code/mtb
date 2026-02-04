@@ -444,12 +444,13 @@ class ResearchMixin:
             "evidence_type": "molecular|clinical|literature|trial|guideline|drug|pathology|imaging",
             "grade": "A|B|C|D|E",
             "civic_type": "predictive|diagnostic|prognostic|predisposing|oncogenic",
-            "source_tool": "工具名称",
+            "source_tool": "你实际调用的工具名称（必填，严禁留空）",
             "gene": "基因名（如有）",
             "variant": "变异名（如有）",
             "drug": "药物名（如有）",
-            "pmid": "PubMed ID（如有）",
-            "nct_id": "NCT ID（如有）"{"," if is_dfrs else ""}
+            "pmid": "PubMed ID（如有，仅填数字，必须来自工具返回结果）",
+            "nct_id": "NCT ID（如有，含NCT前缀，必须来自工具返回结果）",
+            "url": "来源 URL（如有，PubMed/ClinicalTrials/cBioPortal/CIViC 页面链接）"{"," if is_dfrs else ""}
             {"\"depth_chain\": [\"引用1\", \"引用2\", \"推理步骤\"]" if is_dfrs else ""}
         }}}}
     ],
@@ -476,6 +477,13 @@ class ResearchMixin:
     "research_complete": false
 }}}}
 ```
+
+**⚠️ 工具来源强制规则**:
+- 每条 finding 必须来自你在本轮中实际调用的外部工具（search_pubmed, search_nccn, search_civic, search_cbioportal, search_clinical_trials, search_fda_labels, search_rxnorm 等）
+- source_tool 必须填写你实际调用的工具名，严禁留空或填写 "unknown"
+- 严禁基于你的内部知识编撰 findings，即使你认为内容正确
+- pmid/nct_id 必须是工具返回的真实编号，严禁凭记忆编造
+- 如果工具未返回足够结果，请在 per_direction_analysis.what_not_found 中记录缺口，而非自行补充
 
 **证据等级说明 (CIViC Evidence Level)**:
 - A: Validated - 已验证，多项独立研究或 meta 分析支持

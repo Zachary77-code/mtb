@@ -597,35 +597,32 @@ def _save_detailed_iteration_report(
             lines.append("")
 
             # 合并表格：本轮各方向执行概览
-            lines.append("| 方向 ID | 主题 | Agent | 模式 | Obs数(实体+边) | Entity数 | 状态变化 |")
-            lines.append("|---------|------|-------|------|----------------|----------|----------|")
+            lines.append("| 方向 ID | 主题 | Agent | 模式 | 证据数 | Entity数 | 状态变化 |")
+            lines.append("|---------|------|-------|------|--------|----------|----------|")
             for d in pre_plan.directions:
                 if d.target_agent in agent_names:
                     mode_disp = {"breadth_first": "BFRS", "depth_first": "DFRS", "skip": "Skip"}.get(
                         d.preferred_mode, d.preferred_mode
                     )
                     topic_short = d.topic
-                    # 计算 observation 数和 entity 数（只计算本 agent 的观察，含实体+边）
+                    # 计算 observation 数和 entity 数（按 obs.id 去重，仅本 agent，与 agent 报告一致）
                     target_agent = d.target_agent
                     entity_count = len(d.entity_ids)
                     entity_id_set = set(d.entity_ids)
-                    # 实体观察数（仅本 agent）
-                    entity_obs_count = sum(
-                        sum(1 for obs in graph.get_entity(eid).observations
-                            if obs.source_agent == target_agent)
-                        for eid in d.entity_ids
-                        if graph and graph.get_entity(eid)
-                    )
-                    # 边观察数（仅本 agent，且边的端点在该方向的 entity_ids 中）
-                    edge_obs_count = 0
+                    seen_obs_ids = set()
                     if graph:
+                        for eid in d.entity_ids:
+                            entity = graph.get_entity(eid)
+                            if entity:
+                                for obs in entity.observations:
+                                    if obs.source_agent == target_agent:
+                                        seen_obs_ids.add(obs.id)
                         for edge in graph.edges.values():
                             if edge.source_id in entity_id_set or edge.target_id in entity_id_set:
-                                edge_obs_count += sum(
-                                    1 for obs in edge.observations
-                                    if obs.source_agent == target_agent
-                                )
-                    obs_count = entity_obs_count + edge_obs_count
+                                for obs in edge.observations:
+                                    if obs.source_agent == target_agent:
+                                        seen_obs_ids.add(obs.id)
+                    obs_count = len(seen_obs_ids)
                     # 状态变化
                     post_d = post_plan.get_direction_by_id(d.id) if post_plan else None
                     pre_status = d.status.value
@@ -723,7 +720,24 @@ def _save_detailed_iteration_report(
                     if gd.get(g, 0) > 0:
                         grade_parts.append(f"{g}={gd[g]}")
                 grade_str = " ".join(grade_parts) if grade_parts else "无"
-                lines.append(f"**状态**: {status_display} | **模式**: {mode_display} | **完成度**: {stats.get('completeness', 0):.0f}% | **证据数**: {stats.get('evidence_count', 0)} | **等级分布**: {grade_str}")
+                # 计算 per-agent 去重证据数（与 agent 报告一致）
+                agent_obs_ids = set()
+                d_target_agent = d.target_agent
+                d_entity_id_set = set(d.entity_ids)
+                if graph:
+                    for eid in d.entity_ids:
+                        entity = graph.get_entity(eid)
+                        if entity:
+                            for obs in entity.observations:
+                                if obs.source_agent == d_target_agent:
+                                    agent_obs_ids.add(obs.id)
+                    for edge in graph.edges.values():
+                        if edge.source_id in d_entity_id_set or edge.target_id in d_entity_id_set:
+                            for obs in edge.observations:
+                                if obs.source_agent == d_target_agent:
+                                    agent_obs_ids.add(obs.id)
+                agent_evidence_count = len(agent_obs_ids)
+                lines.append(f"**状态**: {status_display} | **模式**: {mode_display} | **完成度**: {stats.get('completeness', 0):.0f}% | **证据数**: {agent_evidence_count} | **等级分布**: {grade_str}")
             else:
                 lines.append(f"**状态**: {status_display} | **模式**: {mode_display}")
             lines.append("")
@@ -1051,7 +1065,7 @@ def _save_detailed_iteration_report(
 
         # 方向完成度计算规则说明
         lines.append("### 方向完成度计算规则")
-        lines.append("- **证据数**: 方向关联的 Entity 数量（`len(entity_ids)`）")
+        lines.append("- **证据数**: 方向负责 Agent 的去重 Observation 数量（按 `obs.id` 去重，仅计 `source_agent == target_agent`）")
         lines.append("- **等级分布**: 每个 Observation 按其 evidence_grade 计数（按 obs.id 去重）")
         lines.append("- **完成度权重**: A=5, B=3, C=2, D=1.5, E=1")
         lines.append("- **完成度公式**: `min(100%, 加权分数 / 50 × 100%)`")
@@ -1173,9 +1187,28 @@ def _format_evidence_table(entities: List[Entity], edges: List[Edge], agent_name
             tool = obs.source_tool or ""
             prov = obs.provenance or ""
             stmt = (obs.statement or "").replace("|", "\\|")
+            # Fallback: 从 statement 中提取 provenance
+            if not prov:
+                pmid_match = re.search(r'\[?PMID[:\s]*(\d{7,9})\]?', obs.statement or "")
+                if pmid_match:
+                    prov = f"PMID:{pmid_match.group(1)}"
+                else:
+                    nct_match = re.search(r'\[?(NCT\d{8,11})\]?', obs.statement or "")
+                    if nct_match:
+                        prov = nct_match.group(1)
+            url = obs.source_url
+            # Fallback: 从 provenance 构建 URL
+            if not url and prov:
+                if prov.startswith("PMID:"):
+                    pmid_num = prov.replace("PMID:", "")
+                    url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid_num}/"
+                elif "NCT" in prov:
+                    nct_id = re.search(r'(NCT\d{8,11})', prov)
+                    if nct_id:
+                        url = f"https://clinicaltrials.gov/study/{nct_id.group(1)}"
             # 如果有 URL，生成链接
-            if obs.source_url and prov:
-                prov = f"[{prov}]({obs.source_url})"
+            if url and prov:
+                prov = f"[{prov}]({url})"
             lines.append(f"| {i} | {stmt} | {grade} | {civic} | {tool} | {prov} |")
 
         lines.append("")

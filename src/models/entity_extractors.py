@@ -441,6 +441,14 @@ class EntityExtractor:
             return f"ClinVar:{finding['clinvar_id']}"
         elif finding.get("provenance"):
             return finding["provenance"]
+        # Fallback: 从 content 文本中提取 PMID/NCT
+        content = finding.get("content", "")
+        pmid_match = re.search(r'PMID[:\s]*(\d{7,9})', content)
+        if pmid_match:
+            return f"PMID:{pmid_match.group(1)}"
+        nct_match = re.search(r'(NCT\d{8,11})', content)
+        if nct_match:
+            return f"NCT:{nct_match.group(1)}"
         return None
 
     def _extract_source_url(self, finding: Dict[str, Any]) -> Optional[str]:
@@ -453,6 +461,22 @@ class EntityExtractor:
         )
         if not url and finding.get("pmid"):
             url = f"https://pubmed.ncbi.nlm.nih.gov/{finding['pmid']}/"
+        # NCT ID URL 自动构建
+        if not url and finding.get("nct_id"):
+            nct = finding["nct_id"]
+            if not nct.startswith("NCT"):
+                nct = f"NCT{nct}"
+            url = f"https://clinicaltrials.gov/study/{nct}"
+        # Fallback: 从 content 文本中提取 PMID/NCT 构建 URL
+        if not url:
+            content = finding.get("content", "")
+            pmid_match = re.search(r'PMID[:\s]*(\d{7,9})', content)
+            if pmid_match:
+                url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid_match.group(1)}/"
+            else:
+                nct_match = re.search(r'(NCT\d{8,11})', content)
+                if nct_match:
+                    url = f"https://clinicaltrials.gov/study/{nct_match.group(1)}"
         return url
 
     def _extract_grade(self, finding: Dict[str, Any]) -> Optional[EvidenceGrade]:
