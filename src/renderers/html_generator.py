@@ -44,6 +44,9 @@ class HtmlReportGenerator:
             autoescape=True
         )
 
+        # observation 索引（用于引用 tooltip），在 generate() 中按需填充
+        self._observation_index: Dict[str, Dict[str, Any]] = {}
+
     def _ensure_templates(self):
         """确保模板文件存在"""
         report_template = self.template_dir / "report.html"
@@ -459,31 +462,53 @@ class HtmlReportGenerator:
         - :::roadmap ... ::: 治疗路线图
         - [[ref:ID;;Title;;URL;;Note]] 内联引用（4字段，兼容旧 | 分隔符）
         - [[ref:ID;;Title;;URL]] 内联引用（3字段，无 Note）
+
+        Pipeline:
+        1. 解析自定义块标记 (:::exec-summary, :::timeline, :::roadmap) → HTML
+        2. 注入 markdown="1" 到 <div> 标签，使 md_in_html 处理其内部 markdown
+        3. 标准 markdown 转换（tables 扩展原生处理表格，含单元格内 **bold** 等）
+        4. 解析 [[ref:...]] 内联引用（在 markdown 转换之后，避免生成的 HTML 干扰表格解析）
         """
         # 1. 先解析自定义块标记
         md_text = self._parse_custom_blocks(md_text)
 
-        # 2. 解析内联引用（必须在 markdown 转换之前，避免 | 分隔符与表格冲突）
-        md_text = self._parse_inline_refs_in_markdown(md_text)
-
-        # 2.5 预转换 Markdown 表格为 HTML（nl2br 会破坏表格换行符，必须在 markdown 前处理）
-        md_text = self._convert_markdown_tables(md_text)
+        # 2. 注入 markdown="1" 到 <div> 标签
+        md_text = self._inject_markdown_attr_to_divs(md_text)
 
         # 3. 标准 Markdown 转换
+        #    - tables: 原生处理 markdown 表格（含单元格内 inline markdown）
+        #    - md_in_html: 处理 <div markdown="1"> 内部的 markdown 内容
+        #    - nl2br: 作为 tree processor 在 tables block processor 之后运行，不会破坏表格
         html = markdown.markdown(
             md_text,
             extensions=[
                 'tables',
                 'fenced_code',
                 'nl2br',
-                'sane_lists'
+                'sane_lists',
+                'md_in_html'
             ]
         )
 
-        # 4. 兜底：清理可能遗漏的内联引用
+        # 4. 解析 [[ref:...]] 内联引用（post-markdown，避免 HTML 片段干扰表格解析）
         html = self._parse_inline_refs(html)
 
         return html
+
+    def _inject_markdown_attr_to_divs(self, md_text: str) -> str:
+        """
+        为 raw HTML <div> 标签注入 markdown="1" 属性。
+
+        Python markdown 默认不处理 raw HTML 块（如 <div>）内部的 markdown 内容。
+        添加 markdown="1" 属性后，md_in_html 扩展会处理这些块内的标题、表格、加粗等。
+        """
+        def add_markdown_attr(m):
+            tag = m.group(0)
+            if 'markdown=' in tag:
+                return tag  # 已有属性，跳过
+            return tag[:-1] + ' markdown="1">'
+
+        return re.sub(r'<div\b[^>]*>', add_markdown_attr, md_text)
 
     def _parse_custom_blocks(self, text: str) -> str:
         """解析自定义块标记为 HTML"""
@@ -678,7 +703,14 @@ class HtmlReportGenerator:
 
             actions_html = ''
             if actions:
-                actions_html = '<ul>' + ''.join(f'<li>{a}</li>' for a in actions) + '</ul>'
+                items = []
+                for a in actions:
+                    if isinstance(a, dict):
+                        # YAML parsed "key: value" as dict; flatten back to string
+                        items.extend(f'{k}: {v}' for k, v in a.items())
+                    else:
+                        items.append(str(a))
+                actions_html = '<ul>' + ''.join(f'<li>{item}</li>' for item in items) + '</ul>'
 
             html += f'''
             <div class="card" style="border-left: 4px solid {color};">
@@ -761,10 +793,10 @@ class HtmlReportGenerator:
 
     def _convert_markdown_tables(self, md_text: str) -> str:
         """
-        将 Markdown 表格预转换为 HTML <table>，防止 nl2br 扩展破坏表格结构。
+        [DEPRECATED] 不再使用。原生 tables 扩展已能正确处理表格。
 
-        nl2br 会在 tables 扩展之前将换行符转为 <br />，导致表格无法被识别。
-        此方法在 markdown.markdown() 之前运行，直接将表格转为 HTML。
+        原设计：将 Markdown 表格预转换为 HTML <table>，防止 nl2br 破坏表格。
+        问题：跳过了单元格内的 inline markdown（如 **bold**），且与 [[ref:]] 解析冲突。
         """
         lines = md_text.split('\n')
         result = []
@@ -794,7 +826,7 @@ class HtmlReportGenerator:
         return '\n'.join(result)
 
     def _markdown_table_to_html(self, table_lines: list) -> str:
-        """将 Markdown 表格行列表转为 HTML <table> 字符串。"""
+        """[DEPRECATED] 不再使用。由 _convert_markdown_tables 调用，现已废弃。"""
 
         def parse_row(line: str) -> list:
             """解析一行表格，返回单元格列表。"""
@@ -850,15 +882,11 @@ class HtmlReportGenerator:
 
     def _parse_inline_refs_in_markdown(self, md_text: str) -> str:
         """
-        在 markdown 转 HTML 之前解析 [[ref:...]] 引用
+        [DEPRECATED] 不再使用。[[ref:...]] 解析已移至 _parse_inline_refs()（post-markdown）。
 
-        必须在 markdown.markdown() 之前运行，避免 markdown 表格解析器
-        将 | 分隔符误认为表格列分隔符。
-
-        支持格式（按优先级）：
-        - 4字段: [[ref:ID;;Title;;URL;;Note]]
-        - 3字段: [[ref:ID;;Title;;URL]]（无 Note）
-        - 旧格式: [[ref:ID|Title|URL|Note]]（向后兼容）
+        原设计：在 markdown 转换前解析引用，避免 | 与表格冲突。
+        问题：生成的 HTML 片段干扰了后续表格单元格解析，导致 <a href="...]] 等残缺标签。
+        现在 [[ref:...]] 使用 ;; 分隔符，不与表格 | 冲突，可在 markdown 转换后安全解析。
         """
         # 4字段格式：;; 分隔符（优先匹配，避免3字段模式吞掉4字段的前3组）
         pattern_4field = r'\[\[ref:([^;]+);;([^;]+);;([^;]+);;([^\]]+)\]\]'
@@ -892,13 +920,19 @@ class HtmlReportGenerator:
 
     def _parse_inline_refs(self, html: str) -> str:
         """
-        [Legacy] 解析内联引用标记（markdown 转换后的清理）
+        解析 [[ref:...]] 内联引用标记，转换为 tooltip HTML。
 
-        注意：主要解析已移至 _parse_inline_refs_in_markdown()（在 markdown 转换前执行）。
-        此方法作为兜底，处理可能遗漏的引用。
+        在 markdown 转 HTML 之后运行。[[ref:...]] 使用 ;; 分隔符，
+        不与 markdown 表格的 | 分隔符冲突，因此可安全地在 post-markdown 阶段解析。
+
+        支持格式（按优先级）：
+        - 4字段: [[ref:ID;;Title;;URL;;Note]]
+        - 3字段: [[ref:ID;;Title;;URL]]（无 Note）
+        - 旧格式: [[ref:ID|Title|URL|Note]]（向后兼容）
         """
         # 4字段格式 ;; 分隔符
-        pattern_4field = r'\[\[ref:([^;]+);;([^;]+);;([^;]+);;([^\]]+)\]\]'
+        # 注意：中间组使用 [^;\]]+ 排除 ; 和 ]，防止跨 ]] 边界贪婪匹配多个 ref
+        pattern_4field = r'\[\[ref:([^;\]]+);;([^;\]]+);;([^;\]]+);;([^\]]+)\]\]'
 
         def replacer_4field(m):
             ref_id, title, url, note = [s.strip() for s in m.groups()]
@@ -907,7 +941,8 @@ class HtmlReportGenerator:
         html = re.sub(pattern_4field, replacer_4field, html)
 
         # 3字段格式 ;; 分隔符（无 Note）
-        pattern_3field = r'\[\[ref:([^;]+);;([^;]+);;([^\]]+)\]\]'
+        # 注意：中间组使用 [^;\]]+ 排除 ; 和 ]，防止跨 ]] 边界贪婪匹配
+        pattern_3field = r'\[\[ref:([^;\]]+);;([^;\]]+);;([^\]]+)\]\]'
 
         def replacer_3field(m):
             ref_id, title, url = [s.strip() for s in m.groups()]
@@ -967,6 +1002,23 @@ class HtmlReportGenerator:
         - 裸 [NCCN: xxx] → NCCN tooltip（仅 hover）
         - markdown 生成的 <a> 引用链接 → 上标 tooltip
         """
+        # 0. 保护已有 ref-text span 内容，防止嵌套 tooltip
+        _protected_spans = {}
+        _protect_counter = [0]
+
+        def _protect_ref_text(m):
+            key = f'\x00REFTEXT{_protect_counter[0]}\x00'
+            _protect_counter[0] += 1
+            _protected_spans[key] = m.group(0)
+            return key
+
+        html = re.sub(
+            r'<span class="ref-text">.*?</span>',
+            _protect_ref_text,
+            html,
+            flags=re.DOTALL
+        )
+
         # 1. 转换裸 [PMID: xxx]（未被 markdown 转为链接的）
         def _pmid_replacer(m):
             pmid = m.group(1)
@@ -1042,6 +1094,10 @@ class HtmlReportGenerator:
             _anchor_replacer,
             html
         )
+
+        # 5. 恢复被保护的 ref-text span 内容
+        for key, value in _protected_spans.items():
+            html = html.replace(key, value)
 
         return html
 
