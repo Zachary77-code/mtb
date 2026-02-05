@@ -190,6 +190,16 @@ def load_prompt(filename: str) -> str:
         return f.read()
 
 
+# ==================== Neo4j ========================
+NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "mtb_password")
+NEO4J_ENABLED = os.getenv("NEO4J_ENABLED", "true").lower() == "true"
+
+# ==================== Cytoscape.js ========================
+CYTOSCAPE_CDN_URL = os.getenv("CYTOSCAPE_CDN_URL", "https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js")
+CYTOSCAPE_INLINE = os.getenv("CYTOSCAPE_INLINE", "false").lower() == "true"
+
 # ==================== 调试信息 ====================
 if __name__ == "__main__":
     print("=== MTB 配置信息 ===")

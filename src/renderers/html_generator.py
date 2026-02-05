@@ -10,6 +10,7 @@ HTML 报告生成器
 """
 import os
 import re
+import json
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List
@@ -406,13 +407,28 @@ class HtmlReportGenerator:
         # 从原始文本提取患者信息
         patient_id, cancer_type = self._extract_patient_info(raw_pdf_text, chair_synthesis)
 
+        # 构建 Cytoscape.js 可视化数据
+        cytoscape_json = None
+        if evidence_graph_data and isinstance(evidence_graph_data, dict):
+            try:
+                from src.models.evidence_graph import load_evidence_graph
+                graph = load_evidence_graph(evidence_graph_data)
+                if graph and graph.entities:
+                    cytoscape_json = graph.to_cytoscape_json()
+            except Exception as e:
+                logger.warning(f"[HTML] Cytoscape 数据生成失败: {e}")
+
         # 准备上下文
         context = {
             "patient_id": patient_id,
             "cancer_type": cancer_type,
             "generation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "report_content": html_content,
-            "warnings": warnings
+            "warnings": warnings,
+            # Cytoscape.js 可视化
+            "cytoscape_data": json.dumps(cytoscape_json, ensure_ascii=False) if cytoscape_json else None,
+            "cytoscape_stats": cytoscape_json.get("stats") if cytoscape_json else None,
+            "cytoscape_cdn_url": "https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js",
         }
 
         # 渲染模板

@@ -35,5 +35,8 @@ colpali-engine>=0.3.7
 # XML 解析 (PubMed/ClinVar)
 lxml>=4.9.0
 
+# Neo4j 图数据库
+neo4j>=5.0.0
+
 # 测试（可选）
 pytest==8.3.3

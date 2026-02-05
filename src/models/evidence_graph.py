@@ -1593,6 +1593,166 @@ class EvidenceGraph:
 
         return "\n".join(lines)
 
+    def to_persistence_dict(self, phase: str = "", iteration: int = 0, checkpoint_type: str = "checkpoint") -> Dict[str, Any]:
+        """
+        序列化图 + metadata 信封，用于 JSON 持久化
+
+        Args:
+            phase: 阶段标识 ("phase1", "phase2", "final")
+            iteration: 迭代次数
+            checkpoint_type: 检查点类型 ("checkpoint", "phase_complete", "final")
+
+        Returns:
+            包含元数据和图数据的字典
+        """
+        summary = self.summary()
+        return {
+            "metadata": {
+                "version": "1.0",
+                "timestamp": datetime.now().isoformat(),
+                "phase": phase,
+                "iteration": iteration,
+                "checkpoint_type": checkpoint_type,
+                "stats": {
+                    "entity_count": summary.get("total_entities", 0),
+                    "edge_count": summary.get("total_edges", 0),
+                    "observation_count": summary.get("total_observations", 0),
+                    "entities_by_type": summary.get("entities_by_type", {}),
+                    "edges_by_predicate": summary.get("edges_by_predicate", {}),
+                }
+            },
+            "graph": self.to_dict(),
+        }
+
+    def to_cytoscape_json(self) -> Dict[str, Any]:
+        """
+        转换为 Cytoscape.js JSON 格式
+
+        Returns:
+            {
+                "elements": {
+                    "nodes": [{"data": {id, label, entity_type, best_grade, obs_count, aliases, source_agents, grade_distribution, observations}}, ...],
+                    "edges": [{"data": {id, source, target, predicate, confidence, best_grade, obs_count, observations}}, ...]
+                },
+                "stats": {entity_count, edge_count, observation_count, entities_by_type}
+            }
+        """
+        nodes = []
+        edges = []
+
+        # 证据等级排序辅助
+        grade_order = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
+
+        # 处理实体节点
+        for entity in self.entities.values():
+            # 获取最佳等级
+            best_grade = entity.get_best_grade()
+            best_grade_str = best_grade.value if best_grade else None
+
+            # 统计观察数量
+            obs_count = len(entity.observations)
+
+            # 收集唯一的源 Agent
+            source_agents = list(set(obs.source_agent for obs in entity.observations if obs.source_agent))
+
+            # 构建等级分布
+            grade_distribution = {}
+            for obs in entity.observations:
+                if obs.evidence_grade:
+                    grade_str = obs.evidence_grade.value
+                    grade_distribution[grade_str] = grade_distribution.get(grade_str, 0) + 1
+
+            # 构建观察详情列表
+            observations = []
+            for obs in entity.observations:
+                obs_detail = {
+                    "id": obs.id,
+                    "statement": obs.statement,
+                    "grade": obs.evidence_grade.value if obs.evidence_grade else None,
+                    "civic_type": obs.civic_type.value if obs.civic_type else None,
+                    "source_agent": obs.source_agent,
+                    "source_tool": obs.source_tool,
+                    "provenance": obs.provenance,
+                    "source_url": obs.source_url,
+                }
+                observations.append(obs_detail)
+
+            # 按等级排序观察（A > B > C > D > E > None）
+            observations.sort(key=lambda o: grade_order.get(o["grade"], 5) if o["grade"] else 5)
+
+            # 构建节点数据
+            node_data = {
+                "id": entity.canonical_id,
+                "label": entity.name,
+                "entity_type": entity.entity_type.value,
+                "best_grade": best_grade_str,
+                "obs_count": obs_count,
+                "aliases": entity.aliases,
+                "source_agents": source_agents,
+                "grade_distribution": grade_distribution,
+                "observations": observations
+            }
+
+            nodes.append({"data": node_data})
+
+        # 处理边
+        for edge in self.edges.values():
+            # 获取最佳等级
+            best_grade = edge.get_best_grade()
+            best_grade_str = best_grade.value if best_grade else None
+
+            # 统计观察数量
+            obs_count = len(edge.observations)
+
+            # 构建观察详情列表
+            observations = []
+            for obs in edge.observations:
+                obs_detail = {
+                    "id": obs.id,
+                    "statement": obs.statement,
+                    "grade": obs.evidence_grade.value if obs.evidence_grade else None,
+                    "civic_type": obs.civic_type.value if obs.civic_type else None,
+                    "source_agent": obs.source_agent,
+                    "source_tool": obs.source_tool,
+                    "provenance": obs.provenance,
+                    "source_url": obs.source_url,
+                }
+                observations.append(obs_detail)
+
+            # 按等级排序
+            observations.sort(key=lambda o: grade_order.get(o["grade"], 5) if o["grade"] else 5)
+
+            # 构建边数据
+            edge_data = {
+                "id": edge.id,
+                "source": edge.source_id,
+                "target": edge.target_id,
+                "predicate": edge.predicate.value,
+                "confidence": edge.confidence,
+                "best_grade": best_grade_str,
+                "obs_count": obs_count,
+                "conflict_group": edge.conflict_group,
+                "observations": observations
+            }
+
+            edges.append({"data": edge_data})
+
+        # 构建统计信息
+        summary = self.summary()
+
+        return {
+            "elements": {
+                "nodes": nodes,
+                "edges": edges
+            },
+            "stats": {
+                "entity_count": summary.get("total_entities", 0),
+                "edge_count": summary.get("total_edges", 0),
+                "observation_count": summary.get("total_observations", 0),
+                "entities_by_type": summary.get("entities_by_type", {}),
+            }
+        }
+
 
 # ==================== 便捷函数 ====================
 

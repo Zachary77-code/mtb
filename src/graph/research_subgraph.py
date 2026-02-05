@@ -36,6 +36,7 @@ from src.utils.logger import (
     log_evidence_stats,
     log_edge_stats
 )
+from src.utils.graph_persistence import checkpoint_evidence_graph
 from config.settings import (
     MAX_PHASE1_ITERATIONS,
     MAX_PHASE2_ITERATIONS,
@@ -1396,6 +1397,10 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
             reports[report_key] = f"## {agent_name} 报告\n\n报告生成异常: {str(e)}"
 
     logger.info(f"[PHASE1_REPORTS] 报告生成完成")
+
+    # 保存 Phase 1 完成检查点
+    checkpoint_evidence_graph(state, phase="phase1", iteration=state.get("phase1_iteration", 0), checkpoint_type="phase_complete")
+
     return reports
 
 
@@ -1543,6 +1548,10 @@ def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
             logger.info(f"[PHASE2_REPORTS] Oncologist 报告生成成功: {len(report)} 字符")
             # 保存到文件
             _save_agent_report(state, "4_oncologist_report.md", report)
+
+            # 保存 Phase 2 完成检查点
+            checkpoint_evidence_graph(state, phase="phase2", iteration=state.get("phase2_iteration", 0), checkpoint_type="phase_complete")
+
             return {"oncologist_plan": report}
         else:
             logger.warning("[PHASE2_REPORTS] Oncologist 报告生成失败")
@@ -1781,6 +1790,9 @@ def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
                             "direction_id": dir_id,
                             **h
                         })
+
+    # 保存检查点
+    checkpoint_evidence_graph(state, phase="phase1", iteration=new_iteration, checkpoint_type="checkpoint")
 
     return {
         "phase1_iteration": new_iteration,
@@ -2054,6 +2066,9 @@ def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
                         "direction_id": dir_id,
                         **h
                     })
+
+    # 保存检查点
+    checkpoint_evidence_graph(state, phase="phase2", iteration=new_iteration, checkpoint_type="checkpoint")
 
     return_dict = {
         "evidence_graph": updated_evidence_graph,

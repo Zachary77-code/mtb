@@ -497,6 +497,124 @@
     .content {
       padding: 24px 32px;
     }
+
+    /* ==================== Evidence Graph Visualization ==================== */
+    .evidence-graph-section {
+      margin: 32px 0;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .evidence-graph-header {
+      background: var(--bg-alt);
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+    .evidence-graph-header h2 {
+      margin: 0; border: none; padding: 0; font-size: 16px;
+    }
+    .evidence-graph-toggle {
+      font-size: 12px; color: var(--text-light);
+    }
+    .evidence-graph-body { display: none; }
+    .evidence-graph-body.active { display: block; }
+    .eg-controls {
+      padding: 12px 20px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    }
+    .eg-control-group {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .eg-control-group label {
+      font-size: 11px; color: var(--text-light);
+      text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .eg-search-input {
+      padding: 4px 8px; border: 1px solid var(--border);
+      border-radius: 3px; font-size: 12px; width: 160px;
+    }
+    .eg-filter-btn {
+      padding: 3px 8px; border: 1px solid var(--border);
+      border-radius: 3px; font-size: 11px; cursor: pointer;
+      background: var(--bg); transition: all 0.2s;
+    }
+    .eg-filter-btn.active {
+      background: var(--primary); color: white; border-color: var(--primary);
+    }
+    .eg-filter-btn:hover { border-color: var(--primary); }
+    .eg-main { display: flex; height: 600px; }
+    .eg-canvas { flex: 1; position: relative; background: #fafbfc; }
+    #eg-cytoscape { width: 100%; height: 100%; }
+    .eg-stats-overlay {
+      position: absolute; bottom: 8px; left: 8px;
+      background: rgba(255,255,255,0.9); padding: 6px 10px;
+      border-radius: 3px; font-size: 10px; color: var(--text-light);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .eg-layout-controls {
+      position: absolute; top: 8px; right: 8px; display: flex; gap: 4px;
+    }
+    .eg-layout-btn {
+      padding: 4px 8px; background: rgba(255,255,255,0.9);
+      border: 1px solid var(--border); border-radius: 3px;
+      font-size: 10px; cursor: pointer;
+    }
+    .eg-layout-btn:hover { background: var(--bg-alt); }
+    .eg-detail-panel {
+      width: 360px; border-left: 1px solid var(--border);
+      overflow-y: auto; background: var(--bg); padding: 0;
+    }
+    .eg-detail-empty {
+      padding: 40px 20px; text-align: center;
+      color: var(--text-light); font-size: 13px;
+    }
+    .eg-detail-header {
+      padding: 16px 20px; background: var(--bg-alt);
+      border-bottom: 1px solid var(--border);
+    }
+    .eg-detail-header h3 { margin: 0 0 4px 0; font-size: 14px; }
+    .eg-detail-type {
+      font-size: 11px; padding: 2px 6px; border-radius: 2px;
+      color: white; display: inline-block; margin-right: 6px;
+    }
+    .eg-detail-aliases {
+      font-size: 11px; color: var(--text-light); margin-top: 4px;
+    }
+    .eg-detail-body { padding: 12px 20px; }
+    .eg-detail-section-title {
+      font-size: 11px; color: var(--text-light);
+      text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 6px;
+    }
+    .eg-observation-item {
+      padding: 8px 10px; margin-bottom: 6px; background: var(--bg-alt);
+      border-radius: 3px; font-size: 12px; border-left: 3px solid var(--border);
+    }
+    .eg-observation-item.grade-A { border-left-color: #166534; }
+    .eg-observation-item.grade-B { border-left-color: #1e40af; }
+    .eg-observation-item.grade-C { border-left-color: #92400e; }
+    .eg-observation-item.grade-D { border-left-color: #991b1b; }
+    .eg-observation-item.grade-E { border-left-color: #6b7280; }
+    .eg-obs-meta {
+      display: flex; justify-content: space-between;
+      margin-top: 4px; font-size: 10px; color: var(--text-light);
+    }
+    .eg-obs-link {
+      color: var(--primary); text-decoration: none; font-size: 10px;
+    }
+    .eg-obs-link:hover { text-decoration: underline; }
+    .eg-edge-item {
+      padding: 8px 10px; margin-bottom: 6px; background: var(--bg-alt);
+      border-radius: 3px; font-size: 12px;
+    }
+    .eg-edge-predicate { font-weight: 600; color: var(--primary); }
+    @media print { .evidence-graph-section { display: none; } }
   </style>
 </head>
 <body>
@@ -517,6 +635,60 @@
     <div class="content">
       {{ report_content | safe }}
 
+      {% if cytoscape_data %}
+      <!-- Evidence Graph Interactive Visualization -->
+      <div class="evidence-graph-section">
+        <div class="evidence-graph-header" onclick="toggleGraphSection()">
+          <h2>Evidence Graph</h2>
+          <span class="evidence-graph-toggle" id="eg-toggle-text">
+            Click to expand |
+            {% if cytoscape_stats %}
+              {{ cytoscape_stats.entity_count }} entities, {{ cytoscape_stats.edge_count }} edges, {{ cytoscape_stats.observation_count }} observations
+            {% endif %}
+          </span>
+        </div>
+        <div class="evidence-graph-body" id="eg-body">
+          <div class="eg-controls">
+            <div class="eg-control-group">
+              <label>Search:</label>
+              <input type="text" class="eg-search-input" id="eg-search" placeholder="Search entities..." oninput="egFilterGraph()">
+            </div>
+            <div class="eg-control-group">
+              <label>Type:</label>
+              <span id="eg-type-filters"></span>
+            </div>
+            <div class="eg-control-group">
+              <label>Min Grade:</label>
+              <button class="eg-filter-btn active" data-grade="A" onclick="egSetMinGrade('A')">A</button>
+              <button class="eg-filter-btn active" data-grade="B" onclick="egSetMinGrade('B')">B</button>
+              <button class="eg-filter-btn active" data-grade="C" onclick="egSetMinGrade('C')">C</button>
+              <button class="eg-filter-btn active" data-grade="D" onclick="egSetMinGrade('D')">D</button>
+              <button class="eg-filter-btn active" data-grade="E" onclick="egSetMinGrade('E')">E</button>
+            </div>
+            <div class="eg-control-group">
+              <label>Agent:</label>
+              <span id="eg-agent-filters"></span>
+            </div>
+          </div>
+          <div class="eg-main">
+            <div class="eg-canvas">
+              <div id="eg-cytoscape"></div>
+              <div class="eg-stats-overlay" id="eg-stats">Loading...</div>
+              <div class="eg-layout-controls">
+                <button class="eg-layout-btn" onclick="egChangeLayout('cose')">Force</button>
+                <button class="eg-layout-btn" onclick="egChangeLayout('circle')">Circle</button>
+                <button class="eg-layout-btn" onclick="egChangeLayout('breadthfirst')">Tree</button>
+                <button class="eg-layout-btn" onclick="egResetView()">Reset</button>
+              </div>
+            </div>
+            <div class="eg-detail-panel" id="eg-detail">
+              <div class="eg-detail-empty">Click a node or edge to view details</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
       {% if warnings %}
       <div class="warning-box">
         <strong>⚠️ 安全警告</strong>
@@ -536,5 +708,255 @@
     </footer>
 
   </div>
+
+  {% if cytoscape_data %}
+  <script src="{{ cytoscape_cdn_url }}"></script>
+  <script>
+  (function() {
+    'use strict';
+    var GRAPH_DATA = {{ cytoscape_data | safe }};
+
+    // Color maps
+    var TYPE_COLORS = {
+      gene:      {bg: '#e1f5fe', border: '#0288d1', shape: 'ellipse'},
+      variant:   {bg: '#fff3e0', border: '#f57c00', shape: 'diamond'},
+      drug:      {bg: '#e8f5e9', border: '#388e3c', shape: 'round-rectangle'},
+      disease:   {bg: '#fce4ec', border: '#c2185b', shape: 'hexagon'},
+      pathway:   {bg: '#f3e5f5', border: '#7b1fa2', shape: 'ellipse'},
+      biomarker: {bg: '#e0f2f1', border: '#00796b', shape: 'ellipse'},
+      paper:     {bg: '#eceff1', border: '#546e7a', shape: 'rectangle'},
+      trial:     {bg: '#fff8e1', border: '#ffa000', shape: 'round-rectangle'},
+      guideline: {bg: '#e8eaf6', border: '#3f51b5', shape: 'rectangle'},
+      regimen:   {bg: '#fbe9e7', border: '#e64a19', shape: 'round-rectangle'},
+      finding:   {bg: '#f5f5f5', border: '#9e9e9e', shape: 'ellipse'}
+    };
+    var PREDICATE_COLORS = {
+      treats: '#2e7d32', sensitizes: '#1565c0', causes_resistance: '#c62828',
+      activates: '#2e7d32', inhibits: '#c62828', recommends: '#0d47a1',
+      evaluates: '#f57c00', supports: '#388e3c', contradicts: '#d32f2f',
+      associated_with: '#546e7a', biomarker_for: '#00796b', member_of: '#7b1fa2',
+      interacts_with: '#f57c00', binds: '#0288d1'
+    };
+    var GRADE_BORDER = {A: 4, B: 3, C: 2, D: 2, E: 1};
+    var GRADE_ORDER = {A:0, B:1, C:2, D:3, E:4};
+
+    // State
+    var cy = null;
+    var currentMinGrade = 'E';
+    var activeTypes = new Set();
+    var activeAgents = new Set();
+
+    function initGraph() {
+      if (typeof cytoscape === 'undefined') {
+        document.getElementById('eg-cytoscape').innerHTML = '<p style="padding:20px;color:#c62828;">Cytoscape.js failed to load.</p>';
+        return;
+      }
+      // Collect types and agents
+      var types = new Set(), agents = new Set();
+      GRAPH_DATA.elements.nodes.forEach(function(n) {
+        types.add(n.data.entity_type);
+        (n.data.source_agents || []).forEach(function(a) { agents.add(a); });
+      });
+      activeTypes = new Set(types);
+      activeAgents = new Set(agents);
+
+      // Build type filter buttons
+      var tc = document.getElementById('eg-type-filters');
+      types.forEach(function(t) {
+        var btn = document.createElement('button');
+        btn.className = 'eg-filter-btn active';
+        btn.textContent = t;
+        btn.dataset.type = t;
+        var c = (TYPE_COLORS[t] || {}).border || '#999';
+        btn.style.borderLeft = '3px solid ' + c;
+        btn.onclick = function() {
+          if (activeTypes.has(t)) { activeTypes.delete(t); btn.classList.remove('active'); }
+          else { activeTypes.add(t); btn.classList.add('active'); }
+          egFilterGraph();
+        };
+        tc.appendChild(btn);
+      });
+      // Build agent filter buttons
+      var ac = document.getElementById('eg-agent-filters');
+      agents.forEach(function(a) {
+        var btn = document.createElement('button');
+        btn.className = 'eg-filter-btn active';
+        btn.textContent = a;
+        btn.onclick = function() {
+          if (activeAgents.has(a)) { activeAgents.delete(a); btn.classList.remove('active'); }
+          else { activeAgents.add(a); btn.classList.add('active'); }
+          egFilterGraph();
+        };
+        ac.appendChild(btn);
+      });
+
+      // Cytoscape style
+      var style = [
+        { selector: 'node', style: {
+          'label': 'data(label)', 'text-valign': 'center', 'text-halign': 'center',
+          'font-size': '10px', 'text-max-width': '80px', 'text-wrap': 'ellipsis',
+          'width': function(e) { return 30 + Math.min((e.data('obs_count')||0) * 3, 30); },
+          'height': function(e) { return 30 + Math.min((e.data('obs_count')||0) * 3, 30); },
+          'background-color': function(e) { return (TYPE_COLORS[e.data('entity_type')]||{}).bg || '#f5f5f5'; },
+          'border-color': function(e) { return (TYPE_COLORS[e.data('entity_type')]||{}).border || '#999'; },
+          'border-width': function(e) { return GRADE_BORDER[e.data('best_grade')] || 1; },
+          'shape': function(e) { return (TYPE_COLORS[e.data('entity_type')]||{}).shape || 'ellipse'; }
+        }},
+        { selector: 'edge', style: {
+          'width': function(e) { return 1 + Math.min((e.data('confidence')||0.5) * 3, 4); },
+          'line-color': function(e) { return PREDICATE_COLORS[e.data('predicate')] || '#999'; },
+          'target-arrow-color': function(e) { return PREDICATE_COLORS[e.data('predicate')] || '#999'; },
+          'target-arrow-shape': 'triangle', 'curve-style': 'bezier',
+          'label': function(e) { var p = e.data('predicate')||''; return p.length > 14 ? p.substring(0,14) : p; },
+          'font-size': '8px', 'text-rotation': 'autorotate', 'text-margin-y': -8,
+          'color': '#616161', 'opacity': 0.7
+        }},
+        { selector: 'node:selected', style: { 'border-width': 4, 'border-color': '#0d47a1' }},
+        { selector: 'edge:selected', style: { 'width': 4, 'opacity': 1 }},
+        { selector: '.dimmed', style: { 'opacity': 0.15 }}
+      ];
+
+      cy = cytoscape({
+        container: document.getElementById('eg-cytoscape'),
+        elements: GRAPH_DATA.elements,
+        style: style,
+        layout: { name: 'cose', animate: false, nodeRepulsion: function(){return 8000;}, idealEdgeLength: function(){return 100;}, nodeDimensionsIncludeLabels: true, padding: 30 },
+        wheelSensitivity: 0.3, minZoom: 0.2, maxZoom: 3
+      });
+
+      cy.on('tap', 'node', function(evt) { showNodeDetail(evt.target.data()); });
+      cy.on('tap', 'edge', function(evt) { showEdgeDetail(evt.target.data()); });
+      cy.on('tap', function(evt) { if (evt.target === cy) clearDetail(); });
+      updateStats();
+    }
+
+    // DETAIL PANEL FUNCTIONS
+    function showNodeDetail(d) {
+      var panel = document.getElementById('eg-detail');
+      var tc = (TYPE_COLORS[d.entity_type]||{}).border || '#999';
+      var html = '<div class="eg-detail-header">';
+      html += '<h3>' + esc(d.label) + '</h3>';
+      html += '<span class="eg-detail-type" style="background:'+tc+'">' + d.entity_type + '</span>';
+      if (d.best_grade) html += ' <span class="evidence-tag evidence-' + d.best_grade.toLowerCase() + '">Grade ' + d.best_grade + '</span>';
+      if (d.aliases && d.aliases.length) html += '<div class="eg-detail-aliases">Aliases: ' + d.aliases.join(', ') + '</div>';
+      html += '</div><div class="eg-detail-body">';
+      html += '<div class="eg-detail-section-title">Observations (' + (d.obs_count||0) + ')</div>';
+      (d.observations || []).forEach(function(obs) {
+        var gc = obs.grade ? 'grade-'+obs.grade : '';
+        html += '<div class="eg-observation-item '+gc+'">';
+        html += '<div>' + esc(obs.statement) + '</div>';
+        html += '<div class="eg-obs-meta"><span>' + (obs.grade ? '['+obs.grade+'] ' : '') + (obs.source_agent||'') + '</span>';
+        if (obs.source_url) html += '<a class="eg-obs-link" href="'+obs.source_url+'" target="_blank">' + (obs.provenance||'Link') + '</a>';
+        else if (obs.provenance) html += '<span>'+obs.provenance+'</span>';
+        html += '</div></div>';
+      });
+      // Connected edges
+      if (cy) {
+        var edges = cy.getElementById(d.id).connectedEdges();
+        if (edges.length) {
+          html += '<div class="eg-detail-section-title">Connections (' + edges.length + ')</div>';
+          edges.forEach(function(e) {
+            var ed = e.data();
+            var other = ed.source === d.id ? cy.getElementById(ed.target).data('label') : cy.getElementById(ed.source).data('label');
+            var dir = ed.source === d.id ? ' → ' : ' ← ';
+            html += '<div class="eg-edge-item"><span class="eg-edge-predicate">' + ed.predicate + '</span>' + dir + esc(other||'') + '</div>';
+          });
+        }
+      }
+      html += '</div>';
+      panel.innerHTML = html;
+    }
+
+    function showEdgeDetail(d) {
+      var panel = document.getElementById('eg-detail');
+      var sl = cy ? cy.getElementById(d.source).data('label') : d.source;
+      var tl = cy ? cy.getElementById(d.target).data('label') : d.target;
+      var html = '<div class="eg-detail-header">';
+      html += '<h3>' + esc(d.predicate) + '</h3>';
+      html += '<div style="font-size:12px;margin-top:4px;">' + esc(sl) + ' → ' + esc(tl) + '</div>';
+      html += '<div style="font-size:11px;color:#616161;margin-top:4px;">Confidence: ' + ((d.confidence||0)*100).toFixed(0) + '%</div>';
+      if (d.best_grade) html += ' <span class="evidence-tag evidence-' + d.best_grade.toLowerCase() + '">Grade ' + d.best_grade + '</span>';
+      html += '</div><div class="eg-detail-body">';
+      html += '<div class="eg-detail-section-title">Evidence (' + (d.obs_count||0) + ')</div>';
+      (d.observations||[]).forEach(function(obs) {
+        var gc = obs.grade ? 'grade-'+obs.grade : '';
+        html += '<div class="eg-observation-item '+gc+'">';
+        html += '<div>' + esc(obs.statement) + '</div>';
+        html += '<div class="eg-obs-meta"><span>' + (obs.grade ? '['+obs.grade+'] ' : '') + (obs.source_agent||'') + '</span>';
+        if (obs.source_url) html += '<a class="eg-obs-link" href="'+obs.source_url+'" target="_blank">' + (obs.provenance||'Link') + '</a>';
+        html += '</div></div>';
+      });
+      html += '</div>';
+      panel.innerHTML = html;
+    }
+
+    function clearDetail() {
+      document.getElementById('eg-detail').innerHTML = '<div class="eg-detail-empty">Click a node or edge to view details</div>';
+    }
+
+    // FILTERING
+    window.egSetMinGrade = function(grade) {
+      currentMinGrade = grade;
+      var r = GRADE_ORDER[grade];
+      document.querySelectorAll('[data-grade]').forEach(function(btn) {
+        btn.classList.toggle('active', GRADE_ORDER[btn.dataset.grade] <= r);
+      });
+      egFilterGraph();
+    };
+    window.egFilterGraph = function() {
+      if (!cy) return;
+      var q = (document.getElementById('eg-search').value||'').toUpperCase().trim();
+      var mgr = GRADE_ORDER[currentMinGrade];
+      cy.batch(function() {
+        cy.elements().removeClass('dimmed');
+        cy.nodes().forEach(function(n) {
+          var d = n.data(), vis = true;
+          if (!activeTypes.has(d.entity_type)) vis = false;
+          if (vis && d.best_grade && GRADE_ORDER[d.best_grade] > mgr) vis = false;
+          if (vis && d.source_agents && d.source_agents.length > 0) {
+            if (!d.source_agents.some(function(a){return activeAgents.has(a);})) vis = false;
+          }
+          if (vis && q) {
+            var match = (d.label||'').toUpperCase().indexOf(q) >= 0 || (d.id||'').toUpperCase().indexOf(q) >= 0 ||
+              (d.aliases||[]).some(function(a){return a.toUpperCase().indexOf(q)>=0;});
+            if (!match) vis = false;
+          }
+          if (!vis) n.addClass('dimmed');
+        });
+        cy.edges().forEach(function(e) {
+          if (cy.getElementById(e.data('source')).hasClass('dimmed') || cy.getElementById(e.data('target')).hasClass('dimmed')) e.addClass('dimmed');
+        });
+      });
+      updateStats();
+    };
+
+    // LAYOUT
+    window.egChangeLayout = function(name) {
+      if (!cy) return;
+      var opts = {name: name, animate: true, animationDuration: 500};
+      if (name === 'cose') { opts.nodeRepulsion = function(){return 8000;}; opts.idealEdgeLength = function(){return 100;}; opts.nodeDimensionsIncludeLabels = true; }
+      if (name === 'breadthfirst') { opts.directed = true; opts.spacingFactor = 1.2; }
+      cy.layout(opts).run();
+    };
+    window.egResetView = function() { if (cy) cy.fit(undefined, 30); };
+
+    // TOGGLE
+    window.toggleGraphSection = function() {
+      var body = document.getElementById('eg-body');
+      body.classList.toggle('active');
+      if (body.classList.contains('active') && !cy) initGraph();
+    };
+
+    // HELPERS
+    function updateStats() {
+      if (!cy) return;
+      var vn = cy.nodes().not('.dimmed').length, tn = cy.nodes().length;
+      var ve = cy.edges().not('.dimmed').length, te = cy.edges().length;
+      document.getElementById('eg-stats').textContent = 'Showing ' + vn + '/' + tn + ' entities, ' + ve + '/' + te + ' edges';
+    }
+    function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+  })();
+  </script>
+  {% endif %}
 </body>
 </html>

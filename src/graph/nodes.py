@@ -2,6 +2,7 @@
 LangGraph 节点函数
 """
 import re
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any
@@ -16,6 +17,7 @@ from src.agents.chair import ChairAgent
 from src.agents.plan_agent import PlanAgent
 from src.models.evidence_graph import create_evidence_graph, load_evidence_graph
 from src.utils.logger import mtb_logger as logger
+from src.utils.graph_persistence import checkpoint_evidence_graph
 
 
 def _create_run_folder(patient_id: str = "unknown") -> Path:
@@ -124,6 +126,11 @@ def plan_agent_node(state: MtbState) -> Dict[str, Any]:
     # 初始化 Evidence Graph
     evidence_graph = create_evidence_graph()
 
+    # 生成 run_id（用于跟踪和 Neo4j 同步）
+    patient_id = _extract_patient_id(raw_pdf_text)
+    run_id = f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{patient_id}"
+    logger.info(f"[PLAN_AGENT] 生成 run_id: {run_id}")
+
     # 打印输出摘要
     q_count = len(research_plan.get("questions", []))
     d_count = len(research_plan.get("directions", []))
@@ -142,7 +149,9 @@ def plan_agent_node(state: MtbState) -> Dict[str, Any]:
         "research_mode": "breadth_first",  # 初始模式
         "phase1_iteration": 0,
         "phase2_iteration": 0,
-        "research_converged": False
+        "research_converged": False,
+        "run_id": run_id,
+        "patient_id": patient_id
     }
 
 
@@ -502,6 +511,9 @@ HTML 路径: {output_path}
     _print_section("[HTML] 生成完成", result_summary, max_len=500)
 
     logger.info(f"[HTML] 报告已保存: {output_path}")
+
+    # 保存最终证据图检查点
+    checkpoint_evidence_graph(state, phase="final", iteration=0, checkpoint_type="final")
 
     return {
         "output_path": output_path
