@@ -61,11 +61,11 @@ MAX_RETRY_ITERATIONS = int(os.getenv("MAX_RETRY_ITERATIONS", "2"))
 
 # ==================== DeepEvidence 模型配置 ====================
 # Subgraph 内 Agent 使用 flash 模型（Pathologist, Geneticist, Recruiter, Oncologist）
-SUBGRAPH_MODEL = os.getenv("SUBGRAPH_MODEL", "google/gemini-3-flash-preview")
+SUBGRAPH_MODEL = os.getenv("SUBGRAPH_MODEL", "moonshotai/kimi-k2.5")
 # 编排 Agent 使用 pro 模型（PlanAgent, ChairAgent）
-ORCHESTRATOR_MODEL = os.getenv("ORCHESTRATOR_MODEL", "google/gemini-3-pro-preview")
+ORCHESTRATOR_MODEL = os.getenv("ORCHESTRATOR_MODEL", "anthropic/claude-opus-4.5")
 # 收敛判断 Agent 使用 pro 模型（ConvergenceJudgeAgent）
-CONVERGENCE_JUDGE_MODEL = os.getenv("CONVERGENCE_JUDGE_MODEL", "google/gemini-3-pro-preview")
+CONVERGENCE_JUDGE_MODEL = os.getenv("CONVERGENCE_JUDGE_MODEL", "anthropic/claude-opus-4.5")
 
 # ==================== Reasoning 配置 ====================
 # 启用 LLM 推理输出（reasoning tokens），用于工具调用报告
