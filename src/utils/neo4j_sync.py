@@ -24,18 +24,20 @@ from src.utils.logger import mtb_logger as logger
 class Neo4jSync:
     """Neo4j 同步层"""
 
-    def __init__(self, uri: str, user: str, password: str):
+    def __init__(self, uri: str, user: str, password: str, database: str = "neo4j"):
         """
         初始化 Neo4j 连接
 
         Args:
-            uri: Neo4j URI (bolt://localhost:7687)
+            uri: Neo4j URI (neo4j://127.0.0.1:7687)
             user: Neo4j 用户名
             password: Neo4j 密码
+            database: 数据库名（默认 neo4j）
         """
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
+        self.database = database
         self.ensure_schema()
-        logger.info(f"[NEO4J] Connected to {uri}")
+        logger.info(f"[NEO4J] Connected to {uri}, database={database}")
 
     def close(self):
         """关闭驱动连接"""
@@ -54,7 +56,7 @@ class Neo4jSync:
         - run_unique on Run.run_id
         - Indexes on entity_type, grade, source_agent
         """
-        with self.driver.session() as session:
+        with self.driver.session(database=self.database) as session:
             # 约束（唯一性）
             constraints = [
                 "CREATE CONSTRAINT entity_unique IF NOT EXISTS FOR (e:Entity) REQUIRE e.canonical_id IS UNIQUE",
@@ -104,7 +106,7 @@ class Neo4jSync:
         start_time = datetime.now()
         logger.info(f"[NEO4J] Syncing graph for run_id={run_id}, patient_id={patient_id}, phase={phase}")
 
-        with self.driver.session() as session:
+        with self.driver.session(database=self.database) as session:
             # 1. MERGE Run 节点
             session.execute_write(self._sync_run, run_id, patient_id, phase)
 
@@ -272,7 +274,7 @@ class Neo4jSync:
         Returns:
             实体信息及其跨运行的所有观察
         """
-        with self.driver.session() as session:
+        with self.driver.session(database=self.database) as session:
             query = """
             MATCH (e:Entity {canonical_id: $canonical_id})
             OPTIONAL MATCH (e)-[:HAS_OBS]->(o:Observation)
@@ -308,7 +310,7 @@ class Neo4jSync:
         Returns:
             完整图数据（entities, edges, observations）
         """
-        with self.driver.session() as session:
+        with self.driver.session(database=self.database) as session:
             query = """
             MATCH (r:Run {run_id: $run_id})-[:CONTAINS]->(e:Entity)
             OPTIONAL MATCH (e)-[:HAS_OBS]->(o:Observation)
@@ -348,7 +350,7 @@ class Neo4jSync:
         Returns:
             节点和关系数量统计
         """
-        with self.driver.session() as session:
+        with self.driver.session(database=self.database) as session:
             query = """
             MATCH (r:Run) WITH count(r) as runs
             MATCH (e:Entity) WITH runs, count(e) as entities

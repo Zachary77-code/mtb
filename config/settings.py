@@ -194,6 +194,7 @@ def load_prompt(filename: str) -> str:
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "mtb_password")
+NEO4J_DATABASE = os.getenv("NEO4J_DATABASE", "neo4j")  # 默认数据库名
 NEO4J_ENABLED = os.getenv("NEO4J_ENABLED", "true").lower() == "true"
 
 # ==================== Cytoscape.js ========================

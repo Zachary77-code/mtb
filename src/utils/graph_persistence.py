@@ -125,7 +125,7 @@ def checkpoint_evidence_graph(
     Returns:
         是否成功
     """
-    from config.settings import NEO4J_ENABLED, NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
+    from config.settings import NEO4J_ENABLED, NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, NEO4J_DATABASE
 
     # 获取必要字段
     evidence_graph_data = state.get("evidence_graph")
@@ -170,7 +170,7 @@ def checkpoint_evidence_graph(
                     patient_id = "_".join(parts[1:])
 
             # 同步到 Neo4j
-            neo4j = Neo4jSync(NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD)
+            neo4j = Neo4jSync(NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, NEO4J_DATABASE)
             try:
                 neo4j.sync_graph(
                     evidence_graph=graph,
