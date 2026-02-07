@@ -4,7 +4,11 @@ cBioPortal API 客户端
 提供突变频率和癌症基因组数据查询 (替代 COSMIC)
 API 文档: https://www.cbioportal.org/api/swagger-ui/index.html
 """
+import time
+import threading
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from typing import Dict, List, Any, Optional
 from src.utils.logger import mtb_logger as logger
 
@@ -14,12 +18,68 @@ class cBioPortalClient:
 
     BASE_URL = "https://www.cbioportal.org/api"
 
+    # 类级别速率限制（跨实例共享）
+    _rate_lock = threading.Lock()
+    _last_request_time = 0.0
+    _min_interval = 2.0  # 所有实例共享：每 2 秒最多 1 个请求
+
+    # 类级别基因信息缓存（跨实例共享，避免重复查询同一基因）
+    _gene_cache: Dict[str, Optional[Dict]] = {}
+    _gene_cache_lock = threading.Lock()
+
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
             "Accept": "application/json"
         })
+        # cBioPortal 限流较激进，使用较大的退避因子 (3s → 6s → 12s)
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=3,
+            status_forcelist=[500, 502, 503, 504],  # 429 由 _request() 手动处理
+            allowed_methods=["GET", "POST"],
+            raise_on_status=False,
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
         self._cancer_types_cache = None
+
+    def _rate_limit(self):
+        """全局速率限制 - 所有 cBioPortalClient 实例共享"""
+        with cBioPortalClient._rate_lock:
+            elapsed = time.time() - cBioPortalClient._last_request_time
+            if elapsed < cBioPortalClient._min_interval:
+                wait = cBioPortalClient._min_interval - elapsed
+                logger.debug(f"[cBioPortal] 速率限制等待 {wait:.1f}s")
+                time.sleep(wait)
+            cBioPortalClient._last_request_time = time.time()
+
+    def _request(self, method: str, url: str, max_retries: int = 3, **kwargs) -> requests.Response:
+        """带 429 反应式退避的请求方法
+
+        - 每次请求前调用 _rate_limit() 主动限速
+        - 收到 429 时读取 Retry-After（默认 30s），推迟所有线程后重试
+        """
+        response = None
+        for attempt in range(max_retries + 1):
+            self._rate_limit()
+            response = self.session.request(method, url, **kwargs)
+            if response.status_code != 429:
+                return response
+            # 429: 读 Retry-After 或默认 30s，推迟所有线程
+            retry_after = int(response.headers.get("Retry-After", 30))
+            logger.warning(
+                f"[cBioPortal] 429 限流，等待 {retry_after}s "
+                f"(重试 {attempt + 1}/{max_retries})"
+            )
+            with cBioPortalClient._rate_lock:
+                # 将 _last_request_time 推到未来，阻止其他线程在退避期间发请求
+                cBioPortalClient._last_request_time = (
+                    time.time() + retry_after - cBioPortalClient._min_interval
+                )
+            time.sleep(retry_after)
+        return response  # 返回最后一个 429 response
 
     def get_cancer_types(self) -> List[Dict]:
         """获取所有癌症类型"""
@@ -29,7 +89,7 @@ class cBioPortalClient:
         url = f"{self.BASE_URL}/cancer-types"
 
         try:
-            response = self.session.get(url, timeout=15)
+            response = self._request("GET", url, timeout=15)
             response.raise_for_status()
             self._cancer_types_cache = response.json()
             return self._cancer_types_cache
@@ -39,7 +99,7 @@ class cBioPortalClient:
 
     def search_gene(self, gene_name: str) -> Optional[Dict]:
         """
-        搜索基因信息
+        搜索基因信息（带缓存）
 
         Args:
             gene_name: 基因名称 (如 EGFR)
@@ -47,18 +107,29 @@ class cBioPortalClient:
         Returns:
             基因信息 {entrezGeneId, hugoGeneSymbol}
         """
+        cache_key = gene_name.upper()
+        with cBioPortalClient._gene_cache_lock:
+            if cache_key in cBioPortalClient._gene_cache:
+                logger.debug(f"[cBioPortal] 基因缓存命中: {gene_name}")
+                return cBioPortalClient._gene_cache[cache_key]
+
         url = f"{self.BASE_URL}/genes/{gene_name}"
 
         try:
             logger.debug(f"[cBioPortal] 搜索基因: {gene_name}")
-            response = self.session.get(url, timeout=15)
+            response = self._request("GET", url, timeout=15)
 
             if response.status_code == 404:
                 logger.info(f"[cBioPortal] 未找到基因: {gene_name}")
+                with cBioPortalClient._gene_cache_lock:
+                    cBioPortalClient._gene_cache[cache_key] = None
                 return None
 
             response.raise_for_status()
-            return response.json()
+            result = response.json()
+            with cBioPortalClient._gene_cache_lock:
+                cBioPortalClient._gene_cache[cache_key] = result
+            return result
 
         except Exception as e:
             logger.error(f"[cBioPortal] 搜索基因失败: {e}")
@@ -92,12 +163,10 @@ class cBioPortalClient:
             "top_mutations": []
         }
 
-        # 使用大型研究直接获取突变
+        # 使用大型泛癌研究获取突变（覆盖 50-62 癌种，~36,700 样本）
         major_study_ids = [
-            "msk_impact_2017",           # MSK-IMPACT Clinical Sequencing (10,945 样本)
-            "pancan_mimsi_msk_2024",     # MSK Mixed Tumors MiMSI (5,033 样本)
-            "brca_metabric",             # METABRIC Breast Cancer (2,433 样本)
-            "mds_iwg_2022",              # MDS International Working Group (3,323 样本)
+            "msk_met_2021",              # MSK MetTropism (25,775 样本，50 种肿瘤类型)
+            "msk_impact_2017",           # MSK-IMPACT (10,945 样本，62 种癌症类型)
         ]
 
         all_mutations = []
@@ -150,7 +219,7 @@ class cBioPortalClient:
             params["keyword"] = cancer_type
 
         try:
-            response = self.session.get(url, params=params, timeout=30)
+            response = self._request("GET", url, params=params, timeout=30)
             response.raise_for_status()
             studies = response.json()
 
@@ -178,8 +247,8 @@ class cBioPortalClient:
         }
 
         try:
-            response = self.session.post(
-                url,
+            response = self._request(
+                "POST", url,
                 json=body,
                 headers={"Content-Type": "application/json"},
                 timeout=30
@@ -274,6 +343,26 @@ class cBioPortalClient:
             "by_cancer_type": mutation_data.get("by_cancer_type", {}),
             "cbioportal_url": f"https://www.cbioportal.org/results?cancer_study_list=msk_impact_2017&gene_list={gene}&tab=summary"
         }
+
+
+# ==================== 全局单例 ====================
+_cbioportal_client_instance: cBioPortalClient = None
+_cbioportal_client_lock = threading.Lock()
+
+
+def get_cbioportal_client() -> cBioPortalClient:
+    """
+    获取全局 cBioPortalClient 单例
+
+    所有 Agent 共享同一个实例和速率限制器，避免并行请求超出 cBioPortal 限制。
+    """
+    global _cbioportal_client_instance
+    if _cbioportal_client_instance is None:
+        with _cbioportal_client_lock:
+            if _cbioportal_client_instance is None:
+                _cbioportal_client_instance = cBioPortalClient()
+                logger.info("[cBioPortal] 初始化全局单例")
+    return _cbioportal_client_instance
 
 
 if __name__ == "__main__":

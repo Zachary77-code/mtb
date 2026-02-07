@@ -266,35 +266,50 @@ class EntityExtractor:
 
         # 使用 SUBGRAPH_MODEL
         try:
-            from config.settings import SUBGRAPH_MODEL
-            model_id = SUBGRAPH_MODEL or "google/gemini-2.0-flash-001"
+            from config.settings import SUBGRAPH_MODEL, MAX_TOKENS_SUBGRAPH
+            model_id = SUBGRAPH_MODEL or "google/gemini-3-flash-preview"
+            max_tokens = MAX_TOKENS_SUBGRAPH
         except ImportError:
-            model_id = "google/gemini-2.0-flash-001"
+            model_id = "google/gemini-3-flash-preview"
+            max_tokens = 65536
 
-        try:
-            response = requests.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": model_id,
-                    "messages": [
-                        {"role": "system", "content": self.SYSTEM_PROMPT},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    "temperature": 0.2
-                },
-                timeout=60
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data.get("choices", [{}])[0].get("message", {}).get("content", "{}")
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": model_id,
+                        "messages": [
+                            {"role": "system", "content": self.SYSTEM_PROMPT},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        "temperature": 0.2,
+                        "max_tokens": max_tokens,
+                    },
+                    timeout=60
+                )
+                response.raise_for_status()
+                data = response.json()
+                return data.get("choices", [{}])[0].get("message", {}).get("content", "{}")
 
-        except Exception as e:
-            logger.error(f"[EntityExtractor] LLM call failed: {e}")
-            return "{}"
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"[EntityExtractor] LLM 请求失败 ({type(e).__name__})，重试 ({attempt + 1}/{max_retries - 1})...")
+                else:
+                    logger.error(f"[EntityExtractor] LLM 请求失败，重试已用尽: {e}")
+                    return "{}"
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"[EntityExtractor] LLM 调用失败，重试 ({attempt + 1}/{max_retries - 1}): {e}")
+                else:
+                    logger.error(f"[EntityExtractor] LLM 调用失败，重试已用尽: {e}")
+                    return "{}"
+        return "{}"
 
     def _parse_response(
         self,

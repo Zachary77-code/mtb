@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional, List
 from src.tools.base_tool import BaseTool
 from src.tools.api_clients.civic_client import CIViCClient
 from src.tools.api_clients.ncbi_client import get_ncbi_client
-from src.tools.api_clients.cbioportal_client import cBioPortalClient
+from src.tools.api_clients.cbioportal_client import get_cbioportal_client
 from src.utils.logger import mtb_logger as logger
 
 
@@ -231,7 +231,7 @@ class cBioPortalTool(BaseTool):
             name="search_cbioportal",
             description="查询 cBioPortal 获取变异在特定肿瘤类型的频率"
         )
-        self.client = cBioPortalClient()
+        self.client = get_cbioportal_client()
 
     def _call_real_api(
         self,

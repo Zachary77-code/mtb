@@ -7,6 +7,8 @@ GraphiQL: https://civicdb.org/api/graphiql
 许可证: CC0 (公共领域)
 """
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from typing import Dict, List, Any, Optional
 from src.utils.logger import mtb_logger as logger
 
@@ -22,6 +24,16 @@ class CIViCClient:
             "Accept": "application/json",
             "Content-Type": "application/json"
         })
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET", "POST"],
+            raise_on_status=False,
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
 
     def _execute_query(self, query: str, variables: Dict = None) -> Optional[Dict]:
         """执行 GraphQL 查询"""

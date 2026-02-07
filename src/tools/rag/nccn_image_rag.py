@@ -66,7 +66,8 @@ class NCCNImageRag:
             NCCN_IMAGE_READER_MODEL, NCCN_IMAGE_READER_TEMPERATURE,
             NCCN_IMAGE_READER_TIMEOUT, NCCN_IMAGE_RENDER_SCALE,
             NCCN_IMAGE_SCORE_THRESHOLD,
-            OPENROUTER_API_KEY, OPENROUTER_BASE_URL, NCCN_PDF_DIR
+            OPENROUTER_API_KEY, OPENROUTER_BASE_URL, NCCN_PDF_DIR,
+            MAX_TOKENS_ORCHESTRATOR,
         )
 
         self.index_root = Path(index_root) if index_root else NCCN_IMAGE_VECTOR_DIR
@@ -80,6 +81,7 @@ class NCCNImageRag:
         self.reader_model = NCCN_IMAGE_READER_MODEL
         self.reader_temperature = NCCN_IMAGE_READER_TEMPERATURE
         self.reader_timeout = NCCN_IMAGE_READER_TIMEOUT
+        self.reader_max_tokens = MAX_TOKENS_ORCHESTRATOR
         self.render_scale = NCCN_IMAGE_RENDER_SCALE
         self.score_threshold = NCCN_IMAGE_SCORE_THRESHOLD
         self.api_key = OPENROUTER_API_KEY
@@ -594,7 +596,7 @@ Language: Respond in the same language as the user's question."""
             "model": self.reader_model,
             "messages": messages,
             "temperature": self.reader_temperature,
-            "max_tokens": 8192,
+            "max_tokens": self.reader_max_tokens,
         }
 
         logger.info(

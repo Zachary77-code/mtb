@@ -23,6 +23,7 @@ from config.settings import (
     OPENROUTER_API_KEY,
     OPENROUTER_BASE_URL,
     SUBGRAPH_MODEL,  # 使用 flash 模型降低成本
+    MAX_TOKENS_SUBGRAPH,
     DEFAULT_YEAR_WINDOW,
     PUBMED_BROAD_SEARCH_COUNT,
     PUBMED_BUCKET_QUOTAS,
@@ -232,7 +233,7 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
         self.ncbi_client = get_ncbi_client()
         self.model = SUBGRAPH_MODEL
 
-    def _call_llm(self, prompt: str, max_tokens: int = None) -> str:
+    def _call_llm(self, prompt: str, max_tokens: int = MAX_TOKENS_SUBGRAPH) -> str:
         """Call LLM (using flash model to reduce cost)"""
         headers = {
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
@@ -241,10 +242,9 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
         payload = {
             "model": self.model,
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.1  # 低温度确保稳定输出
+            "temperature": 0.1,  # 低温度确保稳定输出
+            "max_tokens": max_tokens,
         }
-        if max_tokens is not None:
-            payload["max_tokens"] = max_tokens
 
         # 重试逻辑
         max_retries = 3
@@ -308,7 +308,7 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
         failed_str = "\n".join(f"  - {q}" for q in failed_queries) if failed_queries else "(none)"
 
         prompt = prompt_template.format(query=query, failed_queries=failed_str)
-        result = self._call_llm(prompt, max_tokens=400)
+        result = self._call_llm(prompt)
 
         if not result:
             result = self._fallback_query_cleanup(query)
@@ -468,7 +468,6 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
             articles_json=json.dumps(articles_for_eval, ensure_ascii=False)
         )
 
-        # 调用 LLM（不限制 max_tokens，让模型完整输出所有文章评估）
         response = self._call_llm(prompt)
 
         # 解析返回的 JSON 数组
@@ -497,9 +496,35 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
             logger.debug(f"[SmartPubMed] 批次 {batch_idx}: {len(articles_for_eval)} -> {len(filtered)} 篇相关")
 
         except json.JSONDecodeError as e:
-            logger.error(f"[SmartPubMed] 批次 {batch_idx} JSON 解析失败: {e}")
-            logger.error(f"[SmartPubMed] 原始响应: {response[:500]}...")
-            raise ValueError(f"LLM 返回无效 JSON: {e}")
+            logger.warning(f"[SmartPubMed] 批次 {batch_idx} JSON 解析失败，尝试部分解析: {e}")
+            # 尝试截取到最后一个完整对象，挽救已评估的文章
+            last_complete = response.rfind("}")
+            if last_complete > 0:
+                truncated = response[:last_complete + 1].rstrip(",\n\r\t ") + "]"
+                try:
+                    evaluations = json.loads(truncated)
+                    if not isinstance(evaluations, list):
+                        evaluations = [evaluations]
+                    for eval_result in evaluations:
+                        pmid = str(eval_result.get("pmid", ""))
+                        is_relevant = eval_result.get("is_relevant", False)
+                        score = eval_result.get("relevance_score", 0)
+                        if pmid in pmid_to_article and is_relevant and score >= 5:
+                            article = pmid_to_article[pmid]
+                            article["relevance_score"] = score
+                            article["matched_criteria"] = eval_result.get("matched_criteria", [])
+                            article["key_findings"] = eval_result.get("key_findings", "")
+                            llm_study_type = eval_result.get("study_type", "")
+                            if llm_study_type in self.MTB_EVIDENCE_BUCKETS:
+                                article["llm_study_type"] = llm_study_type
+                            filtered.append(article)
+                    logger.info(f"[SmartPubMed] 批次 {batch_idx} 部分解析成功: 挽救 {len(filtered)} 篇")
+                except json.JSONDecodeError:
+                    logger.error(f"[SmartPubMed] 批次 {batch_idx} 部分解析也失败")
+                    logger.error(f"[SmartPubMed] 原始响应: {response[:500]}...")
+            else:
+                logger.error(f"[SmartPubMed] 批次 {batch_idx} 无法部分解析")
+                logger.error(f"[SmartPubMed] 原始响应: {response[:500]}...")
 
         return filtered
 

@@ -5,6 +5,8 @@ openFDA API 客户端
 API 文档: https://open.fda.gov/apis/drug/label/
 """
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from typing import Dict, List, Any, Optional
 from src.utils.logger import mtb_logger as logger
 
@@ -23,6 +25,16 @@ class FDAClient:
         """
         self.api_key = api_key
         self.session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET", "POST"],
+            raise_on_status=False,
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
 
     def search_drug_label(self, drug_name: str) -> Optional[Dict]:
         """

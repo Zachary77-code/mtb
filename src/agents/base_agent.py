@@ -25,6 +25,9 @@ from config.settings import (
     CONVERGENCE_JUDGE_MODEL,
     ORCHESTRATOR_REASONING_EFFORT,
     SUBGRAPH_REASONING_EFFORT,
+    MAX_TOKENS_MAIN,
+    MAX_TOKENS_SUBGRAPH,
+    MAX_TOKENS_ORCHESTRATOR,
 )
 from src.utils.logger import mtb_logger as logger, log_tool_call
 
@@ -182,10 +185,19 @@ class BaseAgent:
             "Content-Type": "application/json",
         }
 
+        # 根据模型选择 max_tokens（max output tokens）
+        if self.model == SUBGRAPH_MODEL:
+            max_tokens = MAX_TOKENS_SUBGRAPH
+        elif self.model in (ORCHESTRATOR_MODEL, CONVERGENCE_JUDGE_MODEL):
+            max_tokens = MAX_TOKENS_ORCHESTRATOR
+        else:
+            max_tokens = MAX_TOKENS_MAIN
+
         payload = {
             "model": self.model,
             "messages": messages,
-            "temperature": self.temperature
+            "temperature": self.temperature,
+            "max_tokens": max_tokens,
         }
 
         # 根据模型选择 reasoning effort（Pro → high, Flash → medium）

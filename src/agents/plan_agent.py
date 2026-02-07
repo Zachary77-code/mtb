@@ -224,7 +224,8 @@ class PlanAgent(BaseAgent):
             plan = create_research_plan(
                 case_summary=data.get("case_summary", ""),
                 key_entities=data.get("key_entities", {}),
-                directions=directions
+                directions=directions,
+                nccn_guideline_index=data.get("nccn_guideline_index"),
             )
 
             # 验证模块覆盖
