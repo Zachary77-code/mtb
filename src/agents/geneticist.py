@@ -4,7 +4,7 @@ Geneticist Agent（遗传学家）
 from typing import Dict, Any
 
 from src.agents.base_agent import BaseAgent
-from src.tools.molecular_tools import CIViCTool, ClinVarTool, cBioPortalTool
+from src.tools.molecular_tools import CIViCTool, ClinVarTool, GDCTool
 from src.tools.literature_tools import PubMedTool
 from config.settings import GENETICIST_PROMPT_FILE
 
@@ -14,14 +14,14 @@ class GeneticistAgent(BaseAgent):
     遗传学家 Agent
 
     分析分子图谱，确定变异的可操作性和证据等级。
-    使用 CIViC (替代 OncoKB), ClinVar, cBioPortal (替代 COSMIC), PubMed 工具。
+    使用 CIViC (替代 OncoKB), ClinVar, GDC (NCI Genomic Data Commons), PubMed 工具。
     """
 
     def __init__(self):
         tools = [
             CIViCTool(),      # 替代 OncoKB，提供变异证据等级
             ClinVarTool(),    # 变异致病性分类
-            cBioPortalTool(), # 替代 COSMIC，提供突变频率
+            GDCTool(),        # NCI GDC，提供突变频率（TCGA/ICGC 数据）
             PubMedTool()      # 文献检索
         ]
 
@@ -54,7 +54,7 @@ class GeneticistAgent(BaseAgent):
 2. 提取免疫标志物信息（MSI状态、TMB、PD-L1等）
 3. 使用 search_civic 查询每个主要变异的证据等级和治疗意义
 4. 使用 search_clinvar 检查致病性（特别关注是否有胚系突变风险）
-5. 使用 search_cbioportal 查询突变频率
+5. 使用 search_gdc 查询突变频率（基于 TCGA/ICGC 数据）
 6. 使用 search_pubmed 寻找相关临床证据
 7. **特别注意**：如果患者接受过靶向治疗（如TKI），分析是否存在获得性耐药突变（如EGFR T790M）
 

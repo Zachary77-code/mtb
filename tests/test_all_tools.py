@@ -119,13 +119,13 @@ def test_clinvar():
     return success
 
 
-def test_cbioportal():
-    """测试 cBioPortal 突变频率查询"""
-    print_header("5. cBioPortal 突变频率测试")
+def test_gdc():
+    """测试 GDC 突变频率查询"""
+    print_header("5. GDC 突变频率测试 (NCI Genomic Data Commons)")
 
-    from src.tools.molecular_tools import cBioPortalTool
+    from src.tools.molecular_tools import GDCTool
 
-    tool = cBioPortalTool()
+    tool = GDCTool()
     print("查询: EGFR 基因突变频率")
 
     start = time.time()
@@ -136,7 +136,7 @@ def test_cbioportal():
     print("-" * 40)
     print(result[:1200] if result else "无结果")
 
-    success = result is not None and "cBioPortal" in result
+    success = result is not None and "GDC" in result
     print_result(success)
     return success
 
@@ -197,7 +197,7 @@ def main():
         ("ClinicalTrials", test_clinical_trials),
         ("CIViC", test_civic),
         ("ClinVar", test_clinvar),
-        ("cBioPortal", test_cbioportal),
+        ("GDC", test_gdc),
         ("FDA Label", test_fda_label),
         ("RxNorm", test_rxnorm),
     ]

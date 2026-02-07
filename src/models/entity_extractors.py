@@ -471,6 +471,7 @@ class EntityExtractor:
         url = (
             finding.get("civic_url") or
             finding.get("url") or
+            finding.get("gdc_url") or
             finding.get("cbioportal_url") or
             finding.get("source_url")
         )
@@ -628,7 +629,8 @@ ENTITY_EXTRACTOR_MAP: Dict[str, EntityExtractor] = {
 
     # 其他工具使用默认提取器
     "search_clinvar": EntityExtractor(),
-    "search_cbioportal": EntityExtractor(),
+    "search_gdc": EntityExtractor(),
+    "search_cbioportal": EntityExtractor(),  # 向后兼容
     "get_mutation_frequency": EntityExtractor(),
     "check_interaction": EntityExtractor(),
 }

@@ -4,13 +4,13 @@
 提供变异证据、致病性分类和突变频率查询
 - CIViCTool: 变异证据等级 (替代 OncoKB)
 - ClinVarTool: 变异致病性分类
-- cBioPortalTool: 突变频率统计 (替代 COSMIC)
+- GDCTool: 突变频率统计 (NCI GDC, 基于 TCGA/ICGC 数据)
 """
 from typing import Dict, Any, Optional, List
 from src.tools.base_tool import BaseTool
 from src.tools.api_clients.civic_client import CIViCClient
 from src.tools.api_clients.ncbi_client import get_ncbi_client
-from src.tools.api_clients.cbioportal_client import get_cbioportal_client
+from src.tools.api_clients.gdc_client import get_gdc_client
 from src.utils.logger import mtb_logger as logger
 
 
@@ -219,19 +219,19 @@ class ClinVarTool(BaseTool):
         }
 
 
-class cBioPortalTool(BaseTool):
+class GDCTool(BaseTool):
     """
-    cBioPortal 数据库查询工具 (替代 COSMIC)
+    NCI GDC 数据库查询工具
 
-    提供突变频率和癌症基因组数据
+    基于 TCGA/ICGC 数据提供突变频率和癌症基因组数据
     """
 
     def __init__(self):
         super().__init__(
-            name="search_cbioportal",
-            description="查询 cBioPortal 获取变异在特定肿瘤类型的频率"
+            name="search_gdc",
+            description="查询 NCI GDC 数据库获取基因突变频率和癌种分布（基于 TCGA/ICGC 数据）"
         )
-        self.client = get_cbioportal_client()
+        self.client = get_gdc_client()
 
     def _call_real_api(
         self,
@@ -240,15 +240,13 @@ class cBioPortalTool(BaseTool):
         cancer_type: str = "",
         **kwargs
     ) -> Optional[str]:
-        """调用 cBioPortal API"""
+        """调用 GDC API"""
         if not gene:
             return None
 
         if variant:
-            # 查询特定变异频率
             result = self.client.get_variant_frequency_summary(gene, variant)
         else:
-            # 查询基因整体突变情况
             result = self.client.get_mutation_frequency(gene, cancer_type)
 
         if not result or "error" in result:
@@ -265,27 +263,40 @@ class cBioPortalTool(BaseTool):
     ) -> str:
         """格式化结果"""
         output = [
-            "**cBioPortal 查询结果**\n",
+            "**GDC 查询结果** (NCI Genomic Data Commons)\n",
             f"**基因**: {gene}",
         ]
 
         if variant:
             output.append(f"**变异**: {variant}")
-            output.append(f"**变异计数**: {result.get('variant_count', 0)}")
-            output.append(f"**总突变数**: {result.get('total_gene_mutations', 0)}")
+            output.append(f"**变异病例数**: {result.get('variant_count', 0)}")
+            output.append(f"**基因总突变病例数**: {result.get('total_gene_mutations', 0)}")
             output.append(f"**频率**: {result.get('frequency_percentage', 0)}%")
+
+            # 该变异在各项目中的分布
+            variant_by_project = result.get("variant_by_project", {})
+            if variant_by_project:
+                sorted_vp = sorted(variant_by_project.items(), key=lambda x: x[1], reverse=True)
+                output.append(f"\n**{variant} 在各项目中的分布**:")
+                for project, count in sorted_vp[:10]:
+                    output.append(f"- {project}: {count} cases")
         else:
-            output.append(f"**分析研究数**: {result.get('studies_analyzed', 0)}")
+            output.append(f"**分析项目数**: {result.get('studies_analyzed', 0)}")
 
-        output.append(f"**肿瘤类型**: {cancer_type or 'All'}\n")
+        output.append(f"\n**肿瘤类型**: {cancer_type or 'All'}\n")
 
-        # 按癌症类型分布
+        # 按癌症类型/项目分布（基因整体）
         by_cancer = result.get("by_cancer_type", {})
         if by_cancer:
-            output.append("**按癌症类型分布**:")
-            for ct, data in list(by_cancer.items())[:10]:
+            sorted_cancers = sorted(
+                by_cancer.items(),
+                key=lambda x: x[1].get("mutation_count", 0) if isinstance(x[1], dict) else x[1],
+                reverse=True
+            )
+            output.append("**基因突变按 TCGA 项目分布 (Top 15)**:")
+            for ct, data in sorted_cancers[:15]:
                 count = data.get("mutation_count", 0) if isinstance(data, dict) else data
-                output.append(f"- {ct}: {count} mutations")
+                output.append(f"- {ct}: {count} cases")
 
         # 常见突变
         top_mutations = result.get("top_mutations", [])
@@ -294,13 +305,14 @@ class cBioPortalTool(BaseTool):
             for mut in top_mutations[:10]:
                 output.append(f"- {mut['mutation']}: {mut['count']}")
 
-        output.append(f"\n**参考**: {result.get('cbioportal_url', 'https://www.cbioportal.org')}")
+        gdc_url = result.get("gdc_url", "https://portal.gdc.cancer.gov")
+        output.append(f"\n**参考**: [GDC Portal]({gdc_url})")
 
         return "\n".join(output)
 
     def _no_results_response(self, gene: str, variant: str, cancer_type: str) -> str:
         """无结果响应"""
-        return f"""**cBioPortal 查询结果**
+        return f"""**GDC 查询结果**
 
 **基因**: {gene}
 **变异**: {variant or 'All'}
@@ -310,7 +322,7 @@ class cBioPortalTool(BaseTool):
 
 建议:
 1. 检查基因名称是否正确
-2. 直接访问: https://www.cbioportal.org/results/mutations?gene_list={gene}
+2. 直接访问: https://portal.gdc.cancer.gov/genes?searchTableTab=genes&searchTerm={gene}
 """
 
     def _get_parameters_schema(self) -> Dict[str, Any]:
@@ -327,7 +339,7 @@ class cBioPortalTool(BaseTool):
 
 # 保留旧名称以兼容
 OncoKBTool = CIViCTool  # CIViC 替代 OncoKB
-CosmicTool = cBioPortalTool  # cBioPortal 替代 COSMIC
+CosmicTool = GDCTool  # GDC 替代 COSMIC/cBioPortal
 
 
 if __name__ == "__main__":
@@ -342,7 +354,7 @@ if __name__ == "__main__":
     result = clinvar_tool.invoke(gene="EGFR", variant="L858R")
     print(result)
 
-    print("\n=== cBioPortal 工具测试 ===")
-    cbio_tool = cBioPortalTool()
-    result = cbio_tool.invoke(gene="EGFR", variant="L858R")
+    print("\n=== GDC 工具测试 ===")
+    gdc_tool = GDCTool()
+    result = gdc_tool.invoke(gene="EGFR", variant="L858R")
     print(result)

@@ -466,7 +466,7 @@ class ResearchMixin:
             "drug": "药物名（如有）",
             "pmid": "PubMed ID（如有，仅填数字，必须来自工具返回结果）",
             "nct_id": "NCT ID（如有，含NCT前缀，必须来自工具返回结果）",
-            "url": "来源 URL（如有，PubMed/ClinicalTrials/cBioPortal/CIViC 页面链接）"{"," if is_dfrs else ""}
+            "url": "来源 URL（如有，PubMed/ClinicalTrials/GDC/CIViC 页面链接）"{"," if is_dfrs else ""}
             {"\"depth_chain\": [\"引用1\", \"引用2\", \"推理步骤\"]" if is_dfrs else ""}
         }}}}
     ],
@@ -503,7 +503,7 @@ class ResearchMixin:
 ```
 
 **⚠️ 工具来源强制规则**:
-- 每条 finding 必须来自你在本轮中实际调用的外部工具（search_pubmed, search_nccn, search_civic, search_cbioportal, search_clinical_trials, search_fda_labels, search_rxnorm 等）
+- 每条 finding 必须来自你在本轮中实际调用的外部工具（search_pubmed, search_nccn, search_civic, search_gdc, search_clinical_trials, search_fda_labels, search_rxnorm 等）
 - source_tool 必须填写你实际调用的工具名，严禁留空或填写 "unknown"
 - 严禁基于你的内部知识编撰 findings，即使你认为内容正确
 - pmid/nct_id 必须是工具返回的真实编号，严禁凭记忆编造

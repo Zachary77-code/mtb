@@ -389,6 +389,10 @@ class HtmlReportGenerator:
             生成的 HTML 文件路径
         """
         # 构建 observation 索引（用于引用 tooltip）
+        # 兼容 persistence 格式 {"metadata": ..., "graph": {...}} 和 直接格式 {"entities": ..., "edges": ...}
+        if evidence_graph_data and isinstance(evidence_graph_data, dict) and "graph" in evidence_graph_data and "entities" not in evidence_graph_data:
+            evidence_graph_data = evidence_graph_data["graph"]
+
         self._observation_index: Dict[str, Dict[str, Any]] = {}
         if evidence_graph_data and isinstance(evidence_graph_data, dict):
             self._observation_index = self._build_observation_index(evidence_graph_data)
@@ -469,6 +473,9 @@ class HtmlReportGenerator:
         4. 恢复自定义块 HTML
         5. 解析 [[ref:...]] 内联引用（在 markdown 转换之后，避免生成的 HTML 干扰表格解析）
         """
+        # 0. 移除末尾 ## References 部分（已有内联 tooltip 引用，末尾列表冗余）
+        md_text = re.sub(r'\n---\s*\n##\s*References\s*\n.*', '', md_text, flags=re.DOTALL)
+
         # 1. 解析自定义块标记，输出的 HTML 用占位符保护
         #    防止 _inject_markdown_attr_to_divs 和 markdown 处理器破坏已渲染的 HTML
         _protected_blocks = {}
@@ -484,6 +491,10 @@ class HtmlReportGenerator:
 
         # 2. 注入 markdown="1" 到用户编写的 <div> 标签（自定义块已为占位符，不受影响）
         md_text = self._inject_markdown_attr_to_divs(md_text)
+
+        # 2.5 确保 markdown 表格前有空行（tables 扩展要求表格为独立块）
+        #     如 "**毒性管理**:\n| 列1 | 列2 |" 会被 nl2br 变成一个 <p>，表格无法识别
+        md_text = re.sub(r'([^\n])\n(\|[^\n]+\|\s*\n\|[-| :]+\|)', r'\1\n\n\2', md_text)
 
         # 3. 标准 Markdown 转换
         #    - tables: 原生处理 markdown 表格（含单元格内 inline markdown）
@@ -706,7 +717,11 @@ class HtmlReportGenerator:
 
     def _render_roadmap(self, content: str) -> str:
         """渲染治疗路线图卡片"""
-        data = self._parse_yaml_content(content)
+        # Strip markdown bold markers (**text**) that break YAML parsing
+        cleaned = re.sub(r'\*\*([^*]+)\*\*', r'\1', content)
+        # Quote scalar values containing colons (e.g. "- title: 当前: 紧急核查" → '- title: "当前: 紧急核查"')
+        cleaned = re.sub(r'^(\s*-?\s*(?:title|regimen)):\s+(.+:.+)$', r'\1: "\2"', cleaned, flags=re.MULTILINE)
+        data = self._parse_yaml_content(cleaned)
 
         if not data or not isinstance(data, list):
             # 回退：简单文本显示
@@ -956,8 +971,8 @@ class HtmlReportGenerator:
         - 旧格式: [[ref:ID|Title|URL|Note]]（向后兼容）
         """
         # 4字段格式 ;; 分隔符
-        # 注意：中间组使用 [^;\]]+ 排除 ; 和 ]，防止跨 ]] 边界贪婪匹配多个 ref
-        pattern_4field = r'\[\[ref:([^;\]]+);;([^;\]]+);;([^;\]]+);;([^\]]+)\]\]'
+        # 使用 (?:(?!;;)[^\]])+ 允许单个 ; (如 HTML 实体 &amp; &lt;) 但在 ;; 或 ] 处停止
+        pattern_4field = r'\[\[ref:((?:(?!;;)[^\]])+);;((?:(?!;;)[^\]])+);;((?:(?!;;)[^\]])+);;([^\]]+)\]\]'
 
         def replacer_4field(m):
             ref_id, title, url, note = [s.strip() for s in m.groups()]
@@ -966,8 +981,8 @@ class HtmlReportGenerator:
         html = re.sub(pattern_4field, replacer_4field, html)
 
         # 3字段格式 ;; 分隔符（无 Note）
-        # 注意：中间组使用 [^;\]]+ 排除 ; 和 ]，防止跨 ]] 边界贪婪匹配
-        pattern_3field = r'\[\[ref:([^;\]]+);;([^;\]]+);;([^\]]+)\]\]'
+        # 同上，允许单个 ; 但在 ;; 或 ] 处停止
+        pattern_3field = r'\[\[ref:((?:(?!;;)[^\]])+);;((?:(?!;;)[^\]])+);;([^\]]+)\]\]'
 
         def replacer_3field(m):
             ref_id, title, url = [s.strip() for s in m.groups()]
@@ -1101,7 +1116,12 @@ class HtmlReportGenerator:
                 tooltip = self._get_tooltip_text(text, url, text, "")
                 return self._render_standard_citation(text, url, tooltip)
 
-            # cBioPortal 链接
+            # GDC 链接
+            if 'gdc.cancer.gov' in url.lower() or text.lower().startswith('gdc'):
+                tooltip = self._get_tooltip_text(text, url, text, "")
+                return self._render_standard_citation(text, url, tooltip)
+
+            # cBioPortal 链接 (向后兼容)
             if 'cbioportal.org' in url.lower() or text.lower().startswith('cbioportal'):
                 tooltip = self._get_tooltip_text(text, url, text, "")
                 return self._render_standard_citation(text, url, tooltip)

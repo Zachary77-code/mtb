@@ -521,8 +521,8 @@
     .evidence-graph-toggle {
       font-size: 12px; color: var(--text-light);
     }
-    .evidence-graph-body { display: none; }
-    .evidence-graph-body.active { display: block; }
+    .evidence-graph-body { display: block; }
+    .evidence-graph-body.collapsed { display: none; }
     .eg-controls {
       padding: 12px 20px;
       background: var(--bg);
@@ -943,8 +943,8 @@
     // TOGGLE
     window.toggleGraphSection = function() {
       var body = document.getElementById('eg-body');
-      body.classList.toggle('active');
-      if (body.classList.contains('active') && !cy) initGraph();
+      body.classList.toggle('collapsed');
+      if (!body.classList.contains('collapsed') && !cy) initGraph();
     };
 
     // HELPERS
@@ -955,6 +955,9 @@
       document.getElementById('eg-stats').textContent = 'Showing ' + vn + '/' + tn + ' entities, ' + ve + '/' + te + ' edges';
     }
     function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+
+    // 默认展开，页面加载时初始化图
+    initGraph();
   })();
   </script>
   {% endif %}

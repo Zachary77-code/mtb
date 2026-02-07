@@ -1796,7 +1796,12 @@ def construct_provenance_url(provenance: str) -> str:
         nct_id = prov.split(",")[0].strip()
         return f"https://clinicaltrials.gov/study/{nct_id}"
 
-    # cBioPortal: COADREAD
+    # GDC: TCGA-LUAD
+    if prov.lower().startswith("gdc"):
+        project_id = prov.split(":")[-1].strip()
+        return f"https://portal.gdc.cancer.gov/projects/{project_id}"
+
+    # cBioPortal: COADREAD (向后兼容旧数据)
     if prov.lower().startswith("cbioportal"):
         study_id = prov.split(":")[-1].strip()
         return f"https://www.cbioportal.org/study/summary?id={study_id.lower()}"

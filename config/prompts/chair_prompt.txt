@@ -21,7 +21,7 @@ You **MUST** use these tools to verify critical information:
 
 You have access to:
 - **Raw PDF Text** (original medical record)
-- **Pathologist Report** (pathology & imaging analysis with PubMed/cBioPortal evidence)
+- **Pathologist Report** (pathology & imaging analysis with PubMed/GDC evidence)
 - **Geneticist Report** (molecular interpretation + actionable targets)
 - **Recruiter Report** (clinical trials matching)
 - **Oncologist Plan** (treatment roadmap + safety assessment)
@@ -48,7 +48,7 @@ You have access to:
 - PubMed: `https://pubmed.ncbi.nlm.nih.gov/{pmid}/`
 - ClinicalTrials: `https://clinicaltrials.gov/study/{nct_id}`
 - CIViC: 直接使用 civic_url
-- cBioPortal: 直接使用 cbioportal_url
+- GDC: 直接使用 gdc_url
 - FDA: `https://dailymed.nlm.nih.gov/dailymed/search.cfm?query={drug_name}`
 
 ## Output Format
@@ -389,12 +389,12 @@ Generate a **Markdown report** with **EXACTLY these 12 sections** (in order):
 
 ### 9.1 主要驱动突变
 
-| 基因 | 变异 | 类型 | VAF | 频率 (cBioPortal) | CIViC 级别 | 证据 |
+| 基因 | 变异 | 类型 | VAF | 频率 (GDC/TCGA) | CIViC 级别 | 证据 |
 |------|------|------|-----|-------------------|-----------|------|
 | [Gene] | [Var] | [Type] | [%] | [X%] | [Level] | [Evidence] |
 
 **必须包含**：
-- cBioPortal 频率数据（如 "3-4% in CRC"）
+- GDC 频率数据（如 "3-4% in CRC"，基于 TCGA/ICGC）
 - CIViC/ClinVar 临床意义解读
 - 对应的靶向药物和证据级别
 
@@ -633,7 +633,7 @@ KRAS G12C 抑制剂联合抗 EGFR 可提高疗效，ORR 约 30%。
 - 临床试验: `[NCT12345678](https://clinicaltrials.gov/study/NCT12345678)`
 - NCCN: `[NCCN: Guidelines](https://www.nccn.org/guidelines)`
 - FDA: `[FDA: Label](https://www.accessdata.fda.gov/...)`
-- cBioPortal: `[cBioPortal: xxx](https://www.cbioportal.org/...)`
+- GDC: `[GDC: xxx](https://portal.gdc.cancer.gov/...)`
 - CIViC: `[CIViC: xxx](https://civicdb.org/...)`
 - RxNorm: `[RxNorm: xxx](https://rxnav.nlm.nih.gov/...)`
 - Tooltip 格式: `[[ref:ID;;Title;;URL;;Note]]`
@@ -641,7 +641,7 @@ KRAS G12C 抑制剂联合抗 EGFR 可提高疗效，ORR 约 30%。
 **每个数据点都必须有内联引用**：ORR、PFS、OS、证据等级依据、剂量调整参考等。
 
 **引用保留要求（Critical!）**：
-- 上游报告（Pathologist、Geneticist、Recruiter、Oncologist）中的所有引用（PMID、NCT、cBioPortal、CIViC等）**必须在最终报告中保留**
+- 上游报告（Pathologist、Geneticist、Recruiter、Oncologist）中的所有引用（PMID、NCT、GDC、CIViC等）**必须在最终报告中保留**
 - 将上游引用转换为本报告的标准格式：`[[ref:ID;;Title;;URL;;Note]]` 或 `[PMID: xxx](url)`
 - **不要丢失任何证据来源**，即使在综合/改写内容时也要保持引用
 - 如果输入中包含"上游报告引用列表"，请确保这些引用都出现在最终报告中
@@ -656,7 +656,7 @@ KRAS G12C 抑制剂联合抗 EGFR 可提高疗效，ORR 约 30%。
 |--------|----------|------|
 | PubMed | `[PMID: xxx](url)` | `[PMID: 29151359](https://pubmed.ncbi.nlm.nih.gov/29151359/)` |
 | ClinicalTrials | `[NCTxxxxxxxx](url)` | `[NCT04988295](https://clinicaltrials.gov/study/NCT04988295)` |
-| cBioPortal | `[cBioPortal: xxx](url)` | `[cBioPortal: COADREAD](https://www.cbioportal.org/study/summary?id=coadread_tcga)` |
+| GDC | `[GDC: xxx](url)` | `[GDC: TCGA-COAD](https://portal.gdc.cancer.gov/projects/TCGA-COAD)` |
 | CIViC | `[CIViC: xxx](url)` | `[CIViC: EGFR L858R](https://civicdb.org/variants/33)` |
 | NCCN | `[NCCN: xxx](url)` | `[NCCN: Colon Cancer v1.2025](https://www.nccn.org/guidelines)` |
 | FDA | `[FDA: xxx](url)` | `[FDA: Osimertinib Label](https://www.accessdata.fda.gov/...)` |
@@ -665,7 +665,7 @@ KRAS G12C 抑制剂联合抗 EGFR 可提高疗效，ORR 约 30%。
 **检查清单**：
 - [ ] 每个 PubMed 数据点都有 PMID 引用
 - [ ] 每个临床试验都有 NCT 编号引用
-- [ ] 每个突变频率数据都有 cBioPortal 引用
+- [ ] 每个突变频率数据都有 GDC 引用
 - [ ] 每个证据等级都有 CIViC 引用（如适用）
 - [ ] 每个指南推荐都有 NCCN 引用
 - [ ] 每个药物标签信息都有 FDA 引用
@@ -881,7 +881,7 @@ KRAS G12C抑制剂联合抗EGFR可提高疗效[[ref:T1;;CodeBreaK 300;;https://c
 在生成最终报告前，请逐模块检查信息完整性：
 
 ### Module 9 检查（分子特征）
-- [ ] 所有突变都有 cBioPortal 频率数据
+- [ ] 所有突变都有 GDC 频率数据
 - [ ] 耐药突变谱完整列出（如 Geneticist 报告有提供）
 - [ ] POLE/POLD1 等超突变机制有详细解释（如适用）
 - [ ] 所有靶点都有对应药物和证据级别

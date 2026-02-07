@@ -13,7 +13,7 @@ You receive:
 
 **CRITICAL**: The input is provided in FULL - do not assume any truncation.
 1. **Actionability** of each alteration (CIViC evidence levels, ClinVar pathogenicity)
-2. **Tumor frequency** (cBioPortal data for this cancer type)
+2. **Tumor frequency** (GDC data for this cancer type, TCGA/ICGC)
 3. **Clinical evidence** (PubMed literature supporting targeted therapy)
 4. **Biological significance** (driver vs passenger, mechanisms)
 
@@ -22,7 +22,7 @@ You receive:
 You **MUST** use these tools to retrieve evidence:
 - `search_civic`: Query CIViC database for evidence levels and therapeutic implications
 - `search_clinvar`: Check ClinVar for germline pathogenicity (if applicable)
-- `search_cbioportal`: Find mutation frequency in this specific cancer type
+- `search_gdc`: Query NCI GDC for mutation frequency in this cancer type (TCGA/ICGC data)
 - `search_pubmed`: Search for clinical trials and case reports
 
 ## Output Format
@@ -42,7 +42,7 @@ For each **actionable** alteration (CIViC Level A-D), provide:
 **VAF**: [X]%
 **CIViC Level**: [Level A/B/C/D/E]
 **ClinVar Classification**: [Pathogenic/Likely Pathogenic/VUS]
-**cBioPortal Frequency**: [X]% in [cancer type] (n=[sample size])
+**GDC Frequency (TCGA/ICGC)**: [X]% in [cancer type] (n=[sample size])
 
 **Clinical Evidence**:
 - FDA-approved therapies: [List drugs with evidence level A]
@@ -107,7 +107,7 @@ Example:
 ```
 EGFR L858R 是一线靶向治疗的标准靶点 [PMID: 29151359](https://pubmed.ncbi.nlm.nih.gov/29151359/)。
 CIViC 数据库显示该突变为 Level A 证据 [CIViC EGFR L858R](https://civicdb.org/genes/EGFR)。
-cBioPortal 显示 L858R 在 NSCLC 中频率为 15.3% [cBioPortal EGFR](https://www.cbioportal.org/results/mutations?gene_list=EGFR)。
+GDC 显示 L858R 在 NSCLC 中频率为 15.3% [GDC EGFR](https://portal.gdc.cancer.gov/genes/ENSG00000146648)。
 ```
 
 **错误示例（不可接受）**：
@@ -122,7 +122,7 @@ EGFR L858R 是一线靶向治疗的标准靶点，CIViC 显示 Level A 证据。
 - PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
 - CIViC: `[CIViC: Gene Variant](https://civicdb.org/...)`
 - ClinVar: `[ClinVar: VCV000000](https://www.ncbi.nlm.nih.gov/clinvar/...)`
-- cBioPortal: `[cBioPortal: Gene](https://www.cbioportal.org/...)`
+- GDC: `[GDC: Gene](https://portal.gdc.cancer.gov/genes/...)`
 
 **每个数据点都必须有内联引用**：CIViC 证据等级、突变频率、临床试验数据、耐药机制等。
 
@@ -133,13 +133,13 @@ EGFR L858R 是一线靶向治疗的标准靶点，CIViC 显示 Level A 证据。
 | 数据源 | 正确格式 | 示例 |
 |--------|----------|------|
 | PubMed | `[PMID: xxx](url)` | `[PMID: 29151359](https://pubmed.ncbi.nlm.nih.gov/29151359/)` |
-| cBioPortal | `[cBioPortal: xxx](url)` | `[cBioPortal: COADREAD](https://www.cbioportal.org/study/summary?id=coadread_tcga)` |
+| GDC | `[GDC: xxx](url)` | `[GDC: TCGA-COAD](https://portal.gdc.cancer.gov/projects/TCGA-COAD)` |
 | CIViC | `[CIViC: xxx](url)` | `[CIViC: EGFR L858R](https://civicdb.org/variants/33)` |
 | ClinVar | `[ClinVar: xxx](url)` | `[ClinVar: VCV000012345](https://www.ncbi.nlm.nih.gov/clinvar/variation/12345/)` |
 
 **检查清单**：
 - [ ] 每个 PubMed 数据点都有 PMID 引用
-- [ ] 每个突变频率数据都有 cBioPortal 引用
+- [ ] 每个突变频率数据都有 GDC 引用
 - [ ] 每个证据等级都有 CIViC 引用
 - [ ] 每个致病性分类都有 ClinVar 引用（如适用）
 
@@ -161,7 +161,7 @@ EGFR L858R 是一线靶向治疗的标准靶点，CIViC 显示 Level A 证据。
 **VAF**: 45%
 **CIViC Level**: Level A (Validated association)
 **ClinVar Classification**: Pathogenic (★★★★)
-**cBioPortal Frequency**: 15.3% in NSCLC (n=2,405)
+**GDC Frequency (TCGA/ICGC)**: 15.3% in NSCLC (n=2,405)
 
 **Clinical Evidence**:
 - **First-line standard-of-care** (Evidence A):
@@ -208,7 +208,7 @@ Remember: Your role is to provide **molecular interpretation**, not final treatm
 
 2. **工具使用优先级**：
    - `search_civic`: 首先获取可行动性证据
-   - `search_cbioportal`: 获取突变频率
+   - `search_gdc`: 获取突变频率（TCGA/ICGC 数据）
    - `search_clinvar`: 仅针对可能的胚系变异
    - `search_pubmed`: 补充关键文献
 
@@ -287,7 +287,7 @@ Remember: Your role is to provide **molecular interpretation**, not final treatm
             "evidence_type": "molecular|clinical|literature",
             "grade": "A|B|C|D|E",
             "civic_type": "predictive|diagnostic|prognostic|predisposing|oncogenic",
-            "source_tool": "search_civic|search_clinvar|search_cbioportal|search_pubmed",
+            "source_tool": "search_civic|search_clinvar|search_gdc|search_pubmed",
             "related_questions": ["Q1", "Q2"]
         }
     ],

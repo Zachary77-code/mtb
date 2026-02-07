@@ -56,7 +56,7 @@ class ReferenceManager:
         添加引用并返回内联 markdown 链接
 
         Args:
-            ref_type: 引用类型 (PMID, NCT, CIViC, cBioPortal 等)
+            ref_type: 引用类型 (PMID, NCT, CIViC, GDC 等)
             ref_id: 引用 ID
             url: 引用 URL
             title: 引用标题（可选）
@@ -583,7 +583,7 @@ class BaseAgent:
         支持的数据源（共 8 个）：
         - PMID (PubMed)
         - NCT (ClinicalTrials.gov)
-        - cBioPortal
+        - GDC (NCI Genomic Data Commons)
         - CIViC
         - NCCN
         - FDA
@@ -619,16 +619,16 @@ class BaseAgent:
 
         content = re.sub(nct_pattern, replace_nct, content)
 
-        # Pattern 3: [cBioPortal xxx](https://www.cbioportal.org/...)
-        # 或 [cBioPortal: xxx](url)
-        cbioportal_pattern = r'\[cBioPortal[:\s]+([^\]]+)\]\((https?://[^\)]+)\)'
+        # Pattern 3: [GDC xxx](https://portal.gdc.cancer.gov/...)
+        # 或 [GDC: xxx](url) 或 [cBioPortal xxx](url)（兼容旧格式）
+        gdc_pattern = r'\[(?:GDC|cBioPortal)[:\s]+([^\]]+)\]\((https?://[^\)]+)\)'
 
-        def replace_cbioportal(match):
-            study_id = match.group(1).strip()
+        def replace_gdc(match):
+            ref_id = match.group(1).strip()
             url = match.group(2)
-            return self.reference_manager.add_reference("cBioPortal", study_id, url)
+            return self.reference_manager.add_reference("GDC", ref_id, url)
 
-        content = re.sub(cbioportal_pattern, replace_cbioportal, content, flags=re.IGNORECASE)
+        content = re.sub(gdc_pattern, replace_gdc, content, flags=re.IGNORECASE)
 
         # Pattern 4: [CIViC xxx](https://civicdb.org/...)
         # 或 [CIViC: xxx](url)

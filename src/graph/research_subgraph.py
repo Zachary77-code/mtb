@@ -102,7 +102,7 @@ def _format_tool_result_for_report(tool_name: str, result_text: str) -> str:
         return result_text
 
     else:
-        # 其他工具 (CIViC, ClinVar, cBioPortal, ClinicalTrials, FDA, RxNorm):
+        # 其他工具 (CIViC, ClinVar, GDC, ClinicalTrials, FDA, RxNorm):
         # 仅提取原文链接
         urls = _extract_source_urls(result_text)
         if urls:
@@ -1360,7 +1360,7 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
 2. **内联引用格式**：每个数据点必须使用以下格式之一进行内联引用：
    - PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
    - 临床试验: `[NCT04123456](https://clinicaltrials.gov/study/NCT04123456)`
-   - cBioPortal: `[cBioPortal: study](url)`
+   - GDC: `[GDC: project](url)`
    - CIViC: `[CIViC: variant](url)`
    - 禁止只在末尾列出引用而正文无内联引用
 3. 每条建议必须标注证据等级 `[Evidence A/B/C/D/E]`，且紧邻相关引用
@@ -1518,7 +1518,7 @@ def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
 2. **内联引用格式**：每个数据点必须使用以下格式之一进行内联引用：
    - PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
    - 临床试验: `[NCT04123456](https://clinicaltrials.gov/study/NCT04123456)`
-   - cBioPortal: `[cBioPortal: study](url)`
+   - GDC: `[GDC: project](url)`
    - CIViC: `[CIViC: variant](url)`
    - NCCN: `[NCCN: guideline](url)`
    - FDA: `[FDA: label](url)`
