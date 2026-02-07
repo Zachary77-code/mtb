@@ -40,7 +40,10 @@ except ImportError:
 class NCCNImageRag:
     """NCCN 指南多模态图片 RAG 系统 (byaldi + ColQwen2 + MaxSim + 多模态 LLM 读图)"""
 
-    DEFAULT_INDEX_NAME = "nccn_colon"
+    @staticmethod
+    def _default_index_name() -> str:
+        from config.settings import NCCN_IMAGE_DEFAULT_INDEX
+        return NCCN_IMAGE_DEFAULT_INDEX
 
     def __init__(
         self,
@@ -85,6 +88,7 @@ class NCCNImageRag:
 
         # PDF 路径缓存 (doc_id -> Path)
         self._doc_id_to_pdf: Dict[int, Path] = {}
+        self._current_index: Optional[str] = None
 
     def build_index(
         self,
@@ -108,7 +112,7 @@ class NCCNImageRag:
         if not HAS_BYALDI:
             raise ImportError("byaldi 未安装或不可用，请检查日志中的导入错误或运行: pip install byaldi colpali-engine --no-deps")
 
-        index_name = index_name or self.DEFAULT_INDEX_NAME
+        index_name = index_name or self._default_index_name()
         pdf_path = Path(pdf_path)
 
         if not pdf_path.exists():
@@ -151,7 +155,7 @@ class NCCNImageRag:
         if not HAS_BYALDI:
             raise ImportError("byaldi 未安装或不可用，请检查日志中的导入错误或运行: pip install byaldi colpali-engine --no-deps")
 
-        index_name = index_name or self.DEFAULT_INDEX_NAME
+        index_name = index_name or self._default_index_name()
         index_path = self.index_root / index_name
 
         if not index_path.exists():
@@ -167,7 +171,25 @@ class NCCNImageRag:
             index_root=str(self.index_root)
         )
         self._initialized = True
-        logger.info(f"[ImageRAG] 索引加载完成")
+        self._current_index = index_name
+        self._doc_id_to_pdf = {}  # 清空旧映射缓存
+        logger.info(f"[ImageRAG] 索引加载完成: {index_name}")
+
+    def set_index(self, index_name: str) -> None:
+        """
+        设置并加载指定索引（如已加载相同索引则跳过）
+
+        Args:
+            index_name: 索引名称
+        """
+        if self._current_index == index_name and self._initialized:
+            logger.info(f"[ImageRAG] 索引已加载: {index_name}")
+            return
+        index_path = self.index_root / index_name
+        if not index_path.exists():
+            logger.warning(f"[ImageRAG] 索引不存在: {index_path}，保持当前索引")
+            return
+        self.load_index(index_name)
 
     def search(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         """
@@ -386,7 +408,7 @@ class NCCNImageRag:
         Returns:
             {doc_id(int): Path} 映射
         """
-        index_name = index_name or self.DEFAULT_INDEX_NAME
+        index_name = index_name or self._default_index_name()
         mapping_file = self.index_root / index_name / "doc_ids_to_file_names.json.gz"
 
         mapping = {}

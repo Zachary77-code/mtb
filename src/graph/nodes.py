@@ -143,6 +143,17 @@ def plan_agent_node(state: MtbState) -> Dict[str, Any]:
 
     logger.info(f"[PLAN_AGENT] 完成，问题数: {q_count}, 方向数: {d_count}")
 
+    # 根据 PlanAgent 选择的索引配置 NCCN Image RAG
+    nccn_index = research_plan.get("nccn_guideline_index")
+    if nccn_index:
+        try:
+            from src.tools.rag.nccn_image_rag import get_nccn_image_rag
+            rag = get_nccn_image_rag()
+            rag.set_index(nccn_index)
+            logger.info(f"[PLAN_AGENT] NCCN 索引已配置: {nccn_index}")
+        except Exception as e:
+            logger.warning(f"[PLAN_AGENT] NCCN 索引配置失败: {e}")
+
     return {
         "research_plan": research_plan,
         "evidence_graph": evidence_graph.to_dict(),

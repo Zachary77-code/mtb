@@ -97,8 +97,37 @@ class PlanAgent(BaseAgent):
 
         return plan.to_dict()
 
+    def _get_available_nccn_indexes(self) -> list:
+        """扫描 NCCN_IMAGE_VECTOR_DIR 获取可用索引名称列表"""
+        try:
+            from config.settings import NCCN_IMAGE_VECTOR_DIR
+            if not NCCN_IMAGE_VECTOR_DIR.exists():
+                return []
+            return sorted([
+                d.name for d in NCCN_IMAGE_VECTOR_DIR.iterdir()
+                if d.is_dir() and not d.name.startswith(".")
+            ])
+        except Exception:
+            return []
+
     def _build_analysis_prompt(self, case_text: str) -> str:
         """构建分析任务提示"""
+
+        # 动态获取可用 NCCN 索引
+        available_indexes = self._get_available_nccn_indexes()
+        nccn_index_section = ""
+        if available_indexes:
+            index_list = "\n".join(f"- `{name}`" for name in available_indexes)
+            nccn_index_section = f"""
+## NCCN 指南索引选择
+
+系统中可用的 NCCN 指南索引如下：
+{index_list}
+
+请在输出 JSON 中额外添加 `nccn_guideline_index` 字段，选择与本病例癌种最匹配的索引名称。
+如果没有匹配的索引，填写 `null`。
+"""
+
         return f"""请分析以下病例，生成结构化的研究计划。
 
 ## 病例内容
@@ -117,6 +146,7 @@ class PlanAgent(BaseAgent):
         "drugs_mentioned": ["提及的药物"],
         "treatment_history": ["治疗史要点"]
     }},
+    "nccn_guideline_index": "索引名称或null",
     "directions": [
         {{
             "id": "D1",
@@ -130,6 +160,7 @@ class PlanAgent(BaseAgent):
     ]
 }}
 ```
+{nccn_index_section}
 
 ## 研究方向分配指南
 
