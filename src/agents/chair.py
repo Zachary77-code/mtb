@@ -15,7 +15,7 @@ class ChairAgent(BaseAgent):
     """
     MTB 主席 Agent
 
-    汇总所有专家意见，生成最终的 12 模块报告。
+    汇总所有专家意见，生成最终的 6 章节+附录报告。
     负责仲裁冲突（安全优先）和确保引用完整性。
     """
 
@@ -375,50 +375,68 @@ class ChairAgent(BaseAgent):
     def synthesize(
         self,
         raw_pdf_text: str,
-        pathologist_report: str,
-        geneticist_report: str,
-        recruiter_report: str,
-        oncologist_plan: str,
+        pathologist_report: str = "",
+        geneticist_report: str = "",
+        recruiter_report: str = "",
+        oncologist_plan: str = "",
         missing_sections: List[str] = None,
-        evidence_graph: Optional[EvidenceGraph] = None
+        evidence_graph: Optional[EvidenceGraph] = None,
+        # New Phase 1 reports
+        pharmacist_report: str = "",
+        oncologist_analysis_report: str = "",
+        # New Phase 2a reports
+        oncologist_mapping_report: str = "",
+        local_therapist_report: str = "",
+        nutritionist_report: str = "",
+        integrative_med_report: str = "",
+        # New Phase 2b report
+        pharmacist_review_report: str = "",
+        # New Phase 3 report
+        oncologist_integration_report: str = "",
     ) -> Dict[str, Any]:
         """
-        基于完整报告生成最终 MTB 报告
-
-        注意：这是汇总整合，不是摘要压缩！保留所有专家报告中的关键发现。
+        基于全部 agent 报告生成最终 MTB 报告 (6章节+附录)
 
         Args:
             raw_pdf_text: PDF 解析后的完整病历原文
-            pathologist_report: 病理学分析报告（完整）
-            geneticist_report: 遗传学家报告（完整）
-            recruiter_report: 临床试验专员报告（完整）
-            oncologist_plan: 肿瘤学家方案（完整）
+            pathologist_report: Phase 1 病理学报告
+            geneticist_report: Phase 1 遗传学报告
+            pharmacist_report: Phase 1 药师报告(合并症/用药)
+            oncologist_analysis_report: Phase 1 过往治疗分析(3.1)
+            oncologist_mapping_report: Phase 2a Oncologist Mapping报告
+            local_therapist_report: Phase 2a 局部治疗报告
+            recruiter_report: Phase 2a 临床试验报告
+            nutritionist_report: Phase 2a 营养报告
+            integrative_med_report: Phase 2a 整合医学报告
+            pharmacist_review_report: Phase 2b 药学审查报告
+            oncologist_integration_report: Phase 3 方案整合报告
+            oncologist_plan: 向后兼容(同 oncologist_integration_report)
             missing_sections: 上一次验证失败时缺失的模块
-            evidence_graph: 证据图（包含所有 Agent 收集的结构化证据）
+            evidence_graph: 证据图
 
         Returns:
             包含综合报告和引用的字典
         """
-        # 构建综合请求
+        # 向后兼容：如果有 integration 报告但没有 oncologist_plan
+        if oncologist_integration_report and not oncologist_plan:
+            oncologist_plan = oncologist_integration_report
+
         regenerate_note = ""
         if missing_sections:
             regenerate_note = f"""
-**重要**: 上一次报告缺少以下模块，请确保本次包含:
+**重要**: 上一次报告缺少以下章节，请确保本次包含:
 {chr(10).join([f'- {s}' for s in missing_sections])}
 """
 
-        # 格式化证据图信息
         evidence_info = self._format_evidence_for_chair(evidence_graph)
 
         task_prompt = f"""
-请作为 MTB 主席，汇总整合以下专家报告生成最终 MTB 报告。
+请作为 MTB 主席，汇总整合以下全部专家报告生成最终 MTB 报告。
 
 **核心原则: 汇总整合，不是摘要压缩！**
-- 保留所有专家报告中的关键发现
+- 保留所有专家报告中的关键发现，禁止压缩、合并、简化
 - 保留所有临床试验推荐
-- 保留完整的治疗史记录
-- 保留所有分子特征和证据等级
-- 输出应包含完整的信息
+- 保留完整的治疗史记录和 L1-L5 证据分层标注
 - **使用证据图中的引用**（见下方证据图统计和引用列表）
 
 {regenerate_note}{evidence_info}
@@ -430,55 +448,99 @@ class ChairAgent(BaseAgent):
 
 ---
 
-**病理学分析报告** (完整):
-{pathologist_report}
+## Phase 1 报告
+
+**1. 病理学报告** (1.1基础信息 + 1.2诊断 + 治疗史提取):
+{pathologist_report if pathologist_report else "暂无"}
 
 ---
 
-**分子分析报告** (完整):
-{geneticist_report}
+**2. 遗传学报告** (1.3分子特征 + 5.2分子复查初稿):
+{geneticist_report if geneticist_report else "暂无"}
 
 ---
 
-**临床试验推荐** (完整):
-{recruiter_report}
+**3. 药师报告** (1.4合并症 + 1.5过敏史 + 器官功能基线):
+{pharmacist_report if pharmacist_report else "暂无"}
 
 ---
 
-**治疗方案** (完整):
-{oncologist_plan}
+**4. 过往治疗分析** (3.1 每线治疗评价):
+{oncologist_analysis_report if oncologist_analysis_report else "暂无"}
 
 ---
 
-**必须包含的 12 个模块**:
+## Phase 2a 报告
+
+**5. Oncologist Mapping** (3.2 全身治疗4审批×5手段矩阵):
+{oncologist_mapping_report if oncologist_mapping_report else "暂无"}
+
+---
+
+**6. 局部治疗** (手术/放疗/介入):
+{local_therapist_report if local_therapist_report else "暂无"}
+
+---
+
+**7. 临床试验** (活跃+已结束):
+{recruiter_report if recruiter_report else "暂无"}
+
+---
+
+**8. 营养方案**:
+{nutritionist_report if nutritionist_report else "暂无"}
+
+---
+
+**9. 整合医学/替代疗法**:
+{integrative_med_report if integrative_med_report else "暂无"}
+
+---
+
+## Phase 2b 报告
+
+**10. 药学审查** (药物交互/剂量调整/禁忌标注):
+{pharmacist_review_report if pharmacist_review_report else "暂无"}
+
+---
+
+## Phase 3 报告
+
+**11. 方案整合** (3.3治疗方案+L1-L5 + 3.4路径排序 + 5.1+5.2复查):
+{oncologist_integration_report if oncologist_integration_report else oncologist_plan if oncologist_plan else "暂无"}
+
+---
+
+**必须包含的章节**:
 {chr(10).join([f'{i+1}. {s}' for i, s in enumerate(REQUIRED_SECTIONS)])}
 
-**关键要求**:
-1. 报告必须包含**模块 1-11 和模块 13**，按顺序排列（模块 12"完整证据引用列表"由系统自动生成，你不需要生成）
-2. 第3模块"治疗史回顾"必须使用:::timeline格式展示**所有治疗记录**（不要合并或省略）
-3. 第7模块"临床试验推荐"必须保留临床试验专员报告中的**所有试验**（至少Top 5）
-4. **禁止压缩、合并、简化**任何治疗记录或试验信息
-5. 每条建议都需要证据等级标注 [Evidence A/B/C/D/E]
-6. 必须包含"不建议"章节
-7. 仲裁原则：当安全性与疗效冲突时，以安全性为准
-8. 所有引用使用 `[PMID: xxx](url)` 或 `[[ref:ID;;Title;;URL;;Note]]` 格式，必须在正文中内联引用
-9. 整合病理学分析报告中的关键发现（病理类型、IHC解读等）
+**报告结构要求**:
+1. 第1章"病情概要": 整合 pathologist(1.1/1.2) + geneticist(1.3) + pharmacist(1.4/1.5) 报告
+2. 第2章"治疗史回顾": 使用 :::timeline 格式展示所有治疗记录，整合 pathologist 提取 + oncologist_analysis(3.1) 评价
+3. 第3章"治疗方案探索": 3.1 来自 Phase1 oncologist_analysis; 3.2 来自 Phase2a mapping+local_therapist+recruiter+pharmacist_review; 3.3+3.4 来自 Phase3 integration (保留L1-L5标注)
+4. 第4章"整体与辅助支持": 4.1 来自 nutritionist; 4.2 来自 integrative_med
+5. 第5章"复查和追踪方案": 5.1+5.2 来自 Phase3 integration + geneticist 初稿
+6. 第6章"核心建议汇总": Chair 综合
+7. 附录A"完整证据引用列表": 由系统自动生成，你不需要生成
+8. 附录B"证据等级说明": 包含 CIViC A-E + L1-L5 说明
 
-**信息完整性要求**:
-- Gemini 支持 66K Tokens输出
-- 请充分利用输出长度，确保报告完整详尽
-- 宁可信息冗余，不可遗漏关键内容
+**关键要求**:
+- 保留 Phase 3 的 L1-L5 证据分层标注，不修改
+- 引用 LocalTherapist 建议时不修改局部治疗技术参数
+- 每条建议必须标注证据等级 [Evidence A/B/C/D/E]
+- 仲裁原则：当安全性与疗效冲突时，以安全性为准
+- 所有引用使用 `[PMID: xxx](url)` 或 `[[ref:ID;;Title;;URL;;Note]]` 格式
+- 充分利用输出长度，确保报告完整详尽
 
 请生成完整的 Markdown 格式 MTB 报告。
 """
 
         result = self.invoke(task_prompt)
 
-        # 程序化生成 Module 12（完整证据引用列表）并插入到 LLM 输出中
+        # 程序化生成附录A（完整证据引用列表）
         evidence_list = self._generate_evidence_reference_list(evidence_graph)
         output_with_evidence = result["output"] + evidence_list
 
-        # 生成完整报告（含工具调用详情和引用）
         full_report = self.generate_full_report(
             main_content=output_with_evidence,
             title="MTB Chair Final Synthesis Report"

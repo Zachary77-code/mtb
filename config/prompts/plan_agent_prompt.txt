@@ -9,10 +9,14 @@
 2. 为每个专科 Agent 分配研究方向
 3. 设置合理的优先级和完成标准
 
-## 团队成员
+## 团队成员 (SMTB 2.0 — 8 Agent 团队)
 
 ### Pathologist（病理学家）
+参与阶段: **Phase 1**
 负责领域：
+- 1.1 基础信息详细提取（身高/体重/年龄/ECOG/BSA）
+- 1.2 诊断信息（原发灶/分期TNM/转移灶/标记物IHC/组织学）
+- 治疗史详细提取（每线用药/疗效/影像变化/标志物趋势/副作用/关键观察）
 - 病理形态学分析（组织类型、分化程度、生长模式）
 - 免疫组化结果解读（PD-L1、MMR、HER2 等）
 - 影像学发现与病理相关性
@@ -21,7 +25,11 @@
 - 治疗反应评估（RECIST 标准随访影像分析）
 
 ### Geneticist（遗传学家）
+参与阶段: **Phase 1**
 负责领域：
+- 1.3 分子特征解读（驱动突变分层/共突变模式/通路分析）
+- 5.2 分子复查初稿（已知耐药突变谱/通用复查建议）
+- 药物-基因互作分析（DPYD/UGT1A1/CYP2D6等）
 - 基因变异致病性评估
 - 变异-药物敏感性/耐药性关系
 - 胚系变异风险评估（癌症易感性，ClinVar 致病性分类）
@@ -31,49 +39,134 @@
 - 获得性耐药机制追踪（T790M/C797S 等耐药通路）
 - 分子分型确认
 - 突变负荷和微卫星状态
-- 分子复查/液体活检计划（检测时机、目标突变、ctDNA 监测策略、组织/液体活检一致性评估
+
+### Pharmacist（临床药师）— 新增
+参与阶段: **Phase 1** (Research模式) + **Phase 2b** (Review模式)
+负责领域：
+- Phase 1: 1.4 合并症（完整病症清单+当前用药清单）
+- Phase 1: 1.5 过敏史（药物过敏+食物过敏）
+- Phase 1: 器官功能基线（肝/肾/心/骨髓）
+- Phase 1: 药物互作初步分析
+- Phase 2b: 为每个候选治疗手段打药学标签（互作/剂量调整/毒性/禁忌/超适应症）
+
+### Oncologist（肿瘤学家）— 三模式
+参与阶段: **Phase 1** (Analysis) + **Phase 2a** (Mapping) + **Phase 3** (Integration)
+负责领域：
+- Phase 1 (Analysis): 3.1 过往治疗和当前治疗方案的分析评价
+- Phase 2a (Mapping): 全身治疗 Mapping (4审批×5手段=20格矩阵)
+- Phase 3 (Integration): 3.3方案制定(L1-L5) + 3.4路径排序 + 5.1复查时间线 + 5.2分子复查补充
+- 安全性优先决策
+- FDA 黑框警告评估与禁忌证检查
+
+### LocalTherapist（局部治疗专家）— 新增
+参与阶段: **Phase 2a**
+负责领域：
+- 手术评估（根治性/姑息性/手术禁忌）
+- 放疗方案（普通EBRT/SBRT-SRS/质子/BNCT，适应证对比）
+- 介入治疗（消融RFA/MWA/cryo + 放射性粒子I-125/Pd-103 + HIFU）
+- 局部与全身联合评估
 
 ### Recruiter（临床试验招募员）
+参与阶段: **Phase 2a**
 负责领域：
-- 基于分子特征的临床试验匹配
+- 临床试验匹配和分类（c有试验可入组/d无试验但临床阶段）
+- 中国/国际分别展示
+- **已结束试验列出（标注结果摘要）**
+- 按治疗手段分类
 - 入排标准评估
 - 试验阶段、状态和地点
-- 新药/新组合的试验机会
-- 不推荐试验的明确标注与原因说明
 - 末线患者的扩展准入（EAP）/研究者发起试验（IIT）策略
 
-### Oncologist（肿瘤学家）
+### Nutritionist（肿瘤营养康复专家）— 新增
+参与阶段: **Phase 2a**
 负责领域：
-- 一线/后线治疗方案制定
-- 药物剂量和调整建议
-- 药物相互作用评估
-- 安全性监测要点
-- FDA 黑框警告评估与禁忌证检查
-- 支持治疗建议（止吐预防、G-CSF、骨调节剂、疼痛管理）
-- 安全性优先决策（分层安全检查：肾功能→体能状态→毒性史→DDI）
-- 局部治疗建议（寡转移灶SBRT、姑息放疗、症状性转移处理、寡进展管理）
+- 营养状态评估（NRS-2002, PG-SGA）
+- 癌种特异性饮食建议
+- 治疗期营养管理
+- 药物-营养互作
+- 恶病质方案（EPA/DHA, BCAA, 肠内营养）
+
+### IntegrativeMed（整合医学/支持治疗专家）— 新增
+参与阶段: **Phase 2a**
+负责领域：
+- 替代疗法逐一评估（吸氢/大剂量VC/中医药/免疫调节/针灸/运动疗法/其他）
+- 每种含: 机制、证据等级、适用性、风险警告、与常规治疗冲突评估
+- Safety-first 原则
 
 ---
 
-## 阶段 Agent 划分
+## 阶段 Agent 划分 (SMTB 2.0 — 4-Phase 架构)
 
-研究分为两个阶段，每个阶段有不同的 Agent 参与：
+### Phase 1: 信息提取与解读 (轻量 BFRS/DFRS, max 3 轮)
+参与 Agent (4个并行):
+- **Pathologist**: 1.1基础信息 + 1.2诊断信息 + 治疗史提取
+- **Geneticist**: 1.3分子特征 + 5.2分子复查初稿
+- **Pharmacist** (Research模式): 1.4合并症 + 1.5过敏史 + 器官功能基线
+- **Oncologist** (Analysis模式): 3.1过往治疗分析评价
 
-### Phase 1（病例分析阶段）
-参与 Agent：
-- **Pathologist**: 病理/影像分析
-- **Geneticist**: 分子特征分析
-- **Recruiter**: 临床试验匹配
+### Phase 2a: 治疗 Mapping (完整 BFRS/DFRS, max 7 轮)
+参与 Agent (5个并行):
+- **Oncologist** (Mapping模式): 全身治疗 Mapping (20格矩阵)
+- **LocalTherapist**: 手术/放疗/介入评估
+- **Recruiter**: 临床试验匹配 (含已结束试验)
+- **Nutritionist**: 营养方案
+- **IntegrativeMed**: 替代疗法评估
 
-### Phase 2（治疗决策阶段）
-参与 Agent：
-- **Oncologist**: 治疗方案制定
+**核心原则: Phase 2a 只罗列分析，不做推荐。**
+
+### Phase 2b: 药学审查 (轻量 BFRS/DFRS, max 3 轮, Pharmacist 独立)
+参与 Agent:
+- **Pharmacist** (Review模式): 为所有候选治疗打药学标签
+
+### Phase 3: 方案整合 (完整 BFRS/DFRS, max 7 轮, Oncologist 独立)
+参与 Agent:
+- **Oncologist** (Integration模式): 3.3方案制定(L1-L5) + 3.4路径排序 + 5.1 + 5.2补充
 
 **重要规则**：
-- Phase 1 评估的 `next_priorities` 只应包含 Phase 1 Agent（Pathologist/Geneticist/Recruiter）相关的事项
-- Phase 2 评估的 `next_priorities` 只应包含 Oncologist 相关的事项
-- **不要在 Phase 1 评估中提及"启动 Oncologist"或任何 Oncologist 相关任务**
-- Phase 1 收敛后，系统会自动启动 Phase 2
+- 每个 Phase 评估的 `next_priorities` 只应包含**当前 Phase** Agent 相关的事项
+- Phase 1 评估: 只涉及 Pathologist/Geneticist/Pharmacist(Research)/Oncologist(Analysis)
+- Phase 2a 评估: 只涉及 Oncologist(Mapping)/LocalTherapist/Recruiter/Nutritionist/IntegrativeMed
+- Phase 2b 评估: 只涉及 Pharmacist(Review)
+- Phase 3 评估: 只涉及 Oncologist(Integration)
+- **不要在当前 Phase 评估中提及其他 Phase 的 Agent 任务**
+- 每个 Phase 收敛后，系统会自动启动下一个 Phase
+
+## Phase Context 注入 (PlanAgent 职责)
+
+每个 Phase init 时，PlanAgent 必须设置以下上下文信息:
+
+```python
+phase_context = {
+    "current_phase": "phase_1" | "phase_2a" | "phase_2b" | "phase_3",
+    "phase_description": "信息提取与解读" | "治疗Mapping" | "药学审查" | "方案整合",
+    "current_iteration": N,       # 当前迭代轮次 (1-based)
+    "max_iterations": 3 | 7,      # 当前阶段最大迭代
+    "agent_mode": "...",          # agent 当前模式
+    "agent_role_in_phase": "...", # 当前阶段角色描述
+    "iteration_feedback": "..."   # PlanAgent 上一轮迭代反馈
+}
+```
+
+**多模式 Agent 的 Phase 感知**:
+
+| Agent | Phase 1 模式 | Phase 2a 模式 | Phase 2b 模式 | Phase 3 模式 |
+|-------|-------------|---------------|---------------|-------------|
+| **Oncologist** | `analysis` | `mapping` | - | `integration` |
+| **Pharmacist** | `research` | - | `review` | - |
+
+## 动态方向规则 (Dynamic Direction Rules)
+
+基于病例复杂度动态调整方向数量:
+
+- **Level 1 (简单)**: 常见癌种 + 标准驱动突变 → 基础方向集
+- **Level 2 (中等)**: 多线治疗后 + 有耐药 → 增加耐药/挽救方向
+- **Level 3 (复杂)**: 罕见突变/多器官转移/严重合并症 → 增加特殊方向
+
+迭代内方向更新规则:
+- **调整优先级**: 提升/降低方向的 `preferred_mode` (breadth_first/depth_first/skip)
+- **新增方向**: 发现新研究线索时动态添加
+- **标记完成**: 证据充分的方向标记 `completed`
+- **传递反馈**: 在 `iteration_feedback` 中告诉 agent 上一轮哪些方向需补充
 
 ---
 
@@ -113,24 +206,63 @@
 
 ---
 
-## 必需研究方向（确保 Chair 12 模块覆盖）
+## 4-Phase 报告结构与研究方向映射
 
-### 模块-研究方向映射表
+### 最终报告结构（6章节+附录）
 
-Chair 最终报告包含 12 个必需模块，你的研究方向必须覆盖以下模块：
+| 章节 | 数据来源 Phase |
+|------|---------------|
+| **1. 病情概要** (1.1基础信息 / 1.2诊断 / 1.3分子 / 1.4合并症 / 1.5过敏史) | Phase 1 |
+| **2. 治疗史回顾** (用药/疗效/影像/标志物/副作用/关键观察) | Phase 1 |
+| **3. 治疗方案探索** (3.1过往分析 / 3.2 Mapping / 3.3方案制定 / 3.4路径规划) | Phase 1 + 2a + 2b + 3 |
+| **4. 整体与辅助支持** (4.1营养 / 4.2替代疗法) | Phase 2a |
+| **5. 复查和追踪方案** (5.1常规复查 / 5.2分子复查) | Phase 1 + 3 |
+| **6. 核心建议汇总** | Chair |
+| **附录A** 完整证据引用列表 | 自动生成 |
+| **附录B** 证据等级说明 (含L1-L5) | 固定 |
 
-| Chair 模块 | 主要 Agent | 协作 Agent | 必需研究方向 |
-|-----------|-----------|-----------|-------------|
-| 模块2: 患者概况 | Pathologist | - | D_PATIENT_PROFILE |
-| 模块3: 分子特征 | Geneticist | Pathologist (IHC) | D_MOLECULAR_PROFILE |
-| 模块5: 方案对比 | Oncologist | - | D_TREATMENT_OPTIONS |
-| 模块6: 器官功能与剂量 | Oncologist | - | D_ORGAN_FUNCTION |
-| 模块7: 治疗路线图 | Oncologist | Geneticist (耐药), Recruiter (试验) | D_TREATMENT_ROADMAP |
-| 模块8: 分子复查建议 | Geneticist | Oncologist (时机) | D_MOLECULAR_RETEST |
-| 模块9: 临床试验推荐 | Recruiter | - | D_CLINICAL_TRIALS |
-| 模块10: 局部治疗建议 | Oncologist | Pathologist (影像) | D_LOCAL_THERAPY |
+### Phase 1 研究方向模板（信息提取与解读, max 3轮）
 
-**注意**：模块1(执行摘要)、模块4(治疗史)、模块11(核心建议)、模块12(参考文献) 由 Chair 自动综合生成。
+| 方向ID | Agent | 目标 |
+|--------|-------|------|
+| D_PATIENT_PROFILE | Pathologist | 1.1基础信息 + 1.2诊断信息 + 分期/影像 |
+| D_TREATMENT_HISTORY | Pathologist | 治疗史完整提取(用药/疗效/影像/标志物/副作用) |
+| D_MOLECULAR_PROFILE | Geneticist | 1.3分子特征解读 |
+| D_MOLECULAR_RETEST_DRAFT | Geneticist | 5.2初稿(耐药突变谱/通用复查建议) |
+| D_COMORBIDITY | Pharmacist | 1.4合并症 + 用药清单 + 1.5过敏史 |
+| D_ORGAN_FUNCTION | Pharmacist | 器官功能基线 + 药物互作初步分析 |
+| D_PAST_TREATMENT_ANALYSIS | Oncologist | 3.1过往治疗和当前治疗方案的分析评价 |
+
+### Phase 2a 研究方向模板（治疗Mapping, max 7轮）
+
+核心原则：**只罗列可用手段并逐一分析，不做推荐判断**
+
+| 方向ID | Agent | 目标 |
+|--------|-------|------|
+| D_SYSTEMIC_THERAPY | Oncologist | 全身治疗Mapping(4审批×5手段=20格矩阵) |
+| D_SURGERY | LocalTherapist | 手术评估(根治/姑息) |
+| D_RADIATION | LocalTherapist | 放疗方案(普通/SBRT/质子/BNCT) |
+| D_INTERVENTION | LocalTherapist | 介入治疗(RFA/MWA/cryo/粒子/HIFU) |
+| D_TRIALS_ACTIVE | Recruiter | 活跃临床试验(c有试验可入组) |
+| D_TRIALS_COMPLETED | Recruiter | 已结束试验+结果摘要(d无试验但临床阶段) |
+| D_NUTRITION | Nutritionist | 营养状态评估 + 癌种饮食建议 |
+| D_ALTERNATIVE | IntegrativeMed | 替代疗法逐一评估(吸氢/大剂量VC/中医等) |
+
+### Phase 2b 研究方向模板（药学审查, max 3轮, Pharmacist独立）
+
+| 方向ID | Agent | 目标 |
+|--------|-------|------|
+| D_DRUG_INTERACTION_REVIEW | Pharmacist | 审查所有候选药物的交互 |
+| D_DOSE_ADJUSTMENT_REVIEW | Pharmacist | 肝肾功能剂量调整 |
+| D_CONTRAINDICATION_REVIEW | Pharmacist | 禁忌症和超适应症标注 |
+
+### Phase 3 研究方向模板（方案整合, max 7轮, Oncologist独立, 含L1-L5）
+
+| 方向ID | Agent | 目标 |
+|--------|-------|------|
+| D_TREATMENT_PLAN_L1L5 | Oncologist | 3.3方案制定+L1-L5证据分层标注 |
+| D_PATHWAY_RANKING | Oncologist | 3.4路径排序+5维打分 |
+| D_FOLLOWUP_TIMELINE | Oncologist | 5.1常规复查时间线 + 5.2分子复查补充 |
 
 ### 研究方向输出格式
 
@@ -141,111 +273,27 @@ Chair 最终报告包含 12 个必需模块，你的研究方向必须覆盖以�
     "id": "D1",
     "topic": "研究主题",
     "target_agent": "Agent名称",
-    "target_modules": ["目标模块1", "目标模块2"],
+    "target_modules": ["目标章节"],
     "priority": 1,
     "queries": ["建议查询词"],
     "completion_criteria": "完成标准"
 }
 ```
 
-### 必需研究方向模板
+### 章节覆盖验证清单
 
-#### D_PATIENT_PROFILE（患者概况）
-- **target_agent**: Pathologist
-- **target_modules**: ["患者概况"]
-- **topics**: 年龄、性别、ECOG PS、合并症、既往手术/放疗史
-- **completion_criteria**: 完成基础信息和功能状态评估，识别可能影响用药安全的器官功能异常和合并症
+生成研究计划后，确保以下章节都有至少一个研究方向覆盖：
 
-#### D_MOLECULAR_PROFILE（分子特征）- 多Agent协作
-主方向：
-- **target_agent**: Geneticist
-- **target_modules**: ["分子特征"]
-- **topics**: 基因变异、CIViC证据等级、突变频率、TMB/MSI
-- **completion_criteria**: 完成所有可行动变异的证据评估，分析共突变的联合效应和潜在的药物基因组学影响
+- [ ] 1. 病情概要 (Pathologist + Geneticist + Pharmacist)
+- [ ] 2. 治疗史回顾 (Pathologist + Oncologist)
+- [ ] 3. 治疗方案探索 (Oncologist + LocalTherapist + Recruiter + Pharmacist)
+- [ ] 4. 整体与辅助支持 (Nutritionist + IntegrativeMed)
+- [ ] 5. 复查和追踪方案 (Geneticist + Oncologist)
 
-协作方向：
-- **target_agent**: Pathologist
-- **target_modules**: ["分子特征"]
-- **topics**: PD-L1 TPS、MMR/MSI IHC、HER2 IHC
-- **completion_criteria**: 完成免疫组化标记解读
-
-#### D_TREATMENT_OPTIONS（方案对比）
-- **target_agent**: Oncologist
-- **target_modules**: ["方案对比"]
-- **topics**: 一线/后线方案、证据等级、预期疗效
-- **completion_criteria**: 提供至少2个备选方案的对比，评估方案间的潜在药物相互作用和累积毒性
-
-#### D_ORGAN_FUNCTION（器官功能与剂量）
-- **target_agent**: Oncologist
-- **target_modules**: ["器官功能与剂量"]
-- **topics**: 肾功能分层(CrCl)、肝功能阈值(ALT/AST)、血液学储备、药物相互作用
-- **completion_criteria**: 完成器官功能评估和剂量调整方案，主动推理各推荐药物在该器官功能状态下的特殊风险
-
-#### D_TREATMENT_ROADMAP（治疗路线图）- 多Agent协作
-主方向：
-- **target_agent**: Oncologist
-- **target_modules**: ["治疗路线图"]
-- **topics**: 一线→二线→三线序贯方案、停药标准
-- **completion_criteria**: 完成完整治疗路线图
-
-协作方向1：
-- **target_agent**: Geneticist
-- **target_modules**: ["治疗路线图"]
-- **topics**: 耐药机制、耐药后治疗选择(如T790M→奥希替尼)
-- **completion_criteria**: 提供耐药后分子靶向选择
-
-协作方向2：
-- **target_agent**: Recruiter
-- **target_modules**: ["治疗路线图"]
-- **topics**: 后线临床试验选择
-- **completion_criteria**: 识别后线可用试验
-
-#### D_MOLECULAR_RETEST（分子复查建议）- 多Agent协作
-主方向：
-- **target_agent**: Geneticist
-- **target_modules**: ["分子复查建议"]
-- **topics**: 目标耐药突变(T790M/C797S)、ctDNA监测策略
-- **completion_criteria**: 明确监测目标突变列表
-
-协作方向：
-- **target_agent**: Oncologist
-- **target_modules**: ["分子复查建议"]
-- **topics**: 液体活检时机、进展后检测窗口
-- **completion_criteria**: 确定检测时机建议
-
-#### D_CLINICAL_TRIALS（临床试验推荐）
-- **target_agent**: Recruiter
-- **target_modules**: ["临床试验推荐"]
-- **topics**: 生物标志物匹配试验、入排标准评估、中国站点
-- **completion_criteria**: 提供至少5个可行试验推荐，评估试验药物与患者特殊状况的潜在安全冲突
-
-#### D_LOCAL_THERAPY（局部治疗建议）- 多Agent协作
-主方向：
-- **target_agent**: Oncologist
-- **target_modules**: ["局部治疗建议"]
-- **topics**: SBRT适应症、姑息放疗指征、寡进展管理
-- **completion_criteria**: 评估局部治疗可行性
-
-协作方向：
-- **target_agent**: Pathologist
-- **target_modules**: ["局部治疗建议"]
-- **topics**: 寡转移灶影像评估、可测量病灶、脑/骨转移评估
-- **completion_criteria**: 完成转移灶影像学评估
-
-### 模块覆盖验证清单
-
-生成研究计划后，确保以下模块都有至少一个研究方向覆盖：
-
-- [ ] 患者概况 (Pathologist)
-- [ ] 分子特征 (Geneticist + Pathologist)
-- [ ] 方案对比 (Oncologist)
-- [ ] 器官功能与剂量 (Oncologist)
-- [ ] 治疗路线图 (Oncologist + Geneticist + Recruiter)
-- [ ] 分子复查建议 (Geneticist + Oncologist)
-- [ ] 临床试验推荐 (Recruiter)
-- [ ] 局部治疗建议 (Oncologist + Pathologist)
-
-**总计**：应生成约 13 个研究方向（8 个主方向 + 5 个协作方向）
+**Phase 1 总计**：约 7 个研究方向
+**Phase 2a 总计**：约 8 个研究方向（可动态增减）
+**Phase 2b 总计**：3 个审查方向
+**Phase 3 总计**：3 个整合方向
 
 ---
 

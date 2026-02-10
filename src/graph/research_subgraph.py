@@ -30,6 +30,10 @@ from src.agents.recruiter import RecruiterAgent
 from src.agents.oncologist import OncologistAgent
 from src.agents.research_mixin import ResearchMixin
 from src.agents.plan_agent import PlanAgent
+from src.agents.nutritionist import NutritionistAgent
+from src.agents.integrative_med import IntegrativeMedAgent
+from src.agents.pharmacist import PharmacistAgent
+from src.agents.local_therapist import LocalTherapistAgent
 from src.utils.logger import (
     mtb_logger as logger,
     log_separator,
@@ -40,6 +44,9 @@ from src.utils.graph_persistence import checkpoint_evidence_graph
 from config.settings import (
     MAX_PHASE1_ITERATIONS,
     MAX_PHASE2_ITERATIONS,
+    MAX_PHASE2A_ITERATIONS,
+    MAX_PHASE2B_ITERATIONS,
+    MAX_PHASE3_ITERATIONS,
     MIN_EVIDENCE_NODES,
     MIN_EVIDENCE_PER_DIRECTION,
     COVERAGE_REQUIRED_MODULES
@@ -234,6 +241,68 @@ class ReportRecruiter(RecruiterAgent):
 
 class ReportOncologist(OncologistAgent):
     """使用 Pro 模型生成领域报告的肿瘤学家"""
+    def __init__(self):
+        super().__init__()
+        self.model = ORCHESTRATOR_MODEL
+        self.tools = []
+
+
+# ==================== 新增 Research/Report Agent (4-Phase) ====================
+
+class ResearchPharmacist(PharmacistAgent, ResearchMixin):
+    """具有研究能力的临床药师"""
+    def __init__(self):
+        super().__init__()
+        self.model = SUBGRAPH_MODEL
+
+
+class ResearchLocalTherapist(LocalTherapistAgent, ResearchMixin):
+    """具有研究能力的局部治疗专家"""
+    def __init__(self):
+        super().__init__()
+        self.model = SUBGRAPH_MODEL
+
+
+class ResearchNutritionist(NutritionistAgent, ResearchMixin):
+    """具有研究能力的营养师"""
+    def __init__(self):
+        super().__init__()
+        self.model = SUBGRAPH_MODEL
+
+
+class ResearchIntegrativeMed(IntegrativeMedAgent, ResearchMixin):
+    """具有研究能力的整合医学专家"""
+    def __init__(self):
+        super().__init__()
+        self.model = SUBGRAPH_MODEL
+
+
+class ReportPharmacist(PharmacistAgent):
+    """使用 Pro 模型生成报告的临床药师"""
+    def __init__(self):
+        super().__init__()
+        self.model = ORCHESTRATOR_MODEL
+        self.tools = []
+
+
+class ReportLocalTherapist(LocalTherapistAgent):
+    """使用 Pro 模型生成报告的局部治疗专家"""
+    def __init__(self):
+        super().__init__()
+        self.model = ORCHESTRATOR_MODEL
+        self.tools = []
+
+
+class ReportNutritionist(NutritionistAgent):
+    """使用 Pro 模型生成报告的营养师"""
+    def __init__(self):
+        super().__init__()
+        self.model = ORCHESTRATOR_MODEL
+        self.tools = []
+
+
+class ReportIntegrativeMed(IntegrativeMedAgent):
+    """使用 Pro 模型生成报告的整合医学专家"""
     def __init__(self):
         super().__init__()
         self.model = ORCHESTRATOR_MODEL
@@ -1320,7 +1389,8 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
     agent_configs = [
         ("Pathologist", ReportPathologist, "pathologist_report", "1_pathologist_report.md"),
         ("Geneticist", ReportGeneticist, "geneticist_report", "2_geneticist_report.md"),
-        ("Recruiter", ReportRecruiter, "recruiter_report", "3_recruiter_report.md"),
+        ("Pharmacist", ReportPharmacist, "pharmacist_report", "3_pharmacist_report.md"),
+        ("Oncologist", ReportOncologist, "oncologist_analysis_report", "4_oncologist_analysis.md"),
     ]
 
     for agent_name, agent_class, report_key, filename in agent_configs:
@@ -1404,107 +1474,92 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
     return reports
 
 
-# ==================== Phase 2 研究计划初始化 ====================
+# ==================== Phase 2a 研究计划初始化 ====================
 
-def phase2_plan_init(state: MtbState) -> Dict[str, Any]:
+def phase2a_plan_init(state: MtbState) -> Dict[str, Any]:
     """
-    Phase 2 研究计划初始化 - 基于 Phase 1 结果生成针对性的 Oncologist 方向
+    Phase 2a 研究计划初始化 - 治疗 Mapping
 
-    在 Phase 1 收敛后、Phase 2 开始前调用。
-    读取 Phase 1 完整报告和证据图，生成针对性的 Oncologist 研究方向。
+    读取 Phase 1 的 4 份报告 + evidence_graph，为 5 个 agent 生成 Phase2a 方向。
     """
-    log_separator("PHASE2_PLAN_INIT")
-    logger.info("[PHASE2_PLAN_INIT] 基于 Phase 1 结果生成 Phase 2 研究方向...")
+    log_separator("PHASE2A_PLAN_INIT")
+    logger.info("[PHASE2A_PLAN_INIT] 基于 Phase 1 结果生成 Phase 2a 研究方向...")
 
-    # 检查 Phase 1 报告是否存在
-    pathologist_report = state.get("pathologist_report", "")
-    geneticist_report = state.get("geneticist_report", "")
-    recruiter_report = state.get("recruiter_report", "")
-
-    if not (pathologist_report or geneticist_report or recruiter_report):
-        logger.warning("[PHASE2_PLAN_INIT] Phase 1 报告缺失，使用默认 Phase 2 方向")
-        return {}
-
-    logger.info(f"[PHASE2_PLAN_INIT] Phase 1 报告长度: P={len(pathologist_report)}, G={len(geneticist_report)}, R={len(recruiter_report)}")
-
-    # 调用 PlanAgent 生成 Phase 2 方向
     try:
         agent = PlanAgent()
-        new_plan = agent.generate_phase2_directions(state)
+        result = agent.generate_phase2a_directions(state)
 
-        # 统计新方向（Phase 1 不含 Oncologist 方向，无需移除）
-        plan = load_research_plan(new_plan)
+        plan_data = result.get("research_plan", {})
+        directions = plan_data.get("directions", []) if isinstance(plan_data, dict) else []
+        logger.info(f"[PHASE2A_PLAN_INIT] 生成 {len(directions)} 个 Phase 2a 方向")
+        for d in directions:
+            logger.info(f"[PHASE2A_PLAN_INIT]   - {d.get('id', '?')}: {d.get('topic', '?')} → {d.get('target_agent', '?')}")
 
-        oncologist_directions = [d for d in plan.directions if d.target_agent == "Oncologist"] if plan else []
-        logger.info(f"[PHASE2_PLAN_INIT] 生成 {len(oncologist_directions)} 个 Oncologist 方向:")
-        for d in oncologist_directions:
-            logger.info(f"[PHASE2_PLAN_INIT]   - {d.id}: {d.topic}")
-
-        return {"research_plan": plan.to_dict() if plan else new_plan}
+        return result
 
     except Exception as e:
-        logger.error(f"[PHASE2_PLAN_INIT] Phase 2 方向生成失败: {e}")
-        logger.info("[PHASE2_PLAN_INIT] 继续使用原有 Oncologist 方向")
+        logger.error(f"[PHASE2A_PLAN_INIT] Phase 2a 方向生成失败: {e}")
         return {}
 
 
-# ==================== Phase 2 报告生成辅助函数 ====================
+# ==================== Phase 2a/2b/3 报告生成 ====================
 
-def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
+def _generate_phase_reports(state: MtbState, agent_configs: list, phase_tag: str) -> Dict[str, Any]:
     """
-    Phase 2 收敛后，Oncologist 基于 evidence_graph 生成领域综合报告
+    通用报告生成函数，用于 Phase 2a/2b/3
 
-    这个报告将与 Phase 1 专家报告一起传递给 Chair，让 Chair 能够看到
-    所有专家的综合分析结论。
+    Args:
+        agent_configs: [(agent_name, agent_class, state_key, filename), ...]
+        phase_tag: 日志标签
     """
-    log_separator("PHASE2_REPORTS")
-    logger.info("[PHASE2_REPORTS] 生成 Phase 2 专家报告...")
+    log_separator(phase_tag)
+    logger.info(f"[{phase_tag}] 生成专家报告...")
 
     evidence_graph = state.get("evidence_graph", {})
     raw_pdf_text = state.get("raw_pdf_text", "")
 
     graph = load_evidence_graph(evidence_graph)
     if not graph:
-        logger.warning("[PHASE2_REPORTS] 证据图为空，跳过报告生成")
+        logger.warning(f"[{phase_tag}] 证据图为空，跳过报告生成")
         return {}
 
-    # 提取 Oncologist 收集的证据（实体 + 边）
-    oncologist_entities = graph.get_entities_with_agent_observations("Oncologist")
-    oncologist_edges = graph.get_agent_edges("Oncologist")
-    observation_count = graph.get_agent_observation_count("Oncologist")
-    logger.info(f"[PHASE2_REPORTS] Oncologist 实体数: {len(oncologist_entities)}, 边数: {len(oncologist_edges)}, 观察数: {observation_count}")
+    reports = {}
 
-    if not oncologist_entities:
-        logger.warning("[PHASE2_REPORTS] Oncologist 无证据，生成默认报告")
-        return {"oncologist_plan": "## 治疗方案分析\n\n暂无相关发现。"}
+    for agent_name, agent_class, report_key, filename in agent_configs:
+        logger.info(f"[{phase_tag}] 生成 {agent_name} 报告...")
 
-    # 构建证据摘要（文本格式，供 LLM 理解上下文）
-    evidence_summary = _format_evidence_for_report(oncologist_entities, "Oncologist")
+        agent_entities = graph.get_entities_with_agent_observations(agent_name)
+        agent_edges = graph.get_agent_edges(agent_name)
+        observation_count = graph.get_agent_observation_count(agent_name)
+        logger.info(f"[{phase_tag}]   {agent_name} 实体数: {len(agent_entities)}, 边数: {len(agent_edges)}, 观察数: {observation_count}")
 
-    # 构建完整证据表格（结构化表格，确保不遗漏）
-    evidence_table = _format_evidence_table(oncologist_entities, oncologist_edges, "Oncologist")
+        if not agent_entities:
+            reports[report_key] = f"## {agent_name} 报告\n\n暂无相关发现。"
+            continue
 
-    # 获取上游报告作为参考
-    pathologist_report = state.get('pathologist_report', '')
-    geneticist_report = state.get('geneticist_report', '')
-    recruiter_report = state.get('recruiter_report', '')
+        evidence_summary = _format_evidence_for_report(agent_entities, agent_name)
+        evidence_table = _format_evidence_table(agent_entities, agent_edges, agent_name)
 
-    # 构建报告生成 prompt
-    report_prompt = f"""基于以下病例信息、上游专家报告和已收集的研究证据，生成你的肿瘤学专业领域综合报告。
+        # 收集所有已有报告作为上游参考
+        upstream_reports = []
+        for key in ["pathologist_report", "geneticist_report", "pharmacist_report",
+                     "oncologist_analysis_report", "oncologist_mapping_report",
+                     "local_therapist_report", "recruiter_report",
+                     "nutritionist_report", "integrative_med_report",
+                     "pharmacist_review_report"]:
+            val = state.get(key, "")
+            if val:
+                upstream_reports.append(f"### {key}\n{val}")
+
+        upstream_text = "\n\n".join(upstream_reports) if upstream_reports else "暂无"
+
+        report_prompt = f"""基于以下病例信息、上游专家报告和已收集的研究证据，生成你的专业领域综合报告。
 
 ## 病例背景
 {raw_pdf_text}
 
 ## 上游专家报告
-
-### 病理学分析报告
-{pathologist_report if pathologist_report else "暂无"}
-
-### 分子分析报告
-{geneticist_report if geneticist_report else "暂无"}
-
-### 临床试验推荐报告
-{recruiter_report if recruiter_report else "暂无"}
+{upstream_text}
 
 ## 你收集的研究证据（共 {observation_count} 条）
 {evidence_summary}
@@ -1513,53 +1568,79 @@ def generate_phase2_reports(state: MtbState) -> Dict[str, Any]:
 {evidence_table}
 
 ## 输出要求
-请生成一份完整的 Markdown 格式的肿瘤学治疗方案分析报告。注意：
-1. 整合所有证据和上游报告信息，给出综合治疗建议
+请生成一份完整的 Markdown 格式的领域分析报告。注意：
+1. 整合所有证据，给出综合分析结论
 2. **内联引用格式**：每个数据点必须使用以下格式之一进行内联引用：
    - PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
    - 临床试验: `[NCT04123456](https://clinicaltrials.gov/study/NCT04123456)`
-   - GDC: `[GDC: project](url)`
-   - CIViC: `[CIViC: variant](url)`
-   - NCCN: `[NCCN: guideline](url)`
-   - FDA: `[FDA: label](url)`
+   - NCCN: `[NCCN: guideline](url)` / FDA: `[FDA: label](url)`
    - 禁止只在末尾列出引用而正文无内联引用
 3. 每条建议必须标注证据等级 `[Evidence A/B/C/D/E]`，且紧邻相关引用
-4. 重点突出治疗方案选择、用药建议、安全性考量
-5. 包含治疗路线图和分子复查建议
-6. 不要在报告中生成证据清单表格，系统会自动追加完整的 Evidence Graph 证据清单
+4. 重点突出对治疗决策有指导意义的发现
+5. 不要在报告中生成证据清单表格，系统会自动追加完整的 Evidence Graph 证据清单
 """
 
-    try:
-        # 实例化 Oncologist Report Agent（Pro 模型）并调用
-        agent = ReportOncologist()
-        response = agent.invoke(report_prompt)
+        try:
+            agent = agent_class()
+            response = agent.invoke(report_prompt)
 
-        if response and response.get("output"):
-            report = response["output"]
+            if response and response.get("output"):
+                report = response["output"]
+                report += f"\n\n---\n\n## 完整证据清单（Evidence Graph）\n\n{evidence_table}"
 
-            # 程序化追加完整证据清单（确保不遗漏）
-            report += f"\n\n---\n\n## 完整证据清单（Evidence Graph）\n\n{evidence_table}"
+                hypotheses_section = _format_hypotheses_for_report(state, agent_name)
+                if hypotheses_section:
+                    report += f"\n\n---\n\n{hypotheses_section}"
 
-            # 程序化追加假设验证记录
-            hypotheses_section = _format_hypotheses_for_report(state, "Oncologist")
-            if hypotheses_section:
-                report += f"\n\n---\n\n{hypotheses_section}"
+                reports[report_key] = report
+                logger.info(f"[{phase_tag}]   {agent_name} 报告生成成功: {len(report)} 字符")
+                _save_agent_report(state, filename, report)
+            else:
+                reports[report_key] = f"## {agent_name} 报告\n\n报告生成失败。"
+                logger.warning(f"[{phase_tag}]   {agent_name} 报告生成失败")
 
-            logger.info(f"[PHASE2_REPORTS] Oncologist 报告生成成功: {len(report)} 字符")
-            # 保存到文件
-            _save_agent_report(state, "4_oncologist_report.md", report)
+        except Exception as e:
+            logger.error(f"[{phase_tag}]   {agent_name} 报告生成异常: {e}")
+            reports[report_key] = f"## {agent_name} 报告\n\n报告生成异常: {str(e)}"
 
-            # 保存 Phase 2 完成检查点
-            checkpoint_evidence_graph(state, phase="phase2", iteration=state.get("phase2_iteration", 0), checkpoint_type="phase_complete")
+    return reports
 
-            return {"oncologist_plan": report}
-        else:
-            logger.warning("[PHASE2_REPORTS] Oncologist 报告生成失败")
-            return {"oncologist_plan": "## 治疗方案分析\n\n报告生成失败。"}
 
-    except Exception as e:
-        logger.error(f"[PHASE2_REPORTS] Oncologist 报告生成异常: {e}")
-        return {"oncologist_plan": f"## 治疗方案分析\n\n报告生成异常: {str(e)}"}
+def generate_phase2a_reports(state: MtbState) -> Dict[str, Any]:
+    """Phase 2a 收敛后，5 个 agent 生成治疗 Mapping 报告"""
+    agent_configs = [
+        ("Oncologist", ReportOncologist, "oncologist_mapping_report", "5_oncologist_mapping.md"),
+        ("LocalTherapist", ReportLocalTherapist, "local_therapist_report", "6_local_therapist.md"),
+        ("Recruiter", ReportRecruiter, "recruiter_report", "7_recruiter.md"),
+        ("Nutritionist", ReportNutritionist, "nutritionist_report", "8_nutritionist.md"),
+        ("IntegrativeMed", ReportIntegrativeMed, "integrative_med_report", "9_integrative_med.md"),
+    ]
+    result = _generate_phase_reports(state, agent_configs, "PHASE2A_REPORTS")
+    checkpoint_evidence_graph(state, phase="phase2a", iteration=state.get("phase2a_iteration", 0), checkpoint_type="phase_complete")
+    return result
+
+
+def generate_phase2b_report(state: MtbState) -> Dict[str, Any]:
+    """Phase 2b 收敛后，Pharmacist 生成药学审查报告"""
+    agent_configs = [
+        ("Pharmacist", ReportPharmacist, "pharmacist_review_report", "10_pharmacist_review.md"),
+    ]
+    result = _generate_phase_reports(state, agent_configs, "PHASE2B_REPORTS")
+    checkpoint_evidence_graph(state, phase="phase2b", iteration=state.get("phase2b_iteration", 0), checkpoint_type="phase_complete")
+    return result
+
+
+def generate_phase3_report(state: MtbState) -> Dict[str, Any]:
+    """Phase 3 收敛后，Oncologist 生成方案整合报告"""
+    agent_configs = [
+        ("Oncologist", ReportOncologist, "oncologist_integration_report", "11_oncologist_integration.md"),
+    ]
+    result = _generate_phase_reports(state, agent_configs, "PHASE3_REPORTS")
+    # Also set oncologist_plan for backward compat with chair
+    if result.get("oncologist_integration_report"):
+        result["oncologist_plan"] = result["oncologist_integration_report"]
+    checkpoint_evidence_graph(state, phase="phase3", iteration=state.get("phase3_iteration", 0), checkpoint_type="phase_complete")
+    return result
 
 
 # ==================== Phase 1 节点 ====================
@@ -1596,6 +1677,18 @@ def phase1_router(state: MtbState) -> List[Send]:
         agent_status["Recruiter"] = "○"
     else:
         agent_status["Recruiter"] = "✓"
+
+    if not state.get("pharmacist_converged", False):
+        agents_to_run.append("pharmacist")
+        agent_status["Pharmacist"] = "○"
+    else:
+        agent_status["Pharmacist"] = "✓"
+
+    if not state.get("oncologist_analysis_converged", False):
+        agents_to_run.append("oncologist_analysis")
+        agent_status["Oncologist(Analysis)"] = "○"
+    else:
+        agent_status["Oncologist(Analysis)"] = "✓"
 
     # 增强日志输出
     log_separator("PHASE1")
@@ -1642,6 +1735,70 @@ def phase1_geneticist_node(state: MtbState) -> Dict[str, Any]:
 def phase1_recruiter_node(state: MtbState) -> Dict[str, Any]:
     """Phase 1: 临床试验专员研究节点"""
     return _execute_phase1_agent(state, "Recruiter", ResearchRecruiter)
+
+
+def phase1_pharmacist_node(state: MtbState) -> Dict[str, Any]:
+    """Phase 1: 临床药师研究节点"""
+    return _execute_phase1_agent(state, "Pharmacist", ResearchPharmacist)
+
+
+def phase1_oncologist_analysis_node(state: MtbState) -> Dict[str, Any]:
+    """Phase 1: 肿瘤学家(Analysis模式)研究节点"""
+    tag = "PHASE1_ONCOLOGIST_ANALYSIS"
+    logger.info(f"[{tag}] ───────────────────────────────────────")
+
+    converged_key = "oncologist_analysis_converged"
+    if state.get(converged_key, False):
+        logger.info(f"[{tag}] 已收敛，跳过执行")
+        return {}
+
+    iteration = state.get("phase1_iteration", 0)
+    plan = load_research_plan(state.get("research_plan", {}))
+    evidence_graph = state.get("evidence_graph", {})
+    raw_pdf_text = state.get("raw_pdf_text", "")
+
+    # Get directions assigned to Oncologist in Phase 1
+    directions = []
+    if plan:
+        for d in plan.directions:
+            if d.target_agent == "Oncologist":
+                directions.append(d.to_dict())
+
+    if not directions:
+        logger.info(f"[{tag}] 无分配方向，视为收敛")
+        return {converged_key: True}
+
+    agent = ResearchOncologist()
+
+    # Build phase context for Analysis mode
+    phase_context = {
+        "current_phase": "phase_1",
+        "phase_description": "信息提取与解读",
+        "current_iteration": iteration + 1,
+        "max_iterations": MAX_PHASE1_ITERATIONS,
+        "agent_mode": "analysis",
+        "agent_role_in_phase": "过往治疗和当前治疗方案的分析评价(3.1)",
+        "iteration_feedback": ""
+    }
+
+    result = agent.research_iterate(
+        mode=ResearchMode.BREADTH_FIRST,
+        directions=directions,
+        evidence_graph=evidence_graph,
+        iteration=iteration,
+        max_iterations=MAX_PHASE1_ITERATIONS,
+        case_context=raw_pdf_text,
+        research_plan=state.get("research_plan", {}),
+        phase_context=phase_context
+    )
+
+    return_dict = {
+        "evidence_graph": result.get("evidence_graph", evidence_graph),
+        "oncologist_analysis_research_result": result,
+    }
+    if result.get("research_plan"):
+        return_dict["research_plan"] = result.get("research_plan")
+    return return_dict
 
 
 def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict[str, Any]:
@@ -1728,7 +1885,8 @@ def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
     agent_results = {
         "Pathologist": state.get("pathologist_research_result", {}),
         "Geneticist": state.get("geneticist_research_result", {}),
-        "Recruiter": state.get("recruiter_research_result", {})
+        "Pharmacist": state.get("pharmacist_research_result", {}),
+        "Oncologist": state.get("oncologist_analysis_research_result", {}),
     }
 
     new_findings = 0
@@ -1832,7 +1990,7 @@ def plan_agent_evaluate_phase1(state: MtbState) -> Dict[str, Any]:
             phase="PHASE1",
             iteration=iteration,
             eval_result=forced_eval_result,
-            agent_names=["Pathologist", "Geneticist", "Recruiter"],
+            agent_names=["Pathologist", "Geneticist", "Pharmacist", "Oncologist"],
             pre_eval_plan=pre_eval_plan
         )
         return {
@@ -1840,7 +1998,8 @@ def plan_agent_evaluate_phase1(state: MtbState) -> Dict[str, Any]:
             "phase1_all_converged": True,
             "pathologist_converged": True,
             "geneticist_converged": True,
-            "recruiter_converged": True,
+            "pharmacist_converged": True,
+            "oncologist_analysis_converged": True,
             "plan_agent_evaluation": {
                 "phase": "phase1",
                 "iteration": iteration,
@@ -1865,7 +2024,7 @@ def plan_agent_evaluate_phase1(state: MtbState) -> Dict[str, Any]:
             phase="PHASE1",
             iteration=iteration,
             eval_result=eval_result,
-            agent_names=["Pathologist", "Geneticist", "Recruiter"],
+            agent_names=["Pathologist", "Geneticist", "Pharmacist", "Oncologist"],
             pre_eval_plan=pre_eval_plan
         )
 
@@ -1879,7 +2038,8 @@ def plan_agent_evaluate_phase1(state: MtbState) -> Dict[str, Any]:
             "phase1_all_converged": all_converged,
             "pathologist_converged": all_converged,
             "geneticist_converged": all_converged,
-            "recruiter_converged": all_converged,
+            "pharmacist_converged": all_converged,
+            "oncologist_analysis_converged": all_converged,
             "plan_agent_evaluation": {
                 "phase": "phase1",
                 "iteration": iteration,
@@ -1907,7 +2067,7 @@ def plan_agent_evaluate_phase1(state: MtbState) -> Dict[str, Any]:
             phase="PHASE1",
             iteration=iteration,
             eval_result=error_eval_result,
-            agent_names=["Pathologist", "Geneticist", "Recruiter"],
+            agent_names=["Pathologist", "Geneticist", "Pharmacist", "Oncologist"],
             pre_eval_plan=pre_eval_plan
         )
         return {
@@ -1933,275 +2093,513 @@ def phase1_convergence_check(state: MtbState) -> Literal["continue", "converged"
     return decision
 
 
-# ==================== Phase 2 节点 ====================
+# ==================== Phase 2a 节点 (治疗 Mapping, 5 agents 并行) ====================
 
-def phase2_oncologist_node(state: MtbState) -> Dict[str, Any]:
-    """Phase 2: 肿瘤学家研究节点"""
-    # 获取状态
-    iteration = state.get("phase2_iteration", 0)
+def _execute_phase2a_agent(state: MtbState, agent_name: str, agent_class, phase_mode: str = "research") -> Dict[str, Any]:
+    """执行 Phase 2a Agent 的研究迭代"""
+    tag = f"PHASE2A_{agent_name.upper()}"
+    logger.info(f"[{tag}] ───────────────────────────────────────")
+
+    converged_key = f"{agent_name.lower().replace(' ', '_')}_converged"
+    if agent_name == "Oncologist":
+        converged_key = "oncologist_mapping_converged"
+    if state.get(converged_key, False):
+        logger.info(f"[{tag}] 已收敛，跳过执行")
+        return {}
+
+    iteration = state.get("phase2a_iteration", 0)
     plan = load_research_plan(state.get("research_plan", {}))
-    graph = load_evidence_graph(state.get("evidence_graph", {}))
+    evidence_graph = state.get("evidence_graph", {})
+    raw_pdf_text = state.get("raw_pdf_text", "")
 
-    # 增强日志输出
-    log_separator("PHASE2")
-    logger.info(f"[PHASE2] Oncologist 迭代 {iteration + 1}/{MAX_PHASE2_ITERATIONS}")
-
-    # 显示 Oncologist 方向的模式分布（新逻辑）
+    directions = []
     if plan:
-        onc_directions = [d for d in plan.directions if d.target_agent == "Oncologist"]
-        mode_summary = {"breadth_first": 0, "depth_first": 0, "skip": 0}
-        for d in onc_directions:
-            mode_summary[d.preferred_mode] = mode_summary.get(d.preferred_mode, 0) + 1
-        logger.info(f"[PHASE2] Oncologist 方向模式: BFRS={mode_summary['breadth_first']}, DFRS={mode_summary['depth_first']}, Skip={mode_summary['skip']}")
+        for d in plan.directions:
+            if d.target_agent == agent_name:
+                directions.append(d.to_dict())
 
-    # 显示上游报告摘要
-    pathologist_report = state.get('pathologist_report', '')
-    geneticist_report = state.get('geneticist_report', '')
-    recruiter_report = state.get('recruiter_report', '')
-    logger.info(f"[PHASE2] 上游报告:")
-    logger.info(f"[PHASE2]   Pathologist: {len(pathologist_report)} 字符")
-    logger.info(f"[PHASE2]   Geneticist: {len(geneticist_report)} 字符")
-    logger.info(f"[PHASE2]   Recruiter: {len(recruiter_report)} 字符")
+    if not directions:
+        logger.info(f"[{tag}] 无分配方向，视为收敛")
+        return {converged_key: True}
 
-    # 显示当前证据图状态
-    if graph and len(graph) > 0:
-        log_evidence_stats(state.get("evidence_graph", {}))
+    logger.info(f"[{tag}] 分配方向: {len(directions)} 个")
 
-    # 获取分配给 Oncologist 的方向
+    agent = agent_class()
+
+    # 构建上下文（包含所有 Phase 1 报告）
+    context = f"""病例背景:
+{raw_pdf_text}
+
+Phase 1 报告:
+病理学: {state.get('pathologist_report', '暂无')}
+
+遗传学: {state.get('geneticist_report', '暂无')}
+
+药师(合并症): {state.get('pharmacist_report', '暂无')}
+
+过往治疗分析: {state.get('oncologist_analysis_report', '暂无')}
+"""
+
+    phase_context = {
+        "current_phase": "phase_2a",
+        "phase_description": "治疗Mapping",
+        "current_iteration": iteration + 1,
+        "max_iterations": MAX_PHASE2A_ITERATIONS,
+        "agent_mode": phase_mode,
+        "agent_role_in_phase": f"{agent_name} Phase 2a: 只罗列可用手段并逐一分析，不做推荐判断",
+        "iteration_feedback": ""
+    }
+
+    result = agent.research_iterate(
+        mode=ResearchMode.BREADTH_FIRST,
+        directions=directions,
+        evidence_graph=evidence_graph,
+        iteration=iteration,
+        max_iterations=MAX_PHASE2A_ITERATIONS,
+        case_context=context,
+        research_plan=state.get("research_plan", {}),
+        phase_context=phase_context
+    )
+
+    new_entity_ids = result.get("new_entity_ids", [])
+    logger.info(f"[{tag}] 完成, 新证据: {len(new_entity_ids)}")
+
+    result_key = f"{agent_name.lower().replace(' ', '_')}_research_result"
+    if agent_name == "Oncologist":
+        result_key = "oncologist_mapping_research_result"
+
+    return_dict = {
+        "evidence_graph": result.get("evidence_graph", evidence_graph),
+        result_key: result,
+    }
+    if result.get("research_plan"):
+        return_dict["research_plan"] = result.get("research_plan")
+    return return_dict
+
+
+def phase2a_router(state: MtbState) -> List[Send]:
+    """Phase 2a 路由：分发 5 个 agent 并行"""
+    iteration = state.get("phase2a_iteration", 0)
+    log_separator("PHASE2A")
+    logger.info(f"[PHASE2A] 迭代 {iteration + 1}/{MAX_PHASE2A_ITERATIONS}")
+
+    agents_to_run = []
+    if not state.get("oncologist_mapping_converged", False):
+        agents_to_run.append("phase2a_oncologist")
+    if not state.get("local_therapist_converged", False):
+        agents_to_run.append("phase2a_local_therapist")
+    if not state.get("recruiter_converged", False):
+        agents_to_run.append("phase2a_recruiter")
+    if not state.get("nutritionist_converged", False):
+        agents_to_run.append("phase2a_nutritionist")
+    if not state.get("integrative_med_converged", False):
+        agents_to_run.append("phase2a_integrative_med")
+
+    if not agents_to_run:
+        logger.info("[PHASE2A] 所有 Agent 已收敛，跳过迭代")
+        return []
+
+    logger.info(f"[PHASE2A] 分发到: {', '.join(agents_to_run)}")
+    return [Send(agent, state) for agent in agents_to_run]
+
+
+def phase2a_oncologist_node(state: MtbState) -> Dict[str, Any]:
+    """Phase 2a: Oncologist Mapping 模式"""
+    return _execute_phase2a_agent(state, "Oncologist", ResearchOncologist, "mapping")
+
+def phase2a_local_therapist_node(state: MtbState) -> Dict[str, Any]:
+    """Phase 2a: 局部治疗专家"""
+    return _execute_phase2a_agent(state, "LocalTherapist", ResearchLocalTherapist)
+
+def phase2a_recruiter_node(state: MtbState) -> Dict[str, Any]:
+    """Phase 2a: 临床试验专员"""
+    return _execute_phase2a_agent(state, "Recruiter", ResearchRecruiter)
+
+def phase2a_nutritionist_node(state: MtbState) -> Dict[str, Any]:
+    """Phase 2a: 营养师"""
+    return _execute_phase2a_agent(state, "Nutritionist", ResearchNutritionist)
+
+def phase2a_integrative_med_node(state: MtbState) -> Dict[str, Any]:
+    """Phase 2a: 整合医学专家"""
+    return _execute_phase2a_agent(state, "IntegrativeMed", ResearchIntegrativeMed)
+
+
+def phase2a_aggregator(state: MtbState) -> Dict[str, Any]:
+    """Phase 2a 聚合：合并 5 个并行 Agent 的结果"""
+    log_separator("PHASE2A")
+    logger.info("[PHASE2A] 聚合并行结果:")
+
+    agent_results = {
+        "Oncologist": state.get("oncologist_mapping_research_result", {}),
+        "LocalTherapist": state.get("local_therapist_research_result", {}),
+        "Recruiter": state.get("recruiter_research_result", {}),
+        "Nutritionist": state.get("nutritionist_research_result", {}),
+        "IntegrativeMed": state.get("integrative_med_research_result", {}),
+    }
+
+    new_findings = 0
+    agent_findings_detail = {}
+    for agent_name, result in agent_results.items():
+        entity_ids = result.get("new_entity_ids", [])
+        count = len(entity_ids)
+        new_findings += count
+        agent_findings_detail[agent_name] = {"count": count, "entity_ids": entity_ids}
+        logger.info(f"[PHASE2A]   {agent_name}: {count} 条新证据")
+
+    logger.info(f"[PHASE2A]   本轮总计: {new_findings}")
+    log_evidence_stats(state.get("evidence_graph", {}))
+
+    current_iteration = state.get("phase2a_iteration", 0)
+    new_iteration = current_iteration + 1
+
+    iteration_record = {
+        "phase": "PHASE2A",
+        "iteration": new_iteration,
+        "timestamp": datetime.now().isoformat(),
+        "agent_findings": agent_findings_detail,
+        "total_new_findings": new_findings,
+        "convergence_check": {},
+        "final_decision": "pending"
+    }
+
+    history = list(state.get("iteration_history", []))
+    history.append(iteration_record)
+
+    checkpoint_evidence_graph(state, phase="phase2a", iteration=new_iteration, checkpoint_type="checkpoint")
+
+    return {
+        "phase2a_iteration": new_iteration,
+        "iteration_history": history,
+    }
+
+
+def plan_agent_evaluate_phase2a(state: MtbState) -> Dict[str, Any]:
+    """PlanAgent 评估 Phase 2a 研究进度"""
+    logger.info("[PHASE2A_PLAN_EVAL] PlanAgent 评估研究进度...")
+
+    iteration = state.get("phase2a_iteration", 0)
+    pre_eval_plan = state.get("research_plan", {})
+
+    if iteration >= MAX_PHASE2A_ITERATIONS:
+        logger.warning(f"[PHASE2A_PLAN_EVAL] 达到迭代上限 ({MAX_PHASE2A_ITERATIONS})，强制收敛")
+        return {
+            "phase2a_decision": "converged",
+            "phase2a_converged": True,
+            "oncologist_mapping_converged": True,
+            "local_therapist_converged": True,
+            "recruiter_converged": True,
+            "nutritionist_converged": True,
+            "integrative_med_converged": True,
+        }
+
+    try:
+        plan_agent = PlanAgent()
+        eval_result = plan_agent.evaluate_and_update(state, "phase2a", iteration)
+
+        decision = eval_result.get("decision", "continue")
+        logger.info(f"[PHASE2A_PLAN_EVAL] PlanAgent 决策: {decision}")
+
+        _save_detailed_iteration_report(
+            state=state, phase="PHASE2A", iteration=iteration,
+            eval_result=eval_result,
+            agent_names=["Oncologist", "LocalTherapist", "Recruiter", "Nutritionist", "IntegrativeMed"],
+            pre_eval_plan=pre_eval_plan
+        )
+
+        all_converged = (decision == "converged")
+        return {
+            "research_plan": eval_result.get("research_plan", state.get("research_plan", {})),
+            "phase2a_decision": decision,
+            "phase2a_converged": all_converged,
+            "oncologist_mapping_converged": all_converged,
+            "local_therapist_converged": all_converged,
+            "recruiter_converged": all_converged,
+            "nutritionist_converged": all_converged,
+            "integrative_med_converged": all_converged,
+        }
+
+    except Exception as e:
+        logger.error(f"[PHASE2A_PLAN_EVAL] PlanAgent 评估失败: {e}")
+        return {"phase2a_decision": "continue"}
+
+
+def phase2a_convergence_check(state: MtbState) -> Literal["continue", "converged"]:
+    """Phase 2a 收敛检查"""
+    return state.get("phase2a_decision", "continue")
+
+
+# ==================== Phase 2b 节点 (药学审查, Pharmacist 独立) ====================
+
+def phase2b_plan_init(state: MtbState) -> Dict[str, Any]:
+    """Phase 2b 研究计划初始化 - Pharmacist 审查"""
+    log_separator("PHASE2B_PLAN_INIT")
+    logger.info("[PHASE2B_PLAN_INIT] 生成 Phase 2b Pharmacist 审查方向...")
+
+    try:
+        agent = PlanAgent()
+        result = agent.generate_phase2b_directions(state)
+        logger.info(f"[PHASE2B_PLAN_INIT] Phase 2b 方向生成完成")
+        return result
+    except Exception as e:
+        logger.error(f"[PHASE2B_PLAN_INIT] Phase 2b 方向生成失败: {e}")
+        return {}
+
+
+def phase2b_pharmacist_node(state: MtbState) -> Dict[str, Any]:
+    """Phase 2b: Pharmacist Review 模式"""
+    tag = "PHASE2B_PHARMACIST"
+    logger.info(f"[{tag}] ───────────────────────────────────────")
+
+    iteration = state.get("phase2b_iteration", 0)
+    plan = load_research_plan(state.get("research_plan", {}))
+    evidence_graph = state.get("evidence_graph", {})
+    raw_pdf_text = state.get("raw_pdf_text", "")
+
+    directions = []
+    if plan:
+        for d in plan.directions:
+            if d.target_agent == "Pharmacist":
+                directions.append(d.to_dict())
+
+    if not directions:
+        logger.info(f"[{tag}] 无分配方向，视为收敛")
+        return {"phase2b_converged": True}
+
+    agent = ResearchPharmacist()
+
+    # 构建上下文: Phase 1 pharmacist + Phase 2a 全部报告
+    context = f"""病例背景:
+{raw_pdf_text}
+
+Phase 1 药师报告(合并症/用药):
+{state.get('pharmacist_report', '暂无')}
+
+Phase 2a 报告:
+Oncologist Mapping: {state.get('oncologist_mapping_report', '暂无')}
+局部治疗: {state.get('local_therapist_report', '暂无')}
+临床试验: {state.get('recruiter_report', '暂无')}
+营养: {state.get('nutritionist_report', '暂无')}
+整合医学: {state.get('integrative_med_report', '暂无')}
+"""
+
+    phase_context = {
+        "current_phase": "phase_2b",
+        "phase_description": "药学审查",
+        "current_iteration": iteration + 1,
+        "max_iterations": MAX_PHASE2B_ITERATIONS,
+        "agent_mode": "review",
+        "agent_role_in_phase": "为每个候选治疗手段打药学标签(交互/剂量/毒性/禁忌/超适应症)",
+        "iteration_feedback": ""
+    }
+
+    result = agent.research_iterate(
+        mode=ResearchMode.BREADTH_FIRST,
+        directions=directions,
+        evidence_graph=evidence_graph,
+        iteration=iteration,
+        max_iterations=MAX_PHASE2B_ITERATIONS,
+        case_context=context,
+        research_plan=state.get("research_plan", {}),
+        phase_context=phase_context
+    )
+
+    new_entity_ids = result.get("new_entity_ids", [])
+    new_iteration = iteration + 1
+    logger.info(f"[{tag}] 完成, 新证据: {len(new_entity_ids)}")
+
+    history = list(state.get("iteration_history", []))
+    history.append({
+        "phase": "PHASE2B",
+        "iteration": new_iteration,
+        "timestamp": datetime.now().isoformat(),
+        "agent_findings": {"Pharmacist": {"count": len(new_entity_ids), "entity_ids": new_entity_ids}},
+        "total_new_findings": len(new_entity_ids),
+        "convergence_check": {},
+        "final_decision": "pending"
+    })
+
+    checkpoint_evidence_graph(state, phase="phase2b", iteration=new_iteration, checkpoint_type="checkpoint")
+
+    return_dict = {
+        "evidence_graph": result.get("evidence_graph", evidence_graph),
+        "pharmacist_research_result": result,
+        "phase2b_iteration": new_iteration,
+        "iteration_history": history,
+    }
+    if result.get("research_plan"):
+        return_dict["research_plan"] = result.get("research_plan")
+    return return_dict
+
+
+def plan_agent_evaluate_phase2b(state: MtbState) -> Dict[str, Any]:
+    """PlanAgent 评估 Phase 2b Pharmacist 审查进度"""
+    logger.info("[PHASE2B_PLAN_EVAL] PlanAgent 评估研究进度...")
+
+    iteration = state.get("phase2b_iteration", 0)
+
+    if iteration >= MAX_PHASE2B_ITERATIONS:
+        logger.warning(f"[PHASE2B_PLAN_EVAL] 达到迭代上限 ({MAX_PHASE2B_ITERATIONS})，强制收敛")
+        return {"phase2b_decision": "converged", "phase2b_converged": True}
+
+    try:
+        plan_agent = PlanAgent()
+        eval_result = plan_agent.evaluate_and_update(state, "phase2b", iteration)
+        decision = eval_result.get("decision", "continue")
+        logger.info(f"[PHASE2B_PLAN_EVAL] PlanAgent 决策: {decision}")
+
+        return {
+            "research_plan": eval_result.get("research_plan", state.get("research_plan", {})),
+            "phase2b_decision": decision,
+            "phase2b_converged": (decision == "converged"),
+        }
+    except Exception as e:
+        logger.error(f"[PHASE2B_PLAN_EVAL] PlanAgent 评估失败: {e}")
+        return {"phase2b_decision": "continue"}
+
+
+def phase2b_convergence_check(state: MtbState) -> Literal["continue", "converged"]:
+    """Phase 2b 收敛检查"""
+    return state.get("phase2b_decision", "continue")
+
+
+# ==================== Phase 3 节点 (方案整合, Oncologist 独立) ====================
+
+def phase3_plan_init(state: MtbState) -> Dict[str, Any]:
+    """Phase 3 研究计划初始化 - Oncologist 方案整合"""
+    log_separator("PHASE3_PLAN_INIT")
+    logger.info("[PHASE3_PLAN_INIT] 生成 Phase 3 Oncologist 整合方向...")
+
+    try:
+        agent = PlanAgent()
+        result = agent.generate_phase3_directions(state)
+        logger.info(f"[PHASE3_PLAN_INIT] Phase 3 方向生成完成")
+        return result
+    except Exception as e:
+        logger.error(f"[PHASE3_PLAN_INIT] Phase 3 方向生成失败: {e}")
+        return {}
+
+
+def phase3_oncologist_node(state: MtbState) -> Dict[str, Any]:
+    """Phase 3: Oncologist Integration 模式"""
+    tag = "PHASE3_ONCOLOGIST"
+    logger.info(f"[{tag}] ───────────────────────────────────────")
+
+    iteration = state.get("phase3_iteration", 0)
+    plan = load_research_plan(state.get("research_plan", {}))
+    evidence_graph = state.get("evidence_graph", {})
+    raw_pdf_text = state.get("raw_pdf_text", "")
+
     directions = []
     if plan:
         for d in plan.directions:
             if d.target_agent == "Oncologist":
                 directions.append(d.to_dict())
 
-    # 如果没有专门分配的方向，创建默认方向
     if not directions:
-        directions = [{
-            "id": "D_ONC_DEFAULT",
-            "topic": "治疗方案制定",
-            "target_agent": "Oncologist",
-            "priority": 1,
-            "queries": ["treatment guidelines", "drug therapy"],
-            "completion_criteria": "制定治疗方案",
-            "status": "pending"
-        }]
+        logger.info(f"[{tag}] 无分配方向，视为收敛")
+        return {"phase3_converged": True}
 
-    # 创建 Agent 并执行研究
     agent = ResearchOncologist()
-    raw_pdf_text = state.get("raw_pdf_text", "")
 
-    # 构建上下文（包含之前的专家报告摘要）
+    # 构建上下文: 所有 Phase 1 + 2a + 2b 报告
     context = f"""病例背景:
 {raw_pdf_text}
 
-病理学分析摘要:
-{state.get('pathologist_report', '')}
+Phase 1 报告:
+病理学: {state.get('pathologist_report', '暂无')}
+遗传学: {state.get('geneticist_report', '暂无')}
+药师(合并症): {state.get('pharmacist_report', '暂无')}
+过往治疗分析(3.1): {state.get('oncologist_analysis_report', '暂无')}
 
-分子分析摘要:
-{state.get('geneticist_report', '')}
+Phase 2a 报告:
+Oncologist Mapping: {state.get('oncologist_mapping_report', '暂无')}
+局部治疗: {state.get('local_therapist_report', '暂无')}
+临床试验: {state.get('recruiter_report', '暂无')}
+营养: {state.get('nutritionist_report', '暂无')}
+整合医学: {state.get('integrative_med_report', '暂无')}
 
-临床试验摘要:
-{state.get('recruiter_report', '')}
+Phase 2b 药学审查:
+{state.get('pharmacist_review_report', '暂无')}
 """
 
+    phase_context = {
+        "current_phase": "phase_3",
+        "phase_description": "方案整合",
+        "current_iteration": iteration + 1,
+        "max_iterations": MAX_PHASE3_ITERATIONS,
+        "agent_mode": "integration",
+        "agent_role_in_phase": "方案制定(L1-L5证据分层) + 路径排序 + 复查时间线",
+        "iteration_feedback": ""
+    }
+
     result = agent.research_iterate(
-        mode=ResearchMode.BREADTH_FIRST,  # 默认值，实际由 direction.preferred_mode 决定
+        mode=ResearchMode.BREADTH_FIRST,
         directions=directions,
-        evidence_graph=state.get("evidence_graph", {}),
+        evidence_graph=evidence_graph,
         iteration=iteration,
-        max_iterations=MAX_PHASE2_ITERATIONS,
+        max_iterations=MAX_PHASE3_ITERATIONS,
         case_context=context,
-        research_plan=state.get("research_plan", {})
+        research_plan=state.get("research_plan", {}),
+        phase_context=phase_context
     )
 
-    # 更新迭代计数
     new_entity_ids = result.get("new_entity_ids", [])
-    new_findings = len(new_entity_ids)
     new_iteration = iteration + 1
+    logger.info(f"[{tag}] 完成, 新证据: {len(new_entity_ids)}")
 
-    logger.info(f"[PHASE2_ONCOLOGIST] 完成, 新证据: {new_findings}")
-
-    # 更新 evidence_graph
-    updated_evidence_graph = result.get("evidence_graph", state.get("evidence_graph", {}))
-
-    # 构建迭代历史记录（收敛检查由 PlanAgent 填充）
-    iteration_record = {
-        "phase": "PHASE2",
+    history = list(state.get("iteration_history", []))
+    history.append({
+        "phase": "PHASE3",
         "iteration": new_iteration,
         "timestamp": datetime.now().isoformat(),
-        "agent_findings": {
-            "Oncologist": {
-                "count": new_findings,
-                "entity_ids": new_entity_ids
-            }
-        },
-        "total_new_findings": new_findings,
-        # 收敛检查详情将由 plan_agent_evaluate_phase2 更新
+        "agent_findings": {"Oncologist": {"count": len(new_entity_ids), "entity_ids": new_entity_ids}},
+        "total_new_findings": len(new_entity_ids),
         "convergence_check": {},
-        "final_decision": "pending"  # 由 PlanAgent 决定
-    }
+        "final_decision": "pending"
+    })
 
-    # 追加到迭代历史
-    history = list(state.get("iteration_history", []))
-    history.append(iteration_record)
-
-    logger.info(f"[PHASE2] 迭代 {new_iteration} 执行完成，等待 PlanAgent 评估...")
-
-    # 详细迭代报告由 plan_agent_evaluate_phase2() 保存
-
-    # 收集 Oncologist 本轮假设验证记录
-    hypotheses_history = dict(state.get("hypotheses_history", {}))
-    pda = result.get("per_direction_analysis", {})
-    for dir_id, analysis in pda.items():
-        if not isinstance(analysis, dict):
-            continue
-        hypotheses = analysis.get("hypotheses_explored", [])
-        if hypotheses:
-            if "Oncologist" not in hypotheses_history:
-                hypotheses_history["Oncologist"] = []
-            for h in hypotheses:
-                if isinstance(h, dict):
-                    hypotheses_history["Oncologist"].append({
-                        "iteration": new_iteration,
-                        "direction_id": dir_id,
-                        **h
-                    })
-
-    # 保存检查点
-    checkpoint_evidence_graph(state, phase="phase2", iteration=new_iteration, checkpoint_type="checkpoint")
+    checkpoint_evidence_graph(state, phase="phase3", iteration=new_iteration, checkpoint_type="checkpoint")
 
     return_dict = {
-        "evidence_graph": updated_evidence_graph,
+        "evidence_graph": result.get("evidence_graph", evidence_graph),
         "oncologist_research_result": result,
-        "phase2_iteration": new_iteration,
-        "phase2_new_findings": new_findings,
+        "phase3_iteration": new_iteration,
         "iteration_history": history,
-        "hypotheses_history": hypotheses_history,
     }
-    # 如果有更新的研究计划，也返回
     if result.get("research_plan"):
         return_dict["research_plan"] = result.get("research_plan")
     return return_dict
 
 
-def plan_agent_evaluate_phase2(state: MtbState) -> Dict[str, Any]:
-    """
-    PlanAgent 评估 Phase 2 研究进度并更新计划
+def plan_agent_evaluate_phase3(state: MtbState) -> Dict[str, Any]:
+    """PlanAgent 评估 Phase 3 Oncologist 整合进度"""
+    logger.info("[PHASE3_PLAN_EVAL] PlanAgent 评估研究进度...")
 
-    在 Phase 2 Oncologist 执行后调用，由 PlanAgent 统一判断收敛。
-    """
-    logger.info("[PHASE2_PLAN_EVAL] PlanAgent 评估研究进度...")
+    iteration = state.get("phase3_iteration", 0)
 
-    iteration = state.get("phase2_iteration", 0)
+    if iteration >= MAX_PHASE3_ITERATIONS:
+        logger.warning(f"[PHASE3_PLAN_EVAL] 达到迭代上限 ({MAX_PHASE3_ITERATIONS})，强制收敛")
+        return {"phase3_decision": "converged", "phase3_converged": True}
 
-    # 保存评估前的 plan 用于报告对比
-    pre_eval_plan = state.get("research_plan", {})
-
-    # 检查迭代上限
-    if iteration >= MAX_PHASE2_ITERATIONS:
-        logger.warning(f"[PHASE2_PLAN_EVAL] 达到迭代上限 ({MAX_PHASE2_ITERATIONS})，强制收敛")
-        forced_eval_result = {
-            "decision": "converged",
-            "research_mode": "breadth_first",
-            "reasoning": "达到迭代上限，强制收敛",
-            "quality_assessment": {},
-            "gaps": [],
-            "next_priorities": []
-        }
-        # 保存详细迭代报告
-        _save_detailed_iteration_report(
-            state=state,
-            phase="PHASE2",
-            iteration=iteration,
-            eval_result=forced_eval_result,
-            agent_names=["Oncologist"],
-            pre_eval_plan=pre_eval_plan
-        )
-        return {
-            "phase2_decision": "converged",
-            "plan_agent_evaluation": {
-                "phase": "phase2",
-                "iteration": iteration,
-                "reasoning": "达到迭代上限，强制收敛",
-                "gaps": [],
-                "next_priorities": []
-            }
-        }
-
-    # 调用 PlanAgent 评估
     try:
         plan_agent = PlanAgent()
-        eval_result = plan_agent.evaluate_and_update(state, "phase2", iteration)
-
+        eval_result = plan_agent.evaluate_and_update(state, "phase3", iteration)
         decision = eval_result.get("decision", "continue")
-        logger.info(f"[PHASE2_PLAN_EVAL] PlanAgent 决策: {decision}")
-        logger.info(f"[PHASE2_PLAN_EVAL] 理由: {eval_result.get('reasoning', '')[:100]}...")
-
-        # 保存详细迭代报告
-        _save_detailed_iteration_report(
-            state=state,
-            phase="PHASE2",
-            iteration=iteration,
-            eval_result=eval_result,
-            agent_names=["Oncologist"],
-            pre_eval_plan=pre_eval_plan
-        )
+        logger.info(f"[PHASE3_PLAN_EVAL] PlanAgent 决策: {decision}")
 
         return {
             "research_plan": eval_result.get("research_plan", state.get("research_plan", {})),
-            "research_mode": eval_result.get("research_mode", "breadth_first"),
-            "phase2_decision": decision,
-            "plan_agent_evaluation": {
-                "phase": "phase2",
-                "iteration": iteration,
-                "reasoning": eval_result.get("reasoning", ""),
-                "quality_assessment": eval_result.get("quality_assessment", {}),
-                "gaps": eval_result.get("gaps", []),
-                "next_priorities": eval_result.get("next_priorities", [])
-            }
+            "phase3_decision": decision,
+            "phase3_converged": (decision == "converged"),
         }
-
     except Exception as e:
-        logger.error(f"[PHASE2_PLAN_EVAL] PlanAgent 评估失败: {e}")
-        # 评估失败时继续迭代
-        error_eval_result = {
-            "decision": "continue",
-            "research_mode": "breadth_first",
-            "reasoning": f"评估失败: {str(e)}",
-            "quality_assessment": {},
-            "gaps": [],
-            "next_priorities": []
-        }
-        # 仍保存详细报告（记录失败情况）
-        _save_detailed_iteration_report(
-            state=state,
-            phase="PHASE2",
-            iteration=iteration,
-            eval_result=error_eval_result,
-            agent_names=["Oncologist"],
-            pre_eval_plan=pre_eval_plan
-        )
-        return {
-            "phase2_decision": "continue",
-            "plan_agent_evaluation": {
-                "phase": "phase2",
-                "iteration": iteration,
-                "reasoning": f"评估失败: {str(e)}",
-                "gaps": [],
-                "next_priorities": []
-            }
-        }
+        logger.error(f"[PHASE3_PLAN_EVAL] PlanAgent 评估失败: {e}")
+        return {"phase3_decision": "continue"}
 
 
-def phase2_convergence_check(state: MtbState) -> Literal["continue", "converged"]:
-    """
-    Phase 2 收敛检查 - 从 state 中读取 PlanAgent 的决策
-
-    收敛检查逻辑已移至 plan_agent_evaluate_phase2 中执行。
-    此函数仅作为条件边，读取 phase2_decision 字段。
-    """
-    decision = state.get("phase2_decision", "continue")
-    return decision
+def phase3_convergence_check(state: MtbState) -> Literal["continue", "converged"]:
+    """Phase 3 收敛检查"""
+    return state.get("phase3_decision", "continue")
 
 
 # ==================== 报告生成节点 ====================
@@ -2211,8 +2609,10 @@ def generate_agent_reports(state: MtbState) -> Dict[str, Any]:
     提取引用和辅助信息（不覆写综合报告）
 
     综合报告由以下函数生成：
-    - Phase 1 报告: generate_phase1_reports() → pathologist_report, geneticist_report, recruiter_report
-    - Phase 2 报告: generate_phase2_reports() → oncologist_plan
+    - Phase 1: generate_phase1_reports() → pathologist/geneticist/pharmacist/oncologist_analysis
+    - Phase 2a: generate_phase2a_reports() → oncologist_mapping/local_therapist/recruiter/nutritionist/integrative_med
+    - Phase 2b: generate_phase2b_report() → pharmacist_review
+    - Phase 3: generate_phase3_report() → oncologist_integration
 
     本函数仅提取引用、试验信息、安全警告，以及生成研究进度报告。
     """
@@ -2417,130 +2817,178 @@ def generate_progress_report(iteration_history: List[Dict[str, Any]]) -> str:
 
 def create_research_subgraph() -> StateGraph:
     """
-    创建研究子图
+    创建研究子图 (4-Phase 架构)
 
-    结构（新架构，收敛判断由 PlanAgent 统一处理）：
-    [entry]
-        ↓
-    ┌──────────────────────────────────────────┐
-    │ Phase 1 Loop                              │
-    │ [router] → [pathologist]                  │
-    │          → [geneticist]  → [aggregator]   │
-    │          → [recruiter]        ↓           │
-    │                        [plan_agent_eval]  │
-    │                              ↓            │
-    │                    [convergence_check]    │
-    │           ↓ continue         ↓ converged  │
-    └───────────┘                  │            │
-                                   ↓
-                     [generate_phase1_reports]  ← 生成 P/G/R 综合报告
-                                   ↓
-    ┌──────────────────────────────────────────┐
-    │ Phase 2 Loop                              │
-    │       [oncologist]  ← 接收专家报告        │
-    │           ↓                               │
-    │    [plan_agent_eval]                      │
-    │           ↓                               │
-    │   [convergence_check]                     │
-    │       ↓ continue  ↓ converged             │
-    └───────┘           │                       │
-                        ↓
-               [generate_phase2_reports]  ← 生成 Oncologist 综合报告
-                        ↓
-               [generate_reports]  ← 提取引用和辅助信息
-                        ↓
-                      [END]
+    Phase 1: 信息提取与解读 (4 agents 并行, 轻量BFRS/DFRS, max 3轮)
+        Pathologist + Geneticist + Pharmacist + Oncologist(Analysis)
+                  ↓
+    Phase 2a: 治疗 Mapping (5 agents 并行, 完整BFRS/DFRS, max 7轮)
+        Oncologist(Mapping) + LocalTherapist + Recruiter + Nutritionist + IntegrativeMed
+                  ↓
+    Phase 2b: 药学审查 (Pharmacist 独立, 轻量BFRS/DFRS, max 3轮)
+                  ↓
+    Phase 3: 方案整合 (Oncologist 独立, 完整BFRS/DFRS, max 7轮, L1-L5)
+                  ↓
+    generate_reports → END
     """
     workflow = StateGraph(MtbState)
 
     # ==================== Phase 1 节点 ====================
-    workflow.add_node("phase1_router", lambda s: {})  # 路由节点不修改状态
+    workflow.add_node("phase1_router", lambda s: {})
     workflow.add_node("phase1_pathologist", phase1_pathologist_node)
     workflow.add_node("phase1_geneticist", phase1_geneticist_node)
-    workflow.add_node("phase1_recruiter", phase1_recruiter_node)
+    workflow.add_node("phase1_pharmacist", phase1_pharmacist_node)
+    workflow.add_node("phase1_oncologist_analysis", phase1_oncologist_analysis_node)
     workflow.add_node("phase1_aggregator", phase1_aggregator)
-    workflow.add_node("phase1_plan_eval", plan_agent_evaluate_phase1)  # PlanAgent 评估
-
-    # ==================== Phase 1 报告生成节点 ====================
+    workflow.add_node("phase1_plan_eval", plan_agent_evaluate_phase1)
     workflow.add_node("generate_phase1_reports", generate_phase1_reports)
 
-    # ==================== Phase 2 研究计划初始化节点 ====================
-    workflow.add_node("phase2_plan_init", phase2_plan_init)
+    # ==================== Phase 2a 节点 ====================
+    workflow.add_node("phase2a_plan_init", phase2a_plan_init)
+    workflow.add_node("phase2a_router", lambda s: {})
+    workflow.add_node("phase2a_oncologist", phase2a_oncologist_node)
+    workflow.add_node("phase2a_local_therapist", phase2a_local_therapist_node)
+    workflow.add_node("phase2a_recruiter", phase2a_recruiter_node)
+    workflow.add_node("phase2a_nutritionist", phase2a_nutritionist_node)
+    workflow.add_node("phase2a_integrative_med", phase2a_integrative_med_node)
+    workflow.add_node("phase2a_aggregator", phase2a_aggregator)
+    workflow.add_node("phase2a_plan_eval", plan_agent_evaluate_phase2a)
+    workflow.add_node("generate_phase2a_reports", generate_phase2a_reports)
 
-    # ==================== Phase 2 节点 ====================
-    workflow.add_node("phase2_oncologist", phase2_oncologist_node)
-    workflow.add_node("phase2_plan_eval", plan_agent_evaluate_phase2)  # PlanAgent 评估
+    # ==================== Phase 2b 节点 ====================
+    workflow.add_node("phase2b_plan_init", phase2b_plan_init)
+    workflow.add_node("phase2b_pharmacist", phase2b_pharmacist_node)
+    workflow.add_node("phase2b_plan_eval", plan_agent_evaluate_phase2b)
+    workflow.add_node("generate_phase2b_report", generate_phase2b_report)
 
-    # ==================== Phase 2 报告生成节点 ====================
-    workflow.add_node("generate_phase2_reports", generate_phase2_reports)
+    # ==================== Phase 3 节点 ====================
+    workflow.add_node("phase3_plan_init", phase3_plan_init)
+    workflow.add_node("phase3_oncologist", phase3_oncologist_node)
+    workflow.add_node("phase3_plan_eval", plan_agent_evaluate_phase3)
+    workflow.add_node("generate_phase3_report", generate_phase3_report)
 
     # ==================== 辅助信息提取节点 ====================
     workflow.add_node("generate_reports", generate_agent_reports)
 
-    # ==================== 边定义 ====================
+    # ==================== Phase 1 边 ====================
 
     # 入口 → Phase 1 路由
     workflow.add_conditional_edges(
         "__start__",
         phase1_router,
-        ["phase1_pathologist", "phase1_geneticist", "phase1_recruiter"]
+        ["phase1_pathologist", "phase1_geneticist", "phase1_pharmacist", "phase1_oncologist_analysis"]
     )
 
     # Phase 1 并行节点 → 聚合器
     workflow.add_edge("phase1_pathologist", "phase1_aggregator")
     workflow.add_edge("phase1_geneticist", "phase1_aggregator")
-    workflow.add_edge("phase1_recruiter", "phase1_aggregator")
+    workflow.add_edge("phase1_pharmacist", "phase1_aggregator")
+    workflow.add_edge("phase1_oncologist_analysis", "phase1_aggregator")
 
     # Phase 1 聚合器 → PlanAgent 评估
     workflow.add_edge("phase1_aggregator", "phase1_plan_eval")
 
-    # Phase 1 PlanAgent 评估 → 收敛检查
+    # Phase 1 收敛检查
     workflow.add_conditional_edges(
         "phase1_plan_eval",
         phase1_convergence_check,
         {
-            "continue": "phase1_router",  # 继续循环
-            "converged": "generate_phase1_reports"  # 生成专家报告
+            "continue": "phase1_router",
+            "converged": "generate_phase1_reports"
         }
     )
-
-    # Phase 1 专家报告 → Phase 2 研究计划初始化 → Phase 2 Oncologist
-    workflow.add_edge("generate_phase1_reports", "phase2_plan_init")
-    workflow.add_edge("phase2_plan_init", "phase2_oncologist")
 
     # Phase 1 路由 → 并行节点（循环时使用）
     workflow.add_conditional_edges(
         "phase1_router",
         phase1_router,
-        ["phase1_pathologist", "phase1_geneticist", "phase1_recruiter"]
+        ["phase1_pathologist", "phase1_geneticist", "phase1_pharmacist", "phase1_oncologist_analysis"]
     )
 
-    # Phase 2 Oncologist → PlanAgent 评估
-    workflow.add_edge("phase2_oncologist", "phase2_plan_eval")
+    # ==================== Phase 1 → Phase 2a ====================
+    workflow.add_edge("generate_phase1_reports", "phase2a_plan_init")
 
-    # Phase 2 PlanAgent 评估 → 收敛检查
+    # ==================== Phase 2a 边 ====================
     workflow.add_conditional_edges(
-        "phase2_plan_eval",
-        phase2_convergence_check,
+        "phase2a_plan_init",
+        phase2a_router,
+        ["phase2a_oncologist", "phase2a_local_therapist", "phase2a_recruiter",
+         "phase2a_nutritionist", "phase2a_integrative_med"]
+    )
+
+    # Phase 2a 并行节点 → 聚合器
+    workflow.add_edge("phase2a_oncologist", "phase2a_aggregator")
+    workflow.add_edge("phase2a_local_therapist", "phase2a_aggregator")
+    workflow.add_edge("phase2a_recruiter", "phase2a_aggregator")
+    workflow.add_edge("phase2a_nutritionist", "phase2a_aggregator")
+    workflow.add_edge("phase2a_integrative_med", "phase2a_aggregator")
+
+    # Phase 2a 聚合器 → PlanAgent 评估
+    workflow.add_edge("phase2a_aggregator", "phase2a_plan_eval")
+
+    # Phase 2a 收敛检查
+    workflow.add_conditional_edges(
+        "phase2a_plan_eval",
+        phase2a_convergence_check,
         {
-            "continue": "phase2_oncologist",  # 继续循环
-            "converged": "generate_phase2_reports"  # 生成 Oncologist 综合报告
+            "continue": "phase2a_router",
+            "converged": "generate_phase2a_reports"
         }
     )
 
-    # Phase 2 报告 → 辅助信息提取
-    workflow.add_edge("generate_phase2_reports", "generate_reports")
+    # Phase 2a 路由 → 并行节点（循环时使用）
+    workflow.add_conditional_edges(
+        "phase2a_router",
+        phase2a_router,
+        ["phase2a_oncologist", "phase2a_local_therapist", "phase2a_recruiter",
+         "phase2a_nutritionist", "phase2a_integrative_med"]
+    )
 
-    # 辅助信息提取 → 结束
+    # ==================== Phase 2a → Phase 2b ====================
+    workflow.add_edge("generate_phase2a_reports", "phase2b_plan_init")
+
+    # ==================== Phase 2b 边 ====================
+    workflow.add_edge("phase2b_plan_init", "phase2b_pharmacist")
+    workflow.add_edge("phase2b_pharmacist", "phase2b_plan_eval")
+
+    workflow.add_conditional_edges(
+        "phase2b_plan_eval",
+        phase2b_convergence_check,
+        {
+            "continue": "phase2b_pharmacist",
+            "converged": "generate_phase2b_report"
+        }
+    )
+
+    # ==================== Phase 2b → Phase 3 ====================
+    workflow.add_edge("generate_phase2b_report", "phase3_plan_init")
+
+    # ==================== Phase 3 边 ====================
+    workflow.add_edge("phase3_plan_init", "phase3_oncologist")
+    workflow.add_edge("phase3_oncologist", "phase3_plan_eval")
+
+    workflow.add_conditional_edges(
+        "phase3_plan_eval",
+        phase3_convergence_check,
+        {
+            "continue": "phase3_oncologist",
+            "converged": "generate_phase3_report"
+        }
+    )
+
+    # ==================== Phase 3 → Final ====================
+    workflow.add_edge("generate_phase3_report", "generate_reports")
     workflow.add_edge("generate_reports", END)
 
-    logger.info("[RESEARCH_SUBGRAPH] 子图构建完成 (PlanAgent 统一收敛判断)")
+    logger.info("[RESEARCH_SUBGRAPH] 4-Phase 子图构建完成")
     return workflow.compile()
 
 
 if __name__ == "__main__":
-    print("Research Subgraph 模块加载成功")
+    print("Research Subgraph 模块加载成功 (4-Phase 架构)")
     print(f"Phase 1 最大迭代: {MAX_PHASE1_ITERATIONS}")
-    print(f"Phase 2 最大迭代: {MAX_PHASE2_ITERATIONS}")
+    print(f"Phase 2a 最大迭代: {MAX_PHASE2A_ITERATIONS}")
+    print(f"Phase 2b 最大迭代: {MAX_PHASE2B_ITERATIONS}")
+    print(f"Phase 3 最大迭代: {MAX_PHASE3_ITERATIONS}")
     print(f"最小证据节点: {MIN_EVIDENCE_NODES}")
     print(f"每方向最小证据: {MIN_EVIDENCE_PER_DIRECTION}")

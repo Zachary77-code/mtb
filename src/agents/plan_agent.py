@@ -18,7 +18,12 @@ from src.models.research_plan import (
 )
 from src.models.evidence_graph import load_evidence_graph, EvidenceGrade
 from src.utils.logger import mtb_logger as logger
-from config.settings import PLAN_AGENT_PROMPT_FILE
+from config.settings import (
+    PLAN_AGENT_PROMPT_FILE,
+    MAX_PHASE2A_ITERATIONS,
+    MAX_PHASE2B_ITERATIONS,
+    MAX_PHASE3_ITERATIONS,
+)
 
 # 证据等级权重（用于计算方向完成度）
 GRADE_WEIGHTS = {
@@ -42,9 +47,8 @@ CONTINUE_COMPLETENESS_THRESHOLD = 60     # 完成度 < 60% 需要继续收集
 REQUIRED_MODULE_COVERAGE = [
     "患者概况",
     "分子特征",
-    "治疗路线图",
-    "分子复查建议",
-    "临床试验推荐",
+    "合并症",
+    "过往治疗分析",
 ]
 
 
@@ -151,7 +155,7 @@ class PlanAgent(BaseAgent):
         {{
             "id": "D1",
             "topic": "研究方向主题",
-            "target_agent": "Geneticist",  // Pathologist/Geneticist/Recruiter
+            "target_agent": "Geneticist",  // Pathologist/Geneticist/Pharmacist/Oncologist
             "target_modules": ["分子特征"],  // 目标 Chair 模块
             "priority": 1,  // 1-5，1最高
             "queries": ["建议的查询关键词"],
@@ -176,23 +180,31 @@ class PlanAgent(BaseAgent):
 - 耐药机制分析
 - 分子分型确认
 
-### Recruiter（临床试验招募员）
-- 适用临床试验匹配
-- 入排标准评估
-- 试验阶段和状态
+### Pharmacist（药师 - Phase 1 信息提取）
+- 合并症（病症+用药清单）
+- 过敏史
+- 器官功能基线（eGFR、肝功能、血象）
+- 药物互作初步分析
+
+### Oncologist（肿瘤学家 - Phase 1 Analysis 模式）
+- 过往治疗和当前治疗方案的分析评价
+- 每线治疗疗效评估
+- 方案合理性分析
+- 耐药机制推断
+- 关键决策点回顾
 
 ## 必需模块覆盖
 确保研究方向覆盖以下 Phase 1 模块：
 - 患者概况 (Pathologist)
 - 分子特征 (Geneticist + Pathologist)
-- 治疗路线图 (Geneticist + Recruiter)
-- 分子复查建议 (Geneticist)
-- 临床试验推荐 (Recruiter)
+- 合并症 (Pharmacist)
+- 过往治疗分析 (Oncologist)
 
-注意：方案对比、器官功能与剂量、局部治疗建议等 Oncologist 相关模块将在 Phase 2 中由 Oncologist 单独研究，此处无需分配。
+注意：Recruiter（临床试验招募员）已移至 Phase 2a，此处无需分配。
+方案 Mapping、局部治疗、临床试验匹配等将在 Phase 2a 中进行。
 
 ## 注意事项
-1. 每个 Agent 分配 2-4 个研究方向（仅限 Pathologist/Geneticist/Recruiter）
+1. 每个 Agent 分配 2-4 个研究方向（仅限 Pathologist/Geneticist/Pharmacist/Oncologist）
 2. 优先级 1 为最关键方向
 3. 确保 JSON 格式正确，可以被解析
 4. 每个方向必须指定 target_modules
@@ -219,8 +231,9 @@ class PlanAgent(BaseAgent):
 
         try:
             data = json.loads(json_str)
-            # Phase 1 不包含 Oncologist 方向（Oncologist 方向在 Phase 2 单独生成）
-            directions = [d for d in data.get("directions", []) if d.get("target_agent") != "Oncologist"]
+            # Phase 1 仅包含 Pathologist/Geneticist/Pharmacist/Oncologist 方向
+            # Recruiter 已移至 Phase 2a
+            directions = [d for d in data.get("directions", []) if d.get("target_agent") in ("Pathologist", "Geneticist", "Pharmacist", "Oncologist")]
             plan = create_research_plan(
                 case_summary=data.get("case_summary", ""),
                 key_entities=data.get("key_entities", {}),
@@ -295,8 +308,15 @@ class PlanAgent(BaseAgent):
 
         # 提取 Research Agent 的自述字段
         if phase == "phase1":
-            agent_keys = ["pathologist_research_result", "geneticist_research_result", "recruiter_research_result"]
+            agent_keys = ["pathologist_research_result", "geneticist_research_result", "pharmacist_research_result", "oncologist_analysis_research_result"]
+        elif phase == "phase2a":
+            agent_keys = ["oncologist_mapping_research_result", "local_therapist_research_result", "recruiter_research_result", "nutritionist_research_result", "integrative_med_research_result"]
+        elif phase == "phase2b":
+            agent_keys = ["pharmacist_review_research_result"]
+        elif phase == "phase3":
+            agent_keys = ["oncologist_integration_research_result"]
         else:
+            # backward compat: "phase2" maps to old Phase 2 (now phase2a)
             agent_keys = ["oncologist_research_result"]
 
         all_needs_deep = []  # List[Dict]: {agent, direction_id, finding, reason}
@@ -476,9 +496,15 @@ class PlanAgent(BaseAgent):
         conflicts = graph.get_conflicts() if graph else []
         conflict_descriptions = [c.get("description", "") for c in conflicts if c.get("type") == "evidence_conflict"]
 
-        # Phase 1 检查的 Agent
+        # Phase-specific Agent check
         if phase == "phase1":
-            agents_to_check = ["Pathologist", "Geneticist", "Recruiter"]
+            agents_to_check = ["Pathologist", "Geneticist", "Pharmacist", "Oncologist"]
+        elif phase == "phase2a":
+            agents_to_check = ["Oncologist", "LocalTherapist", "Recruiter", "Nutritionist", "IntegrativeMed"]
+        elif phase == "phase2b":
+            agents_to_check = ["Pharmacist"]
+        elif phase == "phase3":
+            agents_to_check = ["Oncologist"]
         else:
             agents_to_check = ["Oncologist"]
 
@@ -1328,6 +1354,279 @@ class PlanAgent(BaseAgent):
             plan.directions.append(direction)
 
         return plan
+
+
+    def generate_phase2a_directions(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Phase 2a 研究方向生成: 治疗 Mapping
+
+        读取 Phase1 的 4 份报告 + evidence_graph，为 5 个 agent 生成 Phase2a 方向
+        """
+        from src.models.evidence_graph import EvidenceGraph
+
+        pathologist_report = state.get("pathologist_report", "")
+        geneticist_report = state.get("geneticist_report", "")
+        pharmacist_report = state.get("pharmacist_report", "")
+        oncologist_analysis = state.get("oncologist_analysis_report", "")
+
+        eg_data = state.get("evidence_graph", {})
+        if isinstance(eg_data, dict):
+            eg = EvidenceGraph.from_dict(eg_data)
+            graph_summary = eg.summary()
+        else:
+            graph_summary = str(eg_data.summary()) if hasattr(eg_data, "summary") else "{}"
+
+        phase1_context = (
+            f"病理学报告:\n{pathologist_report}\n\n"
+            f"遗传学报告:\n{geneticist_report}\n\n"
+            f"药师报告(合并症/用药):\n{pharmacist_report}\n\n"
+            f"过往治疗分析(3.1):\n{oncologist_analysis}\n\n"
+            f"证据图摘要:\n{graph_summary}"
+        )
+
+        prompt = (
+            "请基于 Phase 1 的研究结果，为 Phase 2a (治疗 Mapping) 生成研究方向。\n\n"
+            f"**Phase 1 报告**:\n{phase1_context}\n\n"
+            "**Phase 2a 涉及的 Agent 和角色**:\n"
+            "1. Oncologist (Mapping模式): 全身治疗手段Mapping，按4审批×5手段=20格矩阵，只罗列分析不做推荐\n"
+            "2. LocalTherapist: 手术评估(根治/姑息) + 放疗方案(普通/SBRT/质子/BNCT) + 介入治疗(消融/粒子/HIFU)\n"
+            "3. Recruiter: 临床试验(c有试验可入组 + d无试验但临床阶段)，含已结束试验及结果\n"
+            "4. Nutritionist: 营养状态评估 + 癌种饮食建议 + 治疗期营养管理\n"
+            "5. IntegrativeMed: 替代疗法逐一评估(吸氢/大剂量VC/中医/免疫调节等)\n\n"
+            "**输出格式**: 严格按照 JSON 格式输出研究方向列表:\n"
+            "```json\n"
+            '{"directions": [{"id": "D_xxx", "topic": "主题", "target_agent": "Agent名", '
+            '"target_modules": ["模块"], "priority": 1, "queries": ["查询词"], '
+            '"completion_criteria": "完成标准"}]}\n'
+            "```\n\n"
+            "基于 Phase 1 发现的癌种、突变谱、治疗史，为每个 Agent 分配 1-3 个具体研究方向。"
+        )
+
+        try:
+            result = self.invoke(prompt)
+            output = result.get("output", "")
+
+            import re
+            json_match = re.search(r'\{[\s\S]*\}', output)
+            if json_match:
+                import json
+                parsed = json.loads(json_match.group())
+                directions = parsed.get("directions", [])
+            else:
+                directions = self._get_default_phase2a_directions(state)
+        except Exception as e:
+            logger.warning(f"[PLAN_AGENT] Phase 2a 方向生成失败，使用默认方向: {e}")
+            directions = self._get_default_phase2a_directions(state)
+
+        current_plan = state.get("research_plan", {})
+        if isinstance(current_plan, dict):
+            plan_data = current_plan.copy()
+        else:
+            plan_data = current_plan.to_dict() if hasattr(current_plan, "to_dict") else {}
+
+        plan_data["directions"] = directions
+        plan_data["phase"] = "phase_2a"
+
+        return {
+            "research_plan": plan_data,
+            "current_phase": "phase_2a",
+            "current_phase_description": "治疗Mapping",
+            "current_phase_iteration": 0,
+            "current_phase_max_iterations": MAX_PHASE2A_ITERATIONS,
+            "phase2a_iteration": 0,
+        }
+
+    def _get_default_phase2a_directions(self, state: Dict[str, Any]) -> list:
+        """Phase 2a 默认方向"""
+        cancer_type = ""
+        rp = state.get("research_plan", {})
+        if isinstance(rp, dict):
+            cancer_type = rp.get("case_summary", "肿瘤")
+        else:
+            cancer_type = "肿瘤"
+
+        return [
+            {
+                "id": "D_SYSTEMIC_THERAPY",
+                "topic": f"全身治疗手段Mapping - {cancer_type}",
+                "target_agent": "Oncologist",
+                "target_modules": ["治疗方案探索"],
+                "priority": 1,
+                "queries": ["标准治疗方案", "靶向治疗", "免疫治疗", "化疗方案"],
+                "completion_criteria": "完成4审批×5手段=20格全身治疗矩阵"
+            },
+            {
+                "id": "D_SURGERY",
+                "topic": "手术评估",
+                "target_agent": "LocalTherapist",
+                "target_modules": ["治疗方案探索"],
+                "priority": 2,
+                "queries": ["手术适应证", "根治手术", "姑息手术"],
+                "completion_criteria": "完成手术可行性评估"
+            },
+            {
+                "id": "D_RADIATION",
+                "topic": "放疗方案评估",
+                "target_agent": "LocalTherapist",
+                "target_modules": ["治疗方案探索"],
+                "priority": 2,
+                "queries": ["放疗适应证", "SBRT", "质子治疗", "BNCT"],
+                "completion_criteria": "完成放疗方案对比评估"
+            },
+            {
+                "id": "D_INTERVENTION",
+                "topic": "介入治疗评估",
+                "target_agent": "LocalTherapist",
+                "target_modules": ["治疗方案探索"],
+                "priority": 3,
+                "queries": ["射频消融", "微波消融", "放射性粒子", "HIFU"],
+                "completion_criteria": "完成介入治疗可行性评估"
+            },
+            {
+                "id": "D_TRIALS_ACTIVE",
+                "topic": "活跃临床试验匹配",
+                "target_agent": "Recruiter",
+                "target_modules": ["治疗方案探索"],
+                "priority": 1,
+                "queries": ["临床试验", "入组标准"],
+                "completion_criteria": "匹配至少5个可行临床试验"
+            },
+            {
+                "id": "D_TRIALS_COMPLETED",
+                "topic": "已结束试验及结果",
+                "target_agent": "Recruiter",
+                "target_modules": ["治疗方案探索"],
+                "priority": 2,
+                "queries": ["已完成试验", "试验结果"],
+                "completion_criteria": "列出相关已结束试验及结果摘要"
+            },
+            {
+                "id": "D_NUTRITION",
+                "topic": "营养评估与方案",
+                "target_agent": "Nutritionist",
+                "target_modules": ["整体与辅助支持"],
+                "priority": 2,
+                "queries": ["肿瘤营养", "恶病质", "营养支持"],
+                "completion_criteria": "完成营养状态评估和方案建议"
+            },
+            {
+                "id": "D_ALTERNATIVE",
+                "topic": "替代疗法评估",
+                "target_agent": "IntegrativeMed",
+                "target_modules": ["整体与辅助支持"],
+                "priority": 3,
+                "queries": ["替代疗法", "中医", "免疫调节", "吸氢"],
+                "completion_criteria": "完成每种替代疗法的逐一评估"
+            },
+        ]
+
+    def generate_phase2b_directions(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Phase 2b 研究方向生成: 药学审查
+
+        读取 Phase2a 的 5 份报告，为 Pharmacist(Review模式) 生成审查方向
+        """
+        directions = [
+            {
+                "id": "D_DRUG_INTERACTION_REVIEW",
+                "topic": "药物交互风险审查",
+                "target_agent": "Pharmacist",
+                "target_modules": ["治疗方案探索"],
+                "priority": 1,
+                "queries": ["drug interaction", "药物相互作用"],
+                "completion_criteria": "完成所有候选药物的交互风险评估"
+            },
+            {
+                "id": "D_DOSE_ADJUSTMENT_REVIEW",
+                "topic": "肝肾功能剂量调整审查",
+                "target_agent": "Pharmacist",
+                "target_modules": ["治疗方案探索"],
+                "priority": 1,
+                "queries": ["dose adjustment", "renal impairment", "hepatic impairment"],
+                "completion_criteria": "完成所有候选药物的剂量调整建议"
+            },
+            {
+                "id": "D_CONTRAINDICATION_REVIEW",
+                "topic": "禁忌症和超适应症标注",
+                "target_agent": "Pharmacist",
+                "target_modules": ["治疗方案探索"],
+                "priority": 1,
+                "queries": ["contraindication", "off-label use"],
+                "completion_criteria": "完成所有候选药物的禁忌症标注和超适应症伦理/审批要求"
+            },
+        ]
+
+        current_plan = state.get("research_plan", {})
+        if isinstance(current_plan, dict):
+            plan_data = current_plan.copy()
+        else:
+            plan_data = current_plan.to_dict() if hasattr(current_plan, "to_dict") else {}
+
+        plan_data["directions"] = directions
+        plan_data["phase"] = "phase_2b"
+
+        return {
+            "research_plan": plan_data,
+            "current_phase": "phase_2b",
+            "current_phase_description": "药学审查",
+            "current_phase_iteration": 0,
+            "current_phase_max_iterations": MAX_PHASE2B_ITERATIONS,
+            "phase2b_iteration": 0,
+        }
+
+    def generate_phase3_directions(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Phase 3 研究方向生成: 方案整合
+
+        读取 Phase1+2a+2b 全部产出，为 Oncologist(Integration模式) 生成方向
+        """
+        directions = [
+            {
+                "id": "D_TREATMENT_PLAN_L1L5",
+                "topic": "治疗方案制定 + L1-L5证据分层",
+                "target_agent": "Oncologist",
+                "target_modules": ["治疗方案探索"],
+                "priority": 1,
+                "queries": ["treatment plan", "evidence level", "clinical trial"],
+                "completion_criteria": "每个方案组合完成L1-L5证据分层寻证和标注"
+            },
+            {
+                "id": "D_PATHWAY_RANKING",
+                "topic": "治疗路径排序",
+                "target_agent": "Oncologist",
+                "target_modules": ["治疗方案探索"],
+                "priority": 1,
+                "queries": ["treatment sequence", "pathway ranking"],
+                "completion_criteria": "完成路径排序(证据+获益+安全+可及+患者因素5维打分)"
+            },
+            {
+                "id": "D_FOLLOWUP_TIMELINE",
+                "topic": "复查时间线 + 分子复查补充",
+                "target_agent": "Oncologist",
+                "target_modules": ["复查和追踪方案"],
+                "priority": 2,
+                "queries": ["follow-up", "surveillance", "molecular monitoring"],
+                "completion_criteria": "完成5.1常规复查时间线和5.2分子复查补充"
+            },
+        ]
+
+        current_plan = state.get("research_plan", {})
+        if isinstance(current_plan, dict):
+            plan_data = current_plan.copy()
+        else:
+            plan_data = current_plan.to_dict() if hasattr(current_plan, "to_dict") else {}
+
+        plan_data["directions"] = directions
+        plan_data["phase"] = "phase_3"
+
+        return {
+            "research_plan": plan_data,
+            "current_phase": "phase_3",
+            "current_phase_description": "方案整合",
+            "current_phase_iteration": 0,
+            "current_phase_max_iterations": MAX_PHASE3_ITERATIONS,
+            "phase3_iteration": 0,
+        }
 
 
 if __name__ == "__main__":

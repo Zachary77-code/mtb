@@ -81,8 +81,12 @@ ORCHESTRATOR_REASONING_EFFORT = os.getenv("ORCHESTRATOR_REASONING_EFFORT", "high
 SUBGRAPH_REASONING_EFFORT = os.getenv("SUBGRAPH_REASONING_EFFORT", "medium")
 
 # ==================== DeepEvidence 收敛配置 ====================
-MAX_PHASE1_ITERATIONS = int(os.getenv("MAX_PHASE1_ITERATIONS", "7"))  # 并行分析阶段最大迭代
-MAX_PHASE2_ITERATIONS = int(os.getenv("MAX_PHASE2_ITERATIONS", "7"))  # Oncologist 阶段最大迭代
+MAX_PHASE1_ITERATIONS = int(os.getenv("MAX_PHASE1_ITERATIONS", "3"))    # Phase 1: 轻量 BFRS/DFRS, 信息提取有界
+MAX_PHASE2A_ITERATIONS = int(os.getenv("MAX_PHASE2A_ITERATIONS", "7"))  # Phase 2a: 完整 BFRS/DFRS, 开放式治疗探索
+MAX_PHASE2B_ITERATIONS = int(os.getenv("MAX_PHASE2B_ITERATIONS", "3"))  # Phase 2b: 轻量 BFRS/DFRS, 药学核实有界
+MAX_PHASE3_ITERATIONS = int(os.getenv("MAX_PHASE3_ITERATIONS", "7"))    # Phase 3: 完整 BFRS/DFRS, 方案整合需要深度循证
+# 兼容旧配置: MAX_PHASE2_ITERATIONS 映射到 MAX_PHASE2A_ITERATIONS
+MAX_PHASE2_ITERATIONS = MAX_PHASE2A_ITERATIONS
 MIN_EVIDENCE_NODES = int(os.getenv("MIN_EVIDENCE_NODES", "10"))       # 最小证据节点数（全局）
 MIN_EVIDENCE_PER_DIRECTION = int(os.getenv("MIN_EVIDENCE_PER_DIRECTION", "20"))  # 每个研究方向最小证据数
 
@@ -98,35 +102,33 @@ PUBMED_BUCKET_QUOTAS = {
     "preclinical": 1,
 }
 
-# ==================== 12 个必选模块 ====================
+# ==================== 6 章节 + 附录 必选模块 ====================
 REQUIRED_SECTIONS = [
-    "执行摘要",
-    "患者概况",
+    "病情概要",
     "治疗史回顾",
-    "治疗路线图",
-    "药物/方案对比",
-    "局部治疗建议",
-    "临床试验推荐",
-    "器官功能与剂量",
-    "分子特征",
-    "分子复查建议",
+    "治疗方案探索",
+    "整体与辅助支持",
+    "复查和追踪方案",
     "核心建议汇总",
     "完整证据引用列表",
-    "证据等级说明"
+    "证据等级说明",
 ]
 
+# ==================== 各章节必选子章节 ====================
+REQUIRED_SUBSECTIONS = {
+    "病情概要": ["基础信息", "诊断信息", "分子信息", "合并症", "过敏史"],
+    "治疗方案探索": ["过往治疗分析", "治疗手段Mapping", "治疗方案制定", "治疗路径规划"],
+    "整体与辅助支持": ["营养学方案", "替代疗法"],
+    "复查和追踪方案": ["常规复查时间线", "分子复查"],
+}
+
 # ==================== 需要证据覆盖的模块（收敛检查用）====================
-# 排除：执行摘要（Chair 综合）、患者概况（PDF 提取）、参考文献（汇总）
+# 排除：病情概要（PDF 提取为主）、核心建议汇总（Chair 综合）、附录（汇总/固定）
 COVERAGE_REQUIRED_MODULES = [
     "治疗史回顾",
-    "治疗路线图",
-    "药物/方案对比",
-    "局部治疗建议",
-    "临床试验推荐",
-    "器官功能与剂量",
-    "分子特征",
-    "分子复查建议",
-    "核心建议汇总",
+    "治疗方案探索",
+    "整体与辅助支持",
+    "复查和追踪方案",
 ]
 
 # ==================== 全局输出原则文件名 ====================
@@ -139,6 +141,10 @@ RECRUITER_PROMPT_FILE = "recruiter_prompt.txt"
 ONCOLOGIST_PROMPT_FILE = "oncologist_prompt.txt"
 CHAIR_PROMPT_FILE = "chair_prompt.txt"
 PLAN_AGENT_PROMPT_FILE = "plan_agent_prompt.txt"  # PlanAgent 提示词
+NUTRITIONIST_PROMPT_FILE = "nutritionist_prompt.txt"
+INTEGRATIVE_MED_PROMPT_FILE = "integrative_med_prompt.txt"
+PHARMACIST_PROMPT_FILE = "pharmacist_prompt.txt"
+LOCAL_THERAPIST_PROMPT_FILE = "local_therapist_prompt.txt"
 
 
 # ==================== 多模态图片 RAG 配置 ====================

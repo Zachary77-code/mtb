@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MTB (Molecular Tumor Board) is a multi-agent workflow system for generating clinical tumor board reports. It processes patient case files (PDF) through specialized AI agents and produces structured HTML reports.
+SMTB 2.0 (Smart Molecular Tumor Board) is a multi-agent workflow system for generating clinical tumor board reports. It processes patient case files (PDF) through specialized AI agents across 4 research phases and produces structured HTML reports with 6 chapters + appendices.
 
 **Key constraint**: This system uses **LangGraph 1.0.6 only** - it does NOT use LangChain. All LLM calls go through OpenRouter API directly.
 
@@ -32,67 +32,54 @@ pytest tests/
 ```
 PDF Input → PDF Parser → PlanAgent (generates research plan + initializes EvidenceGraph)
                              ↓
-                    ┌────────────────┐
-                    │ EvidenceGraph  │ ← Global evidence graph (Entity-Edge-Observation)
-                    │   (empty)      │
-                    └───────┬────────┘
-                            ↓
-              ┌──────────────────────────────────────┐
-              │ Research Subgraph (Two-Phase Loop)   │
-              │                                      │
-              │ ┌────────── Phase 1 Loop ──────────┐ │
-              │ │    (max MAX_PHASE1_ITERATIONS=7) │ │
-              │ │ [Pathologist][Geneticist][Recruiter]│
-              │ │        ↓ (parallel BFRS/DFRS)     │ │
-              │ │   ┌─────────────────────┐         │ │
-              │ │   │ Update EvidenceGraph│         │ │
-              │ │   │ (entity extraction) │         │ │
-              │ │   └─────────────────────┘         │ │
-              │ │        ↓                          │ │
-              │ │      Phase1 Aggregator            │ │
-              │ │        ↓                          │ │
-              │ │  PlanAgent.evaluate_and_update()  │ │
-              │ │    continue ↺    ↓ converged      │ │
-              │ └───────────────────┘               │
-              │                     ↓               │
-              │          generate_phase1_reports()  │ ← saves 1_pathologist/2_geneticist/3_recruiter
-              │                     ↓               │
-              │          phase2_plan_init()         │ ← generates Oncologist directions from Phase 1
-              │                     ↓               │
-              │ ┌────────── Phase 2 Loop ──────────┐ │
-              │ │    (max MAX_PHASE2_ITERATIONS=7) │ │
-              │ │         Oncologist               │ │
-              │ │        ↓ (solo BFRS/DFRS)        │ │
-              │ │   ┌─────────────────────┐         │ │
-              │ │   │ Update EvidenceGraph│         │ │
-              │ │   └─────────────────────┘         │ │
-              │ │        ↓                          │ │
-              │ │  PlanAgent.evaluate_and_update()  │ │
-              │ │    continue ↺    ↓ converged      │ │
-              │ └───────────────────┘               │
-              │                     ↓               │
-              │          generate_phase2_reports()  │ ← saves 4_oncologist_report
-              │                     ↓               │
-              │          generate_agent_reports()   │ ← extracts references, trial info
-              └──────────────────────────────────────┘
+              ┌──────────────────────────────────────────────┐
+              │ Research Subgraph (4-Phase Loop)              │
+              │                                              │
+              │ ┌─── Phase 1: 信息提取 (max 3, 轻量) ─────┐ │
+              │ │ [Pathologist][Geneticist][Pharmacist]      │ │
+              │ │ [Oncologist(analysis)]                     │ │
+              │ │ → Aggregator → PlanAgent.evaluate()       │ │
+              │ │   continue ↺     ↓ converged              │ │
+              │ └──────────────────┘                        │ │
+              │              ↓ generate_phase1_reports()     │
+              │              ↓ phase2a_plan_init()           │
+              │ ┌─── Phase 2a: 治疗Mapping (max 7) ───────┐ │
+              │ │ [Oncologist(mapping)][LocalTherapist]      │ │
+              │ │ [Recruiter][Nutritionist][IntegrativeMed]  │ │
+              │ │ → Aggregator → PlanAgent.evaluate()       │ │
+              │ │   continue ↺     ↓ converged              │ │
+              │ └──────────────────┘                        │ │
+              │              ↓ generate_phase2a_reports()    │
+              │              ↓ phase2b_plan_init()           │
+              │ ┌─── Phase 2b: 药学审查 (max 3, 轻量) ────┐ │
+              │ │ [Pharmacist(review)] solo BFRS/DFRS       │ │
+              │ │ → PlanAgent.evaluate()                    │ │
+              │ │   continue ↺     ↓ converged              │ │
+              │ └──────────────────┘                        │ │
+              │              ↓ generate_phase2b_report()     │
+              │              ↓ phase3_plan_init()            │
+              │ ┌─── Phase 3: 方案整合 (max 7) ───────────┐ │
+              │ │ [Oncologist(integration)] solo BFRS/DFRS  │ │
+              │ │ L1-L5 evidence tiering                    │ │
+              │ │ → PlanAgent.evaluate()                    │ │
+              │ │   continue ↺     ↓ converged              │ │
+              │ └──────────────────┘                        │ │
+              │              ↓ generate_phase3_report()      │
+              │              ↓ generate_reports()            │
+              └──────────────────────────────────────────────┘
                              ↓
-                    ┌────────────────┐
-                    │ EvidenceGraph  │ ← Complete graph passed to Chair
-                    │  (88 entities) │
-                    └───────┬────────┘
-                            ↓
-                          Chair  ← generates final report from EvidenceGraph + agent reports
-                            ↓
+                          Chair  ← synthesizes 11 agent reports + EvidenceGraph
+                             ↓
                    Format Verification
                      ↓           ↓
                   [Pass]      [Fail → Chair Retry, max 2x]
                      ↓
-                 HTML Report
+                 HTML Report (with TOC + Agent Appendix)
 ```
 
 - **State**: `MtbState` TypedDict in [src/models/state.py](src/models/state.py) - all data flows through this state object
 - **Graph**: [src/graph/state_graph.py](src/graph/state_graph.py) - workflow definition with `StateGraph`
-- **Research Subgraph**: [src/graph/research_subgraph.py](src/graph/research_subgraph.py) - two-phase BFRS/DFRS research loop
+- **Research Subgraph**: [src/graph/research_subgraph.py](src/graph/research_subgraph.py) - 4-phase BFRS/DFRS research loop
 - **Nodes**: [src/graph/nodes.py](src/graph/nodes.py) - each node calls an agent and updates state
 - **Edges**: [src/graph/edges.py](src/graph/edges.py) - conditional logic for retry decisions
 
@@ -103,25 +90,34 @@ Agents inherit from `BaseAgent` in [src/agents/base_agent.py](src/agents/base_ag
 - System prompt = global_principles.txt + role-specific prompt
 - Support for multi-turn tool calling (up to 5 iterations)
 - Reference management with `ReferenceManager` class
-- **ResearchMixin** ([src/agents/research_mixin.py](src/agents/research_mixin.py)) adds BFRS/DFRS research capabilities
+- **ResearchMixin** ([src/agents/research_mixin.py](src/agents/research_mixin.py)) adds BFRS/DFRS research capabilities with `phase_context` injection
 
-Six agents in `src/agents/`:
+Ten agents in `src/agents/`:
 
-| Agent | Role | Tools | Temp |
-|-------|------|-------|------|
-| **Pathologist** | Pathology/imaging analysis | PubMed, cBioPortal | 0.3 |
-| **Geneticist** | Molecular profile analysis | CIViC, ClinVar, cBioPortal, PubMed | 0.2 |
-| **Recruiter** | Clinical trial matching | ClinicalTrials.gov, NCCN, PubMed | 0.2 |
-| **Oncologist** | Treatment planning, safety | NCCN, FDA Label, RxNorm, PubMed | 0.2 |
-| **Chair** | Final synthesis (12 modules) | NCCN, FDA Label, PubMed | 0.3 |
-| **PlanAgent** | Research plan generation + convergence evaluation | - | 0.3 |
+| Agent | Role | Phase(s) | Tools | Temp |
+|-------|------|----------|-------|------|
+| **Pathologist** | Pathology/imaging/treatment history extraction | P1 | PubMed, GDC | 0.3 |
+| **Geneticist** | Molecular profile + resistance mutation analysis | P1 | CIViC, ClinVar, GDC, PubMed | 0.2 |
+| **Pharmacist** | Comorbidity/drug baseline (P1) + Pharmacy review (P2b) | P1, P2b | FDALabel, RxNorm, PubMed | 0.2 |
+| **Oncologist** | Analysis (P1) / Mapping (P2a) / Integration+L1-L5 (P3) | P1, P2a, P3 | NCCN, FDALabel, RxNorm, PubMed | 0.2 |
+| **LocalTherapist** | Surgery/radiation/intervention evaluation | P2a | NCCN, PubMed | 0.3 |
+| **Recruiter** | Clinical trial matching (active + completed) | P2a | ClinicalTrials, NCCN, PubMed | 0.2 |
+| **Nutritionist** | Nutrition assessment and cancer diet planning | P2a | PubMed | 0.3 |
+| **IntegrativeMed** | Alternative therapy evaluation (per-therapy risk analysis) | P2a | PubMed | 0.3 |
+| **Chair** | Final synthesis (6 chapters + appendices) | P4 | NCCN, FDALabel, PubMed | 0.3 |
+| **PlanAgent** | Research plan + phase init + convergence evaluation | All | - | 0.3 |
+
+**Multi-Mode Agents**:
+- **Oncologist**: `analysis` (P1) → `mapping` (P2a, 4×5 matrix) → `integration` (P3, L1-L5 tiering)
+- **Pharmacist**: `research` (P1, comorbidity baseline) → `review` (P2b, pharmacy review labels)
 
 **Research-Enhanced Agents**: In the Research Subgraph, agents are enhanced with `ResearchMixin`:
-- `ResearchPathologist`, `ResearchGeneticist`, `ResearchRecruiter`, `ResearchOncologist`
+- Phase 1: `ResearchPathologist`, `ResearchGeneticist`, `ResearchPharmacist`, `ResearchOncologist`
+- Phase 2a: `ResearchOncologist`, `ResearchLocalTherapist`, `ResearchRecruiter`, `ResearchNutritionist`, `ResearchIntegrativeMed`
+- Phase 2b: `ResearchPharmacist` (review mode)
+- Phase 3: `ResearchOncologist` (integration mode)
 - Use `SUBGRAPH_MODEL` (flash model) for cost efficiency
-- Support `research_iterate()` for BFRS/DFRS execution
-
-**Reference Preservation**: Chair receives `upstream_references` from Pathologist, Geneticist, and Recruiter, then merges and deduplicates all citations in the final report.
+- Support `research_iterate()` with `phase_context` dict for phase/mode awareness
 
 ### External API Tools
 
@@ -138,53 +134,63 @@ Tools in `src/tools/` follow the `BaseTool` pattern (OpenAI function calling for
 | RxNormTool | NLM RxNorm | Drug interactions |
 | NCCNRagTool | Local ChromaDB | NCCN guideline RAG |
 
-### Research Subgraph
+### Research Subgraph (4-Phase)
 
-Two-phase research loop implementing BFRS/DFRS research modes ([src/graph/research_subgraph.py](src/graph/research_subgraph.py)):
+Four-phase research loop implementing BFRS/DFRS research modes ([src/graph/research_subgraph.py](src/graph/research_subgraph.py)):
+
+**Phase Structure**:
+
+| Phase | Mode | Max Iter | Agents | Purpose |
+|-------|------|----------|--------|---------|
+| Phase 1 | 轻量 BFRS/DFRS | 3 | Pathologist, Geneticist, Pharmacist, Oncologist(analysis) | Information extraction |
+| Phase 2a | 完整 BFRS/DFRS | 7 | Oncologist(mapping), LocalTherapist, Recruiter, Nutritionist, IntegrativeMed | Treatment mapping (list, don't recommend) |
+| Phase 2b | 轻量 BFRS/DFRS | 3 | Pharmacist(review) solo | Pharmacy review labels |
+| Phase 3 | 完整 BFRS/DFRS | 7 | Oncologist(integration) solo | Treatment plan + L1-L5 tiering |
+
+**PlanAgent Phase Initialization**:
+Each phase begins with PlanAgent generating research directions and injecting `phase_context`:
+```python
+phase_context = {
+    "current_phase": "phase_2a",
+    "phase_description": "治疗Mapping",
+    "current_iteration": 3,
+    "max_iterations": 7,
+    "agent_mode": "mapping",
+    "agent_role_in_phase": "全身治疗手段Mapping，只罗列不推荐",
+    "iteration_feedback": "..."
+}
+```
 
 **Research Modes**:
 - **BFRS (Breadth-First Research)**: 1-2 tool calls per direction, collecting broad preliminary evidence
 - **DFRS (Depth-First Research)**: 3-5 consecutive tool calls for high-priority findings
 
 **Convergence Check**: `PlanAgent.evaluate_and_update()`
-- Unified convergence judgment by PlanAgent (ConvergenceJudge deprecated)
+- Unified convergence judgment by PlanAgent
 - Computes evidence quality stats per direction (count, grade distribution, weighted score)
 - LLM evaluates research quality, decides whether to converge
 - Dynamically updates research plan: adjusts priorities, sets direction's preferred_mode (breadth_first/depth_first/skip)
 
-**Research Iteration Output** (each `research_iterate()` returns):
-```python
-{
-    "evidence_graph": Dict,        # Updated evidence graph
-    "research_plan": Dict,         # Updated research plan
-    "new_entity_ids": List[str],   # Newly added entity canonical IDs
-    "direction_updates": Dict,     # Direction status updates {id: "pending"|"completed"}
-    "needs_deep_research": List,   # Findings requiring deep research
-    "summary": str
-}
+**Report Files** (numbered by phase):
+```
+1_pathologist_report.md        Phase 1
+2_geneticist_report.md         Phase 1
+3_pharmacist_report.md         Phase 1
+4_oncologist_analysis.md       Phase 1
+5_oncologist_mapping.md        Phase 2a
+6_local_therapist.md           Phase 2a
+7_recruiter.md                 Phase 2a
+8_nutritionist.md              Phase 2a
+9_integrative_med.md           Phase 2a
+10_pharmacist_review.md        Phase 2b
+11_oncologist_integration.md   Phase 3
+12_chair_final_report.md       Phase 4
+13_final_report.html           Phase 4
 ```
 
 ### Evidence Graph (Entity-Edge-Observation Architecture)
 
 Global evidence graph uses DeepEvidence paper's entity-centric architecture ([src/models/evidence_graph.py](src/models/evidence_graph.py)):
-
-**Architecture Overview**:
-```
-Finding: "Gefitinib improves survival in EGFR L858R NSCLC"
-    ↓ LLM Entity Extraction
-┌─────────────────────────────────────────────────────┐
-│ Entities:                                           │
-│   GENE:EGFR, EGFR_L858R, DRUG:GEFITINIB, DISEASE:NSCLC │
-│                                                     │
-│ Edges:                                              │
-│   EGFR_L858R → SENSITIZES → GEFITINIB              │
-│   GEFITINIB → TREATS → NSCLC                        │
-│                                                     │
-│ Observation (on edge):                              │
-│   "Gefitinib improves OS (human, Phase III, n=347) │
-│    [PMID:12345678]"                                 │
-└─────────────────────────────────────────────────────┘
-```
 
 **Data Structures**:
 - `Entity`: Node (canonical_id, entity_type, name, aliases, observations)
@@ -193,32 +199,54 @@ Finding: "Gefitinib improves survival in EGFR L858R NSCLC"
 
 **Entity Types** (`EntityType`): gene, variant, drug, disease, pathway, biomarker, paper, trial, guideline, regimen, finding
 
-**Predicate Types** (`Predicate`):
-- Molecular mechanisms: ACTIVATES, INHIBITS, BINDS, PHOSPHORYLATES, REGULATES, AMPLIFIES, MUTATES_TO
-- Drug relationships: TREATS, SENSITIZES, CAUSES_RESISTANCE, INTERACTS_WITH, CONTRAINDICATED_FOR
-- Evidence relationships: SUPPORTS, CONTRADICTS, CITES, DERIVED_FROM
-- Membership/annotation: MEMBER_OF, EXPRESSED_IN, ASSOCIATED_WITH, BIOMARKER_FOR
-- Guidelines/trials: RECOMMENDS, EVALUATES, INCLUDES_ARM
-
 **Evidence Grades** (`EvidenceGrade`): A, B, C, D, E (CIViC standard)
 
-**Lifecycle**:
-| When | Operation | Location |
-|------|-----------|----------|
-| Creation | `plan_agent_node()` initializes empty graph | nodes.py |
-| Update | `research_iterate()` → LLM entity extraction → merge | research_mixin.py |
-| Entity Extraction | `extract_entities_from_finding()` | entity_extractors.py |
-| Convergence Check | `check_direction_evidence_sufficiency()` | research_subgraph.py |
-| Report Generation | `generate_agent_reports()` extracts by agent | research_subgraph.py |
-| Visualization | `graph.to_mermaid()` generates flowchart | evidence_graph.py |
+**L1-L5 Evidence Tiering** (Phase 3 treatment plan decisions):
+| Level | Label | Meaning |
+|-------|-------|---------|
+| L1 | 直接循证 | Direct RCT/Meta-analysis |
+| L2 | 指南推荐 | NCCN/CSCO/ESMO guideline |
+| L3 | 间接外推 | Indirect evidence extrapolation |
+| L4 | 机制推断 | Biological mechanism inference |
+| L5 | 经验性 | Clinical experience only |
 
-**Key Methods**:
-- `get_or_create_entity(canonical_id, ...)`: Get or create entity (auto-merge)
-- `add_observation_to_entity(canonical_id, observation)`: Add observation
-- `add_edge(source_id, target_id, predicate, ...)`: Add relationship edge
-- `find_entity_by_name(name)`: Fuzzy entity lookup
-- `summary()`: Returns stats summary (entities_by_type, best_grades, edges_by_predicate)
-- `to_mermaid()`: Generate Mermaid format diagram
+### Report Structure (6 Chapters + Appendices)
+
+| Chapter | Sections | Data Source |
+|---------|----------|-------------|
+| **1. 病情概要** | 1.1基础信息, 1.2诊断, 1.3分子, 1.4合并症, 1.5过敏 | Pathologist P1, Geneticist P1, Pharmacist P1 |
+| **2. 治疗史回顾** | Timeline + 分析评价 | Pathologist P1 + Oncologist P1(3.1) |
+| **3. 治疗方案探索** | 3.1分析, 3.2 Mapping(4×5矩阵), 3.3方案制定(L1-L5), 3.4路径规划 | Oncologist P1/P2a/P3, LocalTherapist, Recruiter, Pharmacist P2b |
+| **4. 整体与辅助支持** | 4.1营养, 4.2替代疗法 | Nutritionist P2a, IntegrativeMed P2a |
+| **5. 复查和追踪方案** | 5.1常规复查To-Do, 5.2分子复查 | Geneticist P1 + Oncologist P3 |
+| **6. 核心建议汇总** | Exec summary + recommendations | Chair synthesis |
+| **附录A** | 完整证据引用列表 | Auto-generated from EvidenceGraph |
+| **附录B** | 证据等级说明 (CIViC A-E + L1-L5) | Fixed content |
+| **附录C** | Agent 原始报告 | HTML appendix (all 11 reports) |
+
+### Report Validation
+
+Reports must contain **8 mandatory sections** (defined in `config/settings.py:REQUIRED_SECTIONS`):
+1. 病情概要
+2. 治疗史回顾
+3. 治疗方案探索
+4. 整体与辅助支持
+5. 复查和追踪方案
+6. 核心建议汇总
+7. 完整证据引用列表
+8. 证据等级说明
+
+`FormatChecker` in [src/validators/format_checker.py](src/validators/format_checker.py) validates these sections + subsections with fuzzy matching.
+
+### HTML Generation
+
+[src/renderers/html_generator.py](src/renderers/html_generator.py) supports:
+- Custom block markers: `:::exec-summary`, `:::timeline`, `:::roadmap`
+- Inline references: `[[ref:ID;;Title;;URL;;Note]]`
+- Evidence badges: `[Evidence A]` → colored badge, `[L1 直接循证]` → L-tier badge
+- **TOC**: Auto-generated table of contents from h2/h3 headings
+- **Agent Appendix**: All 11 agent reports rendered as HTML appendix
+- **Print styles**: Page breaks for chapters and agent reports
 
 ### Monitoring & Logging
 
@@ -229,47 +257,11 @@ Logging configured with Loguru ([src/utils/logger.py](src/utils/logger.py)):
 **Log Tags**:
 | Tag | Description |
 |-----|-------------|
-| `[PHASE1]` / `[PHASE2]` | Research loop iteration |
-| `[PHASE1_CONVERGENCE]` | Convergence check details |
+| `[PHASE1]` / `[PHASE2A]` / `[PHASE2B]` / `[PHASE3]` | Research loop iteration |
+| `[PHASE1_CONVERGENCE]` etc. | Convergence check details |
 | `[EVIDENCE]` | Evidence graph statistics |
 | `[AgentName]` | Agent execution status |
 | `[Tool:ToolName]` | Tool invocation details |
-
-**Helper Functions**:
-- `log_phase_progress()` - Progress bar `[████░░] 4/7`
-- `log_evidence_stats()` - Evidence graph stats (type distribution, agent distribution)
-- `log_convergence_status()` - Convergence status snapshot
-
-**Monitoring Intermediate Process**:
-1. View `logs/mtb.log` real-time logs
-2. Check `[EVIDENCE]` tag for evidence collection progress
-3. Check `[PHASE1_CONVERGENCE]` / `[PHASE2_CONVERGENCE]` tags for convergence decisions
-
-### Report Validation
-
-Reports must contain **12 mandatory modules** (defined in `config/settings.py:REQUIRED_SECTIONS`):
-1. Executive Summary
-2. Patient Profile
-3. Molecular Profile
-4. Treatment History
-5. Regimen Comparison
-6. Organ Function & Dosing
-7. Treatment Roadmap
-8. Re-biopsy/Liquid Biopsy
-9. Clinical Trials
-10. Local Therapy
-11. Core Recommendations
-12. References
-
-`FormatChecker` in [src/validators/format_checker.py](src/validators/format_checker.py) validates these modules with fuzzy matching.
-
-### HTML Generation
-
-[src/renderers/html_generator.py](src/renderers/html_generator.py) supports custom block markers:
-- `:::exec-summary ... :::` - executive summary block
-- `:::timeline ... :::` - treatment timeline (YAML format)
-- `:::roadmap ... :::` - treatment roadmap cards
-- `[[ref:ID|Title|URL|Note]]` - inline reference with tooltip
 
 ## Configuration
 
@@ -285,39 +277,32 @@ Key settings in `config/settings.py`:
 - `AGENT_TEMPERATURE=0.2`
 - `AGENT_TIMEOUT=120` seconds
 - `MAX_RETRY_ITERATIONS=2`
-- `MAX_PHASE1_ITERATIONS=7` - Phase 1 max iterations
-- `MAX_PHASE2_ITERATIONS=7` - Phase 2 max iterations
+- `MAX_PHASE1_ITERATIONS=3` - Phase 1 max iterations (轻量)
+- `MAX_PHASE2A_ITERATIONS=7` - Phase 2a max iterations (完整)
+- `MAX_PHASE2B_ITERATIONS=3` - Phase 2b max iterations (轻量)
+- `MAX_PHASE3_ITERATIONS=7` - Phase 3 max iterations (完整)
 - `MIN_EVIDENCE_PER_DIRECTION=20` - Minimum evidence per research direction
 - `SUBGRAPH_MODEL` - Model for research subgraph (flash model for cost efficiency)
 
 ## Prompts
 
 All agent prompts are in `config/prompts/`:
-- `global_principles.txt` - shared rules (evidence grading, citation format, safety-first)
-- `{agent}_prompt.txt` - role-specific instructions
+- `global_principles.txt` - shared rules (evidence grading, citation format, safety-first, L1-L5, no-truncation)
+- `{agent}_prompt.txt` - role-specific instructions (10 agents)
 
-Evidence grading (CIViC Evidence Level):
-- A: Validated - supported by multiple independent studies or meta-analyses
-- B: Clinical - from clinical trials or large-scale clinical studies
-- C: Case Study - from case reports or small case series
-- D: Preclinical - from cell lines, animal models, etc.
-- E: Inferential - indirect evidence or based on biological principles
+Evidence grading (CIViC Evidence Level): A (Validated) / B (Clinical) / C (Case Study) / D (Preclinical) / E (Inferential)
 
-CIViC Evidence Types (Clinical Significance):
-- Predictive: Predicts response to a treatment
-- Diagnostic: Used for disease diagnosis
-- Prognostic: Related to disease prognosis
-- Predisposing: Related to cancer risk
-- Oncogenic: Variant's oncogenic function
-
-Citation format: `[PMID: 12345678](url)` or `[NCT04123456](url)`
+Citation format: `[PMID: 12345678](url)` or `[NCT04123456](url)` or `[[ref:ID;;Title;;URL;;Note]]`
 
 ## Key Patterns
 
 1. **State updates**: Nodes return `Dict[str, Any]` that gets merged into `MtbState`
 2. **Tool invocation**: Agents can call tools during generation; results feed back into conversation
 3. **Retry logic**: If format validation fails, workflow loops back to Chair node (max 2 times)
-4. **Reference flow**: Upstream agents generate `*_references` arrays; Chair merges all into `chair_final_references`
-5. **Logging**: All logs go to `logs/mtb.log` via Loguru
-6. **Report saving**: Each agent saves `{n}_{agent}_report.md` to the run folder
-7. **No truncation**: Do NOT truncate strings (`[:N]`) or limit list sizes (`[:N]`) in evidence flow, reports, or prompt construction for the purpose of saving tokens or context length. All evidence, entity lists, observations, and reasoning content must be passed in full. Truncation is only acceptable in logger output.
+4. **Reference flow**: All 11 agent reports pass references to Chair; Chair preserves all citations
+5. **Multi-mode agents**: Oncologist and Pharmacist switch behavior based on `phase_context.agent_mode`
+6. **Phase context injection**: Each research agent receives `phase_context` dict with phase/iteration/mode info
+7. **Logging**: All logs go to `logs/mtb.log` via Loguru
+8. **Report saving**: Each agent saves `{n}_{agent}_report.md` to the run folder (numbered 1-13)
+9. **No truncation**: Do NOT truncate strings (`[:N]`) or limit list sizes (`[:N]`) in evidence flow, reports, or prompt construction. All evidence, entity lists, observations, and reasoning content must be passed in full. Truncation is only acceptable in logger output.
+10. **L1-L5 preservation**: Chair must preserve Oncologist Phase 3's L1-L5 annotations without modification

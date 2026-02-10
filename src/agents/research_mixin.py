@@ -54,7 +54,8 @@ class ResearchMixin:
         iteration: int,
         max_iterations: int,
         case_context: str,
-        research_plan: Optional[Dict[str, Any]] = None
+        research_plan: Optional[Dict[str, Any]] = None,
+        phase_context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         执行一轮研究迭代
@@ -68,6 +69,9 @@ class ResearchMixin:
             max_iterations: 最大迭代次数
             case_context: 病例上下文
             research_plan: 研究计划（序列化格式）
+            phase_context: 阶段上下文（可选），包含 current_phase, phase_description,
+                          current_iteration, max_iterations, agent_mode, 
+                          agent_role_in_phase, iteration_feedback
 
         Returns:
             研究结果字典
@@ -144,7 +148,8 @@ class ResearchMixin:
                 graph=graph,
                 iteration=iteration,
                 max_iterations=max_iterations,
-                case_context=case_context
+                case_context=case_context,
+                phase_context=phase_context
             )
             result = self.invoke(prompt, max_tool_iterations=max_tool_rounds)  # type: ignore
 
@@ -329,7 +334,8 @@ class ResearchMixin:
         graph: EvidenceGraph,
         iteration: int,
         max_iterations: int,
-        case_context: str
+        case_context: str,
+        phase_context: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         构建单方向研究提示（统一 BFRS/DFRS）
@@ -413,6 +419,20 @@ class ResearchMixin:
 - 为方向标记状态: pending（需继续）/ completed（已充分）
 - 标记需要深入研究的重要发现和未验证的假设"""
 
+        # Build phase context section
+        phase_context_section = ""
+        if phase_context:
+            phase_context_section = f"""
+### 阶段上下文 [Phase Context]
+- 当前阶段: {phase_context.get('current_phase', 'unknown')} ({phase_context.get('phase_description', '')})
+- 当前迭代: {phase_context.get('current_iteration', '?')}/{phase_context.get('max_iterations', '?')}
+- Agent 模式: {phase_context.get('agent_mode', 'research')}
+- 阶段角色: {phase_context.get('agent_role_in_phase', '')}
+"""
+            feedback = phase_context.get('iteration_feedback', '')
+            if feedback:
+                phase_context_section += f"\n### 迭代反馈 [Iteration Feedback]\n{feedback}\n"
+
         return f"""## 研究模式: {mode_label}
 
 ### 当前迭代信息
@@ -420,6 +440,7 @@ class ResearchMixin:
 - 你的角色: {agent_role}
 - 证据图概况: {total_entities} 个实体, {total_edges} 条关系
 
+{phase_context_section}
 ### 你的研究方向（本次聚焦）
 {direction_detail}{dfrs_section}
 

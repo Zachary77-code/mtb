@@ -395,27 +395,45 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
     recruiter_report = state.get("recruiter_report", "")
     oncologist_plan = state.get("oncologist_plan", "")
 
-    # 获取证据图（包含所有 Agent 收集的结构化证据）
-    # state 中存储的是 dict 格式，需要转换为 EvidenceGraph 对象
+    # Phase 1 新增报告
+    pharmacist_report = state.get("pharmacist_report", "")
+    oncologist_analysis_report = state.get("oncologist_analysis_report", "")
+    # Phase 2a 新增报告
+    oncologist_mapping_report = state.get("oncologist_mapping_report", "")
+    local_therapist_report = state.get("local_therapist_report", "")
+    nutritionist_report = state.get("nutritionist_report", "")
+    integrative_med_report = state.get("integrative_med_report", "")
+    # Phase 2b
+    pharmacist_review_report = state.get("pharmacist_review_report", "")
+    # Phase 3
+    oncologist_integration_report = state.get("oncologist_integration_report", "")
+
+    # 获取证据图
     evidence_graph_dict = state.get("evidence_graph")
     evidence_graph = load_evidence_graph(evidence_graph_dict) if evidence_graph_dict else None
     entity_count = len(evidence_graph.entities) if evidence_graph else 0
 
     # 计算总输入量
-    total_input = (len(raw_pdf_text) + len(pathologist_report) +
-                   len(geneticist_report) + len(recruiter_report) + len(oncologist_plan))
+    all_reports = [raw_pdf_text, pathologist_report, geneticist_report, recruiter_report,
+                   oncologist_plan, pharmacist_report, oncologist_analysis_report,
+                   oncologist_mapping_report, local_therapist_report,
+                   nutritionist_report, integrative_med_report,
+                   pharmacist_review_report, oncologist_integration_report]
+    total_input = sum(len(r) for r in all_reports)
     logger.info(f"[CHAIR] 输入总量: {total_input} 字符, 证据图实体数: {entity_count}")
 
+    report_lengths = {
+        "原始病历": len(raw_pdf_text), "病理学": len(pathologist_report),
+        "遗传学": len(geneticist_report), "药师P1": len(pharmacist_report),
+        "Onc分析P1": len(oncologist_analysis_report), "OncMapping": len(oncologist_mapping_report),
+        "局部治疗": len(local_therapist_report), "临床试验": len(recruiter_report),
+        "营养": len(nutritionist_report), "整合医学": len(integrative_med_report),
+        "药师审查": len(pharmacist_review_report), "Onc整合P3": len(oncologist_integration_report),
+    }
     input_summary = f"""**迭代次数**: {iteration + 1}
-**缺失模块**: {missing if missing else '无'}
-
-**输入总量**: {total_input} 字符
-- 原始病历文本: {len(raw_pdf_text)} 字符
-- 病理学分析报告: {len(pathologist_report)} 字符
-- 分子分析报告: {len(geneticist_report)} 字符
-- 临床试验推荐: {len(recruiter_report)} 字符
-- 治疗方案: {len(oncologist_plan)} 字符
-- 证据图实体数: {entity_count}"""
+**缺失章节**: {missing if missing else '无'}
+**输入总量**: {total_input} 字符, 证据图实体数: {entity_count}
+""" + "\n".join([f"- {k}: {v} 字符" for k, v in report_lengths.items() if v > 0])
     _print_section("[CHAIR] 输入", input_summary)
 
     agent = ChairAgent()
@@ -426,7 +444,15 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
         recruiter_report=recruiter_report,
         oncologist_plan=oncologist_plan,
         missing_sections=missing,
-        evidence_graph=evidence_graph
+        evidence_graph=evidence_graph,
+        pharmacist_report=pharmacist_report,
+        oncologist_analysis_report=oncologist_analysis_report,
+        oncologist_mapping_report=oncologist_mapping_report,
+        local_therapist_report=local_therapist_report,
+        nutritionist_report=nutritionist_report,
+        integrative_med_report=integrative_med_report,
+        pharmacist_review_report=pharmacist_review_report,
+        oncologist_integration_report=oncologist_integration_report,
     )
 
     synthesis_len = len(result["synthesis"]) if result["synthesis"] else 0
@@ -435,7 +461,7 @@ def chair_node(state: MtbState) -> Dict[str, Any]:
     # 保存完整 Markdown 报告
     run_folder = state.get("run_folder")
     if run_folder and result.get("full_report_md"):
-        _save_markdown_report(Path(run_folder), "5_chair_final_report.md", result["full_report_md"])
+        _save_markdown_report(Path(run_folder), "12_chair_final_report.md", result["full_report_md"])
 
     # 保存研究进度报告
     research_progress = state.get("research_progress_report")
@@ -480,7 +506,7 @@ def format_verification_node(state: MtbState) -> Dict[str, Any]:
     _print_section("[VERIFY] 格式验证结果", result_summary, max_len=500)
 
     if is_compliant:
-        logger.info("[VERIFY] 格式验证通过，包含全部 12 个必选模块")
+        logger.info("[VERIFY] 格式验证通过，包含全部必选章节")
     else:
         logger.warning(f"[VERIFY] 格式验证失败，缺失模块: {missing}")
 
@@ -505,12 +531,33 @@ def webpage_generator_node(state: MtbState) -> Dict[str, Any]:
 
     from src.renderers.html_generator import HtmlReportGenerator
 
+    # 收集所有 Agent 报告用于附录
+    agent_reports = {}
+    _report_mapping = [
+        ("Pathologist (Phase 1)", "pathologist_report"),
+        ("Geneticist (Phase 1)", "geneticist_report"),
+        ("Pharmacist (Phase 1)", "pharmacist_report"),
+        ("Oncologist Analysis (Phase 1)", "oncologist_analysis_report"),
+        ("Oncologist Mapping (Phase 2a)", "oncologist_mapping_report"),
+        ("Local Therapist (Phase 2a)", "local_therapist_report"),
+        ("Recruiter (Phase 2a)", "recruiter_report"),
+        ("Nutritionist (Phase 2a)", "nutritionist_report"),
+        ("Integrative Medicine (Phase 2a)", "integrative_med_report"),
+        ("Pharmacist Review (Phase 2b)", "pharmacist_review_report"),
+        ("Oncologist Integration (Phase 3)", "oncologist_integration_report"),
+    ]
+    for display_name, state_key in _report_mapping:
+        report_text = state.get(state_key, "")
+        if report_text:
+            agent_reports[display_name] = report_text
+
     generator = HtmlReportGenerator()
     output_path = generator.generate(
         raw_pdf_text=state.get("raw_pdf_text", ""),
         chair_synthesis=state.get("chair_synthesis", ""),
-        run_folder=state.get("run_folder"),  # 传递运行文件夹路径
-        evidence_graph_data=state.get("evidence_graph")  # 传递证据图用于 observation tooltip
+        run_folder=state.get("run_folder"),
+        evidence_graph_data=state.get("evidence_graph"),
+        agent_reports=agent_reports if agent_reports else None
     )
 
     # 打印生成结果

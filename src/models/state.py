@@ -143,9 +143,43 @@ class MtbState(TypedDict):
     recruiter_report: NotRequired[str]  # Markdown 格式的试验推荐报告
     recruiter_trials: NotRequired[List[Dict[str, Any]]]  # 试验详情列表
 
-    # Oncologist 输出
+    # Oncologist 输出（旧字段保留兼容）
     oncologist_plan: NotRequired[str]  # Markdown 格式的治疗方案
     oncologist_safety_warnings: NotRequired[List[str]]  # 安全警告列表
+
+    # Pharmacist 输出（Phase1 research + Phase2b review）
+    pharmacist_report: NotRequired[str]             # Phase1 合并症/用药/过敏史报告
+    pharmacist_converged: NotRequired[bool]
+    pharmacist_research_result: NotRequired[Dict[str, Any]]
+    pharmacist_review_report: NotRequired[str]      # Phase2b 药学审查报告
+
+    # LocalTherapist 输出（Phase2a）
+    local_therapist_report: NotRequired[str]
+    local_therapist_converged: NotRequired[bool]
+    local_therapist_research_result: NotRequired[Dict[str, Any]]
+
+    # Nutritionist 输出（Phase2a）
+    nutritionist_report: NotRequired[str]
+    nutritionist_converged: NotRequired[bool]
+    nutritionist_research_result: NotRequired[Dict[str, Any]]
+
+    # IntegrativeMed 输出（Phase2a）
+    integrative_med_report: NotRequired[str]
+    integrative_med_converged: NotRequired[bool]
+    integrative_med_research_result: NotRequired[Dict[str, Any]]
+
+    # Oncologist 分析输出（Phase1, 3.1 过往治疗分析）
+    oncologist_analysis_report: NotRequired[str]
+    oncologist_analysis_converged: NotRequired[bool]
+    oncologist_analysis_research_result: NotRequired[Dict[str, Any]]
+
+    # Oncologist Mapping 输出（Phase2a, 5×4 矩阵）
+    oncologist_mapping_report: NotRequired[str]
+    oncologist_mapping_converged: NotRequired[bool]
+    oncologist_mapping_research_result: NotRequired[Dict[str, Any]]
+
+    # Oncologist 整合输出（Phase3）
+    oncologist_integration_report: NotRequired[str]
 
     # Chair 输出
     chair_synthesis: NotRequired[str]  # Markdown 格式的最终综合报告（含完整证据引用列表）
@@ -178,9 +212,27 @@ class MtbState(TypedDict):
     phase1_iteration: NotRequired[int]  # 当前迭代轮次
     phase1_new_findings: NotRequired[int]  # 本轮新发现数量
 
-    # Phase 2 迭代控制（Oncologist）
+    # Phase 2 迭代控制（Oncologist，旧字段保留兼容）
     phase2_iteration: NotRequired[int]  # 当前迭代轮次
     phase2_new_findings: NotRequired[int]  # 本轮新发现数量
+
+    # Phase 2a 迭代控制（5 agents 并行: Oncologist+LocalTherapist+Recruiter+Nutritionist+IntegrativeMed）
+    phase2a_iteration: NotRequired[int]
+    phase2a_converged: NotRequired[bool]
+
+    # Phase 2b 迭代控制（Pharmacist 独立审查）
+    phase2b_iteration: NotRequired[int]
+    phase2b_converged: NotRequired[bool]
+
+    # Phase 3 迭代控制（Oncologist 独立整合）
+    phase3_iteration: NotRequired[int]
+    phase3_converged: NotRequired[bool]
+
+    # Phase 上下文（PlanAgent 每个 Phase init 时写入，传递给 research agent）
+    current_phase: NotRequired[str]                  # "phase_1" | "phase_2a" | "phase_2b" | "phase_3"
+    current_phase_description: NotRequired[str]      # "信息提取与解读" | "治疗Mapping" | ...
+    current_phase_iteration: NotRequired[int]        # 当前轮次 (1-based)
+    current_phase_max_iterations: NotRequired[int]   # 当前阶段最大迭代
 
     # 收敛标志
     research_converged: NotRequired[bool]  # 研究是否已收敛
@@ -288,9 +340,29 @@ def create_initial_state(input_text: str) -> MtbState:
         "pathologist_converged": False,
         "geneticist_converged": False,
         "recruiter_converged": False,
+        "pharmacist_converged": False,
+        "oncologist_analysis_converged": False,
         "phase1_all_converged": False,
         "phase1_decision": "continue",
         "phase2_decision": "continue",
+        # Phase 2a 初始化
+        "phase2a_iteration": 0,
+        "phase2a_converged": False,
+        "oncologist_mapping_converged": False,
+        "local_therapist_converged": False,
+        "nutritionist_converged": False,
+        "integrative_med_converged": False,
+        # Phase 2b 初始化
+        "phase2b_iteration": 0,
+        "phase2b_converged": False,
+        # Phase 3 初始化
+        "phase3_iteration": 0,
+        "phase3_converged": False,
+        # Phase 上下文初始化
+        "current_phase": "phase_1",
+        "current_phase_description": "",
+        "current_phase_iteration": 0,
+        "current_phase_max_iterations": 0,
     }
 
 

@@ -374,7 +374,8 @@ class HtmlReportGenerator:
         raw_pdf_text: str,
         chair_synthesis: str,
         run_folder: str = None,
-        evidence_graph_data: Dict[str, Any] = None
+        evidence_graph_data: Dict[str, Any] = None,
+        agent_reports: Dict[str, str] = None
     ) -> str:
         """
         生成 HTML 报告
@@ -384,6 +385,7 @@ class HtmlReportGenerator:
             chair_synthesis: Chair 综合报告（Markdown，含完整证据引用列表）
             run_folder: 本次运行的报告文件夹路径（可选，若不提供则使用默认目录）
             evidence_graph_data: 序列化的证据图字典（可选，用于 observation tooltip）
+            agent_reports: Agent 报告字典 {display_name: markdown_text}（可选，用于附录）
 
         Returns:
             生成的 HTML 文件路径
@@ -404,6 +406,15 @@ class HtmlReportGenerator:
         html_content = self._markdown_to_html(chair_synthesis)
         html_content = self._add_reference_links(html_content)
         html_content = self._add_evidence_tags(html_content)
+
+        # 为标题分配 ID 并生成目录
+        html_content, heading_ids = self._assign_heading_ids(html_content)
+        toc_html = self._generate_toc(heading_ids)
+
+        # 生成 Agent 报告附录
+        agent_appendix_html = ""
+        if agent_reports:
+            agent_appendix_html = self._render_agent_reports_appendix(agent_reports)
 
         # 提取警告
         warnings = self._extract_warnings(chair_synthesis)
@@ -428,6 +439,8 @@ class HtmlReportGenerator:
             "cancer_type": cancer_type,
             "generation_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "report_content": html_content,
+            "toc_html": toc_html,
+            "agent_appendix_html": agent_appendix_html,
             "warnings": warnings,
             # Cytoscape.js 可视化
             "cytoscape_data": json.dumps(cytoscape_json, ensure_ascii=False) if cytoscape_json else None,
@@ -441,7 +454,7 @@ class HtmlReportGenerator:
         # 确定保存目录
         if run_folder:
             output_dir = Path(run_folder)
-            filename = "6_final_report.html"
+            filename = "13_final_report.html"
         else:
             output_dir = REPORTS_DIR
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1146,8 +1159,113 @@ class HtmlReportGenerator:
 
         return html
 
+    def _assign_heading_ids(self, html: str) -> tuple:
+        """
+        为 HTML 中的 h2/h3 标题分配唯一 ID，用于 TOC 锚点跳转。
+
+        Returns:
+            (html_with_ids, heading_list) — heading_list 为 [(level, id, text), ...]
+        """
+        headings = []
+        counter = [0]
+
+        def _add_id(m):
+            tag = m.group(1)  # "h2" or "h3"
+            attrs = m.group(2) or ""  # existing attributes
+            text = m.group(3)
+            # 清理 text 中的 HTML 标签（用于生成纯文本标题）
+            clean_text = re.sub(r'<[^>]+>', '', text).strip()
+            counter[0] += 1
+            hid = f"section-{counter[0]}"
+            level = int(tag[1])
+            headings.append((level, hid, clean_text))
+            return f'<{tag}{attrs} id="{hid}">{text}</{tag}>'
+
+        html_out = re.sub(
+            r'<(h[23])([^>]*)>(.*?)</\1>',
+            _add_id,
+            html,
+            flags=re.DOTALL
+        )
+        return html_out, headings
+
+    def _generate_toc(self, headings: List[tuple]) -> str:
+        """
+        从标题列表生成目录 HTML。
+
+        Args:
+            headings: [(level, id, text), ...]
+
+        Returns:
+            TOC HTML string
+        """
+        if not headings:
+            return ""
+
+        html = '<nav class="toc"><h3 class="toc-title">目录 / Table of Contents</h3><ul class="toc-list">'
+        for level, hid, text in headings:
+            indent_class = "toc-h3" if level == 3 else "toc-h2"
+            html += f'<li class="{indent_class}"><a href="#{hid}">{text}</a></li>'
+        html += '</ul></nav>'
+        return html
+
+    def _render_agent_reports_appendix(self, agent_reports: Dict[str, str]) -> str:
+        """
+        将 Agent 报告渲染为 HTML 附录。
+
+        Args:
+            agent_reports: {display_name: markdown_text}
+
+        Returns:
+            HTML string for agent reports appendix
+        """
+        if not agent_reports:
+            return ""
+
+        # 按预定义顺序排列
+        ordered_names = [
+            "Pathologist (Phase 1)", "Geneticist (Phase 1)",
+            "Pharmacist (Phase 1)", "Oncologist Analysis (Phase 1)",
+            "Oncologist Mapping (Phase 2a)", "Local Therapist (Phase 2a)",
+            "Recruiter (Phase 2a)", "Nutritionist (Phase 2a)",
+            "Integrative Medicine (Phase 2a)", "Pharmacist Review (Phase 2b)",
+            "Oncologist Integration (Phase 3)",
+        ]
+
+        html = '<div class="agent-appendix">'
+        html += '<h2 id="agent-appendix">附录C. Agent 原始报告</h2>'
+
+        for name in ordered_names:
+            md_text = agent_reports.get(name)
+            if not md_text:
+                continue
+            # Convert markdown to HTML (simple, no custom block parsing)
+            agent_html = markdown.markdown(
+                md_text,
+                extensions=['tables', 'fenced_code', 'sane_lists']
+            )
+            html += f'<div class="agent-report-section">'
+            html += f'<h3 class="agent-report-title">{name}</h3>'
+            html += f'<div class="agent-report-content">{agent_html}</div>'
+            html += '</div>'
+
+        # Also render any reports not in the ordered list
+        for name, md_text in agent_reports.items():
+            if name not in ordered_names and md_text:
+                agent_html = markdown.markdown(
+                    md_text,
+                    extensions=['tables', 'fenced_code', 'sane_lists']
+                )
+                html += f'<div class="agent-report-section">'
+                html += f'<h3 class="agent-report-title">{name}</h3>'
+                html += f'<div class="agent-report-content">{agent_html}</div>'
+                html += '</div>'
+
+        html += '</div>'
+        return html
+
     def _add_evidence_tags(self, html: str) -> str:
-        """添加证据等级标签"""
+        """添加证据等级标签 (CIViC A-E + L1-L5)"""
         evidence_map = {
             r'\[Evidence A\]': '<span class="evidence-tag evidence-a">Evidence A</span>',
             r'\[Evidence B\]': '<span class="evidence-tag evidence-b">Evidence B</span>',
@@ -1156,6 +1274,18 @@ class HtmlReportGenerator:
         }
 
         for pattern, replacement in evidence_map.items():
+            html = re.sub(pattern, replacement, html, flags=re.IGNORECASE)
+
+        # L1-L5 证据分层标签
+        l_tier_map = {
+            r'\[L1[^\]]*直接循证[^\]]*\]': '<span class="evidence-tag tier-l1">L1 直接循证</span>',
+            r'\[L2[^\]]*指南推荐[^\]]*\]': '<span class="evidence-tag tier-l2">L2 指南推荐</span>',
+            r'\[L3[^\]]*间接外推[^\]]*\]': '<span class="evidence-tag tier-l3">L3 间接外推</span>',
+            r'\[L4[^\]]*机制推断[^\]]*\]': '<span class="evidence-tag tier-l4">L4 机制推断</span>',
+            r'\[L5[^\]]*经验性[^\]]*\]': '<span class="evidence-tag tier-l5">L5 经验性</span>',
+        }
+
+        for pattern, replacement in l_tier_map.items():
             html = re.sub(pattern, replacement, html, flags=re.IGNORECASE)
 
         return html

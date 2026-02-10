@@ -399,6 +399,13 @@
     .evidence-c { background: #fef3c7; color: #92400e; }
     .evidence-d { background: #fee2e2; color: #991b1b; }
 
+    /* L1-L5 Evidence Tier Badges */
+    .tier-l1 { background: #dcfce7; color: #166534; }
+    .tier-l2 { background: #dbeafe; color: #1e40af; }
+    .tier-l3 { background: #fef3c7; color: #92400e; }
+    .tier-l4 { background: #fce4ec; color: #880e4f; }
+    .tier-l5 { background: #f3e5f5; color: #6a1b9a; }
+
     /* Calculation Box */
     .calc-box {
       background: var(--bg-alt);
@@ -476,6 +483,75 @@
       text-decoration: underline;
     }
 
+    /* Table of Contents */
+    .toc {
+      background: var(--bg-alt);
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .toc-title {
+      font-size: 14px;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .toc-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      column-count: 2;
+      column-gap: 32px;
+    }
+
+    .toc-list li {
+      margin-bottom: 4px;
+      break-inside: avoid;
+    }
+
+    .toc-list a {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 12px;
+    }
+
+    .toc-list a:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+
+    .toc-h2 { font-weight: 600; }
+    .toc-h3 { padding-left: 16px; font-size: 11px; }
+
+    /* Agent Reports Appendix */
+    .agent-appendix {
+      margin-top: 32px;
+      border-top: 2px solid var(--primary);
+      padding-top: 24px;
+    }
+
+    .agent-report-section {
+      margin-bottom: 24px;
+      page-break-before: always;
+    }
+
+    .agent-report-title {
+      background: var(--bg-alt);
+      padding: 10px 16px;
+      border-left: 4px solid var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .agent-report-content {
+      padding: 0 16px;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .agent-report-content table {
+      font-size: 12px;
+    }
+
     /* Footer */
     footer {
       padding: 16px 32px;
@@ -489,7 +565,11 @@
     @media print {
       body { background: white; padding: 0; }
       .container { box-shadow: none; }
+      .toc { page-break-after: always; }
+      h2 { page-break-before: always; }
+      h2:first-of-type { page-break-before: avoid; }
       .section { page-break-inside: avoid; }
+      .agent-report-section { page-break-before: always; }
       .ref-tooltip .ref-text { display: none; }
     }
 
@@ -631,9 +711,19 @@
       </div>
     </header>
 
+    <!-- Table of Contents -->
+    {% if toc_html %}
+    {{ toc_html | safe }}
+    {% endif %}
+
     <!-- Report Content -->
     <div class="content">
       {{ report_content | safe }}
+
+      <!-- Agent Reports Appendix -->
+      {% if agent_appendix_html %}
+      {{ agent_appendix_html | safe }}
+      {% endif %}
 
       {% if cytoscape_data %}
       <!-- Evidence Graph Interactive Visualization -->
