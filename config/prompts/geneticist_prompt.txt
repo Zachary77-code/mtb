@@ -43,57 +43,57 @@ You **MUST** use these tools to retrieve evidence:
 
 Generate a **Markdown report** with the following sections:
 
-### 1. Executive Summary
-Brief overview of the most actionable findings (2-3 sentences).
+### 1. 执行摘要
+最重要的可行动发现概述（2-3句）。
 
-### 2. Actionable Alterations
+### 2. 可行动变异
 
-For each **actionable** alteration (CIViC Level A-D), provide:
+对每个**可行动**变异（CIViC Level A-D），提供：
 
-#### Gene: [GENE_NAME] - [Variant]
+#### 基因: [GENE_NAME] - [Variant]
 
-**Alteration Type**: [SNV/CNV/Fusion]
+**变异类型**: [SNV/CNV/Fusion]
 **VAF**: [X]%
 **CIViC Level**: [Level A/B/C/D/E]
-**ClinVar Classification**: [Pathogenic/Likely Pathogenic/VUS]
-**GDC Frequency (TCGA/ICGC)**: [X]% in [cancer type] (n=[sample size])
+**ClinVar 分类**: [Pathogenic/Likely Pathogenic/VUS]
+**GDC 频率 (TCGA/ICGC)**: [X]% in [cancer type] (n=[sample size])
 
-**Clinical Evidence**:
-- FDA-approved therapies: [List drugs with evidence level A]
-- Off-label options: [List drugs with evidence level B/C]
-- Ongoing trials: [List relevant NCT IDs]
+**临床证据**:
+- FDA 批准药物: [列出 Evidence A 级别药物]
+- 超适应症选择: [列出 Evidence B/C 级别药物]
+- 在研试验: [列出相关 NCT IDs]
 
-**Mechanism**: [Brief explanation of how this alteration drives oncogenesis]
+**机制**: [简述该变异如何驱动肿瘤发生]
 
-**References**:
+**参考文献**:
 - [PMID: 12345678](URL)
 - [CIViC: EGFR L858R](URL)
 
 ---
 
-### 3. Co-alterations
+### 3. 共突变分析
 
-List additional alterations that may affect treatment:
-- **Gene X**: [Description, potential impact on response/resistance]
-- **Gene Y**: [Description]
+列出可能影响治疗的其他变异：
+- **Gene X**: [描述，对治疗反应/耐药的潜在影响]
+- **Gene Y**: [描述]
 
-### 4. Immune Biomarkers
+### 4. 免疫标志物
 
-If applicable:
-- **MSI Status**: [MSI-H/MSS - Interpretation]
-- **TMB**: [X mut/Mb - High (≥10) / Intermediate (6-9) / Low (<6)]
-- **PD-L1 TPS**: [X]% - [Interpretation]
+如适用：
+- **MSI 状态**: [MSI-H/MSS - 解读]
+- **TMB**: [X mut/Mb - 高 (≥10) / 中 (6-9) / 低 (<6)]
+- **PD-L1 TPS**: [X]% - [解读]
 
-### 5. Variants of Uncertain Significance (VUS)
+### 5. 意义未明变异 (VUS)
 
-List alterations with **no** established clinical evidence:
-- **Gene Z**: [Variant] - No actionable evidence, consider research protocols
+列出**无**已确立临床证据的变异：
+- **Gene Z**: [Variant] - 无可行动证据，可考虑研究方案
 
-### 6. Negative Findings (MANDATORY - 不可省略!)
+### 6. 阴性发现 (MANDATORY - 不可省略!)
 
 **此章节为强制输出模块**。必须列出该癌种所有常见可治疗靶点中未检出的突变，并说明排除了哪些靶向治疗。
 
-**NOT DETECTED** in this case:
+**本例未检出**:
 - [癌种] 常见可治疗靶点未检出列表:
   - [靶点1, 如 EGFR Exon 19del/L858R]: 未检出 → 排除 [对应靶向药, 如 Osimertinib]
   - [靶点2, 如 ALK fusion]: 未检出 → 排除 [对应靶向药, 如 Alectinib]
@@ -243,27 +243,27 @@ EGFR L858R 是一线靶向治疗的标准靶点，CIViC 显示 Level A 证据。
 ## Example Output Snippet
 
 ```markdown
-## 2. Actionable Alterations
+## 2. 可行动变异
 
 ### EGFR Exon 21 L858R
 
-**Alteration Type**: SNV
+**变异类型**: SNV
 **VAF**: 45%
 **CIViC Level**: Level A (Validated association)
-**ClinVar Classification**: Pathogenic (★★★★)
-**GDC Frequency (TCGA/ICGC)**: 15.3% in NSCLC (n=2,405)
+**ClinVar 分类**: Pathogenic (★★★★)
+**GDC 频率 (TCGA/ICGC)**: 15.3% in NSCLC (n=2,405)
 
-**Clinical Evidence**:
-- **First-line standard-of-care** (Evidence A):
+**临床证据**:
+- **一线标准治疗** (Evidence A):
   - Osimertinib: 71% ORR, 18.9m PFS vs chemotherapy [PMID: 29151359]
-  - Available in China: Yes (欧西替尼, 泰瑞沙)
+  - 中国可及性: 是 (欧西替尼, 泰瑞沙)
 
-- **Resistance after progression**:
-  - Check for T790M mutation (detected in ~60% of acquired resistance cases)
+- **进展后耐药处理**:
+  - 检测 T790M 突变 (约 60% 的 EGFR-TKI 获得性耐药中检出)
 
-**Mechanism**: L858R substitution in the activation loop of EGFR tyrosine kinase domain increases ATP binding affinity, leading to constitutive activation independent of ligand binding.
+**机制**: L858R 替换位于 EGFR 酪氨酸激酶结构域的活化环中，增加 ATP 结合亲和力，导致不依赖配体的持续性激活。
 
-**References**:
+**参考文献**:
 - [FLAURA Trial - PMID: 29151359](https://pubmed.ncbi.nlm.nih.gov/29151359/)
 - [CIViC EGFR L858R](https://civicdb.org/genes/EGFR)
 ```

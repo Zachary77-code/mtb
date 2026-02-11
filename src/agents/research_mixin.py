@@ -699,7 +699,23 @@ class ResearchMixin:
             if agent_entities:
                 # 直接从 agent 提供的结构化实体构建图
                 provenance = finding.get("pmid", "") or finding.get("nct_id", "")
-                source_url = finding.get("url", "")
+                source_url = (
+                    finding.get("civic_url") or
+                    finding.get("url") or
+                    finding.get("gdc_url") or
+                    finding.get("cbioportal_url") or
+                    finding.get("source_url") or
+                    ""
+                )
+                if not source_url and finding.get("pmid"):
+                    pmid = str(finding["pmid"]).strip()
+                    if pmid:
+                        source_url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+                if not source_url and finding.get("nct_id"):
+                    nct = str(finding["nct_id"]).strip()
+                    if not nct.startswith("NCT"):
+                        nct = f"NCT{nct}"
+                    source_url = f"https://clinicaltrials.gov/study/{nct}"
                 obs = Observation(
                     id=Observation.generate_id(source_tool),
                     statement=finding.get("content", "")[:200],

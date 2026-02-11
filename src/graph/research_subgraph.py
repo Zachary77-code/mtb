@@ -426,22 +426,6 @@ def check_agent_module_coverage(state: MtbState, agent_names: list[str]) -> tupl
     return True, []
 
 
-# ==================== 证据等级辅助函数 ====================
-
-def _grade_description(grade) -> str:
-    """证据等级描述"""
-    if not grade:
-        return "未知"
-    descs = {
-        "A": "Validated",
-        "B": "Clinical",
-        "C": "Case Study",
-        "D": "Preclinical",
-        "E": "Inferential"
-    }
-    return descs.get(grade.value if hasattr(grade, 'value') else grade, "")
-
-
 # ==================== Agent 报告保存 ====================
 
 def _save_agent_report(state: MtbState, filename: str, content: str):
@@ -1038,64 +1022,8 @@ def _save_detailed_iteration_report(
 
         lines.append("")
 
-    # === 3. 本轮新增证据明细 ===
-    lines.append("## 3. 本轮新增证据明细")
-    lines.append("")
-
-    for agent_name in agent_names:
-        result_key = f"{agent_name.lower()}_research_result"
-        agent_result = state.get(result_key, {})
-        new_entity_ids = agent_result.get("new_entity_ids", [])
-
-        lines.append(f"### {agent_name}: {len(new_entity_ids)} 条")
-        lines.append("")
-
-        if not new_entity_ids:
-            lines.append("本轮无新增证据")
-            lines.append("")
-            continue
-
-        for eid in new_entity_ids:
-            # 新模型：entity_ids 是 entity canonical_id
-            entity = graph.get_entity(eid) if graph else None
-            if not entity:
-                lines.append(f"#### 实体 {eid}")
-                lines.append("- *实体未找到*")
-                lines.append("")
-                continue
-
-            lines.append(f"#### 实体 {entity.canonical_id}")
-            lines.append(f"- **名称**: {entity.name}")
-            lines.append(f"- **类型**: {entity.entity_type.value if entity.entity_type else 'N/A'}")
-            best_grade = entity.get_best_grade()
-            grade_val = best_grade.value if best_grade else 'N/A'
-            grade_desc = _grade_description(best_grade)
-            lines.append(f"- **最佳等级**: {grade_val} ({grade_desc})")
-            if entity.aliases:
-                lines.append(f"- **别名**: {', '.join(entity.aliases[:5])}")
-
-            # 显示该实体的所有观察
-            if entity.observations:
-                lines.append(f"- **观察数**: {len(entity.observations)}")
-                for i, obs in enumerate(entity.observations, 1):
-                    lines.append(f"  **观察 {i}**:")
-                    lines.append(f"    - 陈述: {obs.statement}")
-                    if obs.evidence_grade:
-                        lines.append(f"    - 等级: {obs.evidence_grade.value}")
-                    if obs.civic_type:
-                        lines.append(f"    - CIViC类型: {obs.civic_type.value}")
-                    lines.append(f"    - 来源Agent: {obs.source_agent}")
-                    lines.append(f"    - 来源工具: {obs.source_tool or 'N/A'}")
-                    if obs.provenance:
-                        lines.append(f"    - 来源文献: {obs.provenance}")
-                    if obs.source_url:
-                        lines.append(f"    - URL: {obs.source_url}")
-                    lines.append(f"    - 收集轮次: {obs.iteration}")
-
-            lines.append("")
-
-    # === 4. Evidence Graph 完整统计 ===
-    lines.append("## 4. Evidence Graph 完整统计")
+    # === 3. Evidence Graph 完整统计 ===
+    lines.append("## 3. Evidence Graph 完整统计")
     lines.append("")
     if graph:
         summary = graph.summary()
