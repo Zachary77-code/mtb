@@ -7,6 +7,8 @@ import json
 import re
 import requests
 import time
+import threading
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Any, Optional
@@ -126,6 +128,12 @@ class BaseAgent:
     所有专业 Agent 继承此类。
     """
 
+    # OpenRouter 全局速率限制器（所有Agent实例共享）
+    _rate_limiter_lock = threading.Lock()
+    _request_timestamps = deque()  # 请求时间戳队列
+    _RATE_LIMIT_WINDOW = 10  # 时间窗口：10秒
+    _RATE_LIMIT_MAX_REQUESTS = 20  # 窗口内最大请求数：20次
+
     def __init__(
         self,
         role: str,
@@ -173,6 +181,47 @@ class BaseAgent:
         """获取所有工具的 OpenAI Function Calling 格式"""
         return [tool.to_openai_function() for tool in self.tools]
 
+    @classmethod
+    def _check_rate_limit(cls):
+        """
+        检查OpenRouter速率限制（10秒内最多20次请求）
+        如果达到限制，阻塞等待直到有空闲配额
+        """
+        while True:  # 使用循环代替递归，避免锁问题
+            wait_time = 0
+            with cls._rate_limiter_lock:
+                current_time = time.time()
+                cutoff_time = current_time - cls._RATE_LIMIT_WINDOW
+
+                # 清理过期的时间戳（>10秒前）
+                while cls._request_timestamps and cls._request_timestamps[0] < cutoff_time:
+                    cls._request_timestamps.popleft()
+
+                # 检查是否达到限制
+                if len(cls._request_timestamps) >= cls._RATE_LIMIT_MAX_REQUESTS:
+                    # 计算需要等待的时间（直到最早的请求过期）
+                    oldest_request = cls._request_timestamps[0]
+                    wait_time = oldest_request + cls._RATE_LIMIT_WINDOW - current_time
+                    if wait_time > 0:
+                        logger.info(
+                            f"[RateLimiter] 达到速率限制 ({len(cls._request_timestamps)}/{cls._RATE_LIMIT_MAX_REQUESTS})"
+                            f"，等待 {wait_time:.1f}s"
+                        )
+                    # 锁会在此处自动释放（退出with块）
+                else:
+                    # 未达到限制，记录本次请求时间戳并返回
+                    cls._request_timestamps.append(current_time)
+                    logger.debug(
+                        f"[RateLimiter] 当前速率：{len(cls._request_timestamps)}/{cls._RATE_LIMIT_MAX_REQUESTS} "
+                        f"(过去{cls._RATE_LIMIT_WINDOW}秒)"
+                    )
+                    return  # 成功，退出方法
+
+            # 在锁外等待（此时锁已释放）
+            if wait_time > 0:
+                time.sleep(wait_time)
+                # 继续循环，重新检查
+
     def _call_api(self, messages: List[Dict[str, Any]], include_tools: bool = False) -> Dict[str, Any]:
         """
         调用 OpenRouter API
@@ -185,6 +234,9 @@ class BaseAgent:
             API 响应 JSON
         """
         logger.debug(f"[{self.role}] 调用 API，消息数: {len(messages)}, 工具: {include_tools}")
+
+        # ========== 全局速率限制检查 ==========
+        self._check_rate_limit()
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -257,6 +309,22 @@ class BaseAgent:
                     logger.error(f"[{self.role}] API 请求失败，重试已用尽: {e}")
                     raise
             except Exception as e:
+                # ========== 检测429错误并特殊处理 ==========
+                if "429" in str(e) or "Too Many Requests" in str(e):
+                    if attempt < max_retries - 1:
+                        # 指数退避：5s, 15s, 45s
+                        retry_after = 5 * (2 ** attempt)
+                        logger.warning(
+                            f"[{self.role}] OpenRouter 429限流，等待 {retry_after}s 后重试 "
+                            f"({attempt + 1}/{max_retries})"
+                        )
+                        time.sleep(retry_after)
+                        continue  # 跳过下面的代码，直接进入下一次循环
+                    else:
+                        logger.error(f"[{self.role}] OpenRouter 429限流，重试已用尽: {e}")
+                        raise
+
+                # ========== 其他错误的原有处理逻辑 ==========
                 if attempt < max_retries - 1:
                     logger.warning(f"[{self.role}] API 错误，等待 10s 后重试 ({attempt + 1}/{max_retries - 1}): {e}")
                     time.sleep(10)

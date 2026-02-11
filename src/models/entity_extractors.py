@@ -260,6 +260,10 @@ class EntityExtractor:
 
     def _default_llm_call(self, user_prompt: str) -> str:
         """默认的 OpenRouter LLM 调用"""
+        # ========== 全局速率限制检查 ==========
+        from src.agents.base_agent import BaseAgent
+        BaseAgent._check_rate_limit()
+
         api_key = os.environ.get("OPENROUTER_API_KEY", "")
         if not api_key:
             logger.warning("[EntityExtractor] No OPENROUTER_API_KEY found")

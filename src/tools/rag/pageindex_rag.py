@@ -190,6 +190,10 @@ class PageIndexRAG:
 
     def _tree_search(self, query: str, cancer_type: str) -> Dict[str, Any]:
         """LLM Tree Search + Expert Preference → 返回 {thinking, node_list}"""
+        # ========== 全局速率限制检查 ==========
+        from src.agents.base_agent import BaseAgent
+        BaseAgent._check_rate_limit()
+
         index = self._indices[cancer_type]
         tree_no_text = index["tree_no_text"]
 

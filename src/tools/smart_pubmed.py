@@ -235,6 +235,10 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
 
     def _call_llm(self, prompt: str, max_tokens: int = MAX_TOKENS_SUBGRAPH) -> str:
         """Call LLM (using flash model to reduce cost)"""
+        # ========== 全局速率限制检查 ==========
+        from src.agents.base_agent import BaseAgent
+        BaseAgent._check_rate_limit()
+
         headers = {
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
             "Content-Type": "application/json"
@@ -541,7 +545,7 @@ IMPORTANT: Return evaluation for ALL articles in the input, maintaining the same
             return []
 
         BATCH_SIZE = 20
-        MAX_WORKERS = 5
+        MAX_WORKERS = 2  # 降低并发以配合全局速率限制（10秒/20次）
 
         # 分批
         batches = [results[i:i + BATCH_SIZE] for i in range(0, len(results), BATCH_SIZE)]

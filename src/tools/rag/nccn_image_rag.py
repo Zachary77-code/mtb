@@ -547,6 +547,10 @@ Language: Respond in the same language as the user's question."""
         Returns:
             LLM 分析文本，失败时返回 None
         """
+        # ========== 全局速率限制检查 ==========
+        from src.agents.base_agent import BaseAgent
+        BaseAgent._check_rate_limit()
+
         if not self.api_key:
             logger.error("[ImageRAG] OPENROUTER_API_KEY 未设置，无法调用多模态 LLM")
             return None
