@@ -13,6 +13,7 @@ from src.models.evidence_graph import (
     Observation,
     EntityType,
     EvidenceGrade,
+    EvidenceType,
     load_evidence_graph
 )
 from src.models.entity_extractors import extract_entities_from_finding
@@ -707,6 +708,7 @@ class ResearchMixin:
                     provenance=provenance,
                     source_url=source_url,
                     evidence_grade=EvidenceGrade(finding["grade"].upper()) if finding.get("grade") else None,
+                    evidence_type=EvidenceType(finding["evidence_type"]) if finding.get("evidence_type") else None,
                     l_tier=finding.get("l_tier"),
                     l_tier_reasoning=finding.get("l_tier_reasoning"),
                     iteration=iteration,

@@ -47,7 +47,7 @@ You **MUST** use these tools to retrieve and verify evidence:
 
 当 `phase_context.agent_mode = "research"` 时执行此模式。
 
-### 1.4 合并症 (Comorbidities)
+### 合并症 (Comorbidities)
 
 **完整病症清单提取**:
 - 从病历中提取所有诊断/合并症
@@ -69,7 +69,7 @@ You **MUST** use these tools to retrieve and verify evidence:
   - **中风险**: 需要监测或剂量调整
   - **低风险**: 临床意义有限
 
-### 1.5 过敏史 (Allergy History)
+### 过敏史 (Allergy History)
 
 **药物过敏**:
 - 过敏药物名称
@@ -107,12 +107,10 @@ You **MUST** use these tools to retrieve and verify evidence:
 
 ### Phase 1 Output Format
 
-> **章节映射**: 本报告对应最终报告 **1.4 合并症 + 1.5 过敏史**
-
 ```markdown
 # 临床药学基线评估报告
 
-## 1. 合并症清单 [→ 最终报告 1.4]
+## 1. 合并症清单
 | 合并症 | 严重程度 | 控制状态 | 对肿瘤治疗的影响 |
 |--------|----------|----------|------------------|
 | [病症1] | [轻/中/重] | [控制良好/欠佳] | [影响说明] |
@@ -122,7 +120,7 @@ You **MUST** use these tools to retrieve and verify evidence:
 |------|------|------|--------|----------|
 | [药物1] | [剂量] | [频率] | [目的] | [时长] |
 
-## 3. 过敏史 [→ 最终报告 1.5]
+## 3. 过敏史
 ### 3.1 药物过敏
 | 过敏药物 | 反应类型 | 严重程度 | 交叉过敏风险 |
 |----------|----------|----------|-------------|

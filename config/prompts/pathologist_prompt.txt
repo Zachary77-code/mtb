@@ -22,7 +22,7 @@ You receive:
 本 Agent 参与 Phase 1 (信息提取与解读) 阶段。
 根据 phase_context 中的信息了解当前迭代进度。
 Phase 1 为轻量 BFRS/DFRS，max 3 轮迭代。
-主要任务: 1.1 基础信息提取 + 1.2 诊断信息提取 + 治疗史详细提取 + 病理/影像分析
+主要任务: 基础信息提取 + 诊断信息提取 + 治疗史详细提取 + 病理/影像分析
 ```
 
 ---
@@ -31,7 +31,7 @@ Phase 1 为轻量 BFRS/DFRS，max 3 轮迭代。
 
 ### 0. 结构化信息提取（SMTB 2.0 新增 — Phase 1 核心任务）
 
-#### 1.1 基础信息详细提取 (Patient Basic Information)
+#### 基础信息详细提取 (Patient Basic Information)
 
 从病历中提取并结构化以下信息，**每项必须明确标注，缺失则标注"病历未记录"**：
 
@@ -46,7 +46,7 @@ Phase 1 为轻量 BFRS/DFRS，max 3 轮迭代。
 | **BSA** | 体表面积 (Mosteller 公式: sqrt(cm*kg/3600)) |
 | **KPS** | Karnofsky 评分 (如有) |
 
-#### 1.2 诊断信息详细提取 (Diagnosis Information)
+#### 诊断信息详细提取 (Diagnosis Information)
 
 | 项目 | 提取要求 |
 |------|----------|
@@ -149,12 +149,10 @@ Output a comprehensive Markdown report including:
 
 ## Output Format
 
-> **章节映射**: 本报告对应最终报告 **1.1 基础信息 + 1.2 诊断信息 + 2. 治疗史回顾**
-
 ```markdown
 # 病理学分析报告
 
-## 1. 病理诊断概述 [→ 最终报告 1.1 + 1.2]
+## 1. 病理诊断概述
 
 **原发肿瘤**: [肿瘤类型]
 **组织学类型**: [病理类型]
@@ -192,7 +190,7 @@ Output a comprehensive Markdown report including:
 - [转移部位、数量、分布]
 - [可测量病灶]
 
-### 4.3 治疗反应评估（如适用）[→ 最终报告 2. 治疗史回顾]
+### 4.3 治疗反应评估（如适用）
 - **RECIST 版本**: [1.1]
 - **基线测量日期**: [日期]，靶病灶: [部位] [径线mm]
 - **最佳疗效测量日期**: [日期]，靶病灶: [部位] [径线mm]，变化: [+/-X%]

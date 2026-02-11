@@ -92,6 +92,29 @@ class CivicEvidenceType(str, Enum):
     ONCOGENIC = "oncogenic"        # 致癌性 - 变异的致癌功能
 
 
+class EvidenceType(str, Enum):
+    """证据类型分类（按信息性质，区别于 CIViC 临床意义分类）"""
+    MOLECULAR = "molecular"                # 分子/基因组证据
+    CLINICAL = "clinical"                  # 临床疗效数据 (ORR/PFS/OS)
+    PATHOLOGY = "pathology"                # 病理/组织学证据
+    IMAGING = "imaging"                    # 影像学证据
+    GUIDELINE = "guideline"                # 指南推荐 (NCCN/CSCO/ESMO)
+    DRUG = "drug"                          # 药物信息 (FDA标签/剂量/适应证)
+    DRUG_INTERACTION = "drug_interaction"   # 药物相互作用
+    PHARMACOKINETICS = "pharmacokinetics"   # 药代动力学
+    COMORBIDITY = "comorbidity"            # 合并症评估
+    ORGAN_FUNCTION = "organ_function"       # 器官功能评估
+    ALLERGY = "allergy"                    # 过敏/不良反应
+    SURGICAL = "surgical"                  # 手术相关证据
+    RADIATION = "radiation"                # 放疗相关证据
+    INTERVENTIONAL = "interventional"       # 介入治疗证据
+    TRIAL = "trial"                        # 临床试验信息
+    NUTRITION = "nutrition"                # 营养学证据
+    CAM_EVIDENCE = "cam_evidence"          # 替代疗法证据
+    SAFETY = "safety"                      # 安全性数据
+    LITERATURE = "literature"              # 综合文献证据 (综述/meta分析)
+
+
 # ==================== 核心数据类 ====================
 
 @dataclass
@@ -113,6 +136,7 @@ class Observation:
     source_url: Optional[str] = None             # 完整 URL
     evidence_grade: Optional[EvidenceGrade] = None  # 证据等级 A/B/C/D/E
     civic_type: Optional[CivicEvidenceType] = None  # CIViC 证据类型
+    evidence_type: Optional[EvidenceType] = None  # 证据类型分类 (molecular/clinical/drug/...)
     l_tier: Optional[str] = None                 # L1-L5 证据分层 (Phase 3 Oncologist)
     l_tier_reasoning: Optional[str] = None       # L1-L5 分层寻证过程
     iteration: int = 0                           # 收集迭代轮次
@@ -129,6 +153,7 @@ class Observation:
             "source_url": self.source_url,
             "evidence_grade": self.evidence_grade.value if self.evidence_grade else None,
             "civic_type": self.civic_type.value if self.civic_type else None,
+            "evidence_type": self.evidence_type.value if self.evidence_type else None,
             "l_tier": self.l_tier,
             "l_tier_reasoning": self.l_tier_reasoning,
             "iteration": self.iteration,
@@ -147,6 +172,7 @@ class Observation:
             source_url=data.get("source_url"),
             evidence_grade=EvidenceGrade(data["evidence_grade"]) if data.get("evidence_grade") else None,
             civic_type=CivicEvidenceType(data["civic_type"]) if data.get("civic_type") else None,
+            evidence_type=EvidenceType(data["evidence_type"]) if data.get("evidence_type") else None,
             l_tier=data.get("l_tier"),
             l_tier_reasoning=data.get("l_tier_reasoning"),
             iteration=data.get("iteration", 0),
@@ -1286,6 +1312,7 @@ class EvidenceGraph:
         entity_by_source: Dict[str, int] = {}
         observations_count = 0
         best_grades: Dict[str, int] = {}
+        evidence_types: Dict[str, int] = {}
 
         for entity in self.entities.values():
             # 按类型统计
@@ -1296,8 +1323,12 @@ class EvidenceGraph:
             source = entity.id.split("_")[0] if "_" in entity.id else "unknown"
             entity_by_source[source] = entity_by_source.get(source, 0) + 1
 
-            # 观察数量
+            # 观察数量 + 证据类型统计
             observations_count += len(entity.observations)
+            for obs in entity.observations:
+                if obs.evidence_type:
+                    et = obs.evidence_type.value
+                    evidence_types[et] = evidence_types.get(et, 0) + 1
 
             # 最佳等级
             best = entity.get_best_grade()
@@ -1312,6 +1343,10 @@ class EvidenceGraph:
             p = edge.predicate.value
             edge_by_predicate[p] = edge_by_predicate.get(p, 0) + 1
             edge_observations_count += len(edge.observations)
+            for obs in edge.observations:
+                if obs.evidence_type:
+                    et = obs.evidence_type.value
+                    evidence_types[et] = evidence_types.get(et, 0) + 1
             if edge.conflict_group:
                 conflicts_count += 1
 
@@ -1323,6 +1358,7 @@ class EvidenceGraph:
             "entities_by_source": entity_by_source,
             "edges_by_predicate": edge_by_predicate,
             "best_grades": best_grades,
+            "evidence_types": evidence_types,
             "conflicts_count": conflicts_count,
         }
 
@@ -1676,6 +1712,7 @@ class EvidenceGraph:
                     "statement": obs.statement,
                     "grade": obs.evidence_grade.value if obs.evidence_grade else None,
                     "civic_type": obs.civic_type.value if obs.civic_type else None,
+                    "evidence_type": obs.evidence_type.value if obs.evidence_type else None,
                     "source_agent": obs.source_agent,
                     "source_tool": obs.source_tool,
                     "provenance": obs.provenance,
@@ -1718,6 +1755,7 @@ class EvidenceGraph:
                     "statement": obs.statement,
                     "grade": obs.evidence_grade.value if obs.evidence_grade else None,
                     "civic_type": obs.civic_type.value if obs.civic_type else None,
+                    "evidence_type": obs.evidence_type.value if obs.evidence_type else None,
                     "source_agent": obs.source_agent,
                     "source_tool": obs.source_tool,
                     "provenance": obs.provenance,

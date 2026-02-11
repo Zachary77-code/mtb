@@ -13,10 +13,10 @@
 
 ### Pathologist（病理学家）
 参与阶段: **Phase 1**
-核心输出: 1.1 基础信息 + 1.2 诊断信息 + 治疗史完整提取
+核心输出: 基础信息 + 诊断信息 + 治疗史完整提取
 负责领域：
-- 1.1 基础信息详细提取（身高/体重/年龄/ECOG/BSA/KPS）
-- 1.2 诊断信息（原发灶/分期TNM/转移灶/标记物IHC/组织学/分化程度）
+- 基础信息详细提取（身高/体重/年龄/ECOG/BSA/KPS）
+- 诊断信息（原发灶/分期TNM/转移灶/标记物IHC/组织学/分化程度）
 - 治疗史详细提取（每线: 用药方案+剂量+周期/疗效RECIST/影像变化/标志物趋势/副作用Grade/停药原因/关键观察）
 - 免疫组化结果解读（PD-L1 TPS/CPS、MMR/MSI、HER2 IHC/FISH 等）
 - 影像学分析（原发灶特征/转移灶评估/RECIST标准疗效评价）
@@ -25,22 +25,22 @@
 
 ### Geneticist（遗传学家）
 参与阶段: **Phase 1**
-核心输出: 1.3 分子特征解读 + 5.2 分子复查初稿
+核心输出: 分子特征解读 + 分子复查初稿
 关键方法论: Tier I/II/III/Passenger 驱动突变分层
 负责领域：
-- 1.3 分子特征: 驱动突变分层(Tier I可治疗/II潜在可治疗/III意义未明/Passenger)、共突变模式、通路整合分析
+- 分子特征: 驱动突变分层(Tier I可治疗/II潜在可治疗/III意义未明/Passenger)、共突变模式、通路整合分析
 - 可治疗靶点: 每个突变的 CIViC 证据级别、ClinVar 分类、GDC 频率、FDA 获批药物、在研药物
 - 药物基因组学: DPYD/UGT1A1/CYP2D6/TPMT/NUDT15 代谢酶变异及剂量调整影响
 - **阴性发现（强制）**: 必须列出该癌种常见可治疗靶点中未检出的突变，说明排除了哪些靶向治疗
 - VUS 分类与处理建议
 - 免疫标志物: MSI/MMR状态、TMB值、PD-L1 解读
-- 5.2 分子复查初稿: 已知耐药突变谱表格、液体活检/组织再活检时机建议、ctDNA监测策略
+- 分子复查初稿: 已知耐药突变谱表格、液体活检/组织再活检时机建议、ctDNA监测策略
 
 ### Pharmacist（临床药师）
 参与阶段: **Phase 1** (Research模式) + **Phase 2b** (Review模式)
-核心输出: Phase 1 → 1.4合并症+1.5过敏史+器官功能基线; Phase 2b → 药学审查标签
+核心输出: Phase 1 → 合并症+过敏史+器官功能基线; Phase 2b → 药学审查标签
 负责领域：
-- Phase 1 (Research): 1.4 合并症（完整病症清单+当前用药清单+严重程度+控制状态）、1.5 过敏史（药物+食物+交叉反应风险）
+- Phase 1 (Research): 合并症（完整病症清单+当前用药清单+严重程度+控制状态）、过敏史（药物+食物+交叉反应风险）
 - Phase 1 (Research): 器官功能基线: 肝(ALT/AST/胆红素/Child-Pugh/ALBI)、肾(CrCl/eGFR)、心(LVEF/QTc)、骨髓(ANC/Hb/PLT)
 - Phase 1 (Research): 药物互作初步分析（当前用药 vs 可能治疗的 CYP450 互作）
 - Phase 2b (Review): 为每个候选方案打 **5 要素药学标签**:
@@ -52,15 +52,15 @@
 
 ### Oncologist（肿瘤学家）— 三模式
 参与阶段: **Phase 1** (Analysis) + **Phase 2a** (Mapping) + **Phase 3** (Integration)
-核心输出: 3.1过往分析 + 3.2 Mapping矩阵 + 3.3方案制定(L1-L5) + 3.4路径排序 + 5.1/5.2复查
+核心输出: 过往分析 + Mapping矩阵 + 方案制定(L1-L5) + 路径排序 + 复查
 关键方法论:
 - Phase 2a Mapping: **5种治疗手段(小分子/大分子/生物制剂/内分泌/放射性同位素) × 4审批类别(适应症获批/超适应症/有试验/临床阶段) = 20格矩阵**
 - Phase 3 Integration: **L1-L5 证据分层决策树**(L1直接循证→L2指南推荐→L3间接外推→L4机制推断→L5经验性)
 - Phase 3 路径排序: **5维打分**(证据层级/获益/安全性/可及性/患者因素)
 负责领域：
-- Phase 1 (Analysis): 3.1 逐线治疗分析评价（疗效/方案合理性/耐药机制推断/关键观察）
+- Phase 1 (Analysis): 逐线治疗分析评价（疗效/方案合理性/耐药机制推断/关键观察）
 - Phase 2a (Mapping): 全身治疗手段 Mapping，只罗列分析不做推荐
-- Phase 3 (Integration): 3.3 L1-L5 方案制定 + 3.4 路径排序 + 5.1 常规复查时间线 + 5.2 分子复查补充
+- Phase 3 (Integration): L1-L5 方案制定 + 路径排序 + 常规复查时间线 + 分子复查补充
 - 安全性优先决策 + FDA 黑框警告评估 + 禁忌证检查
 
 ### LocalTherapist（局部治疗专家）
@@ -88,7 +88,7 @@
 
 ### Nutritionist（肿瘤营养康复专家）
 参与阶段: **Phase 2a**
-核心输出: 4.1 营养状态评估 + 癌种饮食建议 + 治疗期营养管理 + 恶病质干预
+核心输出: 营养状态评估 + 癌种饮食建议 + 治疗期营养管理 + 恶病质干预
 关键方法论: NRS-2002 + PG-SGA 标准化评分
 负责领域：
 - 营养评估: NRS-2002评分(营养损害0-3+疾病严重度0-3+年龄校正) + PG-SGA分级(A良好/B中度/C严重)
@@ -99,7 +99,7 @@
 
 ### IntegrativeMed（整合医学/支持治疗专家）
 参与阶段: **Phase 2a**
-核心输出: 4.2 替代疗法逐一安全性评估 + 总体评估摘要表
+核心输出: 替代疗法逐一安全性评估 + 总体评估摘要表
 关键方法论: 7类疗法逐一独立评估，每类必须含: 机制/证据等级/适用性/风险警告/与常规治疗冲突评估
 负责领域：
 - 7类疗法强制逐一评估: (1)吸氢疗法 (2)大剂量维生素C(G6PD/肾功能/铂类拮抗) (3)中医药(中成药+汤剂,肝毒性/CYP互作) (4)免疫调节补充剂 (5)针灸(NCCN支持CINV/疼痛/CIPN) (6)冥想/运动疗法(ACSM指南) (7)其他(臭氧/高压氧/热疗/生酮/碱性/禁食/大麻素)
@@ -122,10 +122,10 @@
 
 ### Phase 1: 信息提取与解读 (轻量 BFRS/DFRS, max 3 轮)
 参与 Agent (4个并行):
-- **Pathologist**: 1.1基础信息 + 1.2诊断信息 + 治疗史提取
-- **Geneticist**: 1.3分子特征 + 5.2分子复查初稿
-- **Pharmacist** (Research模式): 1.4合并症 + 1.5过敏史 + 器官功能基线
-- **Oncologist** (Analysis模式): 3.1过往治疗分析评价
+- **Pathologist**: 基础信息 + 诊断信息 + 治疗史提取
+- **Geneticist**: 分子特征 + 分子复查初稿
+- **Pharmacist** (Research模式): 合并症 + 过敏史 + 器官功能基线
+- **Oncologist** (Analysis模式): 过往治疗分析评价
 
 ### Phase 2a: 治疗 Mapping (完整 BFRS/DFRS, max 7 轮)
 参与 Agent (5个并行):
@@ -143,7 +143,7 @@
 
 ### Phase 3: 方案整合 (完整 BFRS/DFRS, max 7 轮, Oncologist 独立)
 参与 Agent:
-- **Oncologist** (Integration模式): 3.3方案制定(L1-L5) + 3.4路径排序 + 5.1 + 5.2补充
+- **Oncologist** (Integration模式): 方案制定(L1-L5) + 路径排序 + 常规复查 + 分子复查补充
 
 **重要规则**：
 - 每个 Phase 评估的 `next_priorities` 只应包含**当前 Phase** Agent 相关的事项
@@ -235,11 +235,11 @@ phase_context = {
 
 | 章节 | 数据来源 Phase |
 |------|---------------|
-| **1. 病情概要** (1.1基础信息 / 1.2诊断 / 1.3分子 / 1.4合并症 / 1.5过敏史) | Phase 1 |
+| **1. 病情概要** (基础信息 / 诊断 / 分子 / 合并症 / 过敏史) | Phase 1 |
 | **2. 治疗史回顾** (治疗史时间线，需要至少包含用药/疗效/影像/标志物/副作用/关键观察) | Phase 1 |
-| **3. 治疗方案探索** (3.1过往分析 / 3.2 Mapping / 3.3方案制定 / 3.4路径规划) | Phase 1 + 2a + 2b + 3 |
-| **4. 整体与辅助支持** (4.1营养 / 4.2替代疗法) | Phase 2a |
-| **5. 复查和追踪方案** (5.1常规复查 / 5.2分子复查) | Phase 1 + 3 |
+| **3. 治疗方案探索** (过往分析 / Mapping / 方案制定 / 路径规划) | Phase 1 + 2a + 2b + 3 |
+| **4. 整体与辅助支持** (营养 / 替代疗法) | Phase 2a |
+| **5. 复查和追踪方案** (常规复查 / 分子复查) | Phase 1 + 3 |
 | **6. 核心建议汇总** | Chair |
 | **附录A** 完整证据引用列表 | 自动生成 |
 | **附录B** 证据等级说明 (含L1-L5) | 固定 |
@@ -265,13 +265,13 @@ phase_context = {
 
 | 方向ID | Agent | 目标 |
 |--------|-------|------|
-| D_PATIENT_PROFILE | Pathologist | 1.1基础信息 + 1.2诊断信息 + 分期/影像 |
+| D_PATIENT_PROFILE | Pathologist | 基础信息 + 诊断信息 + 分期/影像 |
 | D_TREATMENT_HISTORY | Pathologist | 治疗史完整提取(用药/疗效/影像/标志物/副作用) |
-| D_MOLECULAR_PROFILE | Geneticist | 1.3分子特征解读 |
-| D_MOLECULAR_RETEST_DRAFT | Geneticist | 5.2初稿(耐药突变谱/通用复查建议) |
-| D_COMORBIDITY | Pharmacist | 1.4合并症 + 用药清单 + 1.5过敏史 |
+| D_MOLECULAR_PROFILE | Geneticist | 分子特征解读 |
+| D_MOLECULAR_RETEST_DRAFT | Geneticist | 分子复查初稿(耐药突变谱/通用复查建议) |
+| D_COMORBIDITY | Pharmacist | 合并症 + 用药清单 + 过敏史 |
 | D_ORGAN_FUNCTION | Pharmacist | 器官功能基线 + 药物互作初步分析 |
-| D_PAST_TREATMENT_ANALYSIS | Oncologist | 3.1过往治疗和当前治疗方案的分析评价 |
+| D_PAST_TREATMENT_ANALYSIS | Oncologist | 过往治疗和当前治疗方案的分析评价 |
 
 ### Phase 2a 研究方向模板参考（治疗Mapping, max 7轮）
 
@@ -300,9 +300,9 @@ phase_context = {
 
 | 方向ID | Agent | 目标 |
 |--------|-------|------|
-| D_TREATMENT_PLAN_L1L5 | Oncologist | 3.3方案制定+L1-L5证据分层标注 |
-| D_PATHWAY_RANKING | Oncologist | 3.4路径排序+5维打分 |
-| D_FOLLOWUP_TIMELINE | Oncologist | 5.1常规复查时间线 + 5.2分子复查补充 |
+| D_TREATMENT_PLAN_L1L5 | Oncologist | 方案制定+L1-L5证据分层标注 |
+| D_PATHWAY_RANKING | Oncologist | 路径排序+5维打分 |
+| D_FOLLOWUP_TIMELINE | Oncologist | 常规复查时间线 + 分子复查补充 |
 
 ### 研究方向输出格式
 

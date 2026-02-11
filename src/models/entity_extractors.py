@@ -28,6 +28,7 @@ from src.models.evidence_graph import (
     Predicate,
     EvidenceGrade,
     CivicEvidenceType,
+    EvidenceType,
 )
 from src.utils.logger import mtb_logger as logger
 
@@ -352,6 +353,14 @@ class EntityExtractor:
         # 一个 finding 只生成一个共享的 observation（修复重复创建 bug）
         shared_obs = None
         if observation_text:
+            # 解析 evidence_type
+            et_raw = finding.get("evidence_type")
+            et = None
+            if et_raw:
+                try:
+                    et = EvidenceType(et_raw.lower().strip())
+                except ValueError:
+                    pass
             shared_obs = Observation(
                 id=Observation.generate_id(source_tool),
                 statement=observation_text,
@@ -361,6 +370,7 @@ class EntityExtractor:
                 source_url=source_url,
                 evidence_grade=self._extract_grade(finding),
                 civic_type=self._extract_civic_type(finding),
+                evidence_type=et,
                 l_tier=finding.get("l_tier"),
                 l_tier_reasoning=finding.get("l_tier_reasoning"),
                 iteration=iteration,
@@ -509,7 +519,7 @@ class EntityExtractor:
 
     def _extract_civic_type(self, finding: Dict[str, Any]) -> Optional[CivicEvidenceType]:
         """提取 CIViC 证据类型"""
-        civic_str = finding.get("civic_type") or finding.get("evidence_type")
+        civic_str = finding.get("civic_type")
         if civic_str:
             try:
                 return CivicEvidenceType(civic_str.lower())
