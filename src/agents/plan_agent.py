@@ -57,6 +57,7 @@ REQUIRED_MODULE_COVERAGE = [
     "分子特征",
     "合并症",
     "过往治疗分析",
+    "复查和追踪方案",  # Geneticist 分子复查初稿
 ]
 
 
@@ -204,12 +205,47 @@ class PlanAgent(BaseAgent):
 ## 必需模块覆盖
 确保研究方向覆盖以下 Phase 1 模块：
 - 患者概况 (Pathologist)
-- 分子特征 (Geneticist + Pathologist)
+- 分子特征 (Geneticist)
 - 合并症 (Pharmacist)
-- 过往治疗分析 (Oncologist)
+- 过往治疗分析 (Pathologist + Oncologist)
+- 复查和追踪方案 (Geneticist 分子复查初稿)
 
 注意：Recruiter（临床试验招募员）已移至 Phase 2a，此处无需分配。
 方案 Mapping、局部治疗、临床试验匹配等将在 Phase 2a 中进行。
+
+## Phase 1 研究方向模板与模块映射
+
+**CRITICAL**: 每个研究方向必须使用下表指定的确切 target_modules 名称，不可自行创造：
+
+| 方向类别 | target_agent | target_modules (确切名称) |
+|---------|--------------|--------------------------|
+| 患者基线信息+诊断信息+分期影像 | Pathologist | ["患者概况"] |
+| 完整治疗史提取 | Pathologist | ["过往治疗分析"] |
+| 分子图谱解读 | Geneticist | ["分子特征"] |
+| 分子复查初稿（耐药突变谱/复查策略） | Geneticist | ["复查和追踪方案"] |
+| 合并症+用药清单+过敏史 | Pharmacist | ["合并症"] |
+| 器官功能基线 | Pharmacist | ["合并症"] |
+| 过往治疗分析与评价 | Oncologist | ["过往治疗分析"] |
+
+**必需覆盖**: 以下 5 个模块必须至少被一个研究方向覆盖：
+- 患者概况
+- 分子特征
+- 合并症
+- 过往治疗分析
+- 复查和追踪方案
+
+**示例**:
+```json
+{{
+    "id": "D_PATIENT_BASELINE",
+    "topic": "患者基线信息与诊断信息提取",
+    "target_agent": "Pathologist",
+    "target_modules": ["患者概况"],  // 必须使用确切名称
+    "priority": 1,
+    "queries": ["..."],
+    "completion_criteria": "..."
+}}
+```
 
 ## 定制化示例
 
@@ -220,7 +256,7 @@ class PlanAgent(BaseAgent):
     "id": "D_KRAS_RESISTANCE",
     "topic": "KRAS G12C 抑制剂耐药机制与获得性突变监测策略",
     "target_agent": "Geneticist",
-    "target_modules": ["分子特征", "复查和追踪方案"],
+    "target_modules": ["分子特征"],  // 从上表选择确切名称
     "priority": 1,
     "queries": ["KRAS G12C sotorasib resistance mechanism", "KRAS G12C acquired mutation Y96D R68S", "ctDNA KRAS monitoring CRC"],
     "completion_criteria": "明确 KRAS G12C 抑制剂的原发耐药（EGFR 反馈激活、RAS-MAPK 旁路）和获得性耐药（Y96D/R68S/MET 扩增）机制，给出 ctDNA 监测策略建议"
@@ -232,13 +268,15 @@ class PlanAgent(BaseAgent):
 - topic 包含具体基因、药物名
 - queries 全部可直接用于 PubMed/CIViC 检索
 - completion_criteria 明确需要回答的具体临床问题
+- **target_modules 必须从上表选择确切名称**
 
 ## 注意事项
 1. 每个 Agent 分配 2-4 个研究方向（仅限 Pathologist/Geneticist/Pharmacist/Oncologist）
 2. 优先级 1 为最关键方向
 3. 确保 JSON 格式正确，可以被解析
-4. 每个方向必须指定 target_modules
-5. 方向的 topic/queries/completion_criteria 必须反映本病例的具体实体和临床问题，不要使用泛化描述
+4. **每个方向的 target_modules 必须从上表选择确切名称，不可自创**
+5. **必须确保 5 个必需模块都被至少一个研究方向覆盖**
+6. 方向的 topic/queries/completion_criteria 必须反映本病例的具体实体和临床问题，不要使用泛化描述
 """
 
     def _parse_plan_output(self, output: str) -> ResearchPlan:
@@ -1468,10 +1506,18 @@ class PlanAgent(BaseAgent):
             "3. Recruiter: 临床试验(c有试验可入组 + d无试验但临床阶段)，含已结束试验及结果\n"
             "4. Nutritionist: 营养状态评估 + 癌种饮食建议 + 治疗期营养管理\n"
             "5. IntegrativeMed: 替代疗法逐一评估(吸氢/大剂量VC/中医/免疫调节等)\n\n"
+            "**CRITICAL - target_modules 必须使用以下确切名称**:\n"
+            "| Agent | target_modules |\n"
+            "|-------|----------------|\n"
+            '| Oncologist | ["治疗方案探索"] |\n'
+            '| LocalTherapist | ["治疗方案探索"] |\n'
+            '| Recruiter | ["治疗方案探索"] |\n'
+            '| Nutritionist | ["整体与辅助支持"] |\n'
+            '| IntegrativeMed | ["整体与辅助支持"] |\n\n'
             "**输出格式**: 严格按照 JSON 格式输出研究方向列表:\n"
             "```json\n"
-            '{"directions": [{"id": "D_xxx", "topic": "主题", "target_agent": "Agent名", '
-            '"target_modules": ["模块"], "priority": 1, "queries": ["查询词"], '
+            '{"directions": [{"id": "D_xxx", "topic": "主题", "target_agent": "Oncologist", '
+            '"target_modules": ["治疗方案探索"], "priority": 1, "queries": ["查询词"], '
             '"completion_criteria": "完成标准"}]}\n'
             "```\n\n"
             "基于 Phase 1 发现的癌种、突变谱、治疗史，为每个 Agent 分配 1-3 个具体研究方向。\n\n"
@@ -1480,7 +1526,8 @@ class PlanAgent(BaseAgent):
             "- queries 必须包含可直接用于工具查询的具体术语（如 'KRAS G12C CRC SBRT oligometastatic'），不要使用泛化词汇\n"
             "- completion_criteria 必须引用具体临床决策点（如 '明确 CrCl<40 患者是否可安全使用 TAS-102'）\n"
             "- 方向 ID 应反映具体研究内容（如 D_LUNG_METS_SBRT），不要使用泛化 ID（如 D_LOCAL_THERAPY）\n"
-            "- 根据病情复杂度调整方向数量：每个 Agent 1-2 个方向（简单）或 2-3 个（复杂）"
+            "- 根据病情复杂度调整方向数量：每个 Agent 1-2 个方向（简单）或 2-3 个（复杂）\n"
+            "- **target_modules 必须严格按照上表使用，不可自创**"
         )
 
         try:
