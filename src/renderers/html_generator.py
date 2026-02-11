@@ -243,6 +243,7 @@ class HtmlReportGenerator:
         .evidence-b { background: #dbeafe; color: #1e40af; }
         .evidence-c { background: #fef3c7; color: #92400e; }
         .evidence-d { background: #fee2e2; color: #991b1b; }
+        .evidence-e { background: #f3f4f6; color: #4b5563; }
 
         .footer {
             background: var(--bg-blue);
@@ -321,6 +322,9 @@ class HtmlReportGenerator:
         用于根据 provenance / source_url 查找 observation 内容，
         在 HTML 渲染时为引用添加 tooltip 文本。
 
+        同时构建 _tool_observation_index（按 source_tool 分组），
+        用于当 provenance/url 精确匹配失败时的 fallback 查找。
+
         Args:
             eg_data: 序列化的证据图字典 {entities: {...}, edges: {...}}
 
@@ -329,6 +333,7 @@ class HtmlReportGenerator:
             key 为 provenance 或 source_url
         """
         index: Dict[str, Dict[str, Any]] = {}
+        tool_index: Dict[str, list] = {}
 
         def _index_observation(obs_data: Dict[str, Any]):
             prov = obs_data.get("provenance")
@@ -357,6 +362,13 @@ class HtmlReportGenerator:
                 if not existing or grade_rank < self._GRADE_ORDER.get(existing.get("grade"), 5):
                     index[url] = entry
 
+            # 按 source_tool 索引（用于 tooltip fallback）
+            tool = obs_data.get("source_tool")
+            if tool:
+                if tool not in tool_index:
+                    tool_index[tool] = []
+                tool_index[tool].append(entry)
+
         # 遍历所有实体的 observations
         for entity_data in eg_data.get("entities", {}).values():
             for obs_data in entity_data.get("observations", []):
@@ -367,6 +379,7 @@ class HtmlReportGenerator:
             for obs_data in edge_data.get("observations", []):
                 _index_observation(obs_data)
 
+        self._tool_observation_index = tool_index
         return index
 
     def generate(
@@ -396,6 +409,7 @@ class HtmlReportGenerator:
             evidence_graph_data = evidence_graph_data["graph"]
 
         self._observation_index: Dict[str, Dict[str, Any]] = {}
+        self._tool_observation_index: Dict[str, list] = {}
         if evidence_graph_data and isinstance(evidence_graph_data, dict):
             self._observation_index = self._build_observation_index(evidence_graph_data)
 
@@ -790,27 +804,52 @@ class HtmlReportGenerator:
             return True
         return False
 
+    # 引用类型前缀 → source_tool 映射（用于 tooltip fallback）
+    _CITATION_TOOL_MAP = {
+        "NCCN": "search_nccn",
+        "FDA": "search_fda_labels",
+        "GDC": "search_gdc",
+        "RXNORM": "search_rxnorm",
+        "CIVIC": "search_civic",
+        "CLINVAR": "search_clinvar",
+    }
+
+    def _format_obs_tooltip(self, obs: Dict[str, Any]) -> str:
+        """将 observation 格式化为 tooltip 文本"""
+        statement = re.sub(r'<[^>]+>', '', obs.get("statement", ""))
+        grade = obs.get("grade")
+        grade_str = f" [{grade}]" if grade else ""
+        tool = obs.get("source_tool") or ""
+        tool_str = f" ({tool})" if tool else ""
+        return f"{statement}{grade_str}{tool_str}"
+
     def _get_tooltip_text(self, ref_id: str, url: str, title: str, note: str) -> str:
         """
         获取引用的 tooltip 文本
 
-        优先从 observation index 查找 statement + grade，
-        否则回退到 title: note 格式。
+        优先从 observation index 精确查找 statement + grade，
+        其次按 source_tool 二级索引 fallback 查找，
+        最后回退到 title: note 格式。
         """
-        # 尝试从 observation index 查找
+        # 1. 精确匹配：provenance / source_url
         obs = (self._observation_index.get(ref_id) or
                self._observation_index.get(url) or
                self._observation_index.get(title))
         if obs and obs.get("statement"):
-            # 去除 HTML 标签，防止嵌套 tooltip
-            statement = re.sub(r'<[^>]+>', '', obs['statement'])
-            grade = obs.get("grade")
-            grade_str = f" [{grade}]" if grade else ""
-            tool = obs.get("source_tool") or ""
-            tool_str = f" ({tool})" if tool else ""
-            return f"{statement}{grade_str}{tool_str}"
+            return self._format_obs_tooltip(obs)
 
-        # 回退：使用 citation 自带的 title + note
+        # 2. source_tool fallback：根据引用类型前缀映射到 tool，查找二级索引
+        check_text = (ref_id or title or "").upper()
+        for prefix, tool_name in self._CITATION_TOOL_MAP.items():
+            if check_text.startswith(prefix):
+                tool_obs_list = getattr(self, '_tool_observation_index', {}).get(tool_name, [])
+                if tool_obs_list:
+                    best = min(tool_obs_list, key=lambda o: self._GRADE_ORDER.get(o.get("grade"), 5))
+                    if best.get("statement"):
+                        return self._format_obs_tooltip(best)
+                break
+
+        # 3. 回退：使用 citation 自带的 title + note
         if title and note:
             return f"{title}: {note}"
         return title or note or ref_id
@@ -1091,13 +1130,93 @@ class HtmlReportGenerator:
 
         html = re.sub(r'\[(NCT\d+)\](?!\()', _nct_replacer, html)
 
-        # 3. 转换裸 [NCCN: xxx]（未被 markdown 转为链接的）
+        # 3. 转换裸 [NCCN: xxx] 和 [NCCN xxx]（未被 markdown 转为链接的）
         def _nccn_replacer(m):
             nccn_text = m.group(1)
             tooltip = self._get_tooltip_text(f"NCCN:{nccn_text}", "", f"NCCN: {nccn_text}", "")
             return self._render_nccn_citation("NCCN", tooltip)
 
-        html = re.sub(r'\[NCCN:\s*([^\]]+)\](?!\()', _nccn_replacer, html)
+        html = re.sub(r'\[NCCN[:\s]+([^\]]+)\](?!\()', _nccn_replacer, html)
+
+        # 3.5 转换裸 [FDA: xxx] / [FDA xxx] / [FDA Label: xxx]
+        def _fda_replacer(m):
+            fda_text = m.group(1).strip()
+            prov_key = f"FDA:{fda_text}"
+            obs = (self._observation_index.get(prov_key) or
+                   self._observation_index.get(f"FDA: {fda_text}") or
+                   self._observation_index.get(f"FDA Label: {fda_text}"))
+            url = ""
+            if obs and obs.get("source_url"):
+                url = obs["source_url"]
+            tooltip = self._get_tooltip_text(prov_key, url, f"FDA: {fda_text}", "")
+            if url and "labels.fda.gov" not in url:  # 排除通用 FDA URL
+                return self._render_standard_citation(f"FDA: {fda_text}", url, tooltip)
+            return self._render_nccn_citation(f"FDA: {fda_text}", tooltip)
+
+        html = re.sub(r'\[FDA[\s:]+([^\]]+)\](?!\()', _fda_replacer, html, flags=re.IGNORECASE)
+
+        # 3.6 转换裸 [GDC: xxx] / [GDC:xxx]
+        def _gdc_replacer(m):
+            gdc_text = m.group(1).strip()
+            prov_key = f"GDC:{gdc_text}"
+            from src.models.evidence_graph import construct_provenance_url
+            url = construct_provenance_url(prov_key)
+            obs = self._observation_index.get(prov_key)
+            if obs and obs.get("source_url"):
+                url = obs["source_url"]
+            tooltip = self._get_tooltip_text(prov_key, url, f"GDC: {gdc_text}", "")
+            if url:
+                return self._render_standard_citation(f"GDC: {gdc_text}", url, tooltip)
+            return self._render_nccn_citation(f"GDC: {gdc_text}", tooltip)
+
+        html = re.sub(r'\[GDC[:\s]+([^\]]+)\](?!\()', _gdc_replacer, html, flags=re.IGNORECASE)
+
+        # 3.7 转换裸 [ClinVar: xxx]
+        def _clinvar_replacer(m):
+            cv_text = m.group(1).strip()
+            prov_key = f"ClinVar:{cv_text}"
+            from src.models.evidence_graph import construct_provenance_url
+            url = construct_provenance_url(prov_key)
+            obs = self._observation_index.get(prov_key)
+            if obs and obs.get("source_url"):
+                url = obs["source_url"]
+            tooltip = self._get_tooltip_text(prov_key, url, f"ClinVar: {cv_text}", "")
+            if url:
+                return self._render_standard_citation(f"ClinVar: {cv_text}", url, tooltip)
+            return self._render_nccn_citation(f"ClinVar: {cv_text}", tooltip)
+
+        html = re.sub(r'\[ClinVar[:\s]+([^\]]+)\](?!\()', _clinvar_replacer, html, flags=re.IGNORECASE)
+
+        # 3.8 转换裸 [CIViC: xxx]
+        def _civic_replacer(m):
+            civic_text = m.group(1).strip()
+            prov_key = f"CIViC:{civic_text}"
+            obs = self._observation_index.get(prov_key)
+            url = ""
+            if obs and obs.get("source_url"):
+                url = obs["source_url"]
+            if not url:
+                url = "https://civicdb.org/"
+            tooltip = self._get_tooltip_text(prov_key, url, f"CIViC: {civic_text}", "")
+            return self._render_standard_citation(f"CIViC: {civic_text}", url, tooltip)
+
+        html = re.sub(r'\[CIViC[:\s]+([^\]]+)\](?!\()', _civic_replacer, html, flags=re.IGNORECASE)
+
+        # 3.9 转换裸 [RxNorm: xxx]
+        def _rxnorm_replacer(m):
+            rx_text = m.group(1).strip()
+            prov_key = f"RxNorm:{rx_text}"
+            from src.models.evidence_graph import construct_provenance_url
+            url = construct_provenance_url(prov_key)
+            obs = self._observation_index.get(prov_key)
+            if obs and obs.get("source_url"):
+                url = obs["source_url"]
+            tooltip = self._get_tooltip_text(prov_key, url, f"RxNorm: {rx_text}", "")
+            if url:
+                return self._render_standard_citation(f"RxNorm: {rx_text}", url, tooltip)
+            return self._render_nccn_citation(f"RxNorm: {rx_text}", tooltip)
+
+        html = re.sub(r'\[RxNorm[:\s]+([^\]]+)\](?!\()', _rxnorm_replacer, html, flags=re.IGNORECASE)
 
         # 4. 转换 markdown 生成的 <a> 引用链接为上标 tooltip
         # 匹配: <a href="url">PMID: xxx</a> 或 <a href="url">NCTxxx</a> 或 <a href="url">NCCN: xxx</a>
@@ -1271,6 +1390,7 @@ class HtmlReportGenerator:
             r'\[Evidence B\]': '<span class="evidence-tag evidence-b">Evidence B</span>',
             r'\[Evidence C\]': '<span class="evidence-tag evidence-c">Evidence C</span>',
             r'\[Evidence D\]': '<span class="evidence-tag evidence-d">Evidence D</span>',
+            r'\[Evidence E\]': '<span class="evidence-tag evidence-e">Evidence E</span>',
         }
 
         for pattern, replacement in evidence_map.items():

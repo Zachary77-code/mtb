@@ -100,6 +100,8 @@ class FDAClient:
             "generic_name": generic_names[0] if generic_names else "",
             "brand_name": brand_names[0] if brand_names else "",
             "manufacturer": openfda.get("manufacturer_name", [""])[0],
+            "set_id": openfda.get("spl_set_id", [""])[0],
+            "application_number": openfda.get("application_number", [""])[0],
             "indications": get_section("indications_and_usage"),
             "dosage": get_section("dosage_and_administration"),
             "warnings": get_section("warnings_and_cautions") or get_section("warnings"),

@@ -150,7 +150,8 @@ class MtbState(TypedDict):
     # Pharmacist 输出（Phase1 research + Phase2b review）
     pharmacist_report: NotRequired[str]             # Phase1 合并症/用药/过敏史报告
     pharmacist_converged: NotRequired[bool]
-    pharmacist_research_result: NotRequired[Dict[str, Any]]
+    pharmacist_research_result: NotRequired[Dict[str, Any]]  # Phase1 研究结果
+    pharmacist_review_research_result: NotRequired[Dict[str, Any]]  # Phase2b 研究结果
     pharmacist_review_report: NotRequired[str]      # Phase2b 药学审查报告
 
     # LocalTherapist 输出（Phase2a）

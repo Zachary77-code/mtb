@@ -60,11 +60,17 @@ Include a "Not Recommended / 不建议" section listing:
 
 ## 6. Citation Rule
 
-**STRICTLY** use reliable sources. Format citations as:
-- PubMed: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
-- Clinical Trial: `[NCT04123456](https://clinicaltrials.gov/study/NCT04123456)`
-- Guideline: `[NCCN Guidelines](URL)`
+**STRICTLY** use reliable sources. Format citations as（按来源类型）:
+- **PubMed**: `[PMID: 12345678](https://pubmed.ncbi.nlm.nih.gov/12345678/)`
+- **Clinical Trial**: `[NCT04123456](https://clinicaltrials.gov/study/NCT04123456)`
+- **NCCN 指南**: `[NCCN: 指南名称版本]` — **无 URL**（NCCN 来自本地 RAG，禁止编造 URL），系统自动渲染为不可点击引用标签
+- **FDA 说明书**: `[FDA: 药物名](url)` — URL 由 search_fda_labels tool 返回
+- **GDC**: `[GDC: 基因名](url)` — URL 由 search_gdc tool 返回
+- **CIViC**: `[CIViC: 变异名](url)` — URL 由 search_civic tool 返回
+- **ClinVar**: `[ClinVar: 变异ID](url)` — URL 由 search_clinvar tool 返回
+- **RxNorm**: `[RxNorm: 药物名](url)` — URL 由 search_rxnorm tool 返回
 
+**重要**: 如果 tool 未返回 URL，使用裸引用 `[来源: ID]`（不加括号 URL）。**禁止**编造 URL。
 If a PMID or Trial ID cannot be verified via tool access, **DO NOT** fabricate it. Mark as "Reference unavailable" instead.
 
 ## 6.5 Tool-Only Evidence Rule (工具来源强制规则)
@@ -240,3 +246,22 @@ Phase 3 方案整合时，每个治疗方案必须标注决策依据层级：
 - 不得使用 `[:N]` 截断字符串或限制列表大小（日志输出除外）
 - 所有证据、实体列表、观察记录、推理内容必须完整传递
 - Agent 报告不得设置字数上限或省略条目
+
+## 14. 统一输出格式规范
+
+### 14.1 证据等级标注格式
+所有报告和 JSON 输出中，每条发现/建议必须标注证据等级，**必须使用完整格式**：
+- `[Evidence A]` / `[Evidence B]` / `[Evidence C]` / `[Evidence D]` / `[Evidence E]`
+- **禁止**简写为 `[A]`、`[B]`、`[A-E]`、`[Grade A]`
+- Phase 3 治疗方案同时使用 L-tier: `[L1 直接循证]` ~ `[L5 经验性]`
+
+### 14.2 禁止独立参考文献章节
+- **禁止**在报告末尾生成 `## 参考文献` 或 `## References` 独立章节
+- 必须使用**内联引用**: `[PMID: xxx](url)`、`[NCT xxx](url)` 等，紧邻数据点
+- 系统从 Evidence Graph 自动生成附录A（完整证据引用列表）
+
+### 14.3 输出模式感知
+Agent 工作在两种输出模式中（由 Research Agent 和 Report Agent 分别执行，共用同一份 prompt）：
+- **研究迭代模式 (JSON)**: Research Agent 在 BFRS/DFRS 循环中调用，输出结构化 JSON（findings, direction_updates 等）
+- **报告生成模式 (Markdown)**: Report Agent 在 phase 收敛后调用，基于 Evidence Graph 中的证据合成 Markdown 报告
+- 两种模式都必须遵守 14.1 和 14.2 规则

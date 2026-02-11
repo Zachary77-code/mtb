@@ -232,7 +232,12 @@ class FDALabelTool(BaseTool):
             output.append("### 不良反应")
             output.append(adverse)
 
-        output.append(f"\n**参考**: https://labels.fda.gov (搜索 {generic_name})")
+        set_id = label.get("set_id", "")
+        if set_id:
+            fda_url = f"https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid={set_id}"
+        else:
+            fda_url = f"https://dailymed.nlm.nih.gov/dailymed/search.cfm?query={generic_name}"
+        output.append(f"\n**参考**: [FDA: {generic_name}]({fda_url})")
 
         return "\n".join(output)
 
@@ -318,7 +323,10 @@ class RxNormTool(BaseTool):
                 fda_interactions = label.get("drug_interactions", "")
                 logger.info(f"[RxNormTool] RxNorm 无数据，使用 FDA 说明书补充")
 
-        return self._format_results(drug_name, drug_info, interactions, multi_interactions, fda_interactions)
+        # 提取 rxcui 用于构造特定 URL
+        rxcui = drug_info.get("rxcui", "") if drug_info else ""
+
+        return self._format_results(drug_name, drug_info, interactions, multi_interactions, fda_interactions, rxcui=rxcui)
 
     def _format_results(
         self,
@@ -326,7 +334,8 @@ class RxNormTool(BaseTool):
         drug_info: Optional[Dict],
         interactions: List[Dict],
         multi_interactions: List[Dict],
-        fda_interactions: Optional[str] = None
+        fda_interactions: Optional[str] = None,
+        rxcui: str = ""
     ) -> str:
         """格式化结果"""
         output = [
@@ -374,7 +383,11 @@ class RxNormTool(BaseTool):
                 output.append(f"- **{drugs}**: {severity}")
             output.append("")
 
-        output.append(f"**参考**: https://rxnav.nlm.nih.gov")
+        if rxcui:
+            rxnorm_url = f"https://mor.nlm.nih.gov/RxNav/search?searchBy=RXCUI&searchTerm={rxcui}"
+        else:
+            rxnorm_url = f"https://mor.nlm.nih.gov/RxNav/search?searchBy=STRING&searchTerm={drug_name}"
+        output.append(f"**参考**: [RxNorm: {drug_name}]({rxnorm_url})")
 
         return "\n".join(output)
 

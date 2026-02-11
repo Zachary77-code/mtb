@@ -152,8 +152,9 @@ You **MUST** use these tools to retrieve and verify evidence:
 |-------|-------|----------|----------|----------|
 | [A] | [B] | [机制] | [高/中/低] | [建议] |
 
-## 6. 参考文献
 ```
+
+> **注意**：禁止生成独立 `## 参考文献` 章节（见 global_principles 14.2）。每条发现必须标注 `[Evidence A/B/C/D/E]`（见 global_principles 14.1）。
 
 ---
 
@@ -260,8 +261,9 @@ You **MUST** use these tools to retrieve and verify evidence:
 | 候选方案 | 绝对禁忌 | 相对禁忌 | 超适应症 |
 |----------|----------|----------|----------|
 
-## 参考文献
 ```
+
+> **注意**：禁止生成独立 `## 参考文献` 章节（见 global_principles 14.2）。每条发现必须标注 `[Evidence A/B/C/D/E]`（见 global_principles 14.1）。
 
 ---
 

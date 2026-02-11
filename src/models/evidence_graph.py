@@ -1810,9 +1810,27 @@ def construct_provenance_url(provenance: str) -> str:
     if prov.lower().startswith("civic"):
         return "https://civicdb.org/"
 
-    # NCCN
+    # FDA: drug_name → DailyMed 搜索
+    if prov.upper().startswith("FDA"):
+        drug = prov.split(":")[-1].strip()
+        if drug:
+            return f"https://dailymed.nlm.nih.gov/dailymed/search.cfm?query={drug}"
+
+    # RxNorm: drug_name → RxNav 搜索
+    if prov.upper().startswith("RXNORM"):
+        drug = prov.split(":")[-1].strip()
+        if drug:
+            return f"https://mor.nlm.nih.gov/RxNav/search?searchBy=STRING&searchTerm={drug}"
+
+    # ClinVar: variation_id
+    if prov.lower().startswith("clinvar"):
+        var_id = prov.split(":")[-1].strip()
+        if var_id.isdigit():
+            return f"https://www.ncbi.nlm.nih.gov/clinvar/variation/{var_id}/"
+
+    # NCCN（本地 RAG，无真实可导航 URL）
     if prov.upper().startswith("NCCN"):
-        return "https://www.nccn.org/guidelines"
+        return ""
 
     return ""
 

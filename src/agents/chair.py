@@ -130,7 +130,24 @@ class ChairAgent(BaseAgent):
                 return f"[{prov}]({url})"
             return prov
 
-        # 只有 URL
+        # 只有 URL，尝试从 URL 推导有意义的来源标签
+        if "fda.gov" in url or "dailymed" in url:
+            return f"[FDA]({url})"
+        if "gdc.cancer.gov" in url:
+            return f"[GDC]({url})"
+        if "pubmed" in url:
+            pmid = url.rstrip("/").split("/")[-1]
+            if pmid.isdigit():
+                return f"[PMID:{pmid}]({url})"
+        if "clinicaltrials.gov" in url:
+            nct = url.rstrip("/").split("/")[-1]
+            return f"[{nct}]({url})"
+        if "civicdb.org" in url:
+            return f"[CIViC]({url})"
+        if "rxnav.nlm.nih.gov" in url or "mor.nlm.nih.gov" in url:
+            return f"[RxNorm]({url})"
+        if "clinvar" in url.lower():
+            return f"[ClinVar]({url})"
         return f"[链接]({url})"
 
     # ==================== Section-based evidence organization ====================

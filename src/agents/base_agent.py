@@ -87,6 +87,9 @@ class ReferenceManager:
         """
         生成末尾引用汇总章节（带锚点）
 
+        注意：此方法仅用于 generate_full_report() 的调试/开发输出。
+        生产报告依赖 Evidence Graph 自动生成附录A（完整证据引用列表）。
+
         Returns:
             Markdown 格式的引用章节
         """

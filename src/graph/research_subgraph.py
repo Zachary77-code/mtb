@@ -2422,7 +2422,7 @@ Oncologist Mapping: {state.get('oncologist_mapping_report', '暂无')}
 
     return_dict = {
         "evidence_graph": result.get("evidence_graph", evidence_graph),
-        "pharmacist_research_result": result,
+        "pharmacist_review_research_result": result,
         "phase2b_iteration": new_iteration,
         "iteration_history": history,
     }
