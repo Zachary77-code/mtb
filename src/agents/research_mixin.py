@@ -14,6 +14,7 @@ from src.models.evidence_graph import (
     EntityType,
     EvidenceGrade,
     EvidenceType,
+    Predicate,
     load_evidence_graph
 )
 from src.models.entity_extractors import extract_entities_from_finding
@@ -751,7 +752,12 @@ class ResearchMixin:
                 for rel_data in agent_relationships:
                     src_id = rel_data.get("source_id", "").upper()
                     tgt_id = rel_data.get("target_id", "").upper()
-                    pred = rel_data.get("predicate", "ASSOCIATED_WITH")
+                    # Convert string predicate to Predicate enum (type-safe)
+                    pred_str = rel_data.get("predicate", "ASSOCIATED_WITH")
+                    try:
+                        pred = Predicate(pred_str.lower())
+                    except (ValueError, AttributeError):
+                        pred = Predicate.ASSOCIATED_WITH  # Safe fallback
                     conf = rel_data.get("confidence", 0.5)
                     src_ent = graph.get_entity(src_id) or graph.find_entity_by_name(src_id)
                     tgt_ent = graph.get_entity(tgt_id) or graph.find_entity_by_name(tgt_id)
