@@ -6,6 +6,7 @@ Agent 基类（OpenRouter API + LangGraph）
 import json
 import re
 import requests
+import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Any, Optional
@@ -250,13 +251,15 @@ class BaseAgent:
 
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
                 if attempt < max_retries - 1:
-                    logger.warning(f"[{self.role}] API 请求失败 ({type(e).__name__})，重试 ({attempt + 1}/{max_retries - 1})...")
+                    logger.warning(f"[{self.role}] API 请求失败 ({type(e).__name__})，等待 10s 后重试 ({attempt + 1}/{max_retries - 1})...")
+                    time.sleep(10)
                 else:
                     logger.error(f"[{self.role}] API 请求失败，重试已用尽: {e}")
                     raise
             except Exception as e:
                 if attempt < max_retries - 1:
-                    logger.warning(f"[{self.role}] API 错误，重试 ({attempt + 1}/{max_retries - 1}): {e}")
+                    logger.warning(f"[{self.role}] API 错误，等待 10s 后重试 ({attempt + 1}/{max_retries - 1}): {e}")
+                    time.sleep(10)
                 else:
                     logger.error(f"[{self.role}] API 错误，重试已用尽: {e}")
                     raise

@@ -118,38 +118,84 @@ class ChairAgent(BaseAgent):
         url = (source_url or "").strip()
 
         if not prov and not url:
-            return "-"
+            return ""
 
-        # 如果有 URL 且有 provenance，生成 markdown 链接
-        if url and prov:
+        # Handle each tool type with specific formatting
+        if prov and prov.startswith("PMID:") or (prov and prov.isdigit() and len(prov) == 8):
+            pmid = prov.replace("PMID:", "").strip()
+            return f"[PMID:{pmid}](https://pubmed.ncbi.nlm.nih.gov/{pmid}/)"
+
+        elif prov and prov.startswith("NCT"):
+            return f"[{prov}](https://clinicaltrials.gov/study/{prov})"
+
+        elif prov and prov.startswith("NCCN"):
+            # NCCN RAG - no URL, may have page range
+            if ":p." in prov:
+                return prov  # Shows "NCCN:p.123-145"
+            return "[NCCN Guideline]"
+
+        elif prov and prov.startswith("CIViC:"):
+            civic_id = prov.replace("CIViC:", "").strip()
+            if url:
+                return f"[CIViC:{civic_id}]({url})"
+            return f"CIViC:{civic_id}"
+
+        elif prov and prov.startswith("GDC:"):
+            gdc_id = prov.replace("GDC:", "").strip()
+            if url:
+                return f"[GDC:{gdc_id}]({url})"
+            return f"GDC:{gdc_id}"
+
+        elif prov and prov.startswith("FDA:"):
+            drug_name = prov.replace("FDA:", "").strip()
+            if url:
+                return f"[FDA:{drug_name}]({url})"
+            return f"FDA:{drug_name}"
+
+        elif prov and prov.startswith("RxNorm:"):
+            rxcui = prov.replace("RxNorm:", "").strip()
+            if url:
+                return f"[RxNorm:{rxcui}]({url})"
+            return f"RxNorm:{rxcui}"
+
+        elif prov in ["ClinVar", "cBioPortal"]:
+            if url:
+                return f"[{prov}]({url})"
+            return prov
+
+        # Fallback: if we have both prov and url but no specific format matched
+        elif url and prov:
             return f"[{prov}]({url})"
 
-        # 只有 provenance，尝试自动构建 URL
-        if prov and not url:
+        # Only provenance, try to construct URL
+        elif prov and not url:
             url = construct_provenance_url(prov)
             if url:
                 return f"[{prov}]({url})"
             return prov
 
-        # 只有 URL，尝试从 URL 推导有意义的来源标签
-        if "fda.gov" in url or "dailymed" in url:
-            return f"[FDA]({url})"
-        if "gdc.cancer.gov" in url:
-            return f"[GDC]({url})"
-        if "pubmed" in url:
-            pmid = url.rstrip("/").split("/")[-1]
-            if pmid.isdigit():
-                return f"[PMID:{pmid}]({url})"
-        if "clinicaltrials.gov" in url:
-            nct = url.rstrip("/").split("/")[-1]
-            return f"[{nct}]({url})"
-        if "civicdb.org" in url:
-            return f"[CIViC]({url})"
-        if "rxnav.nlm.nih.gov" in url or "mor.nlm.nih.gov" in url:
-            return f"[RxNorm]({url})"
-        if "clinvar" in url.lower():
-            return f"[ClinVar]({url})"
-        return f"[链接]({url})"
+        # Only URL, infer source from URL
+        elif url:
+            if "fda.gov" in url or "dailymed" in url:
+                return f"[FDA]({url})"
+            if "gdc.cancer.gov" in url:
+                return f"[GDC]({url})"
+            if "pubmed" in url:
+                pmid = url.rstrip("/").split("/")[-1]
+                if pmid.isdigit():
+                    return f"[PMID:{pmid}]({url})"
+            if "clinicaltrials.gov" in url:
+                nct = url.rstrip("/").split("/")[-1]
+                return f"[{nct}]({url})"
+            if "civicdb.org" in url:
+                return f"[CIViC]({url})"
+            if "rxnav.nlm.nih.gov" in url or "mor.nlm.nih.gov" in url:
+                return f"[RxNorm]({url})"
+            if "clinvar" in url.lower():
+                return f"[ClinVar]({url})"
+            return f"[Link]({url})"
+
+        return prov if prov else url
 
     # ==================== Section-based evidence organization ====================
 

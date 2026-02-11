@@ -77,6 +77,27 @@ Include a "Not Recommended / 不建议" section listing:
 **IMPORTANT**: If a tool does not return a URL, use a bare citation `[Source: ID]` (without a parenthesized URL). **Never** fabricate URLs.
 If a PMID or Trial ID cannot be verified via tool access, **DO NOT** fabricate it. Mark as "Reference unavailable" instead.
 
+## 6.4 Evidence Tag Source Attribution Rule
+
+When citing evidence grades in your report text, **ALWAYS** include source attribution with the evidence tag:
+
+**Correct formats**:
+- `[Evidence A - NCCN]` — NCCN guideline evidence
+- `[Evidence B - PMID:12345678]` — PubMed literature evidence
+- `[Evidence C - FDA: DRUG_NAME]` — FDA label evidence
+- `[Evidence D - GDC: GENE_NAME]` — GDC portal evidence
+- `[Evidence E - CIViC: VARIANT]` — CIViC database evidence
+- `[Evidence A - NCT01234567]` — Clinical trial evidence
+- `[Evidence B - RxNorm: DRUG]` — RxNorm drug interaction evidence
+
+**Incorrect formats** (missing source):
+- `[Evidence A]` ❌ — Bare evidence tag without source
+- `[Evidence B]` ❌ — No attribution
+- `[Evidence C - 病例背景]` ✓ — Acceptable for case background statements
+- `[临床常识]` ✓ — Acceptable for general clinical knowledge
+
+**Rule**: Every evidence tag MUST identify its source. If the statement comes from the patient's case file rather than external evidence, use `[病例背景]` or `[病例资料]`. For clinical common knowledge that doesn't require specific citation, use `[临床常识]`.
+
 ## 6.5 Tool-Only Evidence Rule
 
 **Strictly prohibited**: generating any findings based on your internal medical knowledge. All findings MUST come from external tool call results.

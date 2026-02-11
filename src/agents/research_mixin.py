@@ -5,6 +5,7 @@ Research Mixin - BFRS/DFRS 研究能力 (DeepEvidence Style)
 使用实体中心的证据图架构，将发现分解为 Entity + Edge + Observation。
 """
 import json
+import re
 from typing import Dict, List, Any, Optional, Tuple, TYPE_CHECKING
 from dataclasses import dataclass
 
@@ -699,24 +700,115 @@ class ResearchMixin:
             agent_relationships = finding.get("relationships", [])
             if agent_entities:
                 # 直接从 agent 提供的结构化实体构建图
-                provenance = finding.get("pmid", "") or finding.get("nct_id", "")
-                source_url = (
-                    finding.get("civic_url") or
-                    finding.get("url") or
-                    finding.get("gdc_url") or
-                    finding.get("cbioportal_url") or
-                    finding.get("source_url") or
-                    ""
-                )
-                if not source_url and finding.get("pmid"):
-                    pmid = str(finding["pmid"]).strip()
-                    if pmid:
+                # Comprehensive provenance extraction for all tools
+                source_tool = finding.get("source_tool", "")
+                provenance = ""
+                source_url = ""
+
+                # Priority 1: Handle tool-specific provenance (check source_tool FIRST)
+                if source_tool == "search_nccn":
+                    # NCCN PageIndex RAG - no URL, may have page_range
+                    provenance = "NCCN"
+                    page_range = finding.get("page_range", "")
+                    if page_range:
+                        provenance = f"NCCN:p.{page_range}"
+                    source_url = ""  # No direct URL for RAG results
+
+                elif source_tool == "search_civic":
+                    # CIViC - prioritize civic_url over embedded pmid
+                    civic_url = finding.get("civic_url", "")
+                    if civic_url:
+                        # Extract molecular profile ID from URL
+                        match = re.search(r'/molecular-profiles/(\d+)', civic_url)
+                        if match:
+                            provenance = f"CIViC:MP{match.group(1)}"
+                        else:
+                            provenance = "CIViC"
+                        source_url = civic_url
+                    else:
+                        # Fallback to pmid if no civic_url
+                        provenance = finding.get("pmid", "")
+                        if provenance:
+                            source_url = f"https://pubmed.ncbi.nlm.nih.gov/{provenance}/"
+
+                elif source_tool == "search_gdc":
+                    # GDC - extract gene ID from URL
+                    gdc_url = finding.get("gdc_url", "")
+                    if gdc_url:
+                        match = re.search(r'/genes/([A-Z0-9_]+)', gdc_url)
+                        if match:
+                            provenance = f"GDC:{match.group(1)}"
+                        else:
+                            gene_name = finding.get("gene_name", "") or finding.get("gene", "")
+                            provenance = f"GDC:{gene_name}" if gene_name else "GDC"
+                        source_url = gdc_url
+
+                elif source_tool == "search_fda_labels":
+                    # FDA - extract drug name or set_id
+                    drug_name = finding.get("drug_name", "") or finding.get("generic_name", "")
+                    if drug_name:
+                        provenance = f"FDA:{drug_name.upper()}"
+                    else:
+                        # Try extracting from URL
+                        fda_url = finding.get("url", "")
+                        if "setid=" in fda_url:
+                            match = re.search(r'setid=([a-f0-9-]+)', fda_url)
+                            if match:
+                                provenance = f"FDA:SETID_{match.group(1)[:8]}"
+                        else:
+                            provenance = "FDA"
+                    source_url = finding.get("url", "")
+
+                elif source_tool == "search_rxnorm":
+                    # RxNorm - extract rxcui
+                    rxcui = finding.get("rxcui", "")
+                    if rxcui:
+                        provenance = f"RxNorm:{rxcui}"
+                        source_url = f"https://mor.nlm.nih.gov/RxNav/search?searchBy=RXCUI&searchTerm={rxcui}"
+                    else:
+                        provenance = "RxNorm"
+                        source_url = finding.get("url", "") or finding.get("rxnorm_url", "")
+
+                elif source_tool == "search_clinvar":
+                    # ClinVar - use provided URL
+                    provenance = "ClinVar"
+                    source_url = finding.get("url", "")
+
+                elif source_tool == "search_cbioportal":
+                    # cBioPortal - use provided URL
+                    provenance = "cBioPortal"
+                    source_url = finding.get("cbioportal_url", "") or finding.get("url", "")
+
+                # Priority 2: Fallback to PMID/NCT if tool not matched or no tool-specific ID
+                if not provenance:
+                    provenance = finding.get("pmid", "") or finding.get("nct_id", "")
+
+                # Priority 3: Construct URL if missing
+                if not source_url:
+                    if provenance and provenance.startswith("PMID:"):
+                        pmid = provenance.replace("PMID:", "").replace("pmid:", "")
                         source_url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
-                if not source_url and finding.get("nct_id"):
-                    nct = str(finding["nct_id"]).strip()
-                    if not nct.startswith("NCT"):
-                        nct = f"NCT{nct}"
-                    source_url = f"https://clinicaltrials.gov/study/{nct}"
+                    elif provenance and provenance.startswith("NCT"):
+                        source_url = f"https://clinicaltrials.gov/study/{provenance}"
+                    elif finding.get("pmid"):
+                        pmid = str(finding["pmid"]).strip()
+                        if pmid:
+                            source_url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+                    elif finding.get("nct_id"):
+                        nct = str(finding["nct_id"]).strip()
+                        if not nct.startswith("NCT"):
+                            nct = f"NCT{nct}"
+                        source_url = f"https://clinicaltrials.gov/study/{nct}"
+                    else:
+                        # Check for generic url fields
+                        source_url = (
+                            finding.get("civic_url") or
+                            finding.get("url") or
+                            finding.get("gdc_url") or
+                            finding.get("cbioportal_url") or
+                            finding.get("source_url") or
+                            ""
+                        )
                 obs = Observation(
                     id=Observation.generate_id(source_tool),
                     statement=finding.get("content", "")[:200],
