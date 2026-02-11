@@ -13,6 +13,7 @@ from src.models.evidence_graph import (
     load_evidence_graph
 )
 from src.models.entity_extractors import extract_entities_from_finding
+from src.tools.graph_query_tool import GraphQueryTool
 from src.models.research_plan import (
     ResearchPlan,
     ResearchDirection,
@@ -89,6 +90,10 @@ class ResearchMixin:
         # 加载证据图和研究计划
         graph = load_evidence_graph(evidence_graph)
         plan = load_research_plan(research_plan) if research_plan else None
+
+        # 绑定 GraphQueryTool 到当前证据图
+        graph_tool = self._ensure_graph_query_tool()
+        graph_tool.set_graph(graph)
 
         # 按 preferred_mode 分组方向 (新逻辑)
         bfrs_directions = []
@@ -234,6 +239,23 @@ class ResearchMixin:
             "agent_analysis": "\n\n".join(all_agent_analysis),
             "per_direction_analysis": all_per_direction_analysis,
         }
+
+    def _ensure_graph_query_tool(self) -> GraphQueryTool:
+        """确保 GraphQueryTool 已注册到 agent 的 tools 列表，返回实例。幂等操作。"""
+        existing = getattr(self, 'tool_registry', {}).get('query_evidence_graph')
+        if existing and isinstance(existing, GraphQueryTool):
+            return existing
+
+        graph_tool = GraphQueryTool()
+        if not hasattr(self, 'tools') or self.tools is None:
+            self.tools = []
+        self.tools.append(graph_tool)
+        if hasattr(self, 'tool_registry'):
+            self.tool_registry[graph_tool.name] = graph_tool
+        else:
+            self.tool_registry = {graph_tool.name: graph_tool}
+
+        return graph_tool
 
     def _build_direction_anchor_context(
         self,

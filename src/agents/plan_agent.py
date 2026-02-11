@@ -596,7 +596,7 @@ class PlanAgent(BaseAgent):
    - 阅读各 Agent 的研究自述（what_found, what_not_found, conclusion）
    - 对比证据子图中的实际数据，验证自述的准确性
    - 特别注意 what_not_found — 这些信息在证据图中确实不存在
-   - 如需查看具体 observation 内容，可调用 query_evidence_graph 工具的 get_node_observations 或 get_edge_observations action
+   - 具体 observation 内容已包含在下方各方向子图的「核心观察」部分（仅锚点实体）。
 
 1. **证据充分性评估**（每个方向）：
    - 对比「完成标准」与证据子图中的实体和关系，判断研究问题是否已被充分回答
@@ -761,10 +761,10 @@ class PlanAgent(BaseAgent):
         direction: ResearchDirection,
         graph
     ) -> str:
-        """为单个方向生成锚点+子图上下文（仅结构，无 observation 文本）
+        """为单个方向生成锚点+子图上下文（含锚点实体的 observation 文本）
 
-        与 ResearchMixin 的 _build_direction_anchor_context() 保持一致，
-        不包含 observation 文本，需通过工具按需查询。
+        与 ResearchMixin 的 _build_direction_anchor_context() 类似，
+        但额外包含 hop_distance=0 锚点实体的 observation 原文，供收敛评估验证。
         """
         entity_ids = direction.entity_ids
         if not entity_ids:
@@ -775,7 +775,7 @@ class PlanAgent(BaseAgent):
         subgraph = graph.retrieve_subgraph(
             anchor_ids=entity_ids,
             max_hops=2,
-            include_observations=False
+            include_observations=True
         )
 
         entities = subgraph.get('entities', [])
@@ -814,13 +814,34 @@ class PlanAgent(BaseAgent):
                 conf = f" ({e['confidence']:.2f})" if e.get('confidence') else ""
                 lines.append(f"  {e['source_id']} → {e['predicate']} → {e['target_id']}{conf}")
 
+        # 锚点实体的核心观察（仅 hop_distance=0 的直接锚点，避免 prompt 膨胀）
+        obs_lines = []
+        for e in entities:
+            if e.get('hop_distance', 99) > 0:
+                continue
+            obs_list = e.get('observations', [])
+            if not obs_list:
+                continue
+            obs_lines.append(f"  **{e['canonical_id']}**:")
+            grade_order = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
+            sorted_obs = sorted(obs_list, key=lambda o: grade_order.get(o.get('evidence_grade') or 'E', 5))
+            for obs in sorted_obs:
+                grade = f"[{obs.get('evidence_grade', '?')}]"
+                source = f" ({obs.get('source_tool', '')})" if obs.get('source_tool') else ""
+                prov = f" — {obs.get('provenance', '')}" if obs.get('provenance') else ""
+                obs_lines.append(f"    - {grade}{source} {obs.get('statement', '')}{prov}")
+
+        if obs_lines:
+            lines.append(f"**核心观察** (锚点实体):")
+            lines.extend(obs_lines)
+
         return "\n".join(lines)
 
     def _build_direction_evidence_details(
         self, plan: ResearchPlan, graph, relevant_direction_ids: set,
         deep_by_direction: Dict[str, List[Dict[str, str]]] = None
     ) -> str:
-        """为每个方向生成证据子图详情（锚点+子图结构，无 observation 文本）"""
+        """为每个方向生成证据子图详情（锚点+子图结构+锚点实体 observation）"""
         if not graph:
             return "无证据图谱数据"
 
