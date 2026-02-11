@@ -203,11 +203,34 @@ class PlanAgent(BaseAgent):
 注意：Recruiter（临床试验招募员）已移至 Phase 2a，此处无需分配。
 方案 Mapping、局部治疗、临床试验匹配等将在 Phase 2a 中进行。
 
+## 定制化示例
+
+以下是一个结直肠癌 KRAS G12C 患者的方向示例（仅供参考格式和定制化程度，不要照搬内容）：
+
+```json
+{{
+    "id": "D_KRAS_RESISTANCE",
+    "topic": "KRAS G12C 抑制剂耐药机制与获得性突变监测策略",
+    "target_agent": "Geneticist",
+    "target_modules": ["分子特征", "复查和追踪方案"],
+    "priority": 1,
+    "queries": ["KRAS G12C sotorasib resistance mechanism", "KRAS G12C acquired mutation Y96D R68S", "ctDNA KRAS monitoring CRC"],
+    "completion_criteria": "明确 KRAS G12C 抑制剂的原发耐药（EGFR 反馈激活、RAS-MAPK 旁路）和获得性耐药（Y96D/R68S/MET 扩增）机制，给出 ctDNA 监测策略建议"
+}}
+```
+
+注意：
+- ID 反映具体研究内容（D_KRAS_RESISTANCE），不是泛化分类（D_MOLECULAR_PROFILE）
+- topic 包含具体基因、药物名
+- queries 全部可直接用于 PubMed/CIViC 检索
+- completion_criteria 明确需要回答的具体临床问题
+
 ## 注意事项
 1. 每个 Agent 分配 2-4 个研究方向（仅限 Pathologist/Geneticist/Pharmacist/Oncologist）
 2. 优先级 1 为最关键方向
 3. 确保 JSON 格式正确，可以被解析
 4. 每个方向必须指定 target_modules
+5. 方向的 topic/queries/completion_criteria 必须反映本病例的具体实体和临床问题，不要使用泛化描述
 """
 
     def _parse_plan_output(self, output: str) -> ResearchPlan:
@@ -1434,7 +1457,13 @@ class PlanAgent(BaseAgent):
             '"target_modules": ["模块"], "priority": 1, "queries": ["查询词"], '
             '"completion_criteria": "完成标准"}]}\n'
             "```\n\n"
-            "基于 Phase 1 发现的癌种、突变谱、治疗史，为每个 Agent 分配 1-3 个具体研究方向。"
+            "基于 Phase 1 发现的癌种、突变谱、治疗史，为每个 Agent 分配 1-3 个具体研究方向。\n\n"
+            "**定制化要求**:\n"
+            "- topic 必须引用 Phase 1 发现的具体基因、药物、合并症（如 '肺转移灶 SBRT 可行性 - CrCl 39 限制下的方案选择'）\n"
+            "- queries 必须包含可直接用于工具查询的具体术语（如 'KRAS G12C CRC SBRT oligometastatic'），不要使用泛化词汇\n"
+            "- completion_criteria 必须引用具体临床决策点（如 '明确 CrCl<40 患者是否可安全使用 TAS-102'）\n"
+            "- 方向 ID 应反映具体研究内容（如 D_LUNG_METS_SBRT），不要使用泛化 ID（如 D_LOCAL_THERAPY）\n"
+            "- 根据病情复杂度调整方向数量：每个 Agent 1-2 个方向（简单）或 2-3 个（复杂）"
         )
 
         try:
@@ -1472,86 +1501,96 @@ class PlanAgent(BaseAgent):
         }
 
     def _get_default_phase2a_directions(self, state: Dict[str, Any]) -> list:
-        """Phase 2a 默认方向"""
-        cancer_type = ""
+        """Phase 2a 默认方向（LLM 生成失败时的回退，尽量从 state 提取患者信息）"""
         rp = state.get("research_plan", {})
         if isinstance(rp, dict):
-            cancer_type = rp.get("case_summary", "肿瘤")
+            key_entities = rp.get("key_entities", {})
+            cancer_types = key_entities.get("cancer_type", [])
+            cancer_type = ", ".join(cancer_types) if cancer_types else rp.get("case_summary", "肿瘤")[:50]
+            genes = key_entities.get("genes", [])
+            key_genes = ", ".join(genes[:3]) if genes else ""
+            drugs = key_entities.get("drugs_mentioned", [])
         else:
-            cancer_type = "肿瘤"
+            cancer_type, key_genes = "肿瘤", ""
+            genes, drugs = [], []
+
+        # 构建患者特异的 queries 后缀
+        gene_queries = [f"{g} targeted therapy" for g in genes[:2]] if genes else []
+        drug_queries = [f"{d} {cancer_type}" for d in drugs[:2]] if drugs else []
 
         return [
             {
                 "id": "D_SYSTEMIC_THERAPY",
-                "topic": f"全身治疗手段Mapping - {cancer_type}",
+                "topic": f"全身治疗手段Mapping - {cancer_type}" + (f" ({key_genes})" if key_genes else ""),
                 "target_agent": "Oncologist",
                 "target_modules": ["治疗方案探索"],
                 "priority": 1,
-                "queries": ["标准治疗方案", "靶向治疗", "免疫治疗", "化疗方案"],
-                "completion_criteria": "完成4审批×5手段=20格全身治疗矩阵"
+                "queries": [f"{cancer_type} standard treatment", f"{cancer_type} targeted therapy",
+                            f"{cancer_type} immunotherapy", f"{cancer_type} chemotherapy"] + gene_queries[:2],
+                "completion_criteria": f"完成 {cancer_type} 的4审批×5手段=20格全身治疗矩阵"
             },
             {
                 "id": "D_SURGERY",
-                "topic": "手术评估",
+                "topic": f"{cancer_type} 手术评估",
                 "target_agent": "LocalTherapist",
                 "target_modules": ["治疗方案探索"],
                 "priority": 2,
-                "queries": ["手术适应证", "根治手术", "姑息手术"],
-                "completion_criteria": "完成手术可行性评估"
+                "queries": [f"{cancer_type} surgery indication", f"{cancer_type} resection", "palliative surgery"],
+                "completion_criteria": f"完成 {cancer_type} 手术可行性评估（根治 vs 姑息）"
             },
             {
                 "id": "D_RADIATION",
-                "topic": "放疗方案评估",
+                "topic": f"{cancer_type} 放疗方案评估",
                 "target_agent": "LocalTherapist",
                 "target_modules": ["治疗方案探索"],
                 "priority": 2,
-                "queries": ["放疗适应证", "SBRT", "质子治疗", "BNCT"],
-                "completion_criteria": "完成放疗方案对比评估"
+                "queries": [f"{cancer_type} radiation therapy", f"{cancer_type} SBRT", "proton therapy"],
+                "completion_criteria": f"完成 {cancer_type} 放疗方案对比评估（普通/SBRT/质子/BNCT）"
             },
             {
                 "id": "D_INTERVENTION",
-                "topic": "介入治疗评估",
+                "topic": f"{cancer_type} 介入治疗评估",
                 "target_agent": "LocalTherapist",
                 "target_modules": ["治疗方案探索"],
                 "priority": 3,
-                "queries": ["射频消融", "微波消融", "放射性粒子", "HIFU"],
-                "completion_criteria": "完成介入治疗可行性评估"
+                "queries": [f"{cancer_type} ablation", "radiofrequency ablation", "microwave ablation"],
+                "completion_criteria": f"完成 {cancer_type} 介入治疗可行性评估（消融/粒子/HIFU）"
             },
             {
                 "id": "D_TRIALS_ACTIVE",
-                "topic": "活跃临床试验匹配",
+                "topic": f"{cancer_type} 活跃临床试验匹配" + (f" ({key_genes})" if key_genes else ""),
                 "target_agent": "Recruiter",
                 "target_modules": ["治疗方案探索"],
                 "priority": 1,
-                "queries": ["临床试验", "入组标准"],
-                "completion_criteria": "匹配至少5个可行临床试验"
+                "queries": [f"{cancer_type} clinical trial"] + gene_queries[:1] + drug_queries[:1],
+                "completion_criteria": f"匹配至少5个针对 {cancer_type} 的可行临床试验"
             },
             {
                 "id": "D_TRIALS_COMPLETED",
-                "topic": "已结束试验及结果",
+                "topic": f"{cancer_type} 已结束试验及结果" + (f" ({key_genes})" if key_genes else ""),
                 "target_agent": "Recruiter",
                 "target_modules": ["治疗方案探索"],
                 "priority": 2,
-                "queries": ["已完成试验", "试验结果"],
-                "completion_criteria": "列出相关已结束试验及结果摘要"
+                "queries": [f"{cancer_type} completed trial results"] + drug_queries[:1],
+                "completion_criteria": f"列出 {cancer_type} 相关已结束试验及结果摘要"
             },
             {
                 "id": "D_NUTRITION",
-                "topic": "营养评估与方案",
+                "topic": f"{cancer_type} 营养评估与方案",
                 "target_agent": "Nutritionist",
                 "target_modules": ["整体与辅助支持"],
                 "priority": 2,
-                "queries": ["肿瘤营养", "恶病质", "营养支持"],
-                "completion_criteria": "完成营养状态评估和方案建议"
+                "queries": [f"{cancer_type} nutrition", "cancer cachexia", "nutritional support oncology"],
+                "completion_criteria": f"完成 {cancer_type} 营养状态评估和癌种特异饮食方案"
             },
             {
                 "id": "D_ALTERNATIVE",
-                "topic": "替代疗法评估",
+                "topic": f"{cancer_type} 替代疗法评估",
                 "target_agent": "IntegrativeMed",
                 "target_modules": ["整体与辅助支持"],
                 "priority": 3,
-                "queries": ["替代疗法", "中医", "免疫调节", "吸氢"],
-                "completion_criteria": "完成每种替代疗法的逐一评估"
+                "queries": [f"{cancer_type} complementary therapy", "integrative oncology", "traditional Chinese medicine cancer"],
+                "completion_criteria": f"完成 {cancer_type} 每种替代疗法（吸氢/大剂量VC/中医/免疫调节）的逐一评估"
             },
         ]
 
@@ -1559,9 +1598,91 @@ class PlanAgent(BaseAgent):
         """
         Phase 2b 研究方向生成: 药学审查
 
-        读取 Phase2a 的 5 份报告，为 Pharmacist(Review模式) 生成审查方向
+        读取 Phase2a 的 5 份报告，为 Pharmacist(Review模式) 生成审查方向。
+        方向 ID 固定为 3 个审查类别，但 topic/queries/completion_criteria 由 LLM 定制。
         """
-        directions = [
+        import re as _re
+
+        # 提取患者上下文
+        rp = state.get("research_plan", {})
+        key_entities = rp.get("key_entities", {}) if isinstance(rp, dict) else {}
+        case_summary = rp.get("case_summary", "") if isinstance(rp, dict) else ""
+        oncologist_mapping = state.get("oncologist_mapping_report", "")
+        pharmacist_baseline = state.get("pharmacist_report", "")
+
+        # 构造 LLM 定制化 prompt
+        prompt = (
+            "你是药学审查方向定制专家。基于以下患者信息，为 3 个固定药学审查方向定制患者特异的 topic、queries、completion_criteria。\n\n"
+            f"**患者概要**: {case_summary}\n"
+            f"**关键药物**: {json.dumps(key_entities.get('drugs_mentioned', []), ensure_ascii=False)}\n"
+            f"**关键基因**: {json.dumps(key_entities.get('genes', []), ensure_ascii=False)}\n"
+            f"**Oncologist Mapping 摘要（前2000字）**: {oncologist_mapping[:2000]}\n"
+            f"**药师基线报告摘要（前1000字）**: {pharmacist_baseline[:1000]}\n\n"
+            "请严格按以下 JSON 格式输出，定制 3 个方向的内容：\n"
+            "```json\n"
+            '{"directions": [\n'
+            '  {"id": "D_DRUG_INTERACTION_REVIEW", "topic": "包含具体药物名的互作审查主题", '
+            '"queries": ["具体药物名 drug interaction", ...], "completion_criteria": "具体的完成标准"},\n'
+            '  {"id": "D_DOSE_ADJUSTMENT_REVIEW", "topic": "包含具体器官功能状态的剂量调整主题", '
+            '"queries": ["具体药物 dose renal impairment", ...], "completion_criteria": "..."},\n'
+            '  {"id": "D_CONTRAINDICATION_REVIEW", "topic": "包含具体禁忌/超适应症的审查主题", '
+            '"queries": ["具体药物 contraindication", ...], "completion_criteria": "..."}\n'
+            "]}\n"
+            "```\n\n"
+            "要求:\n"
+            "- topic 必须包含具体候选药物名和患者特征（如器官功能状态、合并症）\n"
+            "- queries 必须可直接用于 FDALabel/RxNorm 查询（英文药物名）\n"
+            "- completion_criteria 必须引用具体药物和患者临床问题"
+        )
+
+        try:
+            result = self.invoke(prompt)
+            output = result.get("output", "")
+            json_match = _re.search(r'\{[\s\S]*\}', output)
+            if json_match:
+                parsed = json.loads(json_match.group())
+                customized = parsed.get("directions", [])
+                if len(customized) == 3:
+                    # 强制保持结构字段不变，只取 LLM 定制的内容字段
+                    expected_ids = ["D_DRUG_INTERACTION_REVIEW", "D_DOSE_ADJUSTMENT_REVIEW", "D_CONTRAINDICATION_REVIEW"]
+                    for i, d in enumerate(customized):
+                        d["id"] = expected_ids[i] if i < len(expected_ids) else d.get("id", expected_ids[0])
+                        d["target_agent"] = "Pharmacist"
+                        d["target_modules"] = ["治疗方案探索"]
+                        d["priority"] = 1
+                    directions = customized
+                    logger.info(f"[PLAN_AGENT] Phase 2b 方向已定制化: {[d['topic'][:30] for d in directions]}")
+                else:
+                    logger.warning(f"[PLAN_AGENT] Phase 2b LLM 返回 {len(customized)} 个方向（期望3个），使用默认")
+                    directions = self._get_default_phase2b_directions()
+            else:
+                logger.warning("[PLAN_AGENT] Phase 2b LLM 输出无法解析 JSON，使用默认")
+                directions = self._get_default_phase2b_directions()
+        except Exception as e:
+            logger.warning(f"[PLAN_AGENT] Phase 2b 方向定制失败，使用默认: {e}")
+            directions = self._get_default_phase2b_directions()
+
+        current_plan = state.get("research_plan", {})
+        if isinstance(current_plan, dict):
+            plan_data = current_plan.copy()
+        else:
+            plan_data = current_plan.to_dict() if hasattr(current_plan, "to_dict") else {}
+
+        plan_data["directions"] = directions
+        plan_data["phase"] = "phase_2b"
+
+        return {
+            "research_plan": plan_data,
+            "current_phase": "phase_2b",
+            "current_phase_description": "药学审查",
+            "current_phase_iteration": 0,
+            "current_phase_max_iterations": MAX_PHASE2B_ITERATIONS,
+            "phase2b_iteration": 0,
+        }
+
+    def _get_default_phase2b_directions(self) -> list:
+        """Phase 2b 默认方向（LLM 定制失败时的回退）"""
+        return [
             {
                 "id": "D_DRUG_INTERACTION_REVIEW",
                 "topic": "药物交互风险审查",
@@ -1591,6 +1712,76 @@ class PlanAgent(BaseAgent):
             },
         ]
 
+    def generate_phase3_directions(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Phase 3 研究方向生成: 方案整合
+
+        读取 Phase1+2a+2b 全部产出，为 Oncologist(Integration模式) 生成方向。
+        方向 ID 固定为 3 个整合类别，但 topic/queries/completion_criteria 由 LLM 定制。
+        """
+        import re as _re
+
+        # 提取患者上下文
+        rp = state.get("research_plan", {})
+        key_entities = rp.get("key_entities", {}) if isinstance(rp, dict) else {}
+        case_summary = rp.get("case_summary", "") if isinstance(rp, dict) else ""
+        oncologist_mapping = state.get("oncologist_mapping_report", "")
+        pharmacist_review = state.get("pharmacist_review_report", "")
+
+        # 构造 LLM 定制化 prompt
+        prompt = (
+            "你是治疗方案整合方向定制专家。基于以下患者信息，为 3 个固定整合方向定制患者特异的 topic、queries、completion_criteria。\n\n"
+            f"**患者概要**: {case_summary}\n"
+            f"**关键药物**: {json.dumps(key_entities.get('drugs_mentioned', []), ensure_ascii=False)}\n"
+            f"**关键基因**: {json.dumps(key_entities.get('genes', []), ensure_ascii=False)}\n"
+            f"**关键变异**: {json.dumps(key_entities.get('variants', []), ensure_ascii=False)}\n"
+            f"**Mapping 摘要（前2000字）**: {oncologist_mapping[:2000]}\n"
+            f"**药学审查摘要（前1500字）**: {pharmacist_review[:1500]}\n\n"
+            "请严格按以下 JSON 格式输出，定制 3 个方向的内容：\n"
+            "```json\n"
+            '{"directions": [\n'
+            '  {"id": "D_TREATMENT_PLAN_L1L5", "topic": "包含具体治疗方案名的L1-L5分层主题", '
+            '"queries": ["具体方案名 evidence level", ...], "completion_criteria": "具体的完成标准"},\n'
+            '  {"id": "D_PATHWAY_RANKING", "topic": "包含具体路径选项的排序主题", '
+            '"queries": ["具体方案 vs 方案 comparison", ...], "completion_criteria": "..."},\n'
+            '  {"id": "D_FOLLOWUP_TIMELINE", "topic": "包含具体监测指标的复查主题", '
+            '"queries": ["具体癌种 surveillance guideline", ...], "completion_criteria": "..."}\n'
+            "]}\n"
+            "```\n\n"
+            "要求:\n"
+            "- topic 必须包含具体治疗方案名（如 '氟泽雷赛联合西妥昔单抗 vs TAS-102 L1-L5证据分层'）\n"
+            "- queries 必须可直接用于 NCCN/PubMed 查询\n"
+            "- completion_criteria 必须引用具体的方案对比和决策点"
+        )
+
+        try:
+            result = self.invoke(prompt)
+            output = result.get("output", "")
+            json_match = _re.search(r'\{[\s\S]*\}', output)
+            if json_match:
+                parsed = json.loads(json_match.group())
+                customized = parsed.get("directions", [])
+                if len(customized) == 3:
+                    expected_ids = ["D_TREATMENT_PLAN_L1L5", "D_PATHWAY_RANKING", "D_FOLLOWUP_TIMELINE"]
+                    expected_modules = [["治疗方案探索"], ["治疗方案探索"], ["复查和追踪方案"]]
+                    expected_priorities = [1, 1, 2]
+                    for i, d in enumerate(customized):
+                        d["id"] = expected_ids[i] if i < len(expected_ids) else d.get("id", expected_ids[0])
+                        d["target_agent"] = "Oncologist"
+                        d["target_modules"] = expected_modules[i] if i < len(expected_modules) else ["治疗方案探索"]
+                        d["priority"] = expected_priorities[i] if i < len(expected_priorities) else 1
+                    directions = customized
+                    logger.info(f"[PLAN_AGENT] Phase 3 方向已定制化: {[d['topic'][:30] for d in directions]}")
+                else:
+                    logger.warning(f"[PLAN_AGENT] Phase 3 LLM 返回 {len(customized)} 个方向（期望3个），使用默认")
+                    directions = self._get_default_phase3_directions()
+            else:
+                logger.warning("[PLAN_AGENT] Phase 3 LLM 输出无法解析 JSON，使用默认")
+                directions = self._get_default_phase3_directions()
+        except Exception as e:
+            logger.warning(f"[PLAN_AGENT] Phase 3 方向定制失败，使用默认: {e}")
+            directions = self._get_default_phase3_directions()
+
         current_plan = state.get("research_plan", {})
         if isinstance(current_plan, dict):
             plan_data = current_plan.copy()
@@ -1598,24 +1789,20 @@ class PlanAgent(BaseAgent):
             plan_data = current_plan.to_dict() if hasattr(current_plan, "to_dict") else {}
 
         plan_data["directions"] = directions
-        plan_data["phase"] = "phase_2b"
+        plan_data["phase"] = "phase_3"
 
         return {
             "research_plan": plan_data,
-            "current_phase": "phase_2b",
-            "current_phase_description": "药学审查",
+            "current_phase": "phase_3",
+            "current_phase_description": "方案整合",
             "current_phase_iteration": 0,
-            "current_phase_max_iterations": MAX_PHASE2B_ITERATIONS,
-            "phase2b_iteration": 0,
+            "current_phase_max_iterations": MAX_PHASE3_ITERATIONS,
+            "phase3_iteration": 0,
         }
 
-    def generate_phase3_directions(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Phase 3 研究方向生成: 方案整合
-
-        读取 Phase1+2a+2b 全部产出，为 Oncologist(Integration模式) 生成方向
-        """
-        directions = [
+    def _get_default_phase3_directions(self) -> list:
+        """Phase 3 默认方向（LLM 定制失败时的回退）"""
+        return [
             {
                 "id": "D_TREATMENT_PLAN_L1L5",
                 "topic": "治疗方案制定 + L1-L5证据分层",
@@ -1644,24 +1831,6 @@ class PlanAgent(BaseAgent):
                 "completion_criteria": "完成5.1常规复查时间线和5.2分子复查补充"
             },
         ]
-
-        current_plan = state.get("research_plan", {})
-        if isinstance(current_plan, dict):
-            plan_data = current_plan.copy()
-        else:
-            plan_data = current_plan.to_dict() if hasattr(current_plan, "to_dict") else {}
-
-        plan_data["directions"] = directions
-        plan_data["phase"] = "phase_3"
-
-        return {
-            "research_plan": plan_data,
-            "current_phase": "phase_3",
-            "current_phase_description": "方案整合",
-            "current_phase_iteration": 0,
-            "current_phase_max_iterations": MAX_PHASE3_ITERATIONS,
-            "phase3_iteration": 0,
-        }
 
 
 if __name__ == "__main__":
