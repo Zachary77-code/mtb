@@ -23,11 +23,13 @@ from config.settings import (
     SUBGRAPH_MODEL,
     ORCHESTRATOR_MODEL,
     CONVERGENCE_JUDGE_MODEL,
+    CHAIR_MODEL,
     ORCHESTRATOR_REASONING_EFFORT,
     SUBGRAPH_REASONING_EFFORT,
     MAX_TOKENS_MAIN,
     MAX_TOKENS_SUBGRAPH,
     MAX_TOKENS_ORCHESTRATOR,
+    MAX_TOKENS_CHAIR,
 )
 from src.utils.logger import mtb_logger as logger, log_tool_call
 
@@ -189,7 +191,9 @@ class BaseAgent:
         }
 
         # 根据模型选择 max_tokens（max output tokens）
-        if self.model == SUBGRAPH_MODEL:
+        if self.model == CHAIR_MODEL:
+            max_tokens = MAX_TOKENS_CHAIR
+        elif self.model == SUBGRAPH_MODEL:
             max_tokens = MAX_TOKENS_SUBGRAPH
         elif self.model in (ORCHESTRATOR_MODEL, CONVERGENCE_JUDGE_MODEL):
             max_tokens = MAX_TOKENS_ORCHESTRATOR
@@ -207,7 +211,7 @@ class BaseAgent:
         reasoning_effort = ""
         if self.model == SUBGRAPH_MODEL:
             reasoning_effort = SUBGRAPH_REASONING_EFFORT
-        elif self.model in (ORCHESTRATOR_MODEL, CONVERGENCE_JUDGE_MODEL):
+        elif self.model in (ORCHESTRATOR_MODEL, CONVERGENCE_JUDGE_MODEL, CHAIR_MODEL):
             reasoning_effort = ORCHESTRATOR_REASONING_EFFORT
         if reasoning_effort:
             payload["reasoning"] = {"effort": reasoning_effort}

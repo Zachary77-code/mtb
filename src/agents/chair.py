@@ -8,7 +8,7 @@ from src.tools.guideline_tools import NCCNTool, FDALabelTool
 from src.tools.literature_tools import PubMedTool
 from src.models.evidence_graph import EvidenceGraph, EntityType, Predicate, EvidenceGrade
 from src.models.evidence_graph import construct_provenance_url
-from config.settings import CHAIR_PROMPT_FILE, REQUIRED_SECTIONS
+from config.settings import CHAIR_PROMPT_FILE, REQUIRED_SECTIONS, CHAIR_MODEL
 
 
 class ChairAgent(BaseAgent):
@@ -30,7 +30,8 @@ class ChairAgent(BaseAgent):
             role="Chair",
             prompt_file=CHAIR_PROMPT_FILE,
             tools=tools,
-            temperature=0.3  # 稍高温度以增加综合能力
+            temperature=0.3,  # 稍高温度以增加综合能力
+            model=CHAIR_MODEL
         )
 
     @staticmethod
