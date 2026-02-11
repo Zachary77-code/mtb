@@ -113,6 +113,8 @@ class Observation:
     source_url: Optional[str] = None             # 完整 URL
     evidence_grade: Optional[EvidenceGrade] = None  # 证据等级 A/B/C/D/E
     civic_type: Optional[CivicEvidenceType] = None  # CIViC 证据类型
+    l_tier: Optional[str] = None                 # L1-L5 证据分层 (Phase 3 Oncologist)
+    l_tier_reasoning: Optional[str] = None       # L1-L5 分层寻证过程
     iteration: int = 0                           # 收集迭代轮次
     created_at: datetime = field(default_factory=datetime.now)
 
@@ -127,6 +129,8 @@ class Observation:
             "source_url": self.source_url,
             "evidence_grade": self.evidence_grade.value if self.evidence_grade else None,
             "civic_type": self.civic_type.value if self.civic_type else None,
+            "l_tier": self.l_tier,
+            "l_tier_reasoning": self.l_tier_reasoning,
             "iteration": self.iteration,
             "created_at": self.created_at.isoformat(),
         }
@@ -143,6 +147,8 @@ class Observation:
             source_url=data.get("source_url"),
             evidence_grade=EvidenceGrade(data["evidence_grade"]) if data.get("evidence_grade") else None,
             civic_type=CivicEvidenceType(data["civic_type"]) if data.get("civic_type") else None,
+            l_tier=data.get("l_tier"),
+            l_tier_reasoning=data.get("l_tier_reasoning"),
             iteration=data.get("iteration", 0),
             created_at=datetime.fromisoformat(data["created_at"]) if data.get("created_at") else datetime.now(),
         )

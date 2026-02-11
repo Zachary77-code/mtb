@@ -265,3 +265,30 @@ Agent 工作在两种输出模式中（由 Research Agent 和 Report Agent 分�
 - **研究迭代模式 (JSON)**: Research Agent 在 BFRS/DFRS 循环中调用，输出结构化 JSON（findings, direction_updates 等）
 - **报告生成模式 (Markdown)**: Report Agent 在 phase 收敛后调用，基于 Evidence Graph 中的证据合成 Markdown 报告
 - 两种模式都必须遵守 14.1 和 14.2 规则
+
+### 14.4 统一 evidence_type 枚举
+所有 JSON 输出中的 `evidence_type` 字段必须使用以下标准值之一：
+
+| evidence_type | 说明 | 典型 Agent |
+|---------------|------|-----------|
+| `molecular` | 分子/基因组证据 | Geneticist |
+| `clinical` | 临床疗效数据 (ORR/PFS/OS) | Oncologist |
+| `pathology` | 病理/组织学证据 | Pathologist |
+| `imaging` | 影像学证据 | Pathologist |
+| `guideline` | 指南推荐 (NCCN/CSCO/ESMO) | Oncologist |
+| `drug` | 药物信息 (FDA标签/剂量/适应证) | Pharmacist, Oncologist |
+| `drug_interaction` | 药物相互作用 | Pharmacist |
+| `pharmacokinetics` | 药代动力学 | Pharmacist |
+| `comorbidity` | 合并症评估 | Pharmacist |
+| `organ_function` | 器官功能评估 | Pharmacist |
+| `allergy` | 过敏/不良反应 | Pharmacist |
+| `surgical` | 手术相关证据 | LocalTherapist |
+| `radiation` | 放疗相关证据 | LocalTherapist |
+| `interventional` | 介入治疗证据 | LocalTherapist |
+| `trial` | 临床试验信息 | Recruiter |
+| `nutrition` | 营养学证据 | Nutritionist |
+| `cam_evidence` | 替代疗法证据 | IntegrativeMed |
+| `safety` | 安全性数据 | IntegrativeMed, Pharmacist |
+| `literature` | 综合文献证据 (综述/meta分析) | 所有 Agent |
+
+**规则**: 若 Agent 返回的 evidence_type 不在此枚举中，系统将尝试归一化到最接近的标准值。

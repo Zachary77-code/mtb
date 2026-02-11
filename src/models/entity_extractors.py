@@ -361,6 +361,8 @@ class EntityExtractor:
                 source_url=source_url,
                 evidence_grade=self._extract_grade(finding),
                 civic_type=self._extract_civic_type(finding),
+                l_tier=finding.get("l_tier"),
+                l_tier_reasoning=finding.get("l_tier_reasoning"),
                 iteration=iteration,
             )
 

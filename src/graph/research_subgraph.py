@@ -57,6 +57,26 @@ from config.settings import (
 import re
 
 
+# ==================== iteration_feedback 辅助函数 ====================
+
+def _build_iteration_feedback(state: MtbState) -> str:
+    """从 state 中构建 iteration_feedback 字符串（上轮 PlanAgent 评估的反馈）"""
+    eval_data = state.get("plan_agent_evaluation", {})
+    if not eval_data:
+        return ""
+
+    parts = []
+    next_priorities = eval_data.get("next_priorities", [])
+    gaps = eval_data.get("gaps", [])
+
+    if next_priorities:
+        parts.append("【上一轮优先事项】" + "; ".join(next_priorities))
+    if gaps:
+        parts.append("【待填补空白】" + "; ".join(gaps))
+
+    return "\n".join(parts)
+
+
 # ==================== 迭代报告辅助函数 ====================
 
 def _extract_source_urls(result_text: str) -> List[str]:
@@ -1778,7 +1798,8 @@ def phase1_oncologist_analysis_node(state: MtbState) -> Dict[str, Any]:
         "max_iterations": MAX_PHASE1_ITERATIONS,
         "agent_mode": "analysis",
         "agent_role_in_phase": "过往治疗和当前治疗方案的分析评价(3.1)",
-        "iteration_feedback": ""
+        "iteration_feedback": _build_iteration_feedback(state),
+        "output_format": "json"
     }
 
     result = agent.research_iterate(
@@ -1840,6 +1861,19 @@ def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict
     # 传入默认 mode，实际使用每个方向的 preferred_mode
     agent = agent_class()
     research_plan_dict = state.get("research_plan", {})
+
+    # Build phase context for Phase 1 agents
+    phase_context = {
+        "current_phase": "phase_1",
+        "phase_description": "信息提取与解读",
+        "current_iteration": iteration + 1,
+        "max_iterations": MAX_PHASE1_ITERATIONS,
+        "agent_mode": "research",
+        "agent_role_in_phase": f"{agent_name} Phase 1: 信息提取与解读",
+        "iteration_feedback": _build_iteration_feedback(state),
+        "output_format": "json"
+    }
+
     result = agent.research_iterate(
         mode=ResearchMode.BREADTH_FIRST,  # 默认值，实际由 direction.preferred_mode 决定
         directions=directions,
@@ -1847,7 +1881,8 @@ def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict
         iteration=iteration,
         max_iterations=MAX_PHASE1_ITERATIONS,
         case_context=raw_pdf_text,
-        research_plan=research_plan_dict
+        research_plan=research_plan_dict,
+        phase_context=phase_context
     )
 
     # 显示执行结果
@@ -2147,7 +2182,8 @@ Phase 1 报告:
         "max_iterations": MAX_PHASE2A_ITERATIONS,
         "agent_mode": phase_mode,
         "agent_role_in_phase": f"{agent_name} Phase 2a: 只罗列可用手段并逐一分析，不做推荐判断",
-        "iteration_feedback": ""
+        "iteration_feedback": _build_iteration_feedback(state),
+        "output_format": "json"
     }
 
     result = agent.research_iterate(
@@ -2389,7 +2425,8 @@ Oncologist Mapping: {state.get('oncologist_mapping_report', '暂无')}
         "max_iterations": MAX_PHASE2B_ITERATIONS,
         "agent_mode": "review",
         "agent_role_in_phase": "为每个候选治疗手段打药学标签(交互/剂量/毒性/禁忌/超适应症)",
-        "iteration_feedback": ""
+        "iteration_feedback": _build_iteration_feedback(state),
+        "output_format": "json"
     }
 
     result = agent.research_iterate(
@@ -2529,7 +2566,8 @@ Phase 2b 药学审查:
         "max_iterations": MAX_PHASE3_ITERATIONS,
         "agent_mode": "integration",
         "agent_role_in_phase": "方案制定(L1-L5证据分层) + 路径排序 + 复查时间线",
-        "iteration_feedback": ""
+        "iteration_feedback": _build_iteration_feedback(state),
+        "output_format": "json"
     }
 
     result = agent.research_iterate(

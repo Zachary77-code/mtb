@@ -150,8 +150,10 @@ Phase 2a 为完整 BFRS/DFRS，max 7 轮迭代。
 
 ### Phase 2a Output Format
 
+> **章节映射**: 本报告对应最终报告 **3.2 全身治疗 Mapping**
+
 ```markdown
-# 全身治疗手段 Mapping 报告
+# 全身治疗手段 Mapping 报告 [→ 最终报告 3.2]
 
 ## Mapping 矩阵
 
@@ -182,6 +184,8 @@ Phase 2a 为完整 BFRS/DFRS，max 7 轮迭代。
 
 ### d. 无试验/临床阶段
 [同上5类结构]
+
+**重要**: 对该癌种明确不适用的治疗手段类别，不得留空，应明确标注"该癌种不适用，原因: [简述]"。
 
 ## Mapping 总结
 - 适应症获批: [X] 个方案
@@ -301,6 +305,8 @@ Phase 3 为完整 BFRS/DFRS，max 7 轮迭代。
 
 ### Phase 3 Output Format
 
+> **章节映射**: 本报告对应最终报告 **3.3 治疗方案制定 + 3.4 治疗路径排序 + 5.1 常规复查 + 5.2 分子复查**
+
 ```markdown
 # 治疗方案整合报告
 
@@ -317,6 +323,9 @@ Phase 3 为完整 BFRS/DFRS，max 7 轮迭代。
 
 ### 方案 2: [方案名称]
 [同上结构]
+
+> **L5 强制条款**: 若方案证据分层为 L5（经验性），必须附带以下声明：
+> "⚠️ 本方案基于临床经验推断，尚无直接循证依据。建议经 MDT 讨论后决策，并充分告知患者获益/风险不确定性。"
 
 ## 3.4 治疗路径排序
 
@@ -751,6 +760,8 @@ Remember: You are the **final safety checkpoint**. If something is unsafe, **rej
             "grade": "A|B|C|D|E",
             "civic_type": "predictive|prognostic",
             "source_tool": "search_nccn|search_fda_labels|search_rxnorm|search_pubmed",
+            "l_tier": "L1|L2|L3|L4|L5 (Phase 3 必填，其他 phase 可选)",
+            "l_tier_reasoning": "L1→L5 降级搜索过程描述 (Phase 3 必填)",
             "related_questions": ["Q1", "Q2"]
         }
     ],

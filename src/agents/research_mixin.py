@@ -10,6 +10,9 @@ from dataclasses import dataclass
 
 from src.models.evidence_graph import (
     EvidenceGraph,
+    Observation,
+    EntityType,
+    EvidenceGrade,
     load_evidence_graph
 )
 from src.models.entity_extractors import extract_entities_from_finding
@@ -374,6 +377,7 @@ class ResearchMixin:
         agent_role = getattr(self, 'role', 'Agent')
         dir_id = direction.get('id', '?')
         is_dfrs = (mode == "dfrs")
+        is_phase3 = (phase_context.get('current_phase') == 'phase_3') if phase_context else False
         mode_label = "DFRS (深度优先研究)" if is_dfrs else "BFRS (广度优先研究)"
         tool_rounds = 5 if is_dfrs else 3
         tool_rounds_hint = "3-5" if is_dfrs else "2-3"
@@ -450,6 +454,7 @@ class ResearchMixin:
 - 当前迭代: {phase_context.get('current_iteration', '?')}/{phase_context.get('max_iterations', '?')}
 - Agent 模式: {phase_context.get('agent_mode', 'research')}
 - 阶段角色: {phase_context.get('agent_role_in_phase', '')}
+- 输出格式: {phase_context.get('output_format', 'json')}
 """
             feedback = phase_context.get('iteration_feedback', '')
             if feedback:
@@ -500,7 +505,7 @@ class ResearchMixin:
         {{{{
             "direction_id": "{dir_id}",
             "content": "发现内容（完整详细，不限长度）",
-            "evidence_type": "molecular|clinical|literature|trial|guideline|drug|pathology|imaging",
+            "evidence_type": "molecular|clinical|pathology|imaging|guideline|drug|drug_interaction|pharmacokinetics|comorbidity|organ_function|allergy|surgical|radiation|interventional|trial|nutrition|cam_evidence|safety|literature",
             "grade": "A|B|C|D|E",
             "civic_type": "predictive|diagnostic|prognostic|predisposing|oncogenic",
             "source_tool": "你实际调用的工具名称（必填，严禁留空）",
@@ -509,8 +514,12 @@ class ResearchMixin:
             "drug": "药物名（如有）",
             "pmid": "PubMed ID（如有，仅填数字，必须来自工具返回结果）",
             "nct_id": "NCT ID（如有，含NCT前缀，必须来自工具返回结果）",
-            "url": "来源 URL（如有，PubMed/ClinicalTrials/GDC/CIViC 页面链接）"{"," if is_dfrs else ""}
-            {"\"depth_chain\": [\"引用1\", \"引用2\", \"推理步骤\"]" if is_dfrs else ""}
+            "url": "来源 URL（如有，PubMed/ClinicalTrials/GDC/CIViC 页面链接）",
+            {"\"l_tier\": \"L1|L2|L3|L4|L5（Phase 3 必填，描述证据分层）\"," if is_phase3 else ""}
+            {"\"l_tier_reasoning\": \"L1→L5 降级搜索过程描述（Phase 3 必填）\"," if is_phase3 else ""}
+            {"\"depth_chain\": [\"引用1\", \"引用2\", \"推理步骤\"]," if is_dfrs else ""}
+            "entities": [{{{{ "canonical_id": "GENE:EGFR", "entity_type": "gene|variant|drug|disease|pathway|biomarker|regimen|finding", "name": "EGFR", "aliases": ["ErbB1"] }}}}],
+            "relationships": [{{{{ "source_id": "GENE:EGFR", "target_id": "DRUG:OSIMERTINIB", "predicate": "RESPONDS_TO|TREATS|INTERACTS_WITH|ASSOCIATED_WITH", "confidence": 0.9 }}}}]
         }}}}
     ],
     "direction_updates": {{{{
@@ -612,6 +621,44 @@ class ResearchMixin:
             "agent_analysis": output or ""
         }
 
+    # 统一 evidence_type 枚举值
+    VALID_EVIDENCE_TYPES = {
+        "molecular", "clinical", "pathology", "imaging", "guideline", "drug",
+        "drug_interaction", "pharmacokinetics", "comorbidity", "organ_function",
+        "allergy", "surgical", "radiation", "interventional", "trial",
+        "nutrition", "cam_evidence", "safety", "literature",
+    }
+    # 常见非标准值 → 标准值映射
+    EVIDENCE_TYPE_ALIASES = {
+        "interaction": "drug_interaction",
+        "gene": "molecular",
+        "variant": "molecular",
+        "genomic": "molecular",
+        "genetic": "molecular",
+        "pharma": "pharmacokinetics",
+        "pk": "pharmacokinetics",
+        "surgery": "surgical",
+        "radiotherapy": "radiation",
+        "ablation": "interventional",
+        "cam": "cam_evidence",
+        "alternative": "cam_evidence",
+        "integrative": "cam_evidence",
+        "nccn": "guideline",
+        "fda": "drug",
+    }
+
+    @staticmethod
+    def _normalize_evidence_type(raw: str) -> str:
+        """归一化 evidence_type 到标准枚举值"""
+        if not raw:
+            return "literature"
+        lower = raw.lower().strip()
+        if lower in ResearchMixin.VALID_EVIDENCE_TYPES:
+            return lower
+        if lower in ResearchMixin.EVIDENCE_TYPE_ALIASES:
+            return ResearchMixin.EVIDENCE_TYPE_ALIASES[lower]
+        return "literature"  # fallback
+
     def _update_evidence_graph(
         self,
         graph: EvidenceGraph,
@@ -637,12 +684,75 @@ class ResearchMixin:
         existing_entities = graph.get_entity_index()
 
         for finding in findings:
+            # 归一化 evidence_type
+            if "evidence_type" in finding:
+                finding["evidence_type"] = self._normalize_evidence_type(finding["evidence_type"])
             source_tool = finding.get("source_tool", "unknown")
             finding_new_entities = []
             finding_new_obs = 0
             finding_new_edges = 0
 
-            # ========== LLM 实体提取 ==========
+            # ========== Agent 提供的结构化实体（优先使用）==========
+            agent_entities = finding.get("entities", [])
+            agent_relationships = finding.get("relationships", [])
+            if agent_entities:
+                # 直接从 agent 提供的结构化实体构建图
+                provenance = finding.get("pmid", "") or finding.get("nct_id", "")
+                source_url = finding.get("url", "")
+                obs = Observation(
+                    id=Observation.generate_id(source_tool),
+                    statement=finding.get("content", "")[:200],
+                    source_agent=agent_role,
+                    source_tool=source_tool,
+                    provenance=provenance,
+                    source_url=source_url,
+                    evidence_grade=EvidenceGrade(finding["grade"].upper()) if finding.get("grade") else None,
+                    l_tier=finding.get("l_tier"),
+                    l_tier_reasoning=finding.get("l_tier_reasoning"),
+                    iteration=iteration,
+                )
+                for ent_data in agent_entities:
+                    cid = ent_data.get("canonical_id", "").upper()
+                    ename = ent_data.get("name", "").upper()
+                    if not cid or not ename:
+                        continue
+                    etype_str = ent_data.get("entity_type", "finding")
+                    try:
+                        etype = EntityType(etype_str.lower())
+                    except (ValueError, KeyError):
+                        etype = EntityType.FINDING
+                    entity = graph.get_or_create_entity(
+                        canonical_id=cid, entity_type=etype, name=ename,
+                        source=source_tool, aliases=ent_data.get("aliases", [])
+                    )
+                    graph.add_observation_to_entity(canonical_id=entity.canonical_id, observation=obs)
+                    if entity.canonical_id not in new_entity_ids:
+                        new_entity_ids.append(entity.canonical_id)
+                        finding_new_entities.append(entity.canonical_id)
+                    finding_new_obs += 1
+                for rel_data in agent_relationships:
+                    src_id = rel_data.get("source_id", "").upper()
+                    tgt_id = rel_data.get("target_id", "").upper()
+                    pred = rel_data.get("predicate", "ASSOCIATED_WITH")
+                    conf = rel_data.get("confidence", 0.5)
+                    src_ent = graph.get_entity(src_id) or graph.find_entity_by_name(src_id)
+                    tgt_ent = graph.get_entity(tgt_id) or graph.find_entity_by_name(tgt_id)
+                    if src_ent and tgt_ent:
+                        graph.add_edge(
+                            source_id=src_ent.canonical_id, target_id=tgt_ent.canonical_id,
+                            predicate=pred, observation=obs, confidence=conf
+                        )
+                        finding_new_edges += 1
+                # 跳过 LLM 提取，直接用 agent 提供的数据
+                extraction_details.append({
+                    "source_tool": source_tool,
+                    "entities_extracted": len(agent_entities),
+                    "edges_extracted": len(agent_relationships),
+                    "extraction_method": "agent_provided",
+                })
+                continue
+
+            # ========== LLM 实体提取 (fallback) ==========
             try:
                 extraction_result = extract_entities_from_finding(
                     finding=finding,

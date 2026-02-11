@@ -41,6 +41,14 @@ TARGET_COMPLETENESS_SCORE = 50.0
 CONVERGENCE_COMPLETENESS_THRESHOLD = 80  # 完成度 >= 80% 视为完成
 CONTINUE_COMPLETENESS_THRESHOLD = 60     # 完成度 < 60% 需要继续收集
 
+# Phase → 允许的 Agent 映射（用于 new_directions 校验）
+PHASE_AGENT_MAP = {
+    "phase1": {"Pathologist", "Geneticist", "Pharmacist", "Oncologist"},
+    "phase2a": {"Oncologist", "LocalTherapist", "Recruiter", "Nutritionist", "IntegrativeMed"},
+    "phase2b": {"Pharmacist"},
+    "phase3": {"Oncologist"},
+}
+
 
 # 必须覆盖的 Chair 模块列表
 # Phase 1 必需覆盖的模块（Oncologist 相关模块在 Phase 2 覆盖）
@@ -388,7 +396,7 @@ class PlanAgent(BaseAgent):
         output = result.get("output", "")
 
         # 解析评估结果
-        eval_result = self._parse_evaluation_output(output, plan, direction_stats, needs_deep_research=all_needs_deep)
+        eval_result = self._parse_evaluation_output(output, plan, direction_stats, needs_deep_research=all_needs_deep, phase=phase)
 
         # 附加统计数据和待深入研究项，供迭代报告使用
         eval_result["direction_stats"] = direction_stats
@@ -944,7 +952,8 @@ class PlanAgent(BaseAgent):
         output: str,
         plan: ResearchPlan,
         direction_stats: Dict[str, Dict[str, Any]],
-        needs_deep_research: List[Dict[str, str]] = None
+        needs_deep_research: List[Dict[str, str]] = None,
+        phase: str = ""
     ) -> Dict[str, Any]:
         """解析 LLM 评估输出"""
 
@@ -993,10 +1002,18 @@ class PlanAgent(BaseAgent):
                     "deep_research_assessment": u.get("deep_research_assessment", []),
                 }
 
-            # 添加新方向（如果有）
+            # 添加新方向（如果有，需校验 target_agent 属于当前 phase）
             new_directions = data.get("new_directions", [])
             if new_directions:
+                allowed_agents = PHASE_AGENT_MAP.get(phase, set())
                 for nd in new_directions:
+                    target_agent = nd.get("target_agent", "")
+                    if allowed_agents and target_agent not in allowed_agents:
+                        logger.warning(
+                            f"[{self.role}] 新方向 '{nd.get('id', '?')}' 的 target_agent='{target_agent}' "
+                            f"不属于当前 phase '{phase}' 的 agent 列表 {allowed_agents}，已跳过"
+                        )
+                        continue
                     updated_plan.directions.append(ResearchDirection.from_dict(nd))
 
             return {

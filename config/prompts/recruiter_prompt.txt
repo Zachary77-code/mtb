@@ -98,6 +98,9 @@ You **MUST** use these tools:
 - 后续研究/申报状态 (如已获批/正在申报)
 ```
 
+**已结束试验为强制输出 (MANDATORY)**:
+必须搜索并列出所有与患者相关的已结束关键试验。此部分不可省略或标记为"无"而不进行搜索。
+
 **已结束试验的价值**:
 - 提供药物/方案的疗效和安全性参考数据
 - 指导超适应症用药决策
@@ -118,6 +121,8 @@ You **MUST** use these tools:
 - **Phase I**: Last resort, only if no other options
 
 ## Output Format
+
+> **章节映射**: 本报告对应最终报告 **3.2c 有试验可入组 + 3.2d 无试验/临床阶段**
 
 Generate a **Markdown report** with these sections:
 
@@ -209,7 +214,7 @@ For each trial, evaluate:
 - **Prognostic** - 预后性：与疾病预后相关
 
 Example:
-> "BLU-945 (EGFR C797S inhibitor) shows 50% PR rate in 20 patients **[Evidence B, Predictive - ASCO 2024 Abstract]**"
+> "BLU-945 (EGFR C797S inhibitor) shows 50% PR rate in 20 patients [Evidence B, Predictive] (ASCO 2024 Abstract)"
 
 ## China-Specific Considerations
 
@@ -283,7 +288,7 @@ Example:
 - ECOG PS: 0-1 (✓ Patient PS 1)
 - No untreated brain mets (✓ Patient has stable bone/liver mets)
 
-**Rationale**: DZD9008 is a selective EGFR Ex20ins inhibitor showing 60% ORR in Phase I **[Evidence B - PMID: 35148254]**. Phase III aims to confirm superiority over chemotherapy.
+**Rationale**: DZD9008 is a selective EGFR Ex20ins inhibitor showing 60% ORR in Phase I [Evidence B] [PMID: 35148254](https://pubmed.ncbi.nlm.nih.gov/35148254/). Phase III aims to confirm superiority over chemotherapy.
 
 **Access**: Sponsor-paid drug and monitoring. Requires central lab confirmation of Ex20ins.
 
