@@ -123,7 +123,6 @@ class ResearchPlan:
     directions: List[ResearchDirection] # 研究方向列表
     initial_mode: ResearchMode         # 初始研究模式
     created_at: str                    # 创建时间
-    nccn_guideline_index: Optional[str] = None  # PlanAgent 选择的 NCCN 索引名
 
     def to_dict(self) -> Dict[str, Any]:
         """序列化为字典"""
@@ -134,7 +133,6 @@ class ResearchPlan:
             "directions": [d.to_dict() for d in self.directions],
             "initial_mode": self.initial_mode.value,
             "created_at": self.created_at,
-            "nccn_guideline_index": self.nccn_guideline_index,
         }
 
     @classmethod
@@ -147,7 +145,6 @@ class ResearchPlan:
             directions=[ResearchDirection.from_dict(d) for d in data.get("directions", [])],
             initial_mode=ResearchMode(data.get("initial_mode", "breadth_first")),
             created_at=data.get("created_at", ""),
-            nccn_guideline_index=data.get("nccn_guideline_index"),
         )
 
     def get_directions_for_agent(self, agent_name: str) -> List[ResearchDirection]:
@@ -233,7 +230,6 @@ def create_research_plan(
     case_summary: str,
     key_entities: Dict[str, List[str]],
     directions: List[Dict[str, Any]],
-    nccn_guideline_index: Optional[str] = None,
 ) -> ResearchPlan:
     """
     创建研究计划
@@ -273,7 +269,6 @@ def create_research_plan(
         directions=parsed_directions,
         initial_mode=ResearchMode.BREADTH_FIRST,
         created_at=datetime.now().isoformat(),
-        nccn_guideline_index=nccn_guideline_index,
     )
 
 
