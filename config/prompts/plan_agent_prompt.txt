@@ -442,6 +442,28 @@ predicate: "sensitizes"
   - 存在证据冲突需要解决
   - 关键方向只有低级别证据
 
+### 4.5 证据链完整性分析（基于子图结构）
+
+评估每个方向时，除了看证据数量和等级，还需要分析子图的**结构完整性**：
+
+#### 实体类型覆盖
+从子图实体的 canonical_id 前缀判断实体类型覆盖情况：
+- 治疗相关方向（D_SYSTEMIC_THERAPY, D_TREATMENT_PLAN 等）应包含 DRUG + DISEASE 实体，如只有 GENE/VARIANT 无 DRUG → 药物证据缺失
+- 分子特征方向应包含 GENE + VARIANT，如只有 GENE 无 VARIANT → 变异级别分析缺失
+- 试验方向应包含 TRIAL + DRUG，如只有 TRIAL → 试验-药物映射缺失
+
+#### 关系谓词覆盖
+从子图边的 predicate 判断关键关系是否已建立：
+- 有 `sensitizes` 但无 `causes_resistance` → 耐药证据空白
+- 有 `treats` 但无 `interacts_with` → 药物互作未评估
+- 存在 `contradicts` 边 → 有证据冲突待解决
+- 实体间应有关系但子图中无边连接 → 潜在关联未探索
+
+#### 对 preferred_mode 的影响
+- 关键实体类型或谓词大面积缺失 → `breadth_first`
+- 有初步实体但关键关系未建立（如有 GENE+DRUG 但无 sensitizes 边）→ `depth_first`
+- 实体类型完整 + 关键谓词覆盖 + 完成标准满足 → `skip`
+
 ### 5. 收敛判断
 
 **收敛条件（必须全部满足）**：
@@ -467,7 +489,8 @@ predicate: "sensitizes"
             "priority": 1,
             "completeness": 85,
             "preferred_mode": "skip",
-            "mode_reason": "完成标准已充分回答：肿瘤分型、分期、IHC标记物均有A/B级证据支撑"
+            "mode_reason": "完成标准已充分回答：肿瘤分型、分期、IHC标记物均有A/B级证据支撑",
+            "chain_analysis": "实体: GENE(2)/VARIANT(1)/DRUG(3)/DISEASE(1) 完整; 谓词: sensitizes(3)/causes_resistance(1)/treats(2) 关键关系已覆盖"
         },
         {
             "id": "D2",
@@ -475,7 +498,8 @@ predicate: "sensitizes"
             "priority": 2,
             "completeness": 65,
             "preferred_mode": "depth_first",
-            "mode_reason": "有初步临床试验信息但缺少具体入排标准和招募状态，需深入查询"
+            "mode_reason": "有初步临床试验信息但缺少具体入排标准和招募状态，需深入查询",
+            "chain_analysis": "实体: TRIAL(3) 但无 DRUG 实体; 谓词: 仅 evaluates(2), 缺少 treats/sensitizes → 试验-药物关系未建立"
         }
     ],
     "new_directions": [],

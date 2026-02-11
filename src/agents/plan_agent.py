@@ -603,6 +603,12 @@ class PlanAgent(BaseAgent):
    - 即使完成度数值较高，如果子图未覆盖完成标准的关键问题，仍应标记为未完成
    - 即使完成度数值较低，如果子图已充分回答研究问题，可标记为完成
 
+1.5 **证据链结构分析**（每个方向）：
+   - 从子图实体 canonical_id 前缀检查实体类型覆盖（如治疗方向应有 DRUG + DISEASE 实体）
+   - 从子图边 predicate 检查关键关系是否已建立（sensitizes、causes_resistance、treats、interacts_with 等）
+   - 关注应有但缺失的关系（如两个 DRUG 实体都存在但无 interacts_with 边）
+   - 结构缺陷属于 critical（如治疗方向无 DRUG 实体）→ 该方向需 depth_first 或 breadth_first
+
 2. **待深入研究项评估**（每个方向，如有「待深入研究项」则必须逐条评估）：
    - 逐条评估该方向的每个「待深入研究项」
    - 判断该项是否已被当前证据覆盖: covered（完全覆盖）/ partial（部分覆盖）/ uncovered（未覆盖）
@@ -637,6 +643,7 @@ class PlanAgent(BaseAgent):
             "preferred_mode": "skip",
             "mode_reason": "证据已充分回答完成标准，待深入项已被覆盖",
             "evidence_assessment": "已找到 EGFR L858R 的靶向药物证据(A级)及耐药机制(B级)，完成标准中的分子分型、药物敏感性、耐药机制均有覆盖",
+            "chain_analysis": "实体: GENE(2)/VARIANT(1)/DRUG(3)/DISEASE(1) 完整; 谓词: sensitizes(3)/causes_resistance(1)/treats(2) 关键关系已覆盖",
             "deep_research_assessment": [
                 {{
                     "item": "耐药后二线方案",
@@ -654,6 +661,7 @@ class PlanAgent(BaseAgent):
             "preferred_mode": "depth_first",
             "mode_reason": "有关键待深入项未覆盖，需深入研究",
             "evidence_assessment": "已找到肾功能剂量调整的初步数据(C/D级)，但缺少 FDA 标签中的具体剂量建议",
+            "chain_analysis": "实体: DRUG(2)/DISEASE(1) 但无 VARIANT; 谓词: treats(1) 但缺少 interacts_with → 药物互作未评估",
             "deep_research_assessment": [
                 {{
                     "item": "氟泽雷赛联合西妥昔单抗 ORR/PFS 数据",
@@ -671,6 +679,7 @@ class PlanAgent(BaseAgent):
             "preferred_mode": "breadth_first",
             "mode_reason": "完成度30%，需要广度收集更多初步证据",
             "evidence_assessment": "仅有 PubMed 文献中的间接证据(D级)，缺少指南级治疗方案对比数据",
+            "chain_analysis": "实体: GENE(1) 仅单类型; 谓词: 仅 associated_with(2) → 实体类型和关系谓词均大面积缺失",
             "deep_research_assessment": []
         }}
     ],
@@ -688,9 +697,14 @@ class PlanAgent(BaseAgent):
 ```
 
 **preferred_mode 选择指南**:
-- "skip": 证据已充分回答完成标准，且该方向的待深入研究项已覆盖或仅剩 minor 级别（与患者病情/治疗基本无关）的未覆盖项
-- "breadth_first": 证据覆盖面不足，多个关键问题未涉及，需要广度收集
-- "depth_first": 有初步发现但证据等级不够（只有 D/E 级），或存在证据冲突需要解决，或有 critical/important 级别的待深入研究项未覆盖
+- "skip": 证据已充分回答完成标准，且证据链结构完整（实体类型+关键谓词覆盖），待深入研究项已覆盖或仅剩 minor 级别的未覆盖项
+- "breadth_first": 证据覆盖面不足，多个关键问题未涉及，或关键实体类型大面积缺失，需要广度收集
+- "depth_first": 有初步发现但证据等级不够（只有 D/E 级），或有初步实体但关键关系未建立（如有 GENE+DRUG 但无 sensitizes 边），或存在证据冲突（contradicts 边）需要解决，或有 critical/important 级别的待深入研究项未覆盖
+
+**chain_analysis 必须包含**:
+1. 子图实体类型统计（从 canonical_id 前缀提取）
+2. 子图关系谓词统计（从 edge predicate 提取）
+3. 结构完整性判断（是否有关键缺失及其对 DFRS 判定的影响）
 
 **evidence_assessment 必须包含**:
 1. 已有证据要点（关键发现 + 等级）
