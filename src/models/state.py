@@ -97,7 +97,8 @@ def merge_research_plans(left: Dict[str, Any], right: Dict[str, Any]) -> Dict[st
     """
     合并两个研究计划（用于并行 Agent 更新方向状态）
 
-    方向按 ID 合并，right 覆盖 left 中的同 ID 方向。
+    - 同 Phase 内：方向按 ID 合并，right 覆盖 left 中的同 ID 方向（并行 Agent 更新）
+    - Phase 切换时：完全替换 directions（避免旧 Phase 方向泄露到新 Phase）
     """
     if not left:
         return right
@@ -105,6 +106,15 @@ def merge_research_plans(left: Dict[str, Any], right: Dict[str, Any]) -> Dict[st
         return left
 
     merged = dict(left)
+
+    # Phase 切换：完全替换 directions
+    if "phase" in right and right.get("phase") != left.get("phase"):
+        if "directions" in right:
+            merged["directions"] = right["directions"]
+        merged["phase"] = right["phase"]
+        return merged
+
+    # 同 Phase：按 ID 合并（支持并行 Agent 更新方向状态）
     if "directions" in right:
         left_dirs = {d["id"]: d for d in left.get("directions", [])}
         for d in right.get("directions", []):
@@ -261,6 +271,9 @@ class MtbState(TypedDict):
     # 收敛检查决策（供条件边使用，由 PlanAgent 设置）
     phase1_decision: NotRequired[str]  # "continue" | "converged"
     phase2_decision: NotRequired[str]  # "continue" | "converged"
+    phase2a_decision: NotRequired[str]  # "continue" | "converged"
+    phase2b_decision: NotRequired[str]  # "continue" | "converged"
+    phase3_decision: NotRequired[str]   # "continue" | "converged"
 
     # PlanAgent 评估结果（每轮迭代更新）
     plan_agent_evaluation: NotRequired[Dict[str, Any]]
@@ -346,6 +359,9 @@ def create_initial_state(input_text: str) -> MtbState:
         "phase1_all_converged": False,
         "phase1_decision": "continue",
         "phase2_decision": "continue",
+        "phase2a_decision": "continue",
+        "phase2b_decision": "continue",
+        "phase3_decision": "continue",
         # Phase 2a 初始化
         "phase2a_iteration": 0,
         "phase2a_converged": False,
