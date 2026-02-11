@@ -162,6 +162,11 @@ NCCN_IMAGE_RENDER_SCALE = float(os.getenv("NCCN_IMAGE_RENDER_SCALE", "2.0"))
 NCCN_IMAGE_SCORE_THRESHOLD = float(os.getenv("NCCN_IMAGE_SCORE_THRESHOLD", "0.8"))
 NCCN_IMAGE_DEFAULT_INDEX = os.getenv("NCCN_IMAGE_DEFAULT_INDEX", "nccn_colon")
 
+# ==================== PageIndex RAG 配置 ====================
+NCCN_PAGEINDEX_DIR = BASE_DIR / "data" / "pageindex"
+NCCN_PAGEINDEX_TREE_SEARCH_MODEL = SUBGRAPH_MODEL
+NCCN_PAGEINDEX_REASONING_EFFORT = SUBGRAPH_REASONING_EFFORT
+
 
 def validate_config() -> bool:
     """验证配置有效性"""

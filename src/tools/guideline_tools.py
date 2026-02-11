@@ -17,40 +17,38 @@ class NCCNTool(BaseTool):
     """
     NCCN 指南查询工具
 
-    基于 byaldi + ColQwen2.5 的多模态图片 RAG 实现。
-    返回检索到的 NCCN 指南页面原始图片，由 agent 直接读图分析。
+    基于 PageIndex Tree Search + Expert Preference 的语义检索。
+    通过 LLM 推理选择相关章节，返回指南文本内容。
     """
 
     def __init__(self):
         super().__init__(
             name="search_nccn",
-            description="查询 NCCN 指南获取标准治疗建议（返回指南页面图片）"
+            description="查询 NCCN 指南获取标准治疗建议（基于指南章节语义检索）"
         )
         self._rag = None  # 延迟加载
 
     @property
     def rag(self):
-        """延迟加载多模态 RAG 系统"""
+        """延迟加载 PageIndex RAG 系统"""
         if self._rag is None:
-            from src.tools.rag.nccn_image_rag import get_nccn_image_rag
-            self._rag = get_nccn_image_rag()
+            from src.tools.rag.pageindex_rag import get_pageindex_rag
+            self._rag = get_pageindex_rag()
         return self._rag
 
     def _call_real_api(
         self,
         query: str = "",
         **kwargs
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[str]:
         """
-        调用 NCCN 多模态 RAG 系统
-
-        检索相关 NCCN 指南页面，返回原始页面图片供 agent 直接读图。
+        调用 PageIndex RAG 检索 NCCN 指南
 
         Args:
             query: 自然语言查询（如 "NSCLC EGFR L858R first-line treatment"）
 
         Returns:
-            {"text": 检索元数据, "images": [{"page_num": int, "base64": str}]}
+            检索到的指南章节文本
         """
         if not query.strip():
             query = "cancer treatment guidelines"
@@ -59,7 +57,7 @@ class NCCNTool(BaseTool):
             result = self.rag.retrieve(query)
             return result
         except Exception as e:
-            logger.error(f"[NCCNTool] 多模态 RAG 检索失败: {e}")
+            logger.error(f"[NCCNTool] PageIndex RAG 检索失败: {e}")
             return None
 
     def _get_parameters_schema(self) -> Dict[str, Any]:

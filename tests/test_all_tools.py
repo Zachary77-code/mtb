@@ -41,7 +41,7 @@ def test_pubmed():
 
     print(f"耗时: {elapsed:.2f}s")
     print("-" * 40)
-    print(result[:1000] if result else "无结果")
+    print(result if result else "无结果")
 
     success = result is not None and ("PubMed" in result or "PMID" in result)
     print_result(success)
@@ -68,7 +68,7 @@ def test_clinical_trials():
 
     print(f"耗时: {elapsed:.2f}s")
     print("-" * 40)
-    print(result[:1500] if result else "无结果")
+    print(result if result else "无结果")
 
     success = result is not None and "ClinicalTrials" in result
     print_result(success)
@@ -90,7 +90,7 @@ def test_civic():
 
     print(f"耗时: {elapsed:.2f}s")
     print("-" * 40)
-    print(result[:1200] if result else "无结果")
+    print(result if result else "无结果")
 
     success = result is not None and "CIViC" in result
     print_result(success)
@@ -112,7 +112,7 @@ def test_clinvar():
 
     print(f"耗时: {elapsed:.2f}s")
     print("-" * 40)
-    print(result[:1200] if result else "无结果")
+    print(result if result else "无结果")
 
     success = result is not None and "ClinVar" in result
     print_result(success)
@@ -134,16 +134,38 @@ def test_gdc():
 
     print(f"耗时: {elapsed:.2f}s")
     print("-" * 40)
-    print(result[:1200] if result else "无结果")
+    print(result if result else "无结果")
 
     success = result is not None and "GDC" in result
     print_result(success)
     return success
 
 
+def test_nccn_pageindex():
+    """测试 NCCN PageIndex RAG 检索"""
+    print_header("6. NCCN PageIndex RAG 检索测试")
+
+    from src.tools.guideline_tools import NCCNTool
+
+    tool = NCCNTool()
+    print("Query: IV期结肠癌dMMR/MSI-H患者的一线免疫治疗方案有哪些？帕博利珠单抗和纳武利尤单抗如何选择？")
+
+    start = time.time()
+    result = tool.invoke(query="IV期结肠癌dMMR/MSI-H患者的一线免疫治疗方案有哪些？帕博利珠单抗和纳武利尤单抗如何选择？")
+    elapsed = time.time() - start
+
+    print(f"耗时: {elapsed:.2f}s")
+    print("-" * 40)
+    print(result if result else "无结果")
+
+    success = result is not None and "NCCN" in result
+    print_result(success)
+    return success
+
+
 def test_fda_label():
     """测试 FDA 药品说明书查询"""
-    print_header("6. FDA 药品说明书测试")
+    print_header("7. FDA 药品说明书测试")
 
     from src.tools.guideline_tools import FDALabelTool
 
@@ -156,7 +178,7 @@ def test_fda_label():
 
     print(f"耗时: {elapsed:.2f}s")
     print("-" * 40)
-    print(result[:1500] if result else "无结果")
+    print(result if result else "无结果")
 
     success = result is not None and "FDA" in result
     print_result(success)
@@ -165,7 +187,7 @@ def test_fda_label():
 
 def test_rxnorm():
     """测试 RxNorm 药物相互作用查询"""
-    print_header("7. RxNorm 药物相互作用测试")
+    print_header("8. RxNorm 药物相互作用测试")
 
     from src.tools.guideline_tools import RxNormTool
 
@@ -178,7 +200,7 @@ def test_rxnorm():
 
     print(f"耗时: {elapsed:.2f}s")
     print("-" * 40)
-    print(result[:1200] if result else "无结果")
+    print(result if result else "无结果")
 
     success = result is not None and "RxNorm" in result
     print_result(success)
@@ -198,6 +220,7 @@ def main():
         ("CIViC", test_civic),
         ("ClinVar", test_clinvar),
         ("GDC", test_gdc),
+        ("NCCN PageIndex", test_nccn_pageindex),
         ("FDA Label", test_fda_label),
         ("RxNorm", test_rxnorm),
     ]
