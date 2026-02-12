@@ -439,35 +439,30 @@ class PlanAgent(BaseAgent):
 
         for direction in plan.directions:
             d_id = direction.id
-            entity_ids = direction.entity_ids
-            entity_id_set = set(entity_ids)
 
-            # 统计证据等级分布（按 obs.id 去重，仅计 source_agent == target_agent）
+            # 按 obs.direction_id 过滤（精确归属，不依赖 entity_ids 间接推导）
             grade_dist = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0}
             weighted_score = 0.0
-            target_agent = direction.target_agent
-
-            # 收集去重后的 observation 及其等级（仅该方向的 target_agent）
             obs_grades = {}  # {obs_id: grade_value} 用于去重后统计
+            entity_ids_for_dir = set()  # 动态收集该方向关联的实体
 
-            for eid in entity_ids:
-                # entity_ids 存储的是实体 canonical_id
-                entity = graph.get_entity(eid) if graph else None
-                if entity:
-                    # 收集实体上的 observation 及其等级（仅 target_agent）
+            if graph:
+                # 遍历实体 observations
+                for entity in graph.entities.values():
                     for obs in entity.observations:
-                        if obs.source_agent == target_agent and hasattr(obs, 'id') and obs.id and obs.id not in obs_grades:
+                        if obs.direction_id == d_id and hasattr(obs, 'id') and obs.id and obs.id not in obs_grades:
                             grade = obs.evidence_grade.value if obs.evidence_grade else "E"
                             obs_grades[obs.id] = grade
+                            entity_ids_for_dir.add(entity.canonical_id)
 
-            # 收集关联边上的 observation 及其等级（仅 target_agent）
-            if graph:
+                # 遍历边 observations
                 for edge in graph.edges.values():
-                    if edge.source_id in entity_id_set or edge.target_id in entity_id_set:
-                        for obs in edge.observations:
-                            if obs.source_agent == target_agent and hasattr(obs, 'id') and obs.id and obs.id not in obs_grades:
-                                grade = obs.evidence_grade.value if obs.evidence_grade else "E"
-                                obs_grades[obs.id] = grade
+                    for obs in edge.observations:
+                        if obs.direction_id == d_id and hasattr(obs, 'id') and obs.id and obs.id not in obs_grades:
+                            grade = obs.evidence_grade.value if obs.evidence_grade else "E"
+                            obs_grades[obs.id] = grade
+                            entity_ids_for_dir.add(edge.source_id)
+                            entity_ids_for_dir.add(edge.target_id)
 
             # 统计等级分布和加权得分
             for grade in obs_grades.values():
@@ -488,7 +483,7 @@ class PlanAgent(BaseAgent):
 
             stats[d_id] = {
                 "evidence_count": len(obs_grades),  # 证据数 = 去重后的 observation 数量
-                "entity_count": len(entity_ids),  # 实体数 = entity_ids 数量
+                "entity_count": len(entity_ids_for_dir),  # 实体数 = 动态计算
                 "grade_distribution": grade_dist,
                 "weighted_score": weighted_score,
                 "completeness": completeness,

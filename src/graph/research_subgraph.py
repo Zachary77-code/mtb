@@ -714,24 +714,21 @@ def _save_detailed_iteration_report(
                         d.preferred_mode, d.preferred_mode
                     )
                     topic_short = d.topic
-                    # 计算 observation 数和 entity 数（按 obs.id 去重，仅本 agent，与 agent 报告一致）
-                    target_agent = d.target_agent
-                    entity_count = len(d.entity_ids)
-                    entity_id_set = set(d.entity_ids)
+                    # 计算 observation 数和 entity 数（按 obs.direction_id 精确过滤）
                     seen_obs_ids = set()
+                    entity_ids_for_dir = set()
                     if graph:
-                        for eid in d.entity_ids:
-                            entity = graph.get_entity(eid)
-                            if entity:
-                                for obs in entity.observations:
-                                    if obs.source_agent == target_agent:
-                                        seen_obs_ids.add(obs.id)
+                        for entity in graph.entities.values():
+                            for obs in entity.observations:
+                                if obs.direction_id == d.id:
+                                    seen_obs_ids.add(obs.id)
+                                    entity_ids_for_dir.add(entity.canonical_id)
                         for edge in graph.edges.values():
-                            if edge.source_id in entity_id_set or edge.target_id in entity_id_set:
-                                for obs in edge.observations:
-                                    if obs.source_agent == target_agent:
-                                        seen_obs_ids.add(obs.id)
+                            for obs in edge.observations:
+                                if obs.direction_id == d.id:
+                                    seen_obs_ids.add(obs.id)
                     obs_count = len(seen_obs_ids)
+                    entity_count = len(entity_ids_for_dir)
                     # 状态变化
                     post_d = post_plan.get_direction_by_id(d.id) if post_plan else None
                     pre_status = d.status.value
@@ -829,22 +826,17 @@ def _save_detailed_iteration_report(
                     if gd.get(g, 0) > 0:
                         grade_parts.append(f"{g}={gd[g]}")
                 grade_str = " ".join(grade_parts) if grade_parts else "无"
-                # 计算 per-agent 去重证据数（与 agent 报告一致）
+                # 计算 per-direction 去重证据数（按 obs.direction_id 精确过滤）
                 agent_obs_ids = set()
-                d_target_agent = d.target_agent
-                d_entity_id_set = set(d.entity_ids)
                 if graph:
-                    for eid in d.entity_ids:
-                        entity = graph.get_entity(eid)
-                        if entity:
-                            for obs in entity.observations:
-                                if obs.source_agent == d_target_agent:
-                                    agent_obs_ids.add(obs.id)
+                    for entity in graph.entities.values():
+                        for obs in entity.observations:
+                            if obs.direction_id == d.id:
+                                agent_obs_ids.add(obs.id)
                     for edge in graph.edges.values():
-                        if edge.source_id in d_entity_id_set or edge.target_id in d_entity_id_set:
-                            for obs in edge.observations:
-                                if obs.source_agent == d_target_agent:
-                                    agent_obs_ids.add(obs.id)
+                        for obs in edge.observations:
+                            if obs.direction_id == d.id:
+                                agent_obs_ids.add(obs.id)
                 agent_evidence_count = len(agent_obs_ids)
                 lines.append(f"**状态**: {status_display} | **模式**: {mode_display} | **完成度**: {stats.get('completeness', 0):.0f}% | **证据数**: {agent_evidence_count} | **等级分布**: {grade_str}")
             else:
@@ -2072,32 +2064,6 @@ def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
 
     merged_graph_dict = merged_graph.to_dict()
 
-    # 在证据图合并之后，关联实体到方向（修复方向证据统计为 0 的问题）
-    research_plan = state.get("research_plan", {})
-    if isinstance(research_plan, dict) and "directions" in research_plan:
-        from src.models.research_plan import ResearchDirection
-
-        # 遍历所有方向
-        for dir_data in research_plan["directions"]:
-            direction = ResearchDirection.from_dict(dir_data)
-            target_agent = direction.target_agent
-
-            # 查找该 agent 添加的所有实体（通过 observations 的 source_agent 匹配）
-            agent_entities = set()
-            for entity_id, entity in merged_graph.entities.items():
-                for obs in entity.observations:
-                    if obs.source_agent == target_agent:
-                        agent_entities.add(entity_id)
-                        break
-
-            # 添加到方向的 entity_ids（去重）
-            if agent_entities:
-                existing_ids = set(dir_data.get("entity_ids", []))
-                dir_data["entity_ids"] = list(existing_ids | agent_entities)
-
-        logger.info(f"[PHASE1_AGGREGATOR] 已将实体自动关联到方向: "
-                   f"{[(d['id'], len(d.get('entity_ids', []))) for d in research_plan['directions']]}")
-
     # 保存检查点
     checkpoint_evidence_graph(state, phase="phase1", iteration=new_iteration, checkpoint_type="checkpoint")
 
@@ -2107,7 +2073,6 @@ def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
         "iteration_history": history,
         "hypotheses_history": hypotheses_history,
         "evidence_graph": merged_graph_dict,  # 返回合并后的证据图
-        "research_plan": research_plan,  # 返回更新后的 plan（包含关联的 entity_ids）
     }
 
 
@@ -2458,39 +2423,12 @@ def phase2a_aggregator(state: MtbState) -> Dict[str, Any]:
 
     merged_graph_dict = merged_graph.to_dict()
 
-    # 在证据图合并之后，关联实体到方向（修复方向证据统计为 0 的问题）
-    research_plan = state.get("research_plan", {})
-    if isinstance(research_plan, dict) and "directions" in research_plan:
-        from src.models.research_plan import ResearchDirection
-
-        # 遍历所有方向
-        for dir_data in research_plan["directions"]:
-            direction = ResearchDirection.from_dict(dir_data)
-            target_agent = direction.target_agent
-
-            # 查找该 agent 添加的所有实体（通过 observations 的 source_agent 匹配）
-            agent_entities = set()
-            for entity_id, entity in merged_graph.entities.items():
-                for obs in entity.observations:
-                    if obs.source_agent == target_agent:
-                        agent_entities.add(entity_id)
-                        break
-
-            # 添加到方向的 entity_ids（去重）
-            if agent_entities:
-                existing_ids = set(dir_data.get("entity_ids", []))
-                dir_data["entity_ids"] = list(existing_ids | agent_entities)
-
-        logger.info(f"[PHASE2A_AGGREGATOR] 已将实体自动关联到方向: "
-                   f"{[(d['id'], len(d.get('entity_ids', []))) for d in research_plan['directions']]}")
-
     checkpoint_evidence_graph(state, phase="phase2a", iteration=new_iteration, checkpoint_type="checkpoint")
 
     return {
         "phase2a_iteration": new_iteration,
         "iteration_history": history,
         "evidence_graph": merged_graph_dict,  # 返回合并后的证据图
-        "research_plan": research_plan,  # 返回更新后的 plan（包含关联的 entity_ids）
     }
 
 

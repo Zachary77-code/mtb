@@ -821,6 +821,7 @@ class ResearchMixin:
                     evidence_type=EvidenceType(finding["evidence_type"]) if finding.get("evidence_type") else None,
                     l_tier=finding.get("l_tier"),
                     l_tier_reasoning=finding.get("l_tier_reasoning"),
+                    direction_id=finding.get("direction_id"),
                     iteration=iteration,
                 )
                 for ent_data in agent_entities:
@@ -908,6 +909,7 @@ class ResearchMixin:
 
                 # 添加观察到实体
                 if extracted_entity.observation:
+                    extracted_entity.observation.direction_id = finding.get("direction_id")
                     graph.add_observation_to_entity(
                         canonical_id=entity.canonical_id,
                         observation=extracted_entity.observation
@@ -943,6 +945,8 @@ class ResearchMixin:
                     target_entity = graph.find_entity_by_name(extracted_edge.target_id)
 
                 if source_entity and target_entity:
+                    if extracted_edge.observation:
+                        extracted_edge.observation.direction_id = finding.get("direction_id")
                     graph.add_edge(
                         source_id=source_entity.canonical_id,
                         target_id=target_entity.canonical_id,

@@ -139,6 +139,7 @@ class Observation:
     evidence_type: Optional[EvidenceType] = None  # 证据类型分类 (molecular/clinical/drug/...)
     l_tier: Optional[str] = None                 # L1-L5 证据分层 (Phase 3 Oncologist)
     l_tier_reasoning: Optional[str] = None       # L1-L5 分层寻证过程
+    direction_id: Optional[str] = None            # 所属研究方向 ID
     iteration: int = 0                           # 收集迭代轮次
     created_at: datetime = field(default_factory=datetime.now)
 
@@ -156,6 +157,7 @@ class Observation:
             "evidence_type": self.evidence_type.value if self.evidence_type else None,
             "l_tier": self.l_tier,
             "l_tier_reasoning": self.l_tier_reasoning,
+            "direction_id": self.direction_id,
             "iteration": self.iteration,
             "created_at": self.created_at.isoformat(),
         }
@@ -175,6 +177,7 @@ class Observation:
             evidence_type=EvidenceType(data["evidence_type"]) if data.get("evidence_type") else None,
             l_tier=data.get("l_tier"),
             l_tier_reasoning=data.get("l_tier_reasoning"),
+            direction_id=data.get("direction_id"),
             iteration=data.get("iteration", 0),
             created_at=datetime.fromisoformat(data["created_at"]) if data.get("created_at") else datetime.now(),
         )

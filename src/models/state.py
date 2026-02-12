@@ -118,7 +118,17 @@ def merge_research_plans(left: Dict[str, Any], right: Dict[str, Any]) -> Dict[st
     if "directions" in right:
         left_dirs = {d["id"]: d for d in left.get("directions", [])}
         for d in right.get("directions", []):
-            left_dirs[d["id"]] = d
+            d_id = d["id"]
+            if d_id in left_dirs:
+                # entity_ids 取并集（不同 Agent 各自更新了不同方向的 entity_ids）
+                left_eids = set(left_dirs[d_id].get("entity_ids", []))
+                right_eids = set(d.get("entity_ids", []))
+                merged_eids = list(left_eids | right_eids)
+                # 其他字段由 right 覆盖（status、preferred_mode 等以最新为准）
+                left_dirs[d_id] = d
+                left_dirs[d_id]["entity_ids"] = merged_eids
+            else:
+                left_dirs[d_id] = d
         merged["directions"] = list(left_dirs.values())
     return merged
 
