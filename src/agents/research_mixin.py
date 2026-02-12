@@ -692,6 +692,7 @@ class ResearchMixin:
                 finding["evidence_type"] = self._normalize_evidence_type(finding["evidence_type"])
             source_tool = finding.get("source_tool", "unknown")
             finding_new_entities = []
+            finding_entity_ids = set()  # 追踪本 finding 引用的所有实体（用于方向关联）
             finding_new_obs = 0
             finding_new_edges = 0
 
@@ -837,6 +838,7 @@ class ResearchMixin:
                         source=source_tool, aliases=ent_data.get("aliases", [])
                     )
                     graph.add_observation_to_entity(canonical_id=entity.canonical_id, observation=obs)
+                    finding_entity_ids.add(entity.canonical_id)
                     if entity.canonical_id not in new_entity_ids:
                         new_entity_ids.append(entity.canonical_id)
                         finding_new_entities.append(entity.canonical_id)
@@ -859,6 +861,16 @@ class ResearchMixin:
                             predicate=pred, observation=obs, confidence=conf
                         )
                         finding_new_edges += 1
+                        finding_entity_ids.add(src_ent.canonical_id)
+                        finding_entity_ids.add(tgt_ent.canonical_id)
+                # 更新方向的证据关联（agent 提供的实体）
+                direction_id = finding.get("direction_id")
+                if direction_id and plan:
+                    direction = plan.get_direction_by_id(direction_id)
+                    if direction:
+                        for entity_id in finding_entity_ids:
+                            direction.add_entity_id(entity_id)
+
                 # 跳过 LLM 提取，直接用 agent 提供的数据
                 extraction_details.append({
                     "source_tool": source_tool,
@@ -892,6 +904,7 @@ class ResearchMixin:
                     source=source_tool,
                     aliases=extracted_entity.aliases
                 )
+                finding_entity_ids.add(entity.canonical_id)
 
                 # 添加观察到实体
                 if extracted_entity.observation:
@@ -938,6 +951,8 @@ class ResearchMixin:
                         confidence=extracted_edge.confidence
                     )
                     finding_new_edges += 1
+                    finding_entity_ids.add(source_entity.canonical_id)
+                    finding_entity_ids.add(target_entity.canonical_id)
 
                     # 收集边详情
                     edge_obs = extracted_edge.observation
@@ -960,8 +975,8 @@ class ResearchMixin:
             if direction_id and plan:
                 direction = plan.get_direction_by_id(direction_id)
                 if direction:
-                    # 关联所有新实体到方向
-                    for entity_id in new_entity_ids:
+                    # 关联本 finding 引用的实体到方向
+                    for entity_id in finding_entity_ids:
                         direction.add_entity_id(entity_id)
 
             # 更新实体索引，让后续 finding 的 LLM 提取看到新增实体

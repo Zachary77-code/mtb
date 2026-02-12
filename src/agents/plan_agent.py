@@ -1695,21 +1695,9 @@ class PlanAgent(BaseAgent):
             logger.warning(f"[PLAN_AGENT] Phase 2b 方向定制失败，使用默认: {e}")
             directions = self._get_default_phase2b_directions()
 
-        # 从证据图提取所有实体作为审查锚点（修复 Phase 2b 方向证据统计为 0 的问题）
-        # 遵守 CLAUDE.md 第 9 条：不截断、不限制列表大小
-        from src.models.evidence_graph import load_evidence_graph
-        evidence_graph = load_evidence_graph(state.get("evidence_graph", {}))
-
-        # 提取所有实体（遵守"no truncation"原则）
-        # Phase 2b 的输入是 Phase 1/2a 的证据图，包含所有已识别的实体
-        all_entity_ids = list(evidence_graph.entities.keys())
-
-        # 为每个方向添加 entity_ids
+        # Phase 2b 方向以空 entity_ids 开始，由 research_mixin 在研究过程中按 finding 正确填充
         for direction in directions:
-            # 所有 3 个审查方向使用相同的实体锚点
-            direction["entity_ids"] = all_entity_ids
-
-        logger.info(f"[PLAN_AGENT] Phase 2b 方向已添加实体锚点: {len(all_entity_ids)} 个实体")
+            direction["entity_ids"] = []
 
         current_plan = state.get("research_plan", {})
         if isinstance(current_plan, dict):
@@ -1831,21 +1819,9 @@ class PlanAgent(BaseAgent):
             logger.warning(f"[PLAN_AGENT] Phase 3 方向定制失败，使用默认: {e}")
             directions = self._get_default_phase3_directions()
 
-        # 从证据图提取锚点实体，添加到方向的 entity_ids 字段
-        # 这解决了 Phase 3 方向证据计数为 0 的问题
-        # 遵守 CLAUDE.md 第 9 条：不截断、不限制列表大小
-        from src.models.evidence_graph import load_evidence_graph
-        evidence_graph = load_evidence_graph(state.get("evidence_graph", {}))
-
-        # 提取所有实体作为方向锚点（遵守"no truncation"原则）
-        # Phase 3 的输入是前面所有阶段（Phase 1/2a/2b）的完整证据图
-        all_entity_ids = list(evidence_graph.entities.keys())
-
-        # 所有方向使用相同的实体锚点，确保所有证据都能被正确计数
+        # Phase 3 方向以空 entity_ids 开始，由 research_mixin 在研究过程中按 finding 正确填充
         for direction in directions:
-            direction["entity_ids"] = all_entity_ids
-
-        logger.info(f"[PLAN_AGENT] Phase 3 方向已添加实体锚点: {len(all_entity_ids)} 个实体")
+            direction["entity_ids"] = []
 
         current_plan = state.get("research_plan", {})
         if isinstance(current_plan, dict):
