@@ -81,7 +81,7 @@ MAX_TOKENS_CHAIR = 65536       # anthropic/claude-opus-4-6 (128k)
 # effort: "minimal" / "low" / "medium" / "high" / ""(禁用)
 # Pro 模型（PlanAgent, Chair）使用 high，Flash 模型（Research Agents）使用 high
 ORCHESTRATOR_REASONING_EFFORT = os.getenv("ORCHESTRATOR_REASONING_EFFORT", "high")
-SUBGRAPH_REASONING_EFFORT = os.getenv("SUBGRAPH_REASONING_EFFORT", "medium")
+SUBGRAPH_REASONING_EFFORT = os.getenv("SUBGRAPH_REASONING_EFFORT", "high")
 
 # ==================== DeepEvidence 收敛配置 ====================
 MAX_PHASE1_ITERATIONS = int(os.getenv("MAX_PHASE1_ITERATIONS", "3"))    # Phase 1: 轻量 BFRS/DFRS, 信息提取有界
