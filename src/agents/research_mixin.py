@@ -812,7 +812,7 @@ class ResearchMixin:
                         )
                 obs = Observation(
                     id=Observation.generate_id(source_tool),
-                    statement=finding.get("content", "")[:200],
+                    statement=finding.get("content", ""),
                     source_agent=agent_role,
                     source_tool=source_tool,
                     provenance=provenance,

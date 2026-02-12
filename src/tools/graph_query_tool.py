@@ -241,7 +241,7 @@ class GraphQueryTool(BaseTool):
         lines.append("")
         for r in results:
             grade = f" [Best: {r['best_grade']}]" if r.get("best_grade") else ""
-            aliases = f" (aliases: {', '.join(r['aliases'][:3])})" if r.get("aliases") else ""
+            aliases = f" (aliases: {', '.join(r['aliases'])})" if r.get("aliases") else ""
             lines.append(
                 f"- **{r['canonical_id']}** ({r['type']}){grade} "
                 f"— {r['observation_count']} observations{aliases}"
@@ -351,7 +351,7 @@ class GraphQueryTool(BaseTool):
         # Key edges
         if edges:
             lines.append("### Key relationships:")
-            for edge in edges[:20]:
+            for edge in edges:
                 pred = edge.predicate.value
                 conf = f" (conf={edge.confidence:.2f})" if edge.confidence else ""
                 lines.append(f"- {edge.source_id} → **{pred}** → {edge.target_id}{conf}")
@@ -404,7 +404,7 @@ class GraphQueryTool(BaseTool):
         # Key edges
         if edges:
             lines.append("### Relationships:")
-            for edge in edges[:30]:
+            for edge in edges:
                 pred = edge["predicate"]
                 conf = f" (conf={edge['confidence']:.2f})" if edge.get("confidence") else ""
                 lines.append(f"- {edge['source_id']} → **{pred}** → {edge['target_id']}{conf}")
@@ -529,7 +529,7 @@ class GraphQueryTool(BaseTool):
                     lines.append(f"- {pred} → **{drug.name}**{grade}{conf}")
 
                     # Show edge observations
-                    for obs in edge.observations[:3]:
+                    for obs in edge.observations:
                         prov = f" ({obs.provenance})" if obs.provenance else ""
                         lines.append(f"  - {obs.statement}{prov}")
             lines.append("")
@@ -588,7 +588,7 @@ class GraphQueryTool(BaseTool):
                 return self._not_found_hint("treatment evidence")
 
             lines = [f"## All treatment evidence ({len(all_treatment_edges)} relationships)", ""]
-            for edge in all_treatment_edges[:30]:
+            for edge in all_treatment_edges:
                 src = self._graph.get_entity(edge.source_id)
                 tgt = self._graph.get_entity(edge.target_id)
                 src_name = src.name if src else edge.source_id

@@ -1435,7 +1435,7 @@ class HtmlReportGenerator:
                 if clean and clean not in warnings:
                     warnings.append(clean)
 
-        return warnings[:5]  # 限制数量
+        return warnings
 
     def _extract_patient_info(self, raw_pdf_text: str, chair_synthesis: str) -> tuple:
         """

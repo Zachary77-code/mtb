@@ -306,7 +306,7 @@ d. 无试验/临床阶段: 早期研究阶段药物
                     warnings.append(line.strip())
                     break
 
-        return warnings[:10]
+        return warnings
 
 
 if __name__ == "__main__":

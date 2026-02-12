@@ -1548,8 +1548,8 @@ class PlanAgent(BaseAgent):
             genes, drugs = [], []
 
         # 构建患者特异的 queries 后缀
-        gene_queries = [f"{g} targeted therapy" for g in genes[:2]] if genes else []
-        drug_queries = [f"{d} {cancer_type}" for d in drugs[:2]] if drugs else []
+        gene_queries = [f"{g} targeted therapy" for g in genes] if genes else []
+        drug_queries = [f"{d} {cancer_type}" for d in drugs] if drugs else []
 
         return [
             {
@@ -1559,7 +1559,7 @@ class PlanAgent(BaseAgent):
                 "target_modules": ["治疗方案探索"],
                 "priority": 1,
                 "queries": [f"{cancer_type} standard treatment", f"{cancer_type} targeted therapy",
-                            f"{cancer_type} immunotherapy", f"{cancer_type} chemotherapy"] + gene_queries[:2],
+                            f"{cancer_type} immunotherapy", f"{cancer_type} chemotherapy"] + gene_queries,
                 "completion_criteria": f"完成 {cancer_type} 的4审批×5手段=20格全身治疗矩阵"
             },
             {
@@ -1595,7 +1595,7 @@ class PlanAgent(BaseAgent):
                 "target_agent": "Recruiter",
                 "target_modules": ["治疗方案探索"],
                 "priority": 1,
-                "queries": [f"{cancer_type} clinical trial"] + gene_queries[:1] + drug_queries[:1],
+                "queries": [f"{cancer_type} clinical trial"] + gene_queries + drug_queries,
                 "completion_criteria": f"匹配至少5个针对 {cancer_type} 的可行临床试验"
             },
             {
@@ -1604,7 +1604,7 @@ class PlanAgent(BaseAgent):
                 "target_agent": "Recruiter",
                 "target_modules": ["治疗方案探索"],
                 "priority": 2,
-                "queries": [f"{cancer_type} completed trial results"] + drug_queries[:1],
+                "queries": [f"{cancer_type} completed trial results"] + drug_queries,
                 "completion_criteria": f"列出 {cancer_type} 相关已结束试验及结果摘要"
             },
             {
@@ -1647,15 +1647,15 @@ class PlanAgent(BaseAgent):
             f"{cancer_type} integrative therapy systematic review",
             f"{cancer_type} complementary medicine evidence",
         ]
-        for gene in genes[:3]:
+        for gene in genes:
             queries.append(f"{gene} mutation supportive care cancer")
-        for drug in drugs[:3]:
+        for drug in drugs:
             queries.append(f"{drug} complementary therapy interaction")
             queries.append(f"{drug} supportive care adjunct")
         pharmacist_report = state.get("pharmacist_report", "")
-        for kw in self._extract_comorbidity_keywords(pharmacist_report)[:2]:
+        for kw in self._extract_comorbidity_keywords(pharmacist_report):
             queries.append(f"{kw} cancer supportive therapy")
-        return queries[:8]
+        return queries
 
     def _extract_comorbidity_keywords(self, pharmacist_report: str) -> list:
         """Extract key comorbidity terms from pharmacist report for PubMed query construction."""
@@ -1698,8 +1698,8 @@ class PlanAgent(BaseAgent):
             f"**患者概要**: {case_summary}\n"
             f"**关键药物**: {json.dumps(key_entities.get('drugs_mentioned', []), ensure_ascii=False)}\n"
             f"**关键基因**: {json.dumps(key_entities.get('genes', []), ensure_ascii=False)}\n"
-            f"**Oncologist Mapping 摘要（前2000字）**: {oncologist_mapping[:2000]}\n"
-            f"**药师基线报告摘要（前1000字）**: {pharmacist_baseline[:1000]}\n\n"
+            f"**Oncologist Mapping 摘要**: {oncologist_mapping}\n"
+            f"**药师基线报告**: {pharmacist_baseline}\n\n"
             "请严格按以下 JSON 格式输出，定制 3 个方向的内容：\n"
             "```json\n"
             '{"directions": [\n'
@@ -1821,8 +1821,8 @@ class PlanAgent(BaseAgent):
             f"**关键药物**: {json.dumps(key_entities.get('drugs_mentioned', []), ensure_ascii=False)}\n"
             f"**关键基因**: {json.dumps(key_entities.get('genes', []), ensure_ascii=False)}\n"
             f"**关键变异**: {json.dumps(key_entities.get('variants', []), ensure_ascii=False)}\n"
-            f"**Mapping 摘要（前2000字）**: {oncologist_mapping[:2000]}\n"
-            f"**药学审查摘要（前1500字）**: {pharmacist_review[:1500]}\n\n"
+            f"**Mapping 摘要**: {oncologist_mapping}\n"
+            f"**药学审查摘要**: {pharmacist_review}\n\n"
             "请严格按以下 JSON 格式输出，定制 3 个方向的内容：\n"
             "```json\n"
             '{"directions": [\n'
