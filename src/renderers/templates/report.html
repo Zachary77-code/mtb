@@ -800,11 +800,20 @@
   </div>
 
   {% if cytoscape_data %}
+  <script id="eg-cytoscape-data" type="application/json">{{ cytoscape_data | safe }}</script>
   <script src="{{ cytoscape_cdn_url }}"></script>
   <script>
   (function() {
     'use strict';
-    var GRAPH_DATA = {{ cytoscape_data | safe }};
+    var rawGraphData = document.getElementById('eg-cytoscape-data');
+    var GRAPH_DATA = {elements: {nodes: [], edges: []}};
+    if (rawGraphData && rawGraphData.textContent) {
+      try {
+        GRAPH_DATA = JSON.parse(rawGraphData.textContent);
+      } catch (e) {
+        console.error('Failed to parse cytoscape graph data:', e);
+      }
+    }
 
     // Color maps
     var TYPE_COLORS = {
