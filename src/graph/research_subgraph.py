@@ -57,6 +57,41 @@ from config.settings import (
 import re
 
 
+# Phase-aware state key 映射，必须与 src/models/state.py 中的 MtbState TypedDict 一致
+AGENT_RESULT_KEY_MAP = {
+    "PHASE1": {
+        "Pathologist": "pathologist_research_result",
+        "Geneticist": "geneticist_research_result",
+        "Pharmacist": "pharmacist_research_result",
+        "Oncologist": "oncologist_analysis_research_result",
+    },
+    "PHASE2A": {
+        "Oncologist": "oncologist_mapping_research_result",
+        "LocalTherapist": "local_therapist_research_result",
+        "Recruiter": "recruiter_research_result",
+        "Nutritionist": "nutritionist_research_result",
+        "IntegrativeMed": "integrative_med_research_result",
+    },
+    "PHASE2B": {
+        "Pharmacist": "pharmacist_review_research_result",
+    },
+    "PHASE3": {
+        "Oncologist": "oncologist_research_result",
+    },
+}
+
+# converged key 映射（同样必须与 MtbState 一致）
+AGENT_CONVERGED_KEY_MAP = {
+    "PHASE2A": {
+        "Oncologist": "oncologist_mapping_converged",
+        "LocalTherapist": "local_therapist_converged",
+        "Recruiter": "recruiter_converged",
+        "Nutritionist": "nutritionist_converged",
+        "IntegrativeMed": "integrative_med_converged",
+    },
+}
+
+
 # ==================== iteration_feedback 辅助函数 ====================
 
 def _build_iteration_feedback(state: MtbState) -> str:
@@ -938,7 +973,7 @@ def _save_detailed_iteration_report(
     lines.append("")
 
     for agent_name in agent_names:
-        result_key = f"{agent_name.lower()}_research_result"
+        result_key = AGENT_RESULT_KEY_MAP.get(phase, {}).get(agent_name, f"{agent_name.lower()}_research_result")
         agent_result = state.get(result_key, {})
         tool_records = agent_result.get("tool_call_records", [])
 
@@ -1827,7 +1862,7 @@ def _execute_phase1_agent(state: MtbState, agent_name: str, agent_class) -> Dict
     # 收敛判断已移至 PlanAgent (plan_agent_evaluate_phase1)
     return_dict = {
         "evidence_graph": result.get("evidence_graph", evidence_graph),
-        f"{agent_name.lower()}_research_result": result,
+        AGENT_RESULT_KEY_MAP["PHASE1"].get(agent_name, f"{agent_name.lower()}_research_result"): result,
     }
     # 如果有更新的研究计划，也返回
     if result.get("research_plan"):
@@ -2136,9 +2171,7 @@ def _execute_phase2a_agent(state: MtbState, agent_name: str, agent_class, phase_
     tag = f"PHASE2A_{agent_name.upper()}"
     logger.info(f"[{tag}] ───────────────────────────────────────")
 
-    converged_key = f"{agent_name.lower().replace(' ', '_')}_converged"
-    if agent_name == "Oncologist":
-        converged_key = "oncologist_mapping_converged"
+    converged_key = AGENT_CONVERGED_KEY_MAP["PHASE2A"][agent_name]
     if state.get(converged_key, False):
         logger.info(f"[{tag}] 已收敛，跳过执行")
         return {}
@@ -2201,9 +2234,7 @@ Phase 1 报告:
     new_entity_ids = result.get("new_entity_ids", [])
     logger.info(f"[{tag}] 完成, 新证据: {len(new_entity_ids)}")
 
-    result_key = f"{agent_name.lower().replace(' ', '_')}_research_result"
-    if agent_name == "Oncologist":
-        result_key = "oncologist_mapping_research_result"
+    result_key = AGENT_RESULT_KEY_MAP["PHASE2A"][agent_name]
 
     return_dict = {
         "evidence_graph": result.get("evidence_graph", evidence_graph),
