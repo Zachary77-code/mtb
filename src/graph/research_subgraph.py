@@ -1347,6 +1347,72 @@ def _format_hypotheses_for_report(state: MtbState, agent_name: str) -> str:
     return "\n".join(lines)
 
 
+def _build_report_phase_context(
+    state: MtbState,
+    phase_tag: str,
+    agent_name: str,
+    report_key: str
+) -> Dict[str, Any]:
+    """构建报告生成阶段的 phase_context，传给 Report Agent 约束输出模式。"""
+    phase_meta = {
+        "PHASE1_REPORTS": {
+            "current_phase": "phase_1",
+            "phase_description": "信息提取",
+            "iteration_key": "phase1_iteration",
+            "max_iterations": MAX_PHASE1_ITERATIONS,
+        },
+        "PHASE2A_REPORTS": {
+            "current_phase": "phase_2a",
+            "phase_description": "治疗Mapping",
+            "iteration_key": "phase2a_iteration",
+            "max_iterations": MAX_PHASE2A_ITERATIONS,
+        },
+        "PHASE2B_REPORTS": {
+            "current_phase": "phase_2b",
+            "phase_description": "药学审查",
+            "iteration_key": "phase2b_iteration",
+            "max_iterations": MAX_PHASE2B_ITERATIONS,
+        },
+        "PHASE3_REPORTS": {
+            "current_phase": "phase_3",
+            "phase_description": "方案整合",
+            "iteration_key": "phase3_iteration",
+            "max_iterations": MAX_PHASE3_ITERATIONS,
+        },
+    }
+
+    mode_map = {
+        ("PHASE1_REPORTS", "Oncologist"): ("analysis", "过往治疗分析与当前方案合理性评价（仅分析不制定方案）"),
+        ("PHASE2A_REPORTS", "Oncologist"): ("mapping", "全身治疗手段Mapping，只罗列分析不做推荐"),
+        ("PHASE3_REPORTS", "Oncologist"): ("integration", "治疗方案整合与L1-L5证据分层"),
+        ("PHASE2B_REPORTS", "Pharmacist"): ("review", "药学审查：相互作用/剂量调整/禁忌标注"),
+        ("PHASE1_REPORTS", "Pharmacist"): ("research", "合并症/用药清单/过敏史/器官功能基线分析"),
+        ("PHASE2A_REPORTS", "LocalTherapist"): ("research", "局部治疗手段评估（手术/放疗/介入）"),
+        ("PHASE2A_REPORTS", "Recruiter"): ("research", "临床试验匹配与可入组性评估"),
+        ("PHASE2A_REPORTS", "Nutritionist"): ("research", "营养风险评估与支持方案"),
+        ("PHASE2A_REPORTS", "IntegrativeMed"): ("research", "替代与支持疗法证据评估"),
+        ("PHASE1_REPORTS", "Pathologist"): ("research", "病理/分期/影像与治疗史信息提取"),
+        ("PHASE1_REPORTS", "Geneticist"): ("research", "分子图谱解读与耐药机制分析"),
+    }
+
+    meta = phase_meta.get(phase_tag, {})
+    iteration_key = meta.get("iteration_key", "")
+    current_iteration = state.get(iteration_key, 0) if iteration_key else 0
+    agent_mode, agent_role_in_phase = mode_map.get((phase_tag, agent_name), ("research", "领域证据整合分析"))
+
+    return {
+        "current_phase": meta.get("current_phase", "unknown"),
+        "phase_description": meta.get("phase_description", ""),
+        "current_iteration": current_iteration,
+        "max_iterations": meta.get("max_iterations", 0),
+        "agent_mode": agent_mode,
+        "agent_role_in_phase": agent_role_in_phase,
+        "output_format": "markdown_report",
+        "report_stage": "phase_report_generation",
+        "report_key": report_key,
+    }
+
+
 def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
     """
     Phase 1 收敛后，各专家基于 evidence_graph 生成领域综合报告
@@ -1394,9 +1460,15 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
 
         # 构建完整证据表格（结构化表格，确保不遗漏）
         evidence_table = _format_evidence_table(agent_entities, agent_edges, agent_name)
+        phase_context = _build_report_phase_context(state, "PHASE1_REPORTS", agent_name, report_key)
 
         # 构建报告生成 prompt
         report_prompt = f"""基于以下病例信息和已收集的研究证据，生成你的专业领域综合报告。
+
+## 阶段上下文 [Phase Context]
+```json
+{json.dumps(phase_context, ensure_ascii=False, indent=2)}
+```
 
 ## 病例背景
 {raw_pdf_text}
@@ -1419,12 +1491,13 @@ def generate_phase1_reports(state: MtbState) -> Dict[str, Any]:
 3. 每条建议必须标注证据等级 `[Evidence A/B/C/D/E]`，且紧邻相关引用
 4. 重点突出对治疗决策有指导意义的发现
 5. 不要在报告中生成证据清单表格，系统会自动追加完整的 Evidence Graph 证据清单
+6. 必须严格遵循 phase_context.agent_mode 对应模式，禁止跨阶段输出（例如 analysis 模式下禁止制定治疗方案）
 """
 
         try:
             # 实例化 Agent 并调用
             agent = agent_class()
-            response = agent.invoke(report_prompt)
+            response = agent.invoke(report_prompt, context={"phase_context": phase_context})
 
             if response and response.get("output"):
                 report = response["output"]
@@ -1522,6 +1595,7 @@ def _generate_phase_reports(state: MtbState, agent_configs: list, phase_tag: str
 
         evidence_summary = _format_evidence_for_report(agent_entities, agent_name)
         evidence_table = _format_evidence_table(agent_entities, agent_edges, agent_name)
+        phase_context = _build_report_phase_context(state, phase_tag, agent_name, report_key)
 
         # 收集所有已有报告作为上游参考
         upstream_reports = []
@@ -1537,6 +1611,11 @@ def _generate_phase_reports(state: MtbState, agent_configs: list, phase_tag: str
         upstream_text = "\n\n".join(upstream_reports) if upstream_reports else "暂无"
 
         report_prompt = f"""基于以下病例信息、上游专家报告和已收集的研究证据，生成你的专业领域综合报告。
+
+## 阶段上下文 [Phase Context]
+```json
+{json.dumps(phase_context, ensure_ascii=False, indent=2)}
+```
 
 ## 病例背景
 {raw_pdf_text}
@@ -1561,11 +1640,12 @@ def _generate_phase_reports(state: MtbState, agent_configs: list, phase_tag: str
 3. 每条建议必须标注证据等级 `[Evidence A/B/C/D/E]`，且紧邻相关引用
 4. 重点突出对治疗决策有指导意义的发现
 5. 不要在报告中生成证据清单表格，系统会自动追加完整的 Evidence Graph 证据清单
+6. 必须严格遵循 phase_context.agent_mode 对应模式，禁止跨阶段输出（例如 analysis/mapping 模式下禁止制定治疗方案）
 """
 
         try:
             agent = agent_class()
-            response = agent.invoke(report_prompt)
+            response = agent.invoke(report_prompt, context={"phase_context": phase_context})
 
             if response and response.get("output"):
                 report = response["output"]
