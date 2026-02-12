@@ -61,7 +61,7 @@ MAX_RETRY_ITERATIONS = int(os.getenv("MAX_RETRY_ITERATIONS", "2"))
 
 # ==================== DeepEvidence 模型配置 ====================
 # Subgraph 内 Agent 使用 flash 模型（Pathologist, Geneticist, Recruiter, Oncologist）
-SUBGRAPH_MODEL = os.getenv("SUBGRAPH_MODEL", "x-ai/grok-4.1-fast")
+SUBGRAPH_MODEL = os.getenv("SUBGRAPH_MODEL", "google/gemini-3-flash-preview")
 # 编排 Agent 使用 pro 模型（PlanAgent）
 ORCHESTRATOR_MODEL = os.getenv("ORCHESTRATOR_MODEL", "google/gemini-3-pro-preview")
 # 收敛判断 Agent 使用 pro 模型（ConvergenceJudgeAgent）

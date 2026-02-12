@@ -1474,7 +1474,7 @@ class PlanAgent(BaseAgent):
             "2. LocalTherapist: 手术评估(根治/姑息) + 放疗方案(普通/SBRT/质子/BNCT) + 介入治疗(消融/粒子/HIFU)\n"
             "3. Recruiter: 临床试验(c有试验可入组 + d无试验但临床阶段)，含已结束试验及结果\n"
             "4. Nutritionist: 营养状态评估 + 癌种饮食建议 + 治疗期营养管理\n"
-            "5. IntegrativeMed: 替代疗法逐一评估(吸氢/大剂量VC/中医/免疫调节等)\n\n"
+            "5. IntegrativeMed: 基于患者病情动态探索替代/支持疗法(常见CAM (complementary and alternative therapies) 品类仅为参考，按患者相关性评估)\n\n"
             "**CRITICAL - target_modules 必须使用以下确切名称**:\n"
             "| Agent | target_modules |\n"
             "|-------|----------------|\n"
@@ -1618,14 +1618,63 @@ class PlanAgent(BaseAgent):
             },
             {
                 "id": "D_ALTERNATIVE",
-                "topic": f"{cancer_type} 替代疗法评估",
+                "topic": f"{cancer_type} 患者特异性替代/支持疗法探索"
+                         + (f" ({key_genes})" if key_genes else ""),
                 "target_agent": "IntegrativeMed",
                 "target_modules": ["整体与辅助支持"],
                 "priority": 3,
-                "queries": [f"{cancer_type} complementary therapy", "integrative oncology", "traditional Chinese medicine cancer"],
-                "completion_criteria": f"完成 {cancer_type} 每种替代疗法（吸氢/大剂量VC/中医/免疫调节）的逐一评估"
+                "queries": self._build_dynamic_integrative_queries(
+                    cancer_type, genes, drugs, state
+                ),
+                "completion_criteria": (
+                    f"基于 {cancer_type} 的患者特征"
+                    + (f"（突变: {key_genes}）" if key_genes else "")
+                    + "，搜索并评估相关的补充/替代/支持疗法，"
+                    + "每项疗法含机制、证据、风险和冲突评估"
+                )
             },
         ]
+
+    def _build_dynamic_integrative_queries(
+        self,
+        cancer_type: str,
+        genes: list,
+        drugs: list,
+        state: Dict[str, Any]
+    ) -> list:
+        """Build patient-specific PubMed queries for dynamic integrative medicine discovery."""
+        queries = [
+            f"{cancer_type} integrative therapy systematic review",
+            f"{cancer_type} complementary medicine evidence",
+        ]
+        for gene in genes[:3]:
+            queries.append(f"{gene} mutation supportive care cancer")
+        for drug in drugs[:3]:
+            queries.append(f"{drug} complementary therapy interaction")
+            queries.append(f"{drug} supportive care adjunct")
+        pharmacist_report = state.get("pharmacist_report", "")
+        for kw in self._extract_comorbidity_keywords(pharmacist_report)[:2]:
+            queries.append(f"{kw} cancer supportive therapy")
+        return queries[:8]
+
+    def _extract_comorbidity_keywords(self, pharmacist_report: str) -> list:
+        """Extract key comorbidity terms from pharmacist report for PubMed query construction."""
+        import re
+        keywords = []
+        patterns_map = {
+            r'糖尿病|diabetes': 'diabetes',
+            r'高血压|hypertension': 'hypertension',
+            r'肾功能不全|renal\s+impairment|CrCl': 'renal impairment',
+            r'肝功能[异不]|hepatic\s+impairment': 'hepatic impairment',
+            r'心[脏功][功能]|cardiac': 'cardiac',
+            r'贫血|anemia': 'anemia',
+            r'甲状腺|thyroid': 'thyroid',
+            r'骨质疏松|osteoporosis': 'osteoporosis',
+        }
+        for pattern, english_term in patterns_map.items():
+            if re.search(pattern, pharmacist_report, re.IGNORECASE):
+                keywords.append(english_term)
+        return keywords
 
     def generate_phase2b_directions(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
