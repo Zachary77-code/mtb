@@ -423,20 +423,14 @@ class HtmlReportGenerator:
 
         # 为标题分配 ID 并生成目录
         html_content, heading_ids = self._assign_heading_ids(html_content)
-        toc_html = self._generate_toc(heading_ids)
 
         # 生成 Agent 报告附录
         agent_appendix_html = ""
+        agent_heading_ids = []
         if agent_reports:
-            agent_appendix_html = self._render_agent_reports_appendix(agent_reports)
+            agent_appendix_html, agent_heading_ids = self._render_agent_reports_appendix(agent_reports)
 
-        # 提取警告
-        warnings = self._extract_warnings(chair_synthesis)
-
-        # 从原始文本提取患者信息
-        patient_id, cancer_type = self._extract_patient_info(raw_pdf_text, chair_synthesis)
-
-        # 构建 Cytoscape.js 可视化数据
+        # 构建 Cytoscape.js 可视化数据（提前到 TOC 生成之前，以便加入目录）
         cytoscape_json = None
         if evidence_graph_data and isinstance(evidence_graph_data, dict):
             try:
@@ -446,6 +440,21 @@ class HtmlReportGenerator:
                     cytoscape_json = graph.to_cytoscape_json()
             except Exception as e:
                 logger.warning(f"[HTML] Cytoscape 数据生成失败: {e}")
+
+        # 补充附录C（含各 agent 子目录）和 Evidence Graph 到目录
+        if agent_reports:
+            heading_ids.append((2, "agent-appendix", "附录C. Agent 原始报告"))
+            heading_ids.extend(agent_heading_ids)
+        if cytoscape_json:
+            heading_ids.append((2, "evidence-graph-section", "Evidence Graph"))
+
+        toc_html = self._generate_toc(heading_ids)
+
+        # 提取警告
+        warnings = self._extract_warnings(chair_synthesis)
+
+        # 从原始文本提取患者信息
+        patient_id, cancer_type = self._extract_patient_info(raw_pdf_text, chair_synthesis)
 
         # 准备上下文
         context = {
@@ -500,8 +509,9 @@ class HtmlReportGenerator:
         4. 恢复自定义块 HTML
         5. 解析 [[ref:...]] 内联引用（在 markdown 转换之后，避免生成的 HTML 干扰表格解析）
         """
-        # 0. 移除末尾 ## References 部分（已有内联 tooltip 引用，末尾列表冗余）
-        md_text = re.sub(r'\n---\s*\n##\s*References\s*\n.*', '', md_text, flags=re.DOTALL)
+        # 0. 移除 ## References 部分（已有内联 tooltip 引用，末尾列表冗余）
+        #    使用非贪婪匹配 + 前瞻，仅移除到下一个 ## 标题或文末，避免吞噬后续附录
+        md_text = re.sub(r'\n---\s*\n##\s*References\s*\n.*?(?=\n##\s|\Z)', '', md_text, flags=re.DOTALL)
 
         # 1. 解析自定义块标记，输出的 HTML 用占位符保护
         #    防止 _inject_markdown_attr_to_divs 和 markdown 处理器破坏已渲染的 HTML
@@ -1328,7 +1338,7 @@ class HtmlReportGenerator:
         html += '</ul></nav>'
         return html
 
-    def _render_agent_reports_appendix(self, agent_reports: Dict[str, str]) -> str:
+    def _render_agent_reports_appendix(self, agent_reports: Dict[str, str]) -> tuple:
         """
         将 Agent 报告渲染为 HTML 附录。
 
@@ -1336,10 +1346,10 @@ class HtmlReportGenerator:
             agent_reports: {display_name: markdown_text}
 
         Returns:
-            HTML string for agent reports appendix
+            (html_string, agent_heading_ids): HTML 附录内容 + agent 标题列表用于 TOC
         """
         if not agent_reports:
-            return ""
+            return "", []
 
         # 按预定义顺序排列
         ordered_names = [
@@ -1354,34 +1364,34 @@ class HtmlReportGenerator:
         html = '<div class="agent-appendix">'
         html += '<h2 id="agent-appendix">附录C. Agent 原始报告</h2>'
 
-        for name in ordered_names:
-            md_text = agent_reports.get(name)
-            if not md_text:
-                continue
-            # Convert markdown to HTML (simple, no custom block parsing)
+        agent_heading_ids = []
+
+        def _render_agent(name, md_text):
+            nonlocal html
+            agent_id = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
             agent_html = markdown.markdown(
                 md_text,
                 extensions=['tables', 'fenced_code', 'sane_lists']
             )
             html += f'<div class="agent-report-section">'
-            html += f'<h3 class="agent-report-title">{name}</h3>'
+            html += f'<h3 id="agent-{agent_id}" class="agent-report-title">{name}</h3>'
             html += f'<div class="agent-report-content">{agent_html}</div>'
             html += '</div>'
+            agent_heading_ids.append((3, f"agent-{agent_id}", name))
+
+        for name in ordered_names:
+            md_text = agent_reports.get(name)
+            if not md_text:
+                continue
+            _render_agent(name, md_text)
 
         # Also render any reports not in the ordered list
         for name, md_text in agent_reports.items():
             if name not in ordered_names and md_text:
-                agent_html = markdown.markdown(
-                    md_text,
-                    extensions=['tables', 'fenced_code', 'sane_lists']
-                )
-                html += f'<div class="agent-report-section">'
-                html += f'<h3 class="agent-report-title">{name}</h3>'
-                html += f'<div class="agent-report-content">{agent_html}</div>'
-                html += '</div>'
+                _render_agent(name, md_text)
 
         html += '</div>'
-        return html
+        return html, agent_heading_ids
 
     def _add_evidence_tags(self, html: str) -> str:
         """添加证据等级标签 (CIViC A-E + L1-L5)"""

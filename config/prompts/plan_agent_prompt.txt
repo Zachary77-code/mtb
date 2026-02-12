@@ -243,8 +243,8 @@ Output strictly in JSON format to ensure programmatic parsing:
 | **4. 整体与辅助支持** (Nutrition / Alternative therapies) | Phase 2a |
 | **5. 复查和追踪方案** (Routine follow-up / Molecular retest) | Phase 1 + 3 |
 | **6. 核心建议汇总** | Chair |
-| **附录A** 完整证据引用列表 | Auto-generated |
-| **附录B** 证据等级说明 (including L1-L5) | Fixed content |
+| **附录A** 证据等级说明 (including L1-L5) | Chair-generated |
+| **附录B** 完整证据引用列表 | Auto-generated |
 
 ### Research Direction Customization Requirements (Important)
 

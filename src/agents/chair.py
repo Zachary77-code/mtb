@@ -1,6 +1,7 @@
 """
 Chair Agent（MTB 主席）
 """
+import re
 from typing import Dict, Any, List, Optional
 
 from src.agents.base_agent import BaseAgent
@@ -66,7 +67,7 @@ class ChairAgent(BaseAgent):
             Markdown 格式的完整证据引用列表
         """
         if not evidence_graph or not evidence_graph.entities:
-            return "\n\n---\n\n## 12. 完整证据引用列表\n\n暂无证据数据。\n"
+            return "\n\n---\n\n## 附录B. 完整证据引用列表\n\n暂无证据数据。\n"
 
         # 1. 收集所有 observations（entity + edge）
         all_obs = []
@@ -91,7 +92,7 @@ class ChairAgent(BaseAgent):
         # 4. 生成 markdown 表格
         lines = [
             "\n\n---\n",
-            "## 12. 完整证据引用列表\n",
+            "## 附录B. 完整证据引用列表\n",
             f"以下为本次分析中收集的全部证据（共 {len(unique_obs)} 条，按证据等级排序）：\n",
             "| 证据陈述 | # | 证据等级 | 来源Agent | 链接 |",
             "|----------|---|----------|-----------|------|",
@@ -585,8 +586,8 @@ class ChairAgent(BaseAgent):
 4. 第4章"整体与辅助支持": 4.1 来自 nutritionist; 4.2 来自 integrative_med
 5. 第5章"复查和追踪方案": 5.1+5.2 来自 Phase3 integration + geneticist 初稿
 6. 第6章"核心建议汇总": Chair 综合
-7. 附录A"完整证据引用列表": 由系统自动生成，你不需要生成
-8. 附录B"证据等级说明": 包含 CIViC A-E + L1-L5 说明
+7. 附录A"证据等级说明": 包含 CIViC A-E + L1-L5 说明
+8. 附录B"完整证据引用列表": 由系统自动生成，你不需要生成
 
 **关键要求**:
 - 保留 Phase 3 的 L1-L5 证据分层标注，不修改
@@ -601,9 +602,19 @@ class ChairAgent(BaseAgent):
 
         result = self.invoke(task_prompt)
 
-        # 程序化生成附录A（完整证据引用列表）
+        # 程序化生成附录B（完整证据引用列表）
         evidence_list = self._generate_evidence_reference_list(evidence_graph)
-        output_with_evidence = result["output"] + evidence_list
+
+        # 删除 LLM 可能生成的附录B（系统将用程序化版本替代）
+        output_text = result["output"]
+        output_text = re.sub(
+            r'\n---\n*\s*##\s*附录\s*B\.?\s*完整证据引用列表.*?(?=\n---\n|\n##\s|\Z)',
+            '',
+            output_text,
+            flags=re.DOTALL
+        )
+
+        output_with_evidence = output_text + evidence_list
 
         full_report = self.generate_full_report(
             main_content=output_with_evidence,

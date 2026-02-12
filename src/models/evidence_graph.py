@@ -1813,9 +1813,12 @@ def create_evidence_graph() -> EvidenceGraph:
 
 
 def load_evidence_graph(data: Dict[str, Any]) -> EvidenceGraph:
-    """从字典加载证据图"""
+    """从字典加载证据图（支持 {"graph": {...}} 嵌套格式）"""
     if not data:
         return EvidenceGraph()
+    # 兼容 {"metadata":..., "graph": {"entities":..., "edges":...}} 格式
+    if "graph" in data and "entities" not in data:
+        data = data["graph"]
     return EvidenceGraph.from_dict(data)
 
 

@@ -220,8 +220,8 @@ Global evidence graph uses DeepEvidence paper's entity-centric architecture ([sr
 | **4. 整体与辅助支持** | 4.1营养, 4.2替代疗法 | Nutritionist P2a, IntegrativeMed P2a |
 | **5. 复查和追踪方案** | 5.1常规复查To-Do, 5.2分子复查 | Geneticist P1 + Oncologist P3 |
 | **6. 核心建议汇总** | Exec summary + recommendations | Chair synthesis |
-| **附录A** | 完整证据引用列表 | Auto-generated from EvidenceGraph |
-| **附录B** | 证据等级说明 (CIViC A-E + L1-L5) | Fixed content |
+| **附录A** | 证据等级说明 (CIViC A-E + L1-L5) | Chair-generated |
+| **附录B** | 完整证据引用列表 | Auto-generated from EvidenceGraph |
 | **附录C** | Agent 原始报告 | HTML appendix (all 11 reports) |
 
 ### Report Validation
