@@ -1307,10 +1307,10 @@ class EvidenceGraph:
     # ==================== 统计与摘要 ====================
 
     def summary(self) -> Dict[str, Any]:
-        """返回图摘要信息"""
+        """返回图摘要信息（按 obs.id 去重，同一 observation 可能出现在多个 entity/edge 上）"""
         entity_by_type: Dict[str, int] = {}
         entity_by_source: Dict[str, int] = {}
-        observations_count = 0
+        seen_obs_ids: set = set()
         best_grades: Dict[str, int] = {}
         evidence_types: Dict[str, int] = {}
 
@@ -1323,12 +1323,14 @@ class EvidenceGraph:
             source = entity.id.split("_")[0] if "_" in entity.id else "unknown"
             entity_by_source[source] = entity_by_source.get(source, 0) + 1
 
-            # 观察数量 + 证据类型统计
-            observations_count += len(entity.observations)
+            # 观察数量 + 证据类型统计（按 obs.id 去重）
             for obs in entity.observations:
-                if obs.evidence_type:
-                    et = obs.evidence_type.value
-                    evidence_types[et] = evidence_types.get(et, 0) + 1
+                obs_id = getattr(obs, 'id', None)
+                if obs_id and obs_id not in seen_obs_ids:
+                    seen_obs_ids.add(obs_id)
+                    if obs.evidence_type:
+                        et = obs.evidence_type.value
+                        evidence_types[et] = evidence_types.get(et, 0) + 1
 
             # 最佳等级
             best = entity.get_best_grade()
@@ -1336,24 +1338,25 @@ class EvidenceGraph:
                 best_grades[best.value] = best_grades.get(best.value, 0) + 1
 
         edge_by_predicate: Dict[str, int] = {}
-        edge_observations_count = 0
         conflicts_count = 0
 
         for edge in self.edges.values():
             p = edge.predicate.value
             edge_by_predicate[p] = edge_by_predicate.get(p, 0) + 1
-            edge_observations_count += len(edge.observations)
             for obs in edge.observations:
-                if obs.evidence_type:
-                    et = obs.evidence_type.value
-                    evidence_types[et] = evidence_types.get(et, 0) + 1
+                obs_id = getattr(obs, 'id', None)
+                if obs_id and obs_id not in seen_obs_ids:
+                    seen_obs_ids.add(obs_id)
+                    if obs.evidence_type:
+                        et = obs.evidence_type.value
+                        evidence_types[et] = evidence_types.get(et, 0) + 1
             if edge.conflict_group:
                 conflicts_count += 1
 
         return {
             "total_entities": len(self.entities),
             "total_edges": len(self.edges),
-            "total_observations": observations_count + edge_observations_count,
+            "total_observations": len(seen_obs_ids),
             "entities_by_type": entity_by_type,
             "entities_by_source": entity_by_source,
             "edges_by_predicate": edge_by_predicate,
@@ -1468,10 +1471,10 @@ class EvidenceGraph:
 
     def summary_by_agent(self) -> Dict[str, Dict[str, Any]]:
         """
-        按 Agent 统计观察
+        按 Agent 统计观察（按 obs.id 去重，同一 observation 可能出现在多个 entity/edge 上）
 
         Returns:
-            {agent_name: {observation_count, entity_count, edge_count, grades}}
+            {agent_name: {observation_count, entity_count, grades}}
         """
         agent_stats: Dict[str, Dict[str, Any]] = {}
 
@@ -1480,35 +1483,39 @@ class EvidenceGraph:
                 agent = obs.source_agent
                 if agent not in agent_stats:
                     agent_stats[agent] = {
-                        "observation_count": 0,
+                        "seen_obs_ids": set(),
                         "entity_ids": set(),
                         "grades": {}
                     }
-                agent_stats[agent]["observation_count"] += 1
+                obs_id = getattr(obs, 'id', None)
+                if obs_id and obs_id not in agent_stats[agent]["seen_obs_ids"]:
+                    agent_stats[agent]["seen_obs_ids"].add(obs_id)
+                    if obs.evidence_grade:
+                        g = obs.evidence_grade.value
+                        agent_stats[agent]["grades"][g] = agent_stats[agent]["grades"].get(g, 0) + 1
                 agent_stats[agent]["entity_ids"].add(entity.canonical_id)
-                if obs.evidence_grade:
-                    g = obs.evidence_grade.value
-                    agent_stats[agent]["grades"][g] = agent_stats[agent]["grades"].get(g, 0) + 1
 
         for edge in self.edges.values():
             for obs in edge.observations:
                 agent = obs.source_agent
                 if agent not in agent_stats:
                     agent_stats[agent] = {
-                        "observation_count": 0,
+                        "seen_obs_ids": set(),
                         "entity_ids": set(),
                         "grades": {}
                     }
-                agent_stats[agent]["observation_count"] += 1
-                if obs.evidence_grade:
-                    g = obs.evidence_grade.value
-                    agent_stats[agent]["grades"][g] = agent_stats[agent]["grades"].get(g, 0) + 1
+                obs_id = getattr(obs, 'id', None)
+                if obs_id and obs_id not in agent_stats[agent]["seen_obs_ids"]:
+                    agent_stats[agent]["seen_obs_ids"].add(obs_id)
+                    if obs.evidence_grade:
+                        g = obs.evidence_grade.value
+                        agent_stats[agent]["grades"][g] = agent_stats[agent]["grades"].get(g, 0) + 1
 
         # Convert sets to counts
         result = {}
         for agent, stats in agent_stats.items():
             result[agent] = {
-                "observation_count": stats["observation_count"],
+                "observation_count": len(stats["seen_obs_ids"]),
                 "entity_count": len(stats["entity_ids"]),
                 "grades": stats["grades"]
             }

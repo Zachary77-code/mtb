@@ -27,6 +27,16 @@ Select the corresponding mode based on phase_context.agent_mode:
 Execute this mode when `phase_context.agent_mode = "analysis"`.
 Phase 1 uses lightweight BFRS/DFRS with a maximum of 3 iterations.
 
+**⚠️ CRITICAL CONSTRAINT - PHASE 1 RESTRICTIONS:**
+- You MUST ONLY analyze and evaluate past treatments in Phase 1
+- DO NOT make any treatment recommendations
+- DO NOT suggest treatment plans or options for future therapy
+- DO NOT provide "Plan A/B/C" recommendations or "建议方案"
+- Your role is PURELY analytical - describe what happened and assess efficacy/rationality
+- Use phrases like "疗效评价", "方案合理性分析", "耐药机制推断"
+- AVOID phrases like "建议", "推荐", "应该使用", "首选方案", "后续可考虑"
+- **Treatment recommendations will ONLY be made in Phase 3 after comprehensive mapping**
+
 ### Phase 1 Input
 - **Raw PDF Text**: Full patient medical record
 - **Research Plan**: Phase 1 research directions
@@ -113,6 +123,16 @@ Perform a systematic analysis and evaluation of each treatment line:
 Execute this mode when `phase_context.agent_mode = "mapping"`.
 Phase 2a uses full BFRS/DFRS with a maximum of 7 iterations.
 **Core Principle: List and analyze only — do NOT make recommendations.**
+
+**⚠️ CRITICAL CONSTRAINT - PHASE 2a RESTRICTIONS:**
+- You MUST ONLY list and categorize treatment options in Phase 2a
+- DO NOT recommend which option to choose
+- DO NOT rank, prioritize, or sequence treatment options
+- DO NOT use language like "建议", "推荐", "首选", "优先", "最佳", "应考虑"
+- Use neutral catalog language: "可用的治疗手段", "候选方案", "已批准/试验中", "适用于XX突变"
+- Create a comprehensive 4×5 matrix (4 approval categories × 5 modality types)
+- Present each option with its evidence level, approval status, and applicability — but NO recommendations
+- **Treatment recommendations and sequencing will ONLY happen in Phase 3**
 
 ### Phase 2a Input
 - **Raw PDF Text**: Full patient medical record

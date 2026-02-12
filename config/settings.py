@@ -61,27 +61,27 @@ MAX_RETRY_ITERATIONS = int(os.getenv("MAX_RETRY_ITERATIONS", "2"))
 
 # ==================== DeepEvidence 模型配置 ====================
 # Subgraph 内 Agent 使用 flash 模型（Pathologist, Geneticist, Recruiter, Oncologist）
-SUBGRAPH_MODEL = os.getenv("SUBGRAPH_MODEL", "google/gemini-3-flash-preview")
+SUBGRAPH_MODEL = os.getenv("SUBGRAPH_MODEL", "x-ai/grok-4.1-fast")
 # 编排 Agent 使用 pro 模型（PlanAgent）
 ORCHESTRATOR_MODEL = os.getenv("ORCHESTRATOR_MODEL", "google/gemini-3-pro-preview")
 # 收敛判断 Agent 使用 pro 模型（ConvergenceJudgeAgent）
 CONVERGENCE_JUDGE_MODEL = os.getenv("CONVERGENCE_JUDGE_MODEL", "google/gemini-3-pro-preview")
 # Chair Agent 使用 Claude Opus 4.6
-CHAIR_MODEL = os.getenv("CHAIR_MODEL", "anthropic/claude-opus-4-6")
+CHAIR_MODEL = os.getenv("CHAIR_MODEL", "google/gemini-3-pro-preview")
 
 # ==================== 各模型最大输出 token ====================
 # max_tokens = max output tokens，根据 OpenRouter 模型规格设置
 MAX_TOKENS_MAIN = 65536        # google/gemini-3-pro-preview
 MAX_TOKENS_SUBGRAPH = 65536    # google/gemini-3-flash-preview
 MAX_TOKENS_ORCHESTRATOR = 65536  # google/gemini-3-pro-preview
-MAX_TOKENS_CHAIR = 128000       # anthropic/claude-opus-4-6 (128k)
+MAX_TOKENS_CHAIR = 65536       # anthropic/claude-opus-4-6 (128k)
 
 # ==================== Reasoning 配置 ====================
 # 启用 LLM 推理输出（reasoning tokens），用于工具调用报告
 # effort: "minimal" / "low" / "medium" / "high" / ""(禁用)
 # Pro 模型（PlanAgent, Chair）使用 high，Flash 模型（Research Agents）使用 high
 ORCHESTRATOR_REASONING_EFFORT = os.getenv("ORCHESTRATOR_REASONING_EFFORT", "high")
-SUBGRAPH_REASONING_EFFORT = os.getenv("SUBGRAPH_REASONING_EFFORT", "high")
+SUBGRAPH_REASONING_EFFORT = os.getenv("SUBGRAPH_REASONING_EFFORT", "medium")
 
 # ==================== DeepEvidence 收敛配置 ====================
 MAX_PHASE1_ITERATIONS = int(os.getenv("MAX_PHASE1_ITERATIONS", "3"))    # Phase 1: 轻量 BFRS/DFRS, 信息提取有界

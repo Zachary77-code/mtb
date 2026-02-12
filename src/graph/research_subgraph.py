@@ -1912,6 +1912,77 @@ def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
                             **h
                         })
 
+    # 合并所有 agent 的证据图 (修复并行执行中的证据丢失问题)
+    from src.models.evidence_graph import load_evidence_graph
+    merged_graph_dict = state.get("evidence_graph", {})
+    merged_graph = load_evidence_graph(merged_graph_dict)
+
+    for agent_name, result in agent_results.items():
+        agent_graph_dict = result.get("evidence_graph", {})
+        if not agent_graph_dict:
+            continue
+
+        agent_graph = load_evidence_graph(agent_graph_dict)
+
+        # 合并实体 (去重 observations)
+        for entity_id, entity in agent_graph.entities.items():
+            if entity_id not in merged_graph.entities:
+                merged_graph.entities[entity_id] = entity
+                merged_graph._edge_index[entity_id] = set()
+                merged_graph._name_index[entity.name] = entity_id
+            else:
+                # 合并 observations
+                existing = merged_graph.entities[entity_id]
+                existing_obs_ids = {obs.id for obs in existing.observations}
+                for obs in entity.observations:
+                    if obs.id not in existing_obs_ids:
+                        existing.observations.append(obs)
+
+        # 合并边 (去重 observations)
+        for edge_key, edge in agent_graph.edges.items():
+            if edge_key not in merged_graph.edges:
+                merged_graph.edges[edge_key] = edge
+                # 更新边索引
+                if edge.source_id in merged_graph._edge_index:
+                    merged_graph._edge_index[edge.source_id].add(edge.id)
+                if edge.target_id in merged_graph._edge_index:
+                    merged_graph._edge_index[edge.target_id].add(edge.id)
+            else:
+                # 合并 observations
+                existing = merged_graph.edges[edge_key]
+                existing_obs_ids = {obs.id for obs in existing.observations}
+                for obs in edge.observations:
+                    if obs.id not in existing_obs_ids:
+                        existing.observations.append(obs)
+
+    merged_graph_dict = merged_graph.to_dict()
+
+    # 在证据图合并之后，关联实体到方向（修复方向证据统计为 0 的问题）
+    research_plan = state.get("research_plan", {})
+    if isinstance(research_plan, dict) and "directions" in research_plan:
+        from src.models.research_plan import ResearchDirection
+
+        # 遍历所有方向
+        for dir_data in research_plan["directions"]:
+            direction = ResearchDirection.from_dict(dir_data)
+            target_agent = direction.target_agent
+
+            # 查找该 agent 添加的所有实体（通过 observations 的 source_agent 匹配）
+            agent_entities = set()
+            for entity_id, entity in merged_graph.entities.items():
+                for obs in entity.observations:
+                    if obs.source_agent == target_agent:
+                        agent_entities.add(entity_id)
+                        break
+
+            # 添加到方向的 entity_ids（去重）
+            if agent_entities:
+                existing_ids = set(dir_data.get("entity_ids", []))
+                dir_data["entity_ids"] = list(existing_ids | agent_entities)
+
+        logger.info(f"[PHASE1_AGGREGATOR] 已将实体自动关联到方向: "
+                   f"{[(d['id'], len(d.get('entity_ids', []))) for d in research_plan['directions']]}")
+
     # 保存检查点
     checkpoint_evidence_graph(state, phase="phase1", iteration=new_iteration, checkpoint_type="checkpoint")
 
@@ -1920,6 +1991,8 @@ def phase1_aggregator(state: MtbState) -> Dict[str, Any]:
         "phase1_new_findings": new_findings,
         "iteration_history": history,
         "hypotheses_history": hypotheses_history,
+        "evidence_graph": merged_graph_dict,  # 返回合并后的证据图
+        "research_plan": research_plan,  # 返回更新后的 plan（包含关联的 entity_ids）
     }
 
 
@@ -2229,11 +2302,84 @@ def phase2a_aggregator(state: MtbState) -> Dict[str, Any]:
     history = list(state.get("iteration_history", []))
     history.append(iteration_record)
 
+    # 合并所有 agent 的证据图 (修复并行执行中的证据丢失问题)
+    from src.models.evidence_graph import load_evidence_graph
+    merged_graph_dict = state.get("evidence_graph", {})
+    merged_graph = load_evidence_graph(merged_graph_dict)
+
+    for agent_name, result in agent_results.items():
+        agent_graph_dict = result.get("evidence_graph", {})
+        if not agent_graph_dict:
+            continue
+
+        agent_graph = load_evidence_graph(agent_graph_dict)
+
+        # 合并实体 (去重 observations)
+        for entity_id, entity in agent_graph.entities.items():
+            if entity_id not in merged_graph.entities:
+                merged_graph.entities[entity_id] = entity
+                merged_graph._edge_index[entity_id] = set()
+                merged_graph._name_index[entity.name] = entity_id
+            else:
+                # 合并 observations
+                existing = merged_graph.entities[entity_id]
+                existing_obs_ids = {obs.id for obs in existing.observations}
+                for obs in entity.observations:
+                    if obs.id not in existing_obs_ids:
+                        existing.observations.append(obs)
+
+        # 合并边 (去重 observations)
+        for edge_key, edge in agent_graph.edges.items():
+            if edge_key not in merged_graph.edges:
+                merged_graph.edges[edge_key] = edge
+                # 更新边索引
+                if edge.source_id in merged_graph._edge_index:
+                    merged_graph._edge_index[edge.source_id].add(edge.id)
+                if edge.target_id in merged_graph._edge_index:
+                    merged_graph._edge_index[edge.target_id].add(edge.id)
+            else:
+                # 合并 observations
+                existing = merged_graph.edges[edge_key]
+                existing_obs_ids = {obs.id for obs in existing.observations}
+                for obs in edge.observations:
+                    if obs.id not in existing_obs_ids:
+                        existing.observations.append(obs)
+
+    merged_graph_dict = merged_graph.to_dict()
+
+    # 在证据图合并之后，关联实体到方向（修复方向证据统计为 0 的问题）
+    research_plan = state.get("research_plan", {})
+    if isinstance(research_plan, dict) and "directions" in research_plan:
+        from src.models.research_plan import ResearchDirection
+
+        # 遍历所有方向
+        for dir_data in research_plan["directions"]:
+            direction = ResearchDirection.from_dict(dir_data)
+            target_agent = direction.target_agent
+
+            # 查找该 agent 添加的所有实体（通过 observations 的 source_agent 匹配）
+            agent_entities = set()
+            for entity_id, entity in merged_graph.entities.items():
+                for obs in entity.observations:
+                    if obs.source_agent == target_agent:
+                        agent_entities.add(entity_id)
+                        break
+
+            # 添加到方向的 entity_ids（去重）
+            if agent_entities:
+                existing_ids = set(dir_data.get("entity_ids", []))
+                dir_data["entity_ids"] = list(existing_ids | agent_entities)
+
+        logger.info(f"[PHASE2A_AGGREGATOR] 已将实体自动关联到方向: "
+                   f"{[(d['id'], len(d.get('entity_ids', []))) for d in research_plan['directions']]}")
+
     checkpoint_evidence_graph(state, phase="phase2a", iteration=new_iteration, checkpoint_type="checkpoint")
 
     return {
         "phase2a_iteration": new_iteration,
         "iteration_history": history,
+        "evidence_graph": merged_graph_dict,  # 返回合并后的证据图
+        "research_plan": research_plan,  # 返回更新后的 plan（包含关联的 entity_ids）
     }
 
 
@@ -2406,11 +2552,24 @@ def plan_agent_evaluate_phase2b(state: MtbState) -> Dict[str, Any]:
         logger.warning(f"[PHASE2B_PLAN_EVAL] 达到迭代上限 ({MAX_PHASE2B_ITERATIONS})，强制收敛")
         return {"phase2b_decision": "converged", "phase2b_converged": True}
 
+    # 保存评估前的 plan 用于报告对比
+    pre_eval_plan = state.get("research_plan", {})
+
     try:
         plan_agent = PlanAgent()
         eval_result = plan_agent.evaluate_and_update(state, "phase2b", iteration)
         decision = eval_result.get("decision", "continue")
         logger.info(f"[PHASE2B_PLAN_EVAL] PlanAgent 决策: {decision}")
+
+        # 保存详细迭代报告 (与 Phase 1 和 2a 保持一致)
+        _save_detailed_iteration_report(
+            state=state,
+            phase="PHASE2B",
+            iteration=iteration,
+            eval_result=eval_result,
+            agent_names=["Pharmacist"],
+            pre_eval_plan=pre_eval_plan
+        )
 
         return {
             "research_plan": eval_result.get("research_plan", state.get("research_plan", {})),
@@ -2547,11 +2706,24 @@ def plan_agent_evaluate_phase3(state: MtbState) -> Dict[str, Any]:
         logger.warning(f"[PHASE3_PLAN_EVAL] 达到迭代上限 ({MAX_PHASE3_ITERATIONS})，强制收敛")
         return {"phase3_decision": "converged", "phase3_converged": True}
 
+    # 保存评估前的 plan 用于报告对比
+    pre_eval_plan = state.get("research_plan", {})
+
     try:
         plan_agent = PlanAgent()
         eval_result = plan_agent.evaluate_and_update(state, "phase3", iteration)
         decision = eval_result.get("decision", "continue")
         logger.info(f"[PHASE3_PLAN_EVAL] PlanAgent 决策: {decision}")
+
+        # 保存详细迭代报告 (与 Phase 1 和 2a 保持一致)
+        _save_detailed_iteration_report(
+            state=state,
+            phase="PHASE3",
+            iteration=iteration,
+            eval_result=eval_result,
+            agent_names=["Oncologist"],
+            pre_eval_plan=pre_eval_plan
+        )
 
         return {
             "research_plan": eval_result.get("research_plan", state.get("research_plan", {})),

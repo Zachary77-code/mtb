@@ -132,7 +132,7 @@ class BaseAgent:
     _rate_limiter_lock = threading.Lock()
     _request_timestamps = deque()  # 请求时间戳队列
     _RATE_LIMIT_WINDOW = 10  # 时间窗口：10秒
-    _RATE_LIMIT_MAX_REQUESTS = 20  # 窗口内最大请求数：20次
+    _RATE_LIMIT_MAX_REQUESTS = 20  # 窗口内最大请求数：10次（应对Google上游限制）
 
     def __init__(
         self,

@@ -442,29 +442,30 @@ class PlanAgent(BaseAgent):
             entity_ids = direction.entity_ids
             entity_id_set = set(entity_ids)
 
-            # 统计证据等级分布（按 observation 的 evidence_grade 计数，去重）
+            # 统计证据等级分布（按 obs.id 去重，仅计 source_agent == target_agent）
             grade_dist = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0}
             weighted_score = 0.0
+            target_agent = direction.target_agent
 
-            # 收集去重后的 observation 及其等级
+            # 收集去重后的 observation 及其等级（仅该方向的 target_agent）
             obs_grades = {}  # {obs_id: grade_value} 用于去重后统计
 
             for eid in entity_ids:
                 # entity_ids 存储的是实体 canonical_id
                 entity = graph.get_entity(eid) if graph else None
                 if entity:
-                    # 收集实体上的 observation 及其等级
+                    # 收集实体上的 observation 及其等级（仅 target_agent）
                     for obs in entity.observations:
-                        if hasattr(obs, 'id') and obs.id and obs.id not in obs_grades:
+                        if obs.source_agent == target_agent and hasattr(obs, 'id') and obs.id and obs.id not in obs_grades:
                             grade = obs.evidence_grade.value if obs.evidence_grade else "E"
                             obs_grades[obs.id] = grade
 
-            # 收集关联边上的 observation 及其等级
+            # 收集关联边上的 observation 及其等级（仅 target_agent）
             if graph:
                 for edge in graph.edges.values():
                     if edge.source_id in entity_id_set or edge.target_id in entity_id_set:
                         for obs in edge.observations:
-                            if hasattr(obs, 'id') and obs.id and obs.id not in obs_grades:
+                            if obs.source_agent == target_agent and hasattr(obs, 'id') and obs.id and obs.id not in obs_grades:
                                 grade = obs.evidence_grade.value if obs.evidence_grade else "E"
                                 obs_grades[obs.id] = grade
 
@@ -1694,6 +1695,22 @@ class PlanAgent(BaseAgent):
             logger.warning(f"[PLAN_AGENT] Phase 2b 方向定制失败，使用默认: {e}")
             directions = self._get_default_phase2b_directions()
 
+        # 从证据图提取所有实体作为审查锚点（修复 Phase 2b 方向证据统计为 0 的问题）
+        # 遵守 CLAUDE.md 第 9 条：不截断、不限制列表大小
+        from src.models.evidence_graph import load_evidence_graph
+        evidence_graph = load_evidence_graph(state.get("evidence_graph", {}))
+
+        # 提取所有实体（遵守"no truncation"原则）
+        # Phase 2b 的输入是 Phase 1/2a 的证据图，包含所有已识别的实体
+        all_entity_ids = list(evidence_graph.entities.keys())
+
+        # 为每个方向添加 entity_ids
+        for direction in directions:
+            # 所有 3 个审查方向使用相同的实体锚点
+            direction["entity_ids"] = all_entity_ids
+
+        logger.info(f"[PLAN_AGENT] Phase 2b 方向已添加实体锚点: {len(all_entity_ids)} 个实体")
+
         current_plan = state.get("research_plan", {})
         if isinstance(current_plan, dict):
             plan_data = current_plan.copy()
@@ -1813,6 +1830,22 @@ class PlanAgent(BaseAgent):
         except Exception as e:
             logger.warning(f"[PLAN_AGENT] Phase 3 方向定制失败，使用默认: {e}")
             directions = self._get_default_phase3_directions()
+
+        # 从证据图提取锚点实体，添加到方向的 entity_ids 字段
+        # 这解决了 Phase 3 方向证据计数为 0 的问题
+        # 遵守 CLAUDE.md 第 9 条：不截断、不限制列表大小
+        from src.models.evidence_graph import load_evidence_graph
+        evidence_graph = load_evidence_graph(state.get("evidence_graph", {}))
+
+        # 提取所有实体作为方向锚点（遵守"no truncation"原则）
+        # Phase 3 的输入是前面所有阶段（Phase 1/2a/2b）的完整证据图
+        all_entity_ids = list(evidence_graph.entities.keys())
+
+        # 所有方向使用相同的实体锚点，确保所有证据都能被正确计数
+        for direction in directions:
+            direction["entity_ids"] = all_entity_ids
+
+        logger.info(f"[PLAN_AGENT] Phase 3 方向已添加实体锚点: {len(all_entity_ids)} 个实体")
 
         current_plan = state.get("research_plan", {})
         if isinstance(current_plan, dict):
